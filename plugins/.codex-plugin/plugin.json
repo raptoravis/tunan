@@ -1,5 +1,5 @@
 {
-  "name": "tunan",
+  "name": "yunxing",
   "version": "3.12.0",
   "description": "AI-powered development tools for code review, research, design, and workflow automation.",
   "author": {
@@ -8,11 +8,11 @@
     "url": "https://github.com/raptoravis"
   },
   "homepage": "",
-  "repository": "https://github.com/raptoravis/tunan",
+  "repository": "https://github.com/raptoravis/yunxing",
   "license": "MIT",
   "keywords": [
     "ai-powered",
-    "tunan",
+    "yunxing",
     "workflow-automation",
     "code-review",
     "rails",
@@ -32,9 +32,9 @@
     "capabilities": ["Interactive", "Read", "Write"],
     "websiteURL": "",
     "defaultPrompt": [
-      "/tunan-brainstorm a new feature",
-      "/tunan-plan the implementation",
-      "/tunan-code-review my changes"
+      "/yunxing-brainstorm a new feature",
+      "/yunxing-plan the implementation",
+      "/yunxing-code-review my changes"
     ],
     "screenshots": []
   }

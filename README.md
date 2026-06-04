@@ -1,8 +1,8 @@
-# tunan
+# yunxing
 
 AI-powered development tools that get smarter with every use — make each unit of engineering work easier than the last. Brainstorm requirements, plan implementations, review code with specialized reviewers, research institutional learnings, and capture solved problems so future work compounds.
 
-This repository is a Claude Code / Codex **plugin marketplace**. It ships a single plugin, **`tunan`**, bundling 50+ agents, 38+ skills, and 5 MCP servers.
+This repository is a Claude Code / Codex **plugin marketplace**. It ships a single plugin, **`yunxing`**, bundling 50+ agents, 38+ skills, and 5 MCP servers.
 
 | Component   | Count |
 | ----------- | ----- |
@@ -20,10 +20,10 @@ Register this repository as a plugin marketplace, then install the plugin:
 
 ```text
 /plugin marketplace add raptoravis/yunxing
-/plugin install tunan@yunxing
+/plugin install yunxing@yunxing
 ```
 
-Reload when prompted. After installing, run `/tunan-setup` in any project — it diagnoses your environment, installs missing tools and MCP servers, and bootstraps project config in one interactive flow.
+Reload when prompted. After installing, run `/yunxing-setup` in any project — it diagnoses your environment, installs missing tools and MCP servers, and bootstraps project config in one interactive flow.
 
 ### Codex
 
@@ -34,7 +34,7 @@ codex plugin marketplace add raptoravis/yunxing
 codex
 ```
 
-Inside Codex, run `/plugins`, select the **yunxing** marketplace, choose the **tunan** plugin, and install. Restart Codex afterward. (Codex installs the skill set natively; the review/research/workflow agents that some skills spawn are a Claude Code feature.)
+Inside Codex, run `/plugins`, select the **yunxing** marketplace, choose the **yunxing** plugin, and install. Restart Codex afterward. (Codex installs the skill set natively; the review/research/workflow agents that some skills spawn are a Claude Code feature.)
 
 ### Local development (from a checkout)
 
@@ -54,15 +54,15 @@ The plugin ships a bundled [`.mcp.json`](plugins/.mcp.json). Two lightweight, no
 - `context7` — up-to-date library / API documentation lookup
 - `sequential-thinking` — structured multi-step reasoning
 
-Three heavier servers are **opt-in** (they pull large dependencies — browser binaries, a Python `uvx` toolchain, a Chrome install): `playwright`, `serena`, and `chrome-devtools`. Run `/tunan-setup` to check which MCP servers are registered and install any missing ones interactively. See the [MCP reference](plugins/README.md#mcp-servers) for details.
+Three heavier servers are **opt-in** (they pull large dependencies — browser binaries, a Python `uvx` toolchain, a Chrome install): `playwright`, `serena`, and `chrome-devtools`. Run `/yunxing-setup` to check which MCP servers are registered and install any missing ones interactively. See the [MCP reference](plugins/README.md#mcp-servers) for details.
 
 ## Getting started
 
-After install, run `/tunan-setup` to verify your environment, then try:
+After install, run `/yunxing-setup` to verify your environment, then try:
 
-- `/tunan-brainstorm` — explore requirements and approaches before planning
-- `/tunan-plan` — create an implementation plan
-- `/tunan-code-review` — run a comprehensive multi-agent review
+- `/yunxing-brainstorm` — explore requirements and approaches before planning
+- `/yunxing-plan` — create an implementation plan
+- `/yunxing-code-review` — run a comprehensive multi-agent review
 - `/lfg` — full autonomous engineering workflow
 
 ## License

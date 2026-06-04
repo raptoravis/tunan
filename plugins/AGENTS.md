@@ -1,7 +1,7 @@
 # Plugin Instructions
 
 These instructions apply when working in this repo, which ships the
-`tunan` plugin directly from the root: skills under `skills/`,
+`yunxing` plugin directly from the root: skills under `skills/`,
 agents under `agents/`, and the plugin manifests under `.claude-plugin/` and
 `.codex-plugin/`.
 
@@ -14,8 +14,8 @@ agents under `agents/`, and the plugin manifests under `.claude-plugin/` and
 Consequences:
 
 - Behavioral rules that govern skill _runtime_ behavior must live inside the skill itself — in `SKILL.md` or files under its `references/`. Guidance placed in this file is invisible at runtime.
-- When two or more skills share a behavioral principle, duplicate the guidance into each skill (inline for short rules, `references/` for longer ones). There is no cross-skill shared-file mechanism (see "File References in Skills" below). When a reference file is duplicated across skills (e.g., `concepts-vocabulary.md` in both `tunan-compound/references/` and `tunan-compound-refresh/references/`), edits must be applied to every copy in the same commit. Drift between copies produces inconsistent agent behavior depending on which skill loaded.
-- Do not propose that runtime guidance for tunan-ideate, tunan-brainstorm, tunan-plan, or any other skill live in this AGENTS.md. This file only shapes how contributors edit the plugin.
+- When two or more skills share a behavioral principle, duplicate the guidance into each skill (inline for short rules, `references/` for longer ones). There is no cross-skill shared-file mechanism (see "File References in Skills" below). When a reference file is duplicated across skills (e.g., `concepts-vocabulary.md` in both `yunxing-compound/references/` and `yunxing-compound-refresh/references/`), edits must be applied to every copy in the same commit. Drift between copies produces inconsistent agent behavior depending on which skill loaded.
+- Do not propose that runtime guidance for yunxing-ideate, yunxing-brainstorm, yunxing-plan, or any other skill live in this AGENTS.md. This file only shapes how contributors edit the plugin.
 
 This is easy to miss because authoring feels like using: you edit the plugin while running inside this repo, and the repo's AGENTS.md is loaded — but that load does not follow the installed skill into a user's environment.
 
@@ -38,10 +38,10 @@ Before committing changes:
 
 ```
 agents/
-└── tunan-*.md  # All agents live flat under agents/, prefixed with tunan-
+└── yunxing-*.md  # All agents live flat under agents/, prefixed with yunxing-
 
 skills/
-├── tunan-*/          # Core workflow skills (tunan-plan, tunan-code-review, etc.)
+├── yunxing-*/          # Core workflow skills (yunxing-plan, yunxing-code-review, etc.)
 └── */             # All other skills
 ```
 
@@ -62,19 +62,19 @@ Important: Just because the developer's installed plugin may be out of date, it'
 
 ## Naming Convention
 
-**All skills and agents** use the `tunan-` prefix to unambiguously identify them as tunan components:
+**All skills and agents** use the `yunxing-` prefix to unambiguously identify them as yunxing components:
 
-- `/tunan-brainstorm` - Explore requirements and approaches before planning
-- `/tunan-plan` - Create implementation plans
-- `/tunan-code-review` - Run comprehensive code reviews
-- `/tunan-work` - Execute work items systematically
-- `/tunan-compound` - Document solved problems
+- `/yunxing-brainstorm` - Explore requirements and approaches before planning
+- `/yunxing-plan` - Create implementation plans
+- `/yunxing-code-review` - Run comprehensive code reviews
+- `/yunxing-work` - Execute work items systematically
+- `/yunxing-compound` - Document solved problems
 
-**Why `tunan-`?** Claude Code has built-in `/plan` and `/review` commands. The `tunan-` prefix (short for tunan) makes it immediately clear these components belong to this plugin. The hyphen is used instead of a colon to avoid filesystem issues on Windows and to align directory names with frontmatter names.
+**Why `yunxing-`?** Claude Code has built-in `/plan` and `/review` commands. The `yunxing-` prefix (short for yunxing) makes it immediately clear these components belong to this plugin. The hyphen is used instead of a colon to avoid filesystem issues on Windows and to align directory names with frontmatter names.
 
-**Agents** follow the same convention: `tunan-adversarial-reviewer`, `tunan-learnings-researcher`, etc. When referencing agents from skills, use the bare `tunan-<agent-name>` form (e.g., `tunan-adversarial-reviewer`) — the `tunan-` prefix is sufficient for uniqueness across plugins.
+**Agents** follow the same convention: `yunxing-adversarial-reviewer`, `yunxing-learnings-researcher`, etc. When referencing agents from skills, use the bare `yunxing-<agent-name>` form (e.g., `yunxing-adversarial-reviewer`) — the `yunxing-` prefix is sufficient for uniqueness across plugins.
 
-**The `tunan-` prefix is required for every new skill and agent — no exceptions.** One legacy skill (`lfg`) predates the rule and remains unprefixed; treat it as the only allowed exception and do not add more. When adding a new skill, the directory name, the SKILL.md `name:` frontmatter, and any README references must all start with `tunan-`.
+**The `yunxing-` prefix is required for every new skill and agent — no exceptions.** One legacy skill (`lfg`) predates the rule and remains unprefixed; treat it as the only allowed exception and do not add more. When adding a new skill, the directory name, the SKILL.md `name:` frontmatter, and any README references must all start with `yunxing-`.
 
 ## Skill Design Principles
 
@@ -100,7 +100,7 @@ Match the level to the failure mode in both directions. Over-prescribing produce
 
 **Distinguish process exhaust from audit content.** Sections that exist for the agent's own bookkeeping are exhaust; sections that exist because downstream readers need to know something about the artifact's authorship are audit content and belong in the doc. The test is whether removing the section would degrade a downstream reader's ability to evaluate the artifact correctly.
 
-Non-interactive modes can create audit gaps, but only when the _corresponding interactive mode_ would have validated content the headless run skips. Compare per skill, not per mode. If interactive tunan-plan walks the user through every requirement and headless tunan-plan skips that walkthrough, the headless artifact contains decisions a reader cannot tell weren't user-confirmed — a `## Assumptions` section is audit content. If interactive tunan-compound asks only meta-questions (Full vs Lightweight, session-history, "What's next?") while the substantive inferences (track, category, filename, overlap) are agent decisions in both modes, then labeling them only in headless is misleading — it implies interactive runs validated content they didn't. The reader needs to know what _would have been_ user-validated; if neither mode validates the inferences, the section is process exhaust dressed up as audit.
+Non-interactive modes can create audit gaps, but only when the _corresponding interactive mode_ would have validated content the headless run skips. Compare per skill, not per mode. If interactive yunxing-plan walks the user through every requirement and headless yunxing-plan skips that walkthrough, the headless artifact contains decisions a reader cannot tell weren't user-confirmed — a `## Assumptions` section is audit content. If interactive yunxing-compound asks only meta-questions (Full vs Lightweight, session-history, "What's next?") while the substantive inferences (track, category, filename, overlap) are agent decisions in both modes, then labeling them only in headless is misleading — it implies interactive runs validated content they didn't. The reader needs to know what _would have been_ user-validated; if neither mode validates the inferences, the section is process exhaust dressed up as audit.
 
 **Test the spec by running it, not just by reading it.** Real-world test runs surface failure modes that desk review misses: load reliability, plugin caching across sessions, agent interpretation drift, conflation in menu shapes, edge-case interactions with the user's repo layout. When a test reveals unexpected behavior, ask three questions before tightening the spec:
 
@@ -185,7 +185,7 @@ Design rules for blocking question menus (`AskUserQuestion` / `request_user_inpu
 
 - [ ] When a skill dispatches sub-agents, instruct use of the platform's subagent primitive and name the known equivalents (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi via the `pi-subagents` extension)
 - [ ] Prefer bounded parallel execution: respect platform active-subagent limits, queue overflow work, and treat limit-related spawn errors as backpressure. Include a sequential fallback for platforms that do not support parallel dispatch
-- [ ] Prefer sub-agents shipped with this plugin (`tunan-*`) over platform built-ins. Built-ins have different names on each target (e.g., Claude Code's `Explore` is `explorer` on Codex via `spawn_agent`'s `agent_type`, `scout` on Pi via `pi-subagents`) — using our own avoids the enumeration tax. Exception: when a built-in offers a meaningful benefit worth keeping, enumerate the per-platform equivalents inline at the call site so the model can route correctly on each target.
+- [ ] Prefer sub-agents shipped with this plugin (`yunxing-*`) over platform built-ins. Built-ins have different names on each target (e.g., Claude Code's `Explore` is `explorer` on Codex via `spawn_agent`'s `agent_type`, `scout` on Pi via `pi-subagents`) — using our own avoids the enumeration tax. Exception: when a built-in offers a meaningful benefit worth keeping, enumerate the per-platform equivalents inline at the call site so the model can route correctly on each target.
 
 ### Script Path References in Skills
 
@@ -200,7 +200,7 @@ These skills must run on Windows, not just macOS/Linux. The agent invokes comman
 - [ ] **Bundled scripts ship in both forms.** Every executable helper under a skill's `scripts/` has a bash `.sh` AND a PowerShell `.ps1` twin with **identical args and byte-for-byte stdout contract** (same sentinel strings, exit codes, multi-line output). When adding or changing one, change the other in the same commit (this is the OS-level analog of the stable/beta sync rule).
 - [ ] **`.ps1` targets Windows PowerShell 5.1** (ships with Windows, zero install). No 7+-only syntax: no ternary `? :`, no `ForEach-Object -Parallel`, no `Start-Process -TimeoutSec`, no `??`. Verify with `[System.Management.Automation.PSParser]::Tokenize(...)`. Gotcha: `$x = if (...) { @($a[i..j]) }` collapses a single-element slice to a scalar string — use `@($a | Select-Object -Skip n)` instead.
 - [ ] **SKILL.md invokes the OS-appropriate variant.** Show the Windows form `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/<name>.ps1 <args>` alongside the bash `bash scripts/<name>.sh <args>` form, with a one-line "pick the variant for the current OS" note. Add a `Bash(powershell.exe *<name>.ps1)` entry to `allowed-tools` next to the existing `Bash(bash *<name>.sh)` when the skill pins script permissions.
-- [ ] **Python launcher:** instruct `python3` on macOS/Linux, `python` (or `py -3`) on Windows. Avoid Unix-only pipelines (`tr '\n' '\0' | xargs -0 ...`); prefer a plain pipe into a script that reads newline-delimited stdin (see `tunan-sessions` `extract-metadata.py --paths-stdin`).
+- [ ] **Python launcher:** instruct `python3` on macOS/Linux, `python` (or `py -3`) on Windows. Avoid Unix-only pipelines (`tr '\n' '\0' | xargs -0 ...`); prefer a plain pipe into a script that reads newline-delimited stdin (see `yunxing-sessions` `extract-metadata.py --paths-stdin`).
 - [ ] **Python file I/O must be encoding-safe.** Open text files with `encoding="utf-8"` and, for scripts that read stdin, `sys.stdin.reconfigure(encoding="utf-8", errors="replace")`. Windows defaults to the legacy ANSI code page (e.g. GBK on zh-CN), which raises `UnicodeDecodeError` on UTF-8 content. Do not rely on the locale default.
 - [ ] **Temp/scratch paths:** never hardcode `/tmp`. In bash use `${TMPDIR:-/tmp}/...`; in PowerShell use `$env:TEMP\...`; in Python use `tempfile.gettempdir()`. For a path the skill resolves once and reuses, a `$SCRATCH`/`<scratch-dir>` placeholder is clearest.
 - [ ] **No Unix-only commands without a Windows path:** `uuidgen` is absent even in Git Bash — use `$(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')`. For file/URL openers, offer all three: `open`/`open -a` (macOS), `xdg-open` (Linux), `start`/`Start-Process` (Windows). `mktemp` is fine in bash blocks (Git Bash provides it); give a `$env:TEMP` + `[guid]::NewGuid()` alternative only for prominent standalone scratch-setup steps.
@@ -211,8 +211,8 @@ This plugin is authored once, then converted for other agent platforms. Commands
 
 - [ ] Because of that, slash references inside command or agent content are acceptable when they point to real published commands; target-specific conversion can remap them.
 - [ ] Inside a pass-through `SKILL.md`, do not assume slash references will be remapped for another platform. Write references according to what will still make sense after the skill is copied as-is.
-- [ ] When one skill refers to another skill, prefer semantic wording such as "load the `tunan-doc-review` skill" rather than slash syntax.
-- [ ] Use slash syntax only when referring to an actual published command or workflow such as `/tunan-work` or `/tunan-compound`.
+- [ ] When one skill refers to another skill, prefer semantic wording such as "load the `yunxing-doc-review` skill" rather than slash syntax.
+- [ ] Use slash syntax only when referring to an actual published command or workflow such as `/yunxing-work` or `/yunxing-compound`.
 
 ### Tool Selection in Agents and Skills
 
@@ -266,17 +266,17 @@ When dispatching sub-agents, **omit the `mode` parameter** on the Agent/Task too
 
 ### Reading Config Files from Skills
 
-Plugin config lives at `.tunan/config.local.yaml` in the repo root. This file is gitignored (machine-local settings), which creates two gotchas:
+Plugin config lives at `.yunxing/config.local.yaml` in the repo root. This file is gitignored (machine-local settings), which creates two gotchas:
 
 1. **Path resolution:** Never read the config relative to CWD — the user may invoke a skill from a subdirectory. Always resolve from the repo root. In pre-resolution commands, use `git rev-parse --show-toplevel` to find the root.
 
 2. **Worktrees:** Gitignored files are per-worktree. A config file created in the main checkout does not exist in worktrees. Use `--show-toplevel` to find the root:
 
    ```
-   !`cat "$(git rev-parse --show-toplevel 2>/dev/null)/.tunan/config.local.yaml" 2>/dev/null || echo '__NO_CONFIG__'`
+   !`cat "$(git rev-parse --show-toplevel 2>/dev/null)/.yunxing/config.local.yaml" 2>/dev/null || echo '__NO_CONFIG__'`
    ```
 
-   Outside a git repo, `git rev-parse` emits empty and `cat "/.tunan/config.local.yaml"` fails (permission denied or not found, suppressed by `2>/dev/null`), so the `__NO_CONFIG__` sentinel fires. Note: the previous pattern used `(top=$(...); [ -n "$top" ] && cat "$top/...")` with a semicolon to guard the empty-root case, but `;` is rejected by Claude Code's safety checker as `Unhandled node type: ;` (see Pre-resolution exception above) and must not be used in `!` pre-resolution.
+   Outside a git repo, `git rev-parse` emits empty and `cat "/.yunxing/config.local.yaml"` fails (permission denied or not found, suppressed by `2>/dev/null`), so the `__NO_CONFIG__` sentinel fires. Note: the previous pattern used `(top=$(...); [ -n "$top" ] && cat "$top/...")` with a semicolon to guard the empty-root case, but `;` is rejected by Claude Code's safety checker as `Unhandled node type: ;` (see Pre-resolution exception above) and must not be used in `!` pre-resolution.
 
    Note: in a worktree, `--show-toplevel` returns the worktree path, so config from the main checkout will not be found. This is acceptable — config is optional and users who work from worktrees can add a config file there. A previous pattern used `git-common-dir` with `${common%/.git}` to derive the main repo root as a fallback, but bash parameter expansion operators are rejected as "Contains expansion" (see Pre-resolution exception above), so that approach is no longer viable without a script.
 
@@ -295,7 +295,7 @@ grep -E '^description:' skills/*/SKILL.md
 ## Adding Components
 
 - **New skill:** Create `skills/<name>/SKILL.md` with required YAML frontmatter (`name`, `description`). Reference files go in `skills/<name>/references/`. Add the skill to the appropriate category table in `README.md` and update the skill count.
-- **New agent:** Create `agents/tunan-<name>.md` with frontmatter (the `tunan-` prefix is required). Add the agent to the appropriate topical section of `README.md` (Review, Document Review, Research, Design, Workflow, Docs) and update the agent count.
+- **New agent:** Create `agents/yunxing-<name>.md` with frontmatter (the `yunxing-` prefix is required). Add the agent to the appropriate topical section of `README.md` (Review, Document Review, Research, Design, Workflow, Docs) and update the agent count.
 
 ## Beta Skills
 

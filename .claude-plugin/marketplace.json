@@ -5,12 +5,12 @@
     "url": "https://github.com/raptoravis"
   },
   "metadata": {
-    "description": "Plugin marketplace for the tunan Claude Code / Codex extension.",
+    "description": "Plugin marketplace for the yunxing Claude Code / Codex extension.",
     "version": "1.0.0"
   },
   "plugins": [
     {
-      "name": "tunan",
+      "name": "yunxing",
       "description": "AI-powered development tools for code review, research, design, and workflow automation.",
       "author": {
         "name": "raptoravis",
@@ -20,7 +20,7 @@
       "homepage": "https://github.com/raptoravis/yunxing",
       "tags": [
         "ai-powered",
-        "tunan",
+        "yunxing",
         "workflow-automation",
         "code-review",
         "knowledge-management",

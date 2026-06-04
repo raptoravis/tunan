@@ -6,19 +6,19 @@ argument-hint: "[feature description]"
 
 CRITICAL: You MUST execute every step below IN ORDER. Do NOT skip any required step. Do NOT jump ahead to coding or implementation. The plan phase (step 1) MUST be completed and verified BEFORE any work begins. Violating this order produces bad output.
 
-When invoking any skill referenced below, resolve its name against the available-skills list the host platform provides and use that exact entry. Some platforms list skills under a plugin namespace (e.g., `tunan:tunan-plan`); others list the bare name. Invoking a short-form guess that isn't in the list will fail — always match a listed entry verbatim before calling the Skill/Task tool.
+When invoking any skill referenced below, resolve its name against the available-skills list the host platform provides and use that exact entry. Some platforms list skills under a plugin namespace (e.g., `yunxing:yunxing-plan`); others list the bare name. Invoking a short-form guess that isn't in the list will fail — always match a listed entry verbatim before calling the Skill/Task tool.
 
-1. Invoke the `tunan-plan` skill with `$ARGUMENTS`.
+1. Invoke the `yunxing-plan` skill with `$ARGUMENTS`.
 
-   GATE: STOP. If tunan-plan reported the task is non-software and cannot be processed in pipeline mode, stop the pipeline and inform the user that LFG requires software tasks. Otherwise, verify that the `tunan-plan` workflow produced a plan file in `docs/plans/`. If no plan file was created, invoke `tunan-plan` again with `$ARGUMENTS`. Do NOT proceed to step 2 until a written plan exists. **Record the plan file path** — it will be passed to tunan-code-review in step 3.
+   GATE: STOP. If yunxing-plan reported the task is non-software and cannot be processed in pipeline mode, stop the pipeline and inform the user that LFG requires software tasks. Otherwise, verify that the `yunxing-plan` workflow produced a plan file in `docs/plans/`. If no plan file was created, invoke `yunxing-plan` again with `$ARGUMENTS`. Do NOT proceed to step 2 until a written plan exists. **Record the plan file path** — it will be passed to yunxing-code-review in step 3.
 
-2. Invoke the `tunan-work` skill.
+2. Invoke the `yunxing-work` skill.
 
    GATE: STOP. Verify that implementation work was performed - files were created or modified beyond the plan. Do NOT proceed to step 3 if no code changes were made.
 
-3. Invoke the `tunan-code-review` skill with `mode:agent plan:<plan-path-from-step-1>`.
+3. Invoke the `yunxing-code-review` skill with `mode:agent plan:<plan-path-from-step-1>`.
 
-   Pass the plan file path from step 1 so tunan-code-review can verify requirements completeness. Read the **Actionable Findings** summary the skill emits.
+   Pass the plan file path from step 1 so yunxing-code-review can verify requirements completeness. Read the **Actionable Findings** summary the skill emits.
 
 4. **Apply and persist review fixes** (REQUIRED after step 3, before residual handoff)
 
@@ -49,9 +49,9 @@ When invoking any skill referenced below, resolve its name against the available
 
    Never block DONE on tracker filing failures once residuals have been durably recorded. A `no_sink` outcome is success only when the findings are present in the PR body or in the pushed fallback file.
 
-6. Invoke the `tunan-test-browser` skill with `mode:pipeline`.
+6. Invoke the `yunxing-test-browser` skill with `mode:pipeline`.
 
-7. Invoke the `tunan-commit-push-pr` skill.
+7. Invoke the `yunxing-commit-push-pr` skill.
 
    This commits any remaining changes, pushes the branch, and opens a pull request. If step 5 already opened a PR (check with `gh pr view --json number,url,state 2>/dev/null`), skip PR creation but still commit and push any uncommitted changes.
 
