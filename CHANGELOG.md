@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.11.0](https://github.com/raptoravis/yunxing/compare/cli-v3.10.0...cli-v3.11.0) (2026-06-04)
+
+
+### Features
+
+* **ce-plan,ce-brainstorm:** contract-driven sections + optional HTML output ([#826](https://github.com/raptoravis/yunxing/issues/826)) ([11e12e5](https://github.com/raptoravis/yunxing/commit/11e12e5739c6691a2020eb8b70a944587e7f265f))
+* **skill:** introduce CONCEPTS.md as shared vocabulary substrate ([#838](https://github.com/raptoravis/yunxing/issues/838)) ([7c4bb16](https://github.com/raptoravis/yunxing/commit/7c4bb16123412d97ded593fc785d206ecb9684bc))
+
+
+### Bug Fixes
+
+* **agents:** rename .agent.md to .md for VS Code Copilot tool access ([#846](https://github.com/raptoravis/yunxing/issues/846)) ([796bea7](https://github.com/raptoravis/yunxing/commit/796bea75b74f3b101b53f7cc1c108aece0979e6b))
+* **ce-code-review:** replace resolve-base.sh with prose-driven base detection ([#815](https://github.com/raptoravis/yunxing/issues/815)) ([d090bde](https://github.com/raptoravis/yunxing/commit/d090bde0ff1bbc33ec3c3b2049cb4687e9d76532))
+* **ce-coherence-reviewer:** remove Bash from tool allowlist ([#837](https://github.com/raptoravis/yunxing/issues/837)) ([82b8af4](https://github.com/raptoravis/yunxing/commit/82b8af415d9ca5577577fa80da0a6119fc8b661e))
+* **ce-polish:** promote from beta to stable ([#880](https://github.com/raptoravis/yunxing/issues/880)) ([63b6b26](https://github.com/raptoravis/yunxing/commit/63b6b260c345ba70ce9d9a393eeedefb64e4e0a0))
+* **ce-resolve-pr-feedback:** paginate GraphQL connections ([#807](https://github.com/raptoravis/yunxing/issues/807)) ([07a6d52](https://github.com/raptoravis/yunxing/commit/07a6d52879ed715e179ff11daaee47e02bc6ecc9))
+* **ce-sessions:** unblock session-history on Claude Code ([#800](https://github.com/raptoravis/yunxing/issues/800)) ([81710ef](https://github.com/raptoravis/yunxing/commit/81710efad5666831715a630b04554a35946afb1d))
+* **codex:** respect CODEX_HOME for profile installs ([#830](https://github.com/raptoravis/yunxing/issues/830)) ([a0a08a1](https://github.com/raptoravis/yunxing/commit/a0a08a17cb178655baeabe4045b5164b3a5cef58))
+
 ## [3.10.0](https://github.com/EveryInc/compound-engineering-plugin/compare/cli-v3.9.4...cli-v3.10.0) (2026-06-03)
 
 

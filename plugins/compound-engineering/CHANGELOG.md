@@ -9,6 +9,44 @@ All notable changes to the compound-engineering plugin will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.11.0](https://github.com/raptoravis/yunxing/compare/compound-engineering-v3.10.0...compound-engineering-v3.11.0) (2026-06-04)
+
+
+### Features
+
+* **ce-compound:** add mode:headless for non-interactive use ([#813](https://github.com/raptoravis/yunxing/issues/813)) ([9b45a83](https://github.com/raptoravis/yunxing/commit/9b45a83d7ed2534669656fb3abf6a2c23e2e4f59))
+* **ce-dogfood-beta:** add diff-scoped browser QA dogfood skill ([#848](https://github.com/raptoravis/yunxing/issues/848)) ([0aa6b55](https://github.com/raptoravis/yunxing/commit/0aa6b55a8026728de75aee0ff6ae5a0e006028c5))
+* **ce-plan,ce-brainstorm:** contract-driven sections + optional HTML output ([#826](https://github.com/raptoravis/yunxing/issues/826)) ([11e12e5](https://github.com/raptoravis/yunxing/commit/11e12e5739c6691a2020eb8b70a944587e7f265f))
+* **ce-promote:** add ce-promote skill for post-ship announcement copy ([#888](https://github.com/raptoravis/yunxing/issues/888)) ([0939187](https://github.com/raptoravis/yunxing/commit/09391874b4be1a248bc7d627b0ebd5c29f0c886b))
+* **skill:** introduce CONCEPTS.md as shared vocabulary substrate ([#838](https://github.com/raptoravis/yunxing/issues/838)) ([7c4bb16](https://github.com/raptoravis/yunxing/commit/7c4bb16123412d97ded593fc785d206ecb9684bc))
+
+
+### Bug Fixes
+
+* **agents:** rename .agent.md to .md for VS Code Copilot tool access ([#846](https://github.com/raptoravis/yunxing/issues/846)) ([796bea7](https://github.com/raptoravis/yunxing/commit/796bea75b74f3b101b53f7cc1c108aece0979e6b))
+* **ce-brainstorm,ce-plan:** add conceptual-diagram affordance to brainstorm docs ([#871](https://github.com/raptoravis/yunxing/issues/871)) ([e5e3fc3](https://github.com/raptoravis/yunxing/commit/e5e3fc3630c026ae0eae6637d8b7a342af862e66))
+* **ce-brainstorm,ce-plan:** restore default-on requirements grouping ([#868](https://github.com/raptoravis/yunxing/issues/868)) ([5c88212](https://github.com/raptoravis/yunxing/commit/5c88212c1fd310d27033e7e8508e782e1f19cfdc))
+* **ce-brainstorm:** scoping synthesis and Q&A interaction cleanup ([#829](https://github.com/raptoravis/yunxing/issues/829)) ([6df3f96](https://github.com/raptoravis/yunxing/commit/6df3f965808a67368d24ddd4816a6bed18df7cdb))
+* **ce-code-review:** replace resolve-base.sh with prose-driven base detection ([#815](https://github.com/raptoravis/yunxing/issues/815)) ([d090bde](https://github.com/raptoravis/yunxing/commit/d090bde0ff1bbc33ec3c3b2049cb4687e9d76532))
+* **ce-coherence-reviewer:** remove Bash from tool allowlist ([#837](https://github.com/raptoravis/yunxing/issues/837)) ([82b8af4](https://github.com/raptoravis/yunxing/commit/82b8af415d9ca5577577fa80da0a6119fc8b661e))
+* **ce-commit-push-pr:** require user-visible bug summaries ([#853](https://github.com/raptoravis/yunxing/issues/853)) ([67d2736](https://github.com/raptoravis/yunxing/commit/67d273622e40a7b28f18c95f65379a36726ca558))
+* **ce-commit-push-pr:** rewrite pr-description around a core principle ([#841](https://github.com/raptoravis/yunxing/issues/841)) ([fd88fd8](https://github.com/raptoravis/yunxing/commit/fd88fd8fd71ccba9d12e9f33a8c1dc99709c6d02))
+* **ce-compound:** drop date suffix from generated doc filenames ([#849](https://github.com/raptoravis/yunxing/issues/849)) ([ac1c6d9](https://github.com/raptoravis/yunxing/commit/ac1c6d9a997d4f8eaba1ba55d8b44500ca393cd4))
+* **ce-plan:** add answer-seeking disposition to universal planning ([#886](https://github.com/raptoravis/yunxing/issues/886)) ([ece9fa1](https://github.com/raptoravis/yunxing/commit/ece9fa1f1f40a267b3ab7c4aa94126e3f5623b09))
+* **ce-plan:** compress synthesis confirmation to prose + call-outs ([#819](https://github.com/raptoravis/yunxing/issues/819)) ([60c1c93](https://github.com/raptoravis/yunxing/commit/60c1c938d5bbf70abd0af08af3d2c9ede0d1b89d))
+* **ce-plan:** honor explicit external-research requests and route them by intent ([#875](https://github.com/raptoravis/yunxing/issues/875)) ([b3e396d](https://github.com/raptoravis/yunxing/commit/b3e396d0bfd7be0c672cb7193a5cfa40675e6979))
+* **ce-plan:** inline synthesis gate output into SKILL.md ([#822](https://github.com/raptoravis/yunxing/issues/822)) ([39cb9da](https://github.com/raptoravis/yunxing/commit/39cb9da3a1a90a7ce7418f7a64d7ff3c8f9a917c))
+* **ce-polish:** promote from beta to stable ([#880](https://github.com/raptoravis/yunxing/issues/880)) ([63b6b26](https://github.com/raptoravis/yunxing/commit/63b6b260c345ba70ce9d9a393eeedefb64e4e0a0))
+* **ce-proof:** update HITL flow for Proof v2 ([#847](https://github.com/raptoravis/yunxing/issues/847)) ([2a46670](https://github.com/raptoravis/yunxing/commit/2a46670958e8c102ea32cb2c532fb00a5e29f6e4))
+* **ce-resolve-pr-feedback:** drop clustering, default to merit-based fixing ([#893](https://github.com/raptoravis/yunxing/issues/893)) ([3e77a7b](https://github.com/raptoravis/yunxing/commit/3e77a7bd8450fef7270f8b46c0f1865fd7125741))
+* **ce-resolve-pr-feedback:** paginate GraphQL connections ([#807](https://github.com/raptoravis/yunxing/issues/807)) ([07a6d52](https://github.com/raptoravis/yunxing/commit/07a6d52879ed715e179ff11daaee47e02bc6ecc9))
+* **ce-sessions:** emit repo root path instead of basename subshell ([#873](https://github.com/raptoravis/yunxing/issues/873)) ([253dba8](https://github.com/raptoravis/yunxing/commit/253dba80dd08c111edae3f7fdc8fac998ec0d5cb))
+* **ce-sessions:** unblock session-history on Claude Code ([#800](https://github.com/raptoravis/yunxing/issues/800)) ([81710ef](https://github.com/raptoravis/yunxing/commit/81710efad5666831715a630b04554a35946afb1d))
+* **ce-web-researcher:** use any web tool, not just Claude built-ins ([#836](https://github.com/raptoravis/yunxing/issues/836)) ([6fa1277](https://github.com/raptoravis/yunxing/commit/6fa1277e573b6bec5d94d5b42431b6a4cad5b030))
+* **commit:** auto-create feature branch on default branch ([#856](https://github.com/raptoravis/yunxing/issues/856)) ([26a8025](https://github.com/raptoravis/yunxing/commit/26a802551e44d12b837ac5d3e33fc7ffacbbf354))
+* **html-rendering:** constrain measure and surface execution notes ([#870](https://github.com/raptoravis/yunxing/issues/870)) ([1051132](https://github.com/raptoravis/yunxing/commit/1051132d04153c3045fc4c929cff32882c6934fe))
+* **simplify-code:** guard against over-simplification and behavior drift ([#859](https://github.com/raptoravis/yunxing/issues/859)) ([673dcfa](https://github.com/raptoravis/yunxing/commit/673dcfacb8089476961a0f7d5d1b3a7ac2a84c37))
+
 ## [3.10.0](https://github.com/EveryInc/compound-engineering-plugin/compare/compound-engineering-v3.9.4...compound-engineering-v3.10.0) (2026-06-03)
 
 
