@@ -23,7 +23,7 @@ Register this repository as a plugin marketplace, then install the plugin:
 /plugin install tunan@yunxing
 ```
 
-Reload when prompted. After installing, run `/ce-setup` in any project — it diagnoses your environment, installs missing tools and MCP servers, and bootstraps project config in one interactive flow.
+Reload when prompted. After installing, run `/tunan-setup` in any project — it diagnoses your environment, installs missing tools and MCP servers, and bootstraps project config in one interactive flow.
 
 ### Codex
 
@@ -54,15 +54,15 @@ The plugin ships a bundled [`.mcp.json`](plugins/.mcp.json). Two lightweight, no
 - `context7` — up-to-date library / API documentation lookup
 - `sequential-thinking` — structured multi-step reasoning
 
-Three heavier servers are **opt-in** (they pull large dependencies — browser binaries, a Python `uvx` toolchain, a Chrome install): `playwright`, `serena`, and `chrome-devtools`. Run `/ce-setup` to check which MCP servers are registered and install any missing ones interactively. See the [MCP reference](plugins/README.md#mcp-servers) for details.
+Three heavier servers are **opt-in** (they pull large dependencies — browser binaries, a Python `uvx` toolchain, a Chrome install): `playwright`, `serena`, and `chrome-devtools`. Run `/tunan-setup` to check which MCP servers are registered and install any missing ones interactively. See the [MCP reference](plugins/README.md#mcp-servers) for details.
 
 ## Getting started
 
-After install, run `/ce-setup` to verify your environment, then try:
+After install, run `/tunan-setup` to verify your environment, then try:
 
-- `/ce-brainstorm` — explore requirements and approaches before planning
-- `/ce-plan` — create an implementation plan
-- `/ce-code-review` — run a comprehensive multi-agent review
+- `/tunan-brainstorm` — explore requirements and approaches before planning
+- `/tunan-plan` — create an implementation plan
+- `/tunan-code-review` — run a comprehensive multi-agent review
 - `/lfg` — full autonomous engineering workflow
 
 ## License

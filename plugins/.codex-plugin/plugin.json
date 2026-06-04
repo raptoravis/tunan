@@ -32,9 +32,9 @@
     "capabilities": ["Interactive", "Read", "Write"],
     "websiteURL": "",
     "defaultPrompt": [
-      "/ce-brainstorm a new feature",
-      "/ce-plan the implementation",
-      "/ce-code-review my changes"
+      "/tunan-brainstorm a new feature",
+      "/tunan-plan the implementation",
+      "/tunan-code-review my changes"
     ],
     "screenshots": []
   }
