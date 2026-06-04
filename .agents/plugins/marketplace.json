@@ -1,0 +1,20 @@
+{
+  "name": "yunxing",
+  "interface": {
+    "displayName": "tunan"
+  },
+  "plugins": [
+    {
+      "name": "tunan",
+      "source": {
+        "source": "local",
+        "path": "./plugins"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Coding"
+    }
+  ]
+}
