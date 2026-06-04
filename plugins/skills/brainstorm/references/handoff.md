@@ -63,7 +63,7 @@ Selections may be the literal option label (when the user types the label or a c
 
 **If user selects "Plan implementation with `plan` (Recommended)":**
 
-Immediately load the `plan` skill in the current session. Pass the requirement issue ref (`#<N>` or URL) when one exists; otherwise pass a concise summary of the finalized brainstorm decisions. `plan` reads the issue body for the requirement and links its plan back to the req issue by `#<N>` reference. Do not print the closing summary first.
+Immediately load the `plan` skill in the current session. Pass the requirement issue ref (`#<N>` or URL) when one exists; otherwise pass a concise summary of the finalized brainstorm decisions. The req issue **is** the feature issue: `plan` reads its body for the requirement and writes the plan as a **comment** on this same issue (first line `<!-- yunxing:plan -->`), adding the `yunxing:plan` label — it does **not** create a separate plan issue. The feature issue `#<N>` is what flows downstream. Do not print the closing summary first.
 
 **If user selects "Agent review of the requirement with `doc-review`":**
 

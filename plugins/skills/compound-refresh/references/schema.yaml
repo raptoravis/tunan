@@ -1,6 +1,9 @@
 # Documentation schema for learnings written by compound.
-# A learning is a GitHub issue labeled `yunxing:solution`; this schema is the
-# canonical contract for the YAML block fenced at the top of the issue body.
+# A learning is a `yunxing:solution` comment on its feature issue — first line is
+# the marker `<!-- yunxing:solution -->`, then the YAML block this schema governs,
+# then the resolution-template markdown sections. The feature issue is also labeled
+# `yunxing:solution` for cross-feature discovery. This schema is the canonical
+# contract for the fenced YAML block that follows the marker line.
 #
 # The schema has two tracks based on problem_type:
 #   Bug track  — problem_type is a defect or failure (build_error, test_failure, etc.)
@@ -37,6 +40,11 @@ tracks:
 
 # --- Fields required by BOTH tracks -----------------------------------------
 required_fields:
+  source_issue:
+    type: string
+    pattern: '^#\d+$'
+    description: "The feature issue this solution comment lives on, as `#<N>`. Anchors the learning to its host issue in the comment-chain model. MUST be double-quoted in YAML (`source_issue: \"#42\"`) — a bare `#42` value is read as a comment, leaving the field null."
+
   module:
     type: string
     description: "Module or area affected"
@@ -220,6 +228,7 @@ bug_optional_fields:
 validation_rules:
   - "Determine track from problem_type using the tracks section above"
   - "All shared required_fields must be present"
+  - "source_issue must be present and match `#<N>` — the feature issue the solution comment lives on"
   - "Bug-track required fields (symptoms, root_cause, resolution_type) must be present on bug-track docs"
   - "Knowledge-track docs have no additional required fields beyond the shared ones"
   - "Bug-track fields on existing knowledge-track docs are harmless (see backward compatibility note)"

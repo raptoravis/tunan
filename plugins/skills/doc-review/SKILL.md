@@ -1,6 +1,6 @@
 ---
 name: doc-review
-description: "Review requirements or plan documents using parallel persona agents that surface role-specific issues. Use when a yunxing artifact issue (yunxing:req / yunxing:plan / yunxing:solution / yunxing:idea / yunxing:pulse) or a local markdown document exists and the user wants to improve it."
+description: "Review requirements or plan documents using parallel persona agents that surface role-specific issues. Use when a yunxing artifact (a yunxing:req feature issue, its plan/solution marker comment, or a yunxing:idea / yunxing:pulse issue) or a local markdown document exists and the user wants to improve it."
 argument-hint: "[mode:headless] [#<N> | <issue-url> | path/to/document.md]"
 ---
 
@@ -8,13 +8,14 @@ argument-hint: "[mode:headless] [#<N> | <issue-url> | path/to/document.md]"
 
 Review requirements or plan documents through multi-persona analysis. Dispatches specialized reviewer agents in parallel, auto-applies `safe_auto` fixes, and routes remaining findings through a four-option interaction (per-finding walk-through, auto-resolve with best judgment, Append-to-Open-Questions, Report-only) for user decision.
 
-The primary input is a **yunxing artifact issue** — durable requirements/plan artifacts are stored as GitHub issues distinguished by label (`yunxing:req`, `yunxing:plan`, `yunxing:solution`, `yunxing:idea`, `yunxing:pulse`), not as local files. Reviewing an arbitrary local markdown file (a doc that is not a yunxing artifact) is also supported. In both cases the review reads markdown, runs the persona analysis, and applies agreed findings back to the **source** — the issue body for an artifact, the file on disk for a local doc.
+The primary input is a **yunxing artifact** — durable requirements live in the body of a `yunxing:req` feature issue, while that feature's plan and solution live as marker comments (`<!-- yunxing:plan -->` / `<!-- yunxing:solution -->`) on the same issue, with the issue accruing the matching `yunxing:plan` / `yunxing:solution` label; `yunxing:idea` and `yunxing:pulse` artifacts are their own issues. None are local files. Reviewing an arbitrary local markdown file (a doc that is not a yunxing artifact) is also supported. In both cases the review reads markdown, runs the persona analysis, and applies agreed findings back to the **source** — the issue body or marker comment for an artifact, the file on disk for a local doc.
 
 ## Source resolution
 
 A single concept threads through the whole skill: the **working file** — a local markdown path that all edit-tool mechanics (safe_auto apply, the Apply-set batch edit, Open-Questions appends) operate on. How the working file maps to the source depends on the argument:
 
-- **Issue ref** — an argument of the form `#<N>`, a bare integer `<N>`, or a GitHub issue URL. Run GH PREFLIGHT (below), read the issue body via `gh issue view`, and write the body markdown to a transient working file in the OS temp dir. This is the **primary path** for yunxing artifacts. After review edits land on the working file, push it BACK to the issue body via `gh issue edit <N> --body-file <working-file>` (the SYNC-BACK step in Phase 4/walkthrough).
+- **Issue ref (body source)** — an argument of the form `#<N>`, a bare integer `<N>`, or a GitHub issue URL whose artifact lives in the **issue body** (`yunxing:req` / `yunxing:idea` / `yunxing:pulse`, or any non-plan/solution issue). Run GH PREFLIGHT (below), read the issue body via `gh issue view`, and write the body markdown to a transient working file in the OS temp dir. This is the **primary path** for body-source yunxing artifacts. After review edits land on the working file, push it BACK to the issue body via `gh issue edit <N> --body-file <working-file>` (the SYNC-BACK step in Phase 4/walkthrough).
+- **Issue ref (comment source — plan / solution)** — when the target is a **plan** or **solution**, the artifact is a marker comment on the feature issue (`<!-- yunxing:plan -->` / `<!-- yunxing:solution -->`), not the issue body (the body is the requirement). The caller (e.g., `plan`'s doc-review step) names which stage. Resolve that comment, write its body to the working file, and SYNC-BACK by PATCHing the **same comment** — not the issue body. See "Comment-source read/sync-back" below.
 - **Local path** — an argument that is a filesystem path to a markdown file that is not a yunxing artifact. The working file IS that path; edits write in place, with no SYNC-BACK step.
 
 ### GH PREFLIGHT (issue source only)
@@ -53,6 +54,27 @@ gh issue comment <N> --body-file <notes-file>
 
 The Open-Questions deferral mechanic also operates on the working file; the same `gh issue edit` push-back carries those appended entries to the issue body. See `references/synthesis-and-presentation.md` and `references/walkthrough.md` for exactly when SYNC-BACK fires.
 
+### Comment-source read/sync-back (plan / solution)
+
+When reviewing a **plan** or **solution**, the artifact is a marker comment on the feature issue, so read and write that comment — never the issue body. Substitute the right marker (`<!-- yunxing:plan -->` or `<!-- yunxing:solution -->`).
+
+Read the marker comment into the working file (REST `issues/{N}/comments` returns plain numeric ids; capture the id for SYNC-BACK):
+
+```bash
+gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .id'
+```
+```bash
+gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .body'
+```
+
+SYNC-BACK overwrites that same comment by id (not the issue body):
+
+```bash
+gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<working-file>
+```
+
+Keep the marker line as the first line of the working file so the comment stays discoverable after edits. FYI/residual notes still post as a fresh `gh issue comment <N>` on the feature issue.
+
 ## Interactive mode rules
 
 - **Pre-load the platform question tool before any question fires.** In Claude Code, `AskUserQuestion` is a deferred tool — its schema is not available at session start. At the start of Interactive-mode work (before the routing question, per-finding walk-through questions, bulk-preview Proceed/Cancel, and Phase 5 terminal question), call `ToolSearch` with query `select:AskUserQuestion` to load the schema. Load it once, eagerly, at the top of the Interactive flow — do not wait for the first question site. On Codex, Gemini, and Pi this preload is not required.
@@ -86,7 +108,7 @@ Skill("doc-review", "mode:headless #142")
 Skill("doc-review", "mode:headless /abs/path/to/local-doc.md")
 ```
 
-In headless mode the safe_auto pass still edits the working file. When the source is an issue, the headless run still pushes the edited working file back via `gh issue edit <N> --body-file <working-file>` after the safe_auto pass — silent fixes are durable regardless of interaction model. Non-safe_auto findings are returned as structured text for the caller (no SYNC-BACK is needed for findings the caller hasn't decided on yet).
+In headless mode the safe_auto pass still edits the working file. When the source is an issue, the headless run still pushes the edited working file back after the safe_auto pass — body sources via `gh issue edit <N> --body-file <working-file>`, comment sources (plan/solution) via the comment PATCH in "Comment-source read/sync-back" — silent fixes are durable regardless of interaction model. Non-safe_auto findings are returned as structured text for the caller (no SYNC-BACK is needed for findings the caller hasn't decided on yet).
 
 If `mode:headless` is not present, the skill runs in its default interactive mode with the routing question, walk-through, and bulk-preview behaviors documented in `references/walkthrough.md` and `references/bulk-preview.md`.
 
@@ -103,7 +125,7 @@ gh issue list --label yunxing:req --state open --limit 10
 gh issue list --label yunxing:plan --state open --limit 10
 ```
 
-(Use one `gh issue list` per label; `yunxing:solution`, `yunxing:idea`, and `yunxing:pulse` are also valid artifact labels.)
+(Use one `gh issue list` per label; `yunxing:solution`, `yunxing:idea`, and `yunxing:pulse` are also valid artifact labels. A `yunxing:plan` / `yunxing:solution` label marks a feature issue whose plan/solution lives in a marker comment, not the body.)
 
 **If no source is specified (headless mode):** Output "Review failed: headless mode requires an issue ref or document path. Re-invoke with: Skill(\"doc-review\", \"mode:headless #<N>\") or Skill(\"doc-review\", \"mode:headless <path>\")" without dispatching agents.
 

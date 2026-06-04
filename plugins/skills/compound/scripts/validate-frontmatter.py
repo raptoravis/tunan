@@ -23,8 +23,11 @@ values without raising.
 
 Block extraction: the YAML lives in the first fenced block opened by a line
 whose stripped content is ```yaml (or ``` immediately followed by a `key: value`
-line). For backward compatibility the script also accepts a raw `---`/`---`
-frontmatter pair at the very top of the input.
+line). In the comment-chain storage model a solution comment's first line is the
+marker `<!-- yunxing:solution -->`; a single leading HTML-comment marker line
+(and any blank lines) is skipped before the fence is located. For backward
+compatibility the script also accepts a raw `---`/`---` frontmatter pair at the
+very top of the input.
 
 Checks (regex-based, no YAML parser dependency):
     1. A YAML block is present and properly closed
@@ -55,10 +58,27 @@ def extract_yaml_block(text: str, source: str) -> str:
     """Return the YAML block from an issue body, or exit(2) if none found.
 
     Accepts two shapes:
-      1. A fenced ```yaml (or bare ```) block — the preferred issue-body form.
+      1. A fenced ```yaml (or bare ```) block — the preferred comment/issue-body
+         form. A single leading `<!-- ... -->` marker line (the comment-chain
+         storage marker, e.g. `<!-- yunxing:solution -->`) plus surrounding blank
+         lines is skipped before locating the fence.
       2. A leading `---` / `---` frontmatter pair — backward compatibility.
     """
     lines = text.split("\n")
+
+    # Skip a single leading HTML-comment marker line (comment-chain storage:
+    # the solution comment's first line is `<!-- yunxing:solution -->`), along
+    # with blank lines around it, so the fence/frontmatter that follows is found.
+    marker_re = re.compile(r"^\s*<!--.*-->\s*$")
+    start = 0
+    for idx, line in enumerate(lines):
+        if not line.strip():
+            continue
+        if marker_re.match(line):
+            start = idx + 1
+        break
+    if start:
+        lines = lines[start:]
 
     # Shape 1: fenced ```yaml block (allow leading blank lines before it).
     fence_open = re.compile(r"^\s*```\s*ya?ml\s*$", re.IGNORECASE)
@@ -136,6 +156,18 @@ def main(argv: list[str]) -> int:
             continue
         # Already quoted or structured (block scalar, flow collection)
         if val_stripped[0] in '"\'[{|>':
+            continue
+
+        # Value begins with '#' (e.g. an unquoted `source_issue: #42`) — YAML
+        # reads the whole value as a comment and the key becomes null. This is
+        # the silent-data-loss the comment-chain `source_issue` field is most
+        # prone to, since its value always starts with '#'.
+        if val_stripped.startswith("#"):
+            issues.append(
+                f"line {lineno}: '{key.strip()}' value starts with '#' — quote it "
+                '(e.g. `source_issue: "#42"`). YAML reads a leading # as a comment '
+                "and silently sets the value to null."
+            )
             continue
 
         if re.search(r"\s#", val_stripped):

@@ -1,9 +1,10 @@
 # Plan Sections
 
 This reference describes what makes a great implementation plan. It does NOT
-prescribe how the plan looks on the page — rendering of the plan issue body is
-handled by `markdown-rendering.md`. The plan is stored as a `yunxing:plan`
-GitHub issue whose body is markdown; there is no local plan file.
+prescribe how the plan looks on the page — rendering of the plan comment body is
+handled by `markdown-rendering.md`. The plan is stored as a `<!-- yunxing:plan -->`
+marker comment on the feature (`yunxing:req`) GitHub issue; there is no local plan
+file. See `comment-chain-storage.md` for the storage model.
 
 ## The outcome
 
@@ -66,7 +67,7 @@ vs. genuine skip cases:
 - *"Bump dependency X to v2.3.1"* — mechanical, skip the plan (unless the
   bump introduces breaking changes that warrant unit-by-unit migration).
 
-When skipping the plan issue, the work proceeds directly to `work` or to
+When skipping the plan comment, the work proceeds directly to `work` or to
 implementation, and any decisions made along the way land in the commit
 message or a `yunxing:solution` learning issue if they're worth carrying
 forward.
@@ -162,8 +163,9 @@ The agent also picks per artifact:
 ## Plan metadata fields
 
 Every plan carries a small set of stable metadata fields that downstream
-tooling depends on. These fields appear as a fenced ```yaml block at the very
-top of the plan issue body. Field names and semantics are stable so consumers
+tooling depends on. These fields appear as a fenced ```yaml block immediately
+after the `<!-- yunxing:plan -->` marker line at the top of the plan comment
+body. Field names and semantics are stable so consumers
 can locate them by name.
 
 ### Required
@@ -225,6 +227,6 @@ These apply regardless of rendering format.
 ## Rendering
 
 `references/markdown-rendering.md` describes how to render these sections in
-the plan issue body. This reference (`plan-sections.md`) is about WHAT the
+the plan comment body. This reference (`plan-sections.md`) is about WHAT the
 plan contains; the rendering reference is about HOW the markdown body presents
 it. The plan body is always markdown (a `yunxing:plan` GitHub issue).

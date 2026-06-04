@@ -1,7 +1,7 @@
 ---
 name: plan
-description: "Create structured implementation plans stored as yunxing:plan GitHub issues -- software features and bounded refactors that benefit from breakdown. Also deepens existing plan issues with interactive sub-agent review. Use when the user says 'plan this', 'create a plan', 'how should we build', 'break this down', or when a yunxing:req requirement issue is ready for planning. Use 'deepen the plan' or 'deepening pass' for the deepening flow. For exploratory requests, prefer brainstorm first."
-argument-hint: "[optional: feature description, a yunxing:req issue ref (#N or URL), a plan issue ref to deepen, or any task to plan]"
+description: "Create structured implementation plans stored as plan comments on the feature (yunxing:req) GitHub issue -- software features and bounded refactors that benefit from breakdown. Also deepens existing plan comments with interactive sub-agent review. Use when the user says 'plan this', 'create a plan', 'how should we build', 'break this down', or when a yunxing:req requirement issue is ready for planning. Use 'deepen the plan' or 'deepening pass' for the deepening flow. For exploratory requests, prefer brainstorm first."
+argument-hint: "[optional: feature description, a yunxing:req feature issue ref (#N or URL) to plan or whose plan comment to deepen, or any task to plan]"
 ---
 
 # Create Technical Plan
@@ -10,7 +10,7 @@ argument-hint: "[optional: feature description, a yunxing:req issue ref (#N or U
 
 `brainstorm` defines **WHAT** to build. `plan` defines **HOW** to build it. `work` executes the plan. A prior brainstorm is useful context but never required — `plan` works from any input: a `yunxing:req` requirement issue, a bug report, a feature idea, or a rough description.
 
-**The plan is stored as a GitHub issue labeled `yunxing:plan`, never a local file.** Requirements, plans, solutions, ideas, and reports all live as GitHub issues distinguished by label — `plan` writes the plan to a `yunxing:plan` issue and hands its issue number downstream. There is no local plan file artifact.
+**The plan is stored as a comment on the feature issue (the input `yunxing:req` issue), never a local file.** A feature is one GitHub issue for its lifetime; the plan lands as a comment on it whose first line is the marker `<!-- yunxing:plan -->`, and the feature issue `#N` — not a separate plan number — is handed downstream. There is no local plan file artifact. Read `references/comment-chain-storage.md` for the model and the exact gh recipes.
 
 ## GitHub Storage Preflight
 
@@ -20,7 +20,7 @@ Plans are GitHub issues. Before reading or writing any issue, run this preflight
 2. `gh auth status` exits 0 (else: run `gh auth login`; in Claude Code suggest typing `! gh auth login`).
 3. `gh repo view --json nameWithOwner` resolves (else: a GitHub repo is required to store plans).
 
-Ensure the `yunxing:plan` label exists before creating a plan issue:
+Ensure the `yunxing:plan` label exists before adding it to a feature issue:
 
 ```bash
 gh label list --search "yunxing:plan"
@@ -88,30 +88,36 @@ A plan is ready when an implementer can start confidently without needing the pl
 
 #### 0.0 Plan Storage
 
-The plan is always a `yunxing:plan` GitHub issue rendered in markdown. There is no output-format choice and no local-file artifact. Run the GitHub Storage Preflight (above) before any issue read or write. Read `references/markdown-rendering.md` for the format principles that govern the issue body; it is paired with `references/plan-sections.md`, which describes what the plan contains.
+The plan is always a comment on the feature issue, rendered in markdown with the marker `<!-- yunxing:plan -->` as its first line. There is no output-format choice and no local-file artifact. Run the GitHub Storage Preflight (above) before any issue read or write. Read `references/comment-chain-storage.md` for the comment-chain model and gh recipes, `references/markdown-rendering.md` for the format principles that govern the comment body, and `references/plan-sections.md` for what the plan contains.
 
 **Token-parsing convention:** conventional-commit prefixes like `feat:`, `fix:`, `chore:` that may appear inside a feature description pass through verbatim as part of the description. A leading `#<N>` or an issue URL is parsed as an issue ref per Feature Description above, not as description text.
 
 #### 0.1 Resume Existing Plan Work When Appropriate
 
-If the user passes a `yunxing:plan` issue ref (`#<N>` or URL), or describes work that matches an existing open plan issue:
+If the user passes a feature issue ref (`#<N>` or URL) that already carries a plan comment, or describes work that matches an existing feature issue with a plan comment:
 
-- Read the issue with `gh issue view <N> --json title,body,url,labels`. Locate by topic when no ref was given:
+- Read the plan comment on the feature issue (find it by marker, then read its body):
+
+  ```bash
+  gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .body'
+  ```
+
+  Locate by topic when no ref was given — search feature issues that carry a plan comment (they have the `yunxing:plan` label):
 
   ```bash
   gh issue list --label "yunxing:plan" --search "<terms>" --json number,title,url
   ```
 
-- Confirm whether to overwrite the existing plan issue's body or create a new plan issue.
-- If updating, revise only the still-relevant sections and overwrite the body via `gh issue edit <N> --body-file <tmpfile>`. Plans do not carry per-unit progress state — progress is derived from git by `work`, so there is no progress to preserve across edits.
+- Confirm whether to overwrite the existing plan comment in place or write a new plan onto a different feature issue.
+- If updating, revise only the still-relevant sections and PATCH the plan comment in place by id (find its id, then PATCH — see `references/comment-chain-storage.md`). Plans do not carry per-unit progress state — progress is derived from git by `work`, so there is no progress to preserve across edits.
 
-**Deepen intent:** The word "deepen" (or "deepening") in reference to a plan is the primary trigger for the deepening fast path. When the user says "deepen the plan", "deepen my plan", "run a deepening pass", or similar, the target is a `yunxing:plan` **issue**, not a requirements issue. Use any ref, keyword, or context the user provides to identify the right plan issue (read it via `gh issue view`, or locate it via `gh issue list --label yunxing:plan --search`). If a ref is provided, verify the issue carries the `yunxing:plan` label. If the match is not obvious, confirm with the user before proceeding.
+**Deepen intent:** The word "deepen" (or "deepening") in reference to a plan is the primary trigger for the deepening fast path. When the user says "deepen the plan", "deepen my plan", "run a deepening pass", or similar, the target is the **plan comment** on a feature issue, not a requirements-only issue. Use any ref, keyword, or context the user provides to identify the right feature issue (read its plan comment via `gh api .../comments`, or locate the feature issue via `gh issue list --label yunxing:plan --search`). If a ref is provided, verify the feature issue carries the `yunxing:plan` label (i.e., it already has a plan comment). If the match is not obvious, confirm with the user before proceeding.
 
 Words like "strengthen", "confidence", "gaps", and "rigor" are NOT sufficient on their own to trigger deepening. These words appear in normal editing requests ("strengthen that section about the diagram", "there are gaps in the test scenarios") and should not cause a holistic deepening pass. Only treat them as deepening intent when the request clearly targets the plan as a whole and does not name a specific section or content area to change — and even then, prefer to confirm with the user before entering the deepening flow.
 
-Once the plan issue is identified and appears complete (all major sections present, implementation units defined, `status: active` in the body frontmatter): short-circuit to Phase 5.3 (Confidence Check and Deepening) in **interactive mode**.
+Once the plan comment is identified and appears complete (all major sections present, implementation units defined, `status: active` in the comment frontmatter): short-circuit to Phase 5.3 (Confidence Check and Deepening) in **interactive mode**.
 
-A `yunxing:plan` issue is always a software plan; the non-software universal-planning route (Phase 0.1b) is selected by task classification at fresh-invocation time, never by resuming a plan issue.
+A `yunxing:plan` comment is always a software plan; the non-software universal-planning route (Phase 0.1b) is selected by task classification at fresh-invocation time, never by resuming a plan comment.
 
 The Phase 5.3 short-circuit avoids re-running the full planning workflow and gives the user control over which findings are integrated.
 
@@ -119,7 +125,7 @@ Normal editing requests (e.g., "update the test scenarios", "add a new implement
 
 If the plan body already carries a `deepened: YYYY-MM-DD` frontmatter field and there is no explicit user request to re-deepen, the fast path still applies the same confidence-gap evaluation — it does not force deepening.
 
-**Resume overwrites the plan issue body in place.** When resuming an existing plan issue, the resume run rewrites the same issue's body via `gh issue edit <N> --body-file <tmpfile>` so the issue number is stable downstream. It does not create a new issue.
+**Resume overwrites the plan comment in place.** When resuming an existing plan, the resume run PATCHes the same plan comment by id (find the comment id, then `gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>`) so the feature issue number is stable downstream. It does not create a new comment or a new issue.
 
 #### 0.1b Classify Task Domain
 
@@ -154,7 +160,7 @@ If multiple requirement issues match, ask which one to use using the platform's 
 If a relevant requirement issue exists:
 
 1. Read it thoroughly with `gh issue view <reqN> --json title,body,url,labels`
-2. Announce that it will serve as the origin requirement for planning, and record its number as `<reqN>` for the `Requirement: #<reqN>` body link written at Phase 5.2
+2. Announce that it will serve as the origin requirement for planning. This requirement issue **is** the feature issue the plan comment will be written onto (Phase 5.2); record its number as `<reqN>` / `FEATURE_ISSUE`
 3. Carry forward all of the following:
    - Problem frame
    - Actors (A-IDs), Key Flows (F-IDs), and Acceptance Examples (AE-IDs) when present — preserve these as constraints that implementation units must honor
@@ -167,7 +173,7 @@ If a relevant requirement issue exists:
 5. Reference important carried-forward decisions in the plan with `(see requirement: #<reqN>)`
 6. Do not silently omit source content — if the requirement issue discussed it, the plan must address it even if briefly. Before finalizing, scan each section of the requirement issue body to verify nothing was dropped.
 
-If no relevant requirement issue exists, planning may proceed from the user's request directly (the plan issue is created standalone, with no `Requirement:` link).
+If no relevant requirement issue exists, planning may proceed from the user's request directly. There is still no standalone plan issue: Phase 5.2 creates a host feature issue (a `yunxing:req` requirement stub) and writes the plan comment onto it, preserving "one feature = one issue".
 
 #### 0.4 Planning Bootstrap (No Requirement Issue or Unclear Input)
 
@@ -197,11 +203,11 @@ If the bootstrap reveals that a different workflow would serve the user better:
 - **Bug-shaped prompt** (user describes broken behavior — "fix the bug where X", error message, regression, "doesn't work"). Surface `debug` as a route-out option alongside continuing with `plan` whenever the bug surface is reachable (in cwd OR named repo found at another local path). Stay in `plan` silently when the named code can't be found anywhere local — paper-planning is the only useful output for unreachable surfaces.
 
   **When the bug is at another local path (not cwd):**
-  - Announce the target explicitly **before** any cross-repo investigation: which path will be read AND which GitHub repo the plan issue will be created in (default: the target repo's GitHub repo, resolved by running the GitHub Storage Preflight from that repo, not cwd's).
+  - Announce the target explicitly **before** any cross-repo investigation: which path will be read AND which GitHub repo the feature issue (carrying the plan comment) lives in (default: the target repo's GitHub repo, resolved by running the GitHub Storage Preflight from that repo, not cwd's).
   - Default: proceed from the target repo for both investigation and plan-write. The user can interrupt to redirect (switch context, paper-plan, abandon, etc.). No location menu — the announcement makes the cross-repo nature visible, and the user can speak up if they want something unusual.
   - **After** announcing and proceeding, fire the standard debug routing menu (continue with `plan` vs switch to `debug`) — same shape as the in-cwd case. Cross-repo location and debug skill routing are orthogonal decisions; do not merge them into a single question.
 
-  Reading code at another path is fine in principle — that's just file access. The harm to avoid is silent operation on the wrong repo, especially creating the plan issue in the wrong GitHub repo where it won't be discovered. The announcement requirement makes the target visible; defaulting to the target repo for both investigation and the plan issue respects the user's stated intent (they named that repo); the orthogonal debug menu keeps the skill-choice question clean.
+  Reading code at another path is fine in principle — that's just file access. The harm to avoid is silent operation on the wrong repo, especially writing the plan comment onto a feature issue in the wrong GitHub repo where it won't be discovered. The announcement requirement makes the target visible; defaulting to the target repo for both investigation and the plan comment respects the user's stated intent (they named that repo); the orthogonal debug menu keeps the skill-choice question clean.
 
   The accessibility classification is conservative and may under-suggest in monorepos, dependency bugs, or after renames. Users can always invoke `/yunxing:debug` manually.
 
@@ -305,7 +311,7 @@ Run these agents in parallel:
 - Architectural patterns and conventions to follow
 - Implementation patterns, relevant files, modules, and tests
 - AGENTS.md guidance that materially affects the plan, with CLAUDE.md used only as compatibility fallback when present
-- Institutional learnings from `yunxing:solution` issues (`gh issue list --label yunxing:solution`)
+- Institutional learnings from the solution comments on feature issues that carry the `yunxing:solution` label (`gh issue list --label yunxing:solution`, then read each one's solution comment)
 - Product strategy context when `STRATEGY.md` is present — flag any plan decisions that pull away from the active tracks or the stated approach
 
 **Slack context** (opt-in) — never auto-dispatch. Route by condition:
@@ -465,7 +471,7 @@ Ask the user only when the answer materially affects architecture, scope, sequen
 
 - Draft a clear, searchable topic for the plan, concise (3-5 words) — e.g., "user authentication flow", "checkout race condition".
 - Determine the plan type: `feat`, `fix`, or `refactor`.
-- The plan issue title is `[plan] <topic>` (e.g., `[plan] user authentication flow`). The conventional-commit type is carried in the `type:` frontmatter field of the issue body (see `references/plan-sections.md`), not in the issue title.
+- The feature issue title stays `[req] <topic>` (e.g., `[req] user authentication flow`) — it is not re-prefixed for the plan stage; the plan is a comment on it, and stage progress is read from the `yunxing:plan` label plus the marker comment. The conventional-commit type is carried in the `type:` frontmatter field of the plan comment body (see `references/plan-sections.md`), not in the issue title.
 
 #### 3.2 Stakeholder and Impact Awareness
 
@@ -494,7 +500,7 @@ Each unit carries a stable plan-local **U-ID** assigned in Phase 3.5 (`U1`, `U2`
 
 When the plan's technical approach has shape that prose alone doesn't carry well — architecture across components, sequencing across processes, state machines, branching gates, lifecycles, quantitative comparisons — include a High-Level Technical Design section that conveys the shape. The exact form (component diagram, sequence, swim lane, flowchart, state machine, decision matrix, pseudo-code grammar, bar chart for sizing concerns) is the agent's call per artifact — pick what makes the content land fastest for the reader.
 
-See `references/plan-sections.md` for the section catalog including HTD's "include when material" criterion. See `references/markdown-rendering.md` for how visualizations render in the plan issue body (mermaid in markdown).
+See `references/plan-sections.md` for the section catalog including HTD's "include when material" criterion. See `references/markdown-rendering.md` for how visualizations render in the plan comment body (mermaid in markdown).
 
 When the plan's approach is a one-paragraph pattern application that prose conveys directly, skip the section. The presence of HTD should earn its keep with content that genuinely benefits from visualization.
 
@@ -718,49 +724,56 @@ Then continue to Phase 5.2 without a blocking question.
 
 **Headless mode**: internal draft is composed but stage 2 (chat-time call-outs) is skipped — no synchronous user to confirm to. Proceed to Phase 5.2 plan-write. Inferred bets from the internal draft route to a `## Assumptions` section in the plan instead of Key Technical Decisions. See `references/synthesis-summary.md` Headless mode for the full routing.
 
-#### 5.2 Write Plan Issue
+#### 5.2 Write Plan Comment
 
-**REQUIRED: Create or update the `yunxing:plan` GitHub issue before presenting any options.**
+**REQUIRED: Write or update the plan comment on the feature issue before presenting any options.** The plan is a **comment** on the feature issue, never a new issue. Read `references/comment-chain-storage.md` for the model and the exact gh recipes.
 
-Compose the complete plan body in markdown using the content from `references/plan-sections.md` and the format principles from `references/markdown-rendering.md`. The plan metadata fields (`title`, `type`, `status: active`, `date`, optional `origin`/`deepened`) render as a fenced ```yaml block at the very top of the issue body (see `references/plan-sections.md`).
+Compose the complete plan in markdown using the content from `references/plan-sections.md` and the format principles from `references/markdown-rendering.md`. The artifact's **first line is the marker** `<!-- yunxing:plan -->`; the plan metadata fields (`title`, `type`, `status: active`, `date`, optional `origin`/`deepened`) render as a fenced ```yaml block immediately after the marker, then the sections (see `references/plan-sections.md`). Write this to an OS temp file (bash `${TMPDIR:-/tmp}/yunxing-plan-body.md`, PowerShell `$env:TEMP\yunxing-plan-body.md`).
 
-**Link the source requirement.** When a `yunxing:req` issue was bound (Phase 0.2/0.3), include a line near the top of the body:
+**Resolve the feature issue `#N`:**
 
-```text
-Requirement: #<reqN>
-```
+- **Requirement bound** (Phase 0.2/0.3): the `yunxing:req` issue **is** the feature issue. Use its number.
+- **Resume/deepen** (Phase 0.1): use the feature issue the existing plan comment lives on.
+- **Standalone** (no upstream requirement): create the feature issue first — body = a short requirement stub distilled from the request, then write the plan comment onto it:
 
-Omit the line entirely when planning standalone (no requirement issue).
+  ```bash
+  gh issue create --title "[req] <topic>" --label "yunxing:req" --body-file <req-stub-file>
+  ```
 
-Write the body to an OS temp file (bash `${TMPDIR:-/tmp}/yunxing-plan-body.md`, PowerShell `$env:TEMP\yunxing-plan-body.md`).
-
-**Create** a new plan issue (title `[plan] <topic>` from Phase 3.1):
-
-```bash
-gh issue create --title "[plan] <topic>" --label "yunxing:plan" --body-file <tmpfile>
-```
-
-**Update** an existing plan issue (resume/deepen, from Phase 0.1) by overwriting its body:
+**Write or update the plan comment** (per `references/comment-chain-storage.md` — find the existing plan comment id; PATCH it in place if present, else create and add the label):
 
 ```bash
-gh issue edit <N> --body-file <tmpfile>
+gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .id'
 ```
 
-Before creating, check for an existing matching open `yunxing:plan` issue (`gh issue list --label yunxing:plan --search "<terms>"`) and update it instead of duplicating.
+- **None found** → create the comment and add the stage label:
 
-Capture the resulting issue number/URL as `PLAN_ISSUE` for handoff. Confirm:
+  ```bash
+  gh issue comment <N> --body-file <tmpfile>
+  ```
+  ```bash
+  gh issue edit <N> --add-label "yunxing:plan"
+  ```
+
+- **Exists** (resume/deepen) → update it in place by id:
+
+  ```bash
+  gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>
+  ```
+
+Capture the feature issue number/URL as `FEATURE_ISSUE` for handoff — downstream stages receive `#N`, not a separate plan number. Confirm:
 
 ```text
-Plan issue ready: <plan issue URL>
+Plan comment ready on #<N>: <feature issue URL>
 ```
 
-**Pipeline mode:** If invoked from an automated workflow such as LFG or any `disable-model-invocation` context, skip interactive questions. Make the needed choices automatically and proceed to creating/updating the plan issue.
+**Pipeline mode:** If invoked from an automated workflow such as LFG or any `disable-model-invocation` context, skip interactive questions. Make the needed choices automatically and proceed to writing/updating the plan comment on the feature issue.
 
 **CONCEPTS.md gap-fill (only if the file already exists):** If the plan body uses a domain term whose definition is missing from `CONCEPTS.md`, add the entry. **Domain entities, named processes, and status concepts with project-specific meaning only** — not file paths, class names, function signatures, or implementation decisions. `CONCEPTS.md` is a glossary, not a spec or catch-all. Follow the format set by existing entries. Apply silently. Skip entirely if `CONCEPTS.md` does not exist — creation is owned by compound and compound-refresh.
 
 #### 5.3 Confidence Check and Deepening
 
-After writing the plan file, automatically evaluate whether the plan needs strengthening.
+After writing the plan comment, automatically evaluate whether the plan needs strengthening.
 
 **Two deepening modes:**
 
@@ -811,26 +824,26 @@ When deepening is warranted, read `references/deepening-workflow.md` for confide
 
 ##### 5.3.8–5.4 Document Review, Final Checks, and Post-Generation Options
 
-**STOP. Load `references/plan-handoff.md` now before continuing.** It carries the full instructions for 5.3.8 (document review), 5.3.9 (final checks and cleanup), and 5.4 (post-generation handoff, including the Proof HITL flow and post-HITL re-review). **This load is non-optional** — without it, the agent renders the post-generation menu, captures the user's selection, and stops without firing the routed action. Document review at 5.3.8 runs unconditionally regardless of whether the confidence check already ran. The default mode is headless (`mode:headless`) — `safe_auto` fixes apply silently to the plan issue body, remaining findings surface contextually above the menu, and a deeper interactive review is opt-in via free-form prompt.
+**STOP. Load `references/plan-handoff.md` now before continuing.** It carries the full instructions for 5.3.8 (document review), 5.3.9 (final checks and cleanup), and 5.4 (post-generation handoff, including the Proof HITL flow and post-HITL re-review). **This load is non-optional** — without it, the agent renders the post-generation menu, captures the user's selection, and stops without firing the routed action. Document review at 5.3.8 runs unconditionally regardless of whether the confidence check already ran. The default mode is headless (`mode:headless`) — `safe_auto` fixes apply silently to the plan comment, remaining findings surface contextually above the menu, and a deeper interactive review is opt-in via free-form prompt.
 
 After document review and final checks, print a one-line summary of the headless review state above the menu (e.g., `Doc review applied 3 fixes. 2 decisions, 1 proposed fix, 4 FYI observations remain (1 at P1).`), then present the menu. The menu has 4 options when actionable findings remain (`proposed_fixes_count + decisions_count > 0`) and 3 options otherwise — the FYI-only case hides option 2 because doc-review's walkthrough is gated to actionable findings and would have nothing valid to walk through. See `references/plan-handoff.md` for the full rule. Route the menu through the platform's blocking tool normally (`AskUserQuestion` in Claude Code — call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), with a numbered-list-in-chat fallback when no blocking tool is available or the call errors. Never silently skip the question.
 
-**Question:** "Plan issue ready at `<plan issue URL>`. What would you like to do next?"
+**Question:** "Plan comment ready on `#<N>`: `<feature issue URL>`. What would you like to do next?"
 
 1. **Start `/yunxing:work`** (recommended) - Begin implementing this plan in the current session
 2. **Run deeper doc review** - Walk through the remaining findings interactively (full doc-review walkthrough)
-3. **Open in Proof (web app) — review and comment to iterate with the agent** - Export the plan body to Every's Proof editor, iterate with the agent via comments, then sync edits back to the plan issue.
-4. **Done for now** - Pause; the plan issue is saved and can be resumed later by its issue ref
+3. **Open in Proof (web app) — review and comment to iterate with the agent** - Export the plan body to Every's Proof editor, iterate with the agent via comments, then sync edits back to the plan comment.
+4. **Done for now** - Pause; the plan comment is saved and can be resumed later by the feature issue ref
 
 **Routing.** Act on the user's selection — do not just announce it. Elaborate sub-flows (Proof HITL state machine, post-HITL resync) live in `references/plan-handoff.md`.
 
-- **Start `/yunxing:work`** — Invoke the `work` skill via the platform's skill-invocation primitive (`Skill` in Claude Code, `Skill` in Codex, the equivalent on Gemini/Pi), passing the plan issue ref (`PLAN_ISSUE`, e.g., `#<N>` or its URL) as the skill argument. Do not merely tell the user to type `/yunxing:work` — fire the invocation now so the plan executes in this session.
-- **Run deeper doc review** — Re-invoke the `doc-review` skill on the plan issue ref **without** `mode:headless` so the interactive routing question and walkthrough fire. After it returns (and any body edits are synced back to the issue), re-render this menu with refreshed counts so the user can pick a next-stage action.
-- **Open in Proof (web app) — review and comment to iterate with the agent** — Export the plan issue body to a temp markdown file, load the `proof` skill in HITL-review mode with that file as `source file`, the plan title as `doc title`, identity `ai:yunxing` / `Compound Engineering`, and recommended next step `/yunxing:work`. Then follow the post-HITL resync logic in `references/plan-handoff.md`, which handles the `proof` return statuses, syncs reviewed markdown back to the plan issue body via `gh issue edit`, re-runs `doc-review` after material edits, and falls back gracefully on upload failure.
-- **Done for now** — Display a brief confirmation that the plan issue is saved (show its URL) and end the turn. Do not start follow-up work without an explicit further user prompt.
+- **Start `/yunxing:work`** — Invoke the `work` skill via the platform's skill-invocation primitive (`Skill` in Claude Code, `Skill` in Codex, the equivalent on Gemini/Pi), passing the feature issue ref (`FEATURE_ISSUE`, e.g., `#<N>` or its URL) as the skill argument. Do not merely tell the user to type `/yunxing:work` — fire the invocation now so the plan executes in this session.
+- **Run deeper doc review** — Re-invoke the `doc-review` skill on the feature issue ref **without** `mode:headless` so the interactive routing question and walkthrough fire. After it returns (and any edits are synced back to the plan comment), re-render this menu with refreshed counts so the user can pick a next-stage action.
+- **Open in Proof (web app) — review and comment to iterate with the agent** — Export the plan comment body to a temp markdown file, load the `proof` skill in HITL-review mode with that file as `source file`, the plan title as `doc title`, identity `ai:yunxing` / `Compound Engineering`, and recommended next step `/yunxing:work`. Then follow the post-HITL resync logic in `references/plan-handoff.md`, which handles the `proof` return statuses, syncs reviewed markdown back to the plan comment (PATCH by id), re-runs `doc-review` after material edits, and falls back gracefully on upload failure.
+- **Done for now** — Display a brief confirmation that the plan comment is saved (show the feature issue URL) and end the turn. Do not start follow-up work without an explicit further user prompt.
 
 If the user types free-form prompts targeting the findings (e.g., "review", "walk through", "deep review"), route as if they picked `Run deeper doc review` — fire the skill rather than looping back to the menu. For other free-text revisions, accept the input and loop back to this menu after applying the revision.
 
 **Completion check:** This skill is not complete until the post-generation menu above has been presented, the user has selected an action, and the inline routing for that selection has been executed. Presenting the menu and stopping at the user's selection is not completion — fire the routed action.
 
-**Pipeline mode exception:** In LFG or any `disable-model-invocation` context, skip the interactive menu and return control to the caller (passing the plan issue ref `PLAN_ISSUE`) after the plan issue is created/updated, the confidence check has run, and `doc-review` has run in headless mode (per `references/plan-handoff.md`).
+**Pipeline mode exception:** In LFG or any `disable-model-invocation` context, skip the interactive menu and return control to the caller (passing the feature issue ref `FEATURE_ISSUE`) after the plan comment is created/updated, the confidence check has run, and `doc-review` has run in headless mode (per `references/plan-handoff.md`).

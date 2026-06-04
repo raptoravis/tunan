@@ -1,6 +1,6 @@
 # YAML Frontmatter Schema
 
-A learning is a GitHub issue labeled `yunxing:solution`, titled `[solution] <slug>`. The YAML described here is fenced as a ```yaml block at the top of the issue body. `schema.yaml` in this directory is the canonical contract for that block, written by `compound`.
+A learning is a `yunxing:solution` comment on its feature issue: first line is the marker `<!-- yunxing:solution -->`, then the YAML block described here (fenced as a ```yaml block), then the markdown sections. The feature issue is labeled `yunxing:solution` for cross-feature discovery. `schema.yaml` in this directory is the canonical contract for that block, written by `compound`.
 
 Use this file as the quick reference for:
 - required fields
@@ -20,6 +20,7 @@ The `problem_type` determines which **track** applies. Each track has different 
 
 ## Required Fields (both tracks)
 
+- **source_issue**: The feature issue this solution comment lives on, as `#<N>` — anchors the learning to its host issue in the comment-chain model. Double-quote it (`source_issue: "#42"`) — a bare `#42` reads as a YAML comment and leaves the field null
 - **module**: Module or area affected
 - **date**: ISO date in `YYYY-MM-DD`
 - **problem_type**: One of the values listed in the Tracks table above
@@ -83,7 +84,7 @@ Each learning carries a `category` value in its YAML block — a sub-type slug d
 ## Validation Rules
 
 1. Determine the track from `problem_type` using the Tracks table.
-2. All shared required fields must be present.
+2. All shared required fields must be present, including `source_issue` (must match `#<N>`).
 3. Bug-track required fields (`symptoms`, `root_cause`, `resolution_type`) must be present on bug-track docs.
 4. Knowledge-track docs have no additional required fields beyond the shared ones.
 5. Bug-track fields on existing knowledge-track docs are harmless (see Backward Compatibility).

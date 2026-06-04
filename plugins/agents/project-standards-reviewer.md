@@ -38,7 +38,7 @@ In either case, identify which sections apply to the file types in the diff. A s
 
 - **Writing style violations** -- second person ("you should") where the standards require imperative/objective form. Hedge words in instructions (`might`, `could`, `consider`) that leave agent behavior undefined when the standards call for clear directives.
 
-- **Protected artifact violations** -- findings, suggestions, or instructions that recommend closing, deleting, or otherwise discarding yunxing pipeline artifacts. These durable artifacts live as GitHub issues labeled `yunxing:req`/`yunxing:plan`/`yunxing:solution`, not as files in the tree; treat them as protected.
+- **Protected artifact violations** -- findings, suggestions, or instructions that recommend closing, deleting, or otherwise discarding yunxing pipeline artifacts. These durable artifacts are GitHub issues, not files in the tree: a feature is one `yunxing:req` issue, with its plan and solution as comments on it (markers `<!-- yunxing:plan -->` / `<!-- yunxing:solution -->`, the feature issue accruing the matching label). Treat the feature issues and their comments as protected.
 
 ## Confidence calibration
 

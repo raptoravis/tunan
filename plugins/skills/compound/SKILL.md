@@ -1,6 +1,6 @@
 ---
 name: compound
-description: "Document a recently solved problem as a yunxing:solution GitHub issue to compound your team's knowledge, or update CONCEPTS.md, the project's shared domain vocabulary."
+description: "Document a recently solved problem as a yunxing:solution comment on its feature issue to compound your team's knowledge, or update CONCEPTS.md, the project's shared domain vocabulary."
 argument-hint: "[optional: brief context] [mode:headless] "
 ---
 
@@ -10,7 +10,7 @@ Coordinate multiple subagents working in parallel to document a recently solved 
 
 ## Purpose
 
-Captures problem solutions while context is fresh, creating a structured GitHub issue labeled `yunxing:solution` (titled `[solution] <slug>`) with a fenced ```yaml block at the top of the body for searchability and future reference. Uses parallel subagents for maximum efficiency.
+Captures problem solutions while context is fresh, writing a structured **solution comment** on the **feature issue** the solved problem belongs to — first line `<!-- yunxing:solution -->`, then a fenced ```yaml block for searchability and future reference. The feature issue is also labeled `yunxing:solution` so the comment is discoverable by label across features. Uses parallel subagents for maximum efficiency.
 
 **Why "compound"?** Each documented solution compounds your team's knowledge. The first time you solve a problem takes research. Document it, and the next occurrence takes minutes. Knowledge compounds.
 
@@ -44,9 +44,9 @@ Headless mode is intended for automations and skill-to-skill invocation where no
 
 If the line above resolved to a plain branch name (like `feat/my-branch`), include it in the `sessions` invocation payload in Phase 1 so the orchestrator does not waste a turn deriving it. If it still contains a backtick command string or is empty, omit it and let `sessions` derive it at runtime.
 
-## Storage: yunxing:solution GitHub issues
+## Storage: yunxing:solution comments on the feature issue
 
-Learnings are stored as GitHub issues, never local files. A learning is one issue labeled `yunxing:solution`, titled `[solution] <slug>`, whose body is a fenced ```yaml block (the frontmatter from `references/schema.yaml`) followed by the resolution-template markdown sections. Never write a learning to a local file.
+Learnings are stored on GitHub, never local files. A feature is **one GitHub issue** for its lifetime; the solution lands as a **comment** on that feature issue whose **first line is the marker** `<!-- yunxing:solution -->`, followed by a fenced ```yaml block (the frontmatter from `references/schema.yaml`) and the resolution-template markdown sections. The feature issue is **also labeled `yunxing:solution`** so `gh issue list --label yunxing:solution` still finds every feature that carries a solution — that label is the cheap cross-feature index institutional-learnings search (`learnings-researcher`) relies on. Read `references/comment-chain-storage.md` for the comment-chain model and the exact gh recipes. Never write a learning to a local file.
 
 **GH preflight — run before any issue read or write.** If any check fails, abort and surface the guidance; never fall back to a local file.
 
@@ -54,7 +54,7 @@ Learnings are stored as GitHub issues, never local files. A learning is one issu
 2. `gh auth status` exits 0. If not, run `gh auth login` (in Claude Code, suggest typing `! gh auth login`).
 3. `gh repo view --json nameWithOwner` resolves. If not, a GitHub repo is required.
 
-**Ensure the label exists** before creating or relabeling:
+**Ensure the label exists** before relabeling:
 
 ```bash
 gh label list --search "yunxing:solution"
@@ -66,29 +66,46 @@ If absent:
 gh label create "yunxing:solution" --color 1f883d --description "yunxing solution"
 ```
 
-**Create a learning issue** (markdown body only — no HTML files). Write the body to a temp file, then:
+**Resolve the feature issue `#N`.** The solution comment always lives on the feature issue the solved problem belongs to:
+
+- **Bound** — the solved problem traces back to a `yunxing:req`/`yunxing:plan` feature issue (an explicit `#<N>`/URL input, or the req/plan the work came from). That issue **is** the feature issue.
+- **Standalone** (no upstream feature issue) — create the host feature issue first, then comment on it:
+
+  ```bash
+  gh issue create --title "[req] <topic>" --label "yunxing:req" --body-file <req-stub-file>
+  ```
+
+  The body is a short requirement stub distilled from the problem. This preserves "one feature = one issue": there is never a solution comment without a host issue.
+
+**Write or update the solution comment** (per `references/comment-chain-storage.md` — find the existing solution comment id, PATCH it in place if present, else create and add the label). The comment body's first line is the marker `<!-- yunxing:solution -->`, then the ```yaml block (from the resolution template's frontmatter, including `source_issue: #<N>`) followed by the template's markdown sections.
 
 ```bash
-gh issue create --title "[solution] <slug>" --label "yunxing:solution" --body-file <tmpfile>
+gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:solution -->")) | .id'
 ```
 
-The body is the ```yaml block (from the resolution template's frontmatter) followed by the template's markdown sections. Reference the originating req/plan issue by `#<N>` in the body when known.
+- **None found** → create the comment and add the stage label:
 
-**Find / resume / update a learning issue:**
+  ```bash
+  gh issue comment <N> --body-file <tmpfile>
+  ```
+  ```bash
+  gh issue edit <N> --add-label "yunxing:solution"
+  ```
 
-```bash
-gh issue list --label "yunxing:solution" --search "<terms>" --json number,title,url
-gh issue view <N> --json title,body,url,labels
-gh issue edit <N> --body-file <tmpfile>
-```
+- **Exists** → update it in place by id (do not append a second comment):
 
-Accept an issue ref `#<N>` or full issue URL as input. Before creating, check for an existing matching open `yunxing:solution` issue and update it instead of duplicating.
+  ```bash
+  gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>
+  ```
+
+Accept a feature-issue ref `#<N>` or full issue URL as input. Before creating a new comment, check the feature issue for an existing solution comment and update it instead of duplicating.
 
 ## Support Files
 
 These files are the durable contract for the workflow. Read them on-demand at the step that needs them — do not bulk-load at skill start.
 
-- `references/schema.yaml` — canonical frontmatter fields and enum values for the issue body's ```yaml block (read when validating YAML)
+- `references/comment-chain-storage.md` — the comment-chain storage model and exact gh recipes for writing/updating the solution comment (read before any issue write)
+- `references/schema.yaml` — canonical frontmatter fields and enum values for the solution comment's ```yaml block (read when validating YAML)
 - `references/yaml-schema.md` — category classification from problem_type (read when classifying)
 - `references/concepts-vocabulary.md` — CONCEPTS.md format and inclusion rules (read in Phase 2.4 when domain terms surface)
 - `assets/resolution-template.md` — issue body structure for new learnings (read when assembling)
@@ -131,9 +148,9 @@ If the user says yes, invoke `sessions` in Phase 1 (see step 4). If no, skip it.
 ### Full Mode
 
 <critical_requirement>
-**The primary deliverable is ONE artifact — the final `yunxing:solution` issue.**
+**The primary deliverable is ONE artifact — the final `yunxing:solution` comment on the feature issue.**
 
-Phase 1 subagents return TEXT DATA to the orchestrator. They must NOT use Write, Edit, create files, or create/edit issues. Only the orchestrator creates or edits the issue. Beyond the Phase 2 solution issue, its other writes are local maintenance side effects — not additional deliverables, and creating one when absent is expected, not a violation of this rule:
+Phase 1 subagents return TEXT DATA to the orchestrator. They must NOT use Write, Edit, create files, or create/edit issues or comments. Only the orchestrator writes or PATCHes the solution comment (and creates the host feature issue when standalone). Beyond the Phase 2 solution comment, its other writes are local maintenance side effects — not additional deliverables, and creating one when absent is expected, not a violation of this rule:
 - **`CONCEPTS.md`** — create or update in Phase 2.4 (Vocabulary Capture) when a qualifying domain term surfaces.
 - **A project instruction file** (AGENTS.md or CLAUDE.md) — a small edit when the Discoverability Check finds a gap.
 
@@ -180,8 +197,8 @@ Launch research subagents. Each returns text data to the orchestrator.
      - **Knowledge track**: applies_when (symptoms/root_cause/resolution_type optional)
    - Incorporates auto memory excerpts (if provided by the orchestrator) as supplementary evidence
    - Reads `references/yaml-schema.md` for category classification from problem_type
-   - Suggests an issue title slug using the pattern `[solution] <sanitized-problem-slug>` — no date suffix; the `date:` frontmatter field is the canonical creation date
-   - Returns: YAML frontmatter skeleton (must include `category:` field mapped from problem_type), category slug, suggested title slug, and which track applies
+   - Suggests a learning slug using the pattern `<sanitized-problem-slug>` (used for the `title:` frontmatter field and overlap matching — no date suffix; the `date:` frontmatter field is the canonical creation date). This names the learning, not the host issue (the feature issue keeps its own `[req]` title).
+   - Returns: YAML frontmatter skeleton (must include `category:` field mapped from problem_type and `source_issue: #<N>` once the feature issue is resolved), category slug, suggested learning slug, and which track applies
    - Does not invent enum values, categories, or frontmatter fields from memory; reads the schema and mapping files above
    - Does not force bug-track fields onto knowledge-track learnings or vice versa
 
@@ -208,8 +225,9 @@ Launch research subagents. Each returns text data to the orchestrator.
    - **Examples**: Concrete before/after or usage examples showing the practice in action
 
 #### 3. **Related Docs Finder**
-   - Searches existing `yunxing:solution` issues for related learnings (`gh issue list --label "yunxing:solution" --search "<terms>"`)
-   - Identifies cross-references and links (by `#<N>` issue references)
+   - **Same feature issue first:** if the feature issue `#N` is known, check whether it already carries a solution comment (`gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:solution -->")) | .body'`). An existing solution comment on the same feature is the highest-overlap candidate — it is updated in place rather than duplicated.
+   - **Cross-feature by label:** searches features that carry a solution for related learnings (`gh issue list --label "yunxing:solution" --search "<terms>"`), then reads each candidate's solution comment via the `gh api ... /comments` find recipe above
+   - Identifies cross-references and links (by `#<N>` feature-issue references)
    - Finds related GitHub issues
    - Flags any related learning issue that may now be stale, contradicted, or overly broad
    - **Assesses overlap** with the new learning being created across five dimensions: problem statement, root cause, solution approach, referenced files, and prevention rules. Score as:
@@ -221,11 +239,11 @@ Launch research subagents. Each returns text data to the orchestrator.
    **Search strategy (issue-list filtering for efficiency):**
 
    1. Extract keywords from the problem context: module names, technical terms, error messages, component types
-   2. List candidate learning issues with `gh issue list --label "yunxing:solution" --search "<keywords>" --state all --json number,title,url --limit 25`. Run a few keyword variants if needed
+   2. List candidate feature issues carrying a solution with `gh issue list --label "yunxing:solution" --search "<keywords>" --state all --json number,title,url --limit 25`. Run a few keyword variants if needed
    3. If the list returns >25 candidates, re-run with more specific keywords. If <3, broaden the keywords
-   4. Read only the frontmatter ```yaml block of candidate issues (`gh issue view <N> --json body` then inspect the top fence) to score relevance
+   4. Read only the frontmatter ```yaml block of each candidate's solution comment (`gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:solution -->")) | .body'` then inspect the top fence after the marker line) to score relevance
    5. Fully read only strong/moderate matches
-   6. Return distilled links (`#<N>` refs / URLs) and relationships, not raw issue bodies
+   6. Return distilled links (`#<N>` feature-issue refs / URLs) and relationships, not raw comment bodies
 
    **Related non-learning issues:**
 
@@ -270,24 +288,24 @@ The orchestrating agent (main conversation) performs these steps:
 
    | Overlap | Action |
    |---------|--------|
-   | **High** — existing learning issue covers the same problem, root cause, and solution | **Update the existing issue** with fresher context (new code examples, updated references, additional prevention tips) via `gh issue edit <N> --body-file <tmpfile>` rather than creating a duplicate. The existing issue's number and structure stay the same. |
-   | **Moderate** — same problem area but different angle, root cause, or solution | **Create the new issue** normally. Flag the overlap for Phase 2.5 to recommend consolidation review. |
-   | **Low or none** | **Create the new issue** normally. |
+   | **High** — existing solution comment covers the same problem, root cause, and solution | **Update the existing solution comment** with fresher context (new code examples, updated references, additional prevention tips) by PATCHing it in place (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>`) rather than writing a duplicate. The comment's host feature issue stays the same. |
+   | **Moderate** — same problem area but different angle, root cause, or solution | **Write the new solution comment** normally (on its own feature issue). Flag the overlap for Phase 2.5 to recommend consolidation review. |
+   | **Low or none** | **Write the new solution comment** normally. |
 
-   The reason to update rather than create: two learnings describing the same problem and solution will inevitably drift apart. The newer context is fresher and more trustworthy, so fold it into the existing issue rather than creating a second one that immediately needs consolidation.
+   The reason to update rather than create: two learnings describing the same problem and solution will inevitably drift apart. The newer context is fresher and more trustworthy, so fold it into the existing comment rather than writing a second one that immediately needs consolidation.
 
-   When updating an existing issue, preserve its number and frontmatter structure. Update the solution, code examples, prevention tips, and any stale references. Add a `last_updated: YYYY-MM-DD` field to the ```yaml block. Do not change the title unless the problem framing has materially shifted.
+   When updating an existing solution comment, preserve its marker line and frontmatter structure. Update the solution, code examples, prevention tips, and any stale references. Add a `last_updated: YYYY-MM-DD` field to the ```yaml block.
 
 3. **Incorporate session history findings** (if available). When `sessions` returned relevant prior-session context:
    - Fold investigation dead ends and failed approaches into the **What Didn't Work** section (bug track) or **Context** section (knowledge track)
    - Use cross-session patterns to enrich the **Prevention** or **Why This Matters** sections
    - Tag session-sourced content with "(session history)" so its origin is clear to future readers
    - If findings are thin or "no relevant prior sessions," proceed without session context
-4. Assemble the complete issue body from the collected pieces: a fenced ```yaml block (the frontmatter) at the top, then the markdown sections — reading `assets/resolution-template.md` for the structure of new learnings. Write the body to a temp file.
+4. Assemble the complete comment body from the collected pieces: the marker line `<!-- yunxing:solution -->` as the first line, then a fenced ```yaml block (the frontmatter, including `source_issue: #<N>`), then the markdown sections — reading `assets/resolution-template.md` for the structure of new learnings. Write the body to a temp file.
 5. Validate the YAML block against `references/schema.yaml`, including the YAML-safety quoting rule for array items (see `references/yaml-schema.md` > YAML Safety Rules)
-6. Run the GH preflight (see "Storage: yunxing:solution GitHub issues") and ensure the `yunxing:solution` label exists
-7. Create or update the issue: for a new learning, `gh issue create --title "[solution] <slug>" --label "yunxing:solution" --body-file <tmpfile>`; for a high-overlap update, `gh issue edit <N> --body-file <tmpfile>` on the existing issue
-8. **Run the parser-safety validator on the body file** — `python3 scripts/validate-frontmatter.py <body-file>` (macOS/Linux) or `python scripts/validate-frontmatter.py <body-file>` (Windows). It extracts the top ```yaml block and catches silent-corruption parser-safety issues the prose rules miss: unquoted ` #` in scalar values (silent comment truncation) and unquoted `: ` in scalar values (silent mapping confusion). Exit 0 means parser-safe; exit 1 means stderr names the offending field(s) — quote the value(s), rebuild the body, and re-run until exit 0 **before** creating/editing the issue. Do not declare success while validation fails. The script does not enforce schema rules and does not flag YAML reserved-indicator characters (those produce loud parser errors downstream rather than silent corruption — out of scope). Uses Python 3 stdlib only (no PyYAML or other deps).
+6. Run the GH preflight (see "Storage: yunxing:solution comments on the feature issue") and ensure the `yunxing:solution` label exists
+7. Resolve the feature issue `#N` (bound, or standalone-create per the Storage section), then write or update the solution comment per `references/comment-chain-storage.md`: for a new learning, `gh issue comment <N> --body-file <tmpfile>` then `gh issue edit <N> --add-label "yunxing:solution"`; for a high-overlap update, find the existing comment id and `gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>`
+8. **Run the parser-safety validator on the body file** — `python3 scripts/validate-frontmatter.py <body-file>` (macOS/Linux) or `python scripts/validate-frontmatter.py <body-file>` (Windows). It skips the leading marker line, extracts the top ```yaml block, and catches silent-corruption parser-safety issues the prose rules miss: unquoted ` #` in scalar values (silent comment truncation) and unquoted `: ` in scalar values (silent mapping confusion). Exit 0 means parser-safe; exit 1 means stderr names the offending field(s) — quote the value(s), rebuild the body, and re-run until exit 0 **before** writing/PATCHing the comment. Do not declare success while validation fails. The script does not enforce schema rules and does not flag YAML reserved-indicator characters (those produce loud parser errors downstream rather than silent corruption — out of scope). Uses Python 3 stdlib only (no PyYAML or other deps).
 
 When creating a new learning, preserve the section order from `assets/resolution-template.md` unless the user explicitly asks for a different structure.
 
@@ -363,12 +381,12 @@ Always capture the new learning first. Refresh is a targeted maintenance follow-
 
 ### Discoverability Check
 
-After the learning is written and the refresh decision is made, check whether the project's instruction files would lead an agent to discover and search the project's `yunxing:solution` GitHub issues before starting work in a documented area. This runs every time — the knowledge store only compounds value when agents can find it.
+After the learning is written and the refresh decision is made, check whether the project's instruction files would lead an agent to discover and search the project's `yunxing:solution` learnings before starting work in a documented area. Learnings are comments (first line `<!-- yunxing:solution -->`) on feature issues that carry the `yunxing:solution` label, so the label list still indexes every feature that has one. This runs every time — the knowledge store only compounds value when agents can find it.
 
 1. Identify which root-level instruction files exist (AGENTS.md, CLAUDE.md, or both). Read the file(s) and determine which holds the substantive content — one file may just be a shim that `@`-includes the other (e.g., `CLAUDE.md` containing only `@AGENTS.md`, or vice versa). The substantive file is the assessment and edit target; ignore shims. If neither file exists, skip this check entirely.
 2. Assess whether an agent reading the instruction files would learn three things:
-   - That a searchable knowledge store of documented solutions exists as GitHub issues labeled `yunxing:solution`
-   - Enough about its structure to search effectively (the label, and the YAML fields like `category`, `module`, `tags`, `problem_type` in each issue body)
+   - That a searchable knowledge store of documented solutions exists as `yunxing:solution` comments on feature issues labeled `yunxing:solution`
+   - Enough about its structure to search effectively (the label finds the feature issues; each carries a solution comment with a YAML block holding fields like `category`, `module`, `tags`, `problem_type`)
    - When to search it (before implementing features, debugging issues, or making decisions in documented areas — learnings may cover bugs, best practices, workflow patterns, or other institutional knowledge)
 
    This is a semantic assessment, not a string match. The information could be a line in an architecture section, a bullet in a gotchas section, spread across multiple places, or expressed without ever using the exact label `yunxing:solution`. Use judgment — if an agent would reasonably discover and use the knowledge store after reading the file, the check passes.
@@ -384,14 +402,14 @@ After the learning is written and the refresh decision is made, check whether th
 
       When there's an existing conventions or architecture section — add a line:
       ```
-      Solved-problem learnings live as GitHub issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each with a YAML block carrying category, module, tags, problem_type — search with `gh issue list --label "yunxing:solution" --search "<terms>"`.
+      Solved-problem learnings live as `yunxing:solution` comments on feature issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each comment's YAML block carrying category, module, tags, problem_type — find features with `gh issue list --label "yunxing:solution" --search "<terms>"`, then read the issue's `<!-- yunxing:solution -->` comment.
       ```
 
       When nothing in the file is a natural fit — a small headed section is appropriate:
       ```
       ## Documented Solutions
 
-      Solved-problem learnings live as GitHub issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each with a YAML block carrying `category`, `module`, `tags`, `problem_type`. Search with `gh issue list --label "yunxing:solution" --search "<terms>"`. Relevant when implementing or debugging in documented areas.
+      Solved-problem learnings live as `yunxing:solution` comments on feature issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each comment's YAML block carrying `category`, `module`, `tags`, `problem_type`. Find features with `gh issue list --label "yunxing:solution" --search "<terms>"`, then read the issue's `<!-- yunxing:solution -->` comment. Relevant when implementing or debugging in documented areas.
       ```
    c. In full interactive mode, explain to the user why this matters — agents working in this repo (including fresh sessions, other tools, or collaborators without the plugin) won't know to check the `yunxing:solution` issues unless the instruction file surfaces them. Show the proposed change and where it would go, then use the platform's blocking question tool to get consent before making the edit: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to presenting the proposal in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. In lightweight mode, output a one-liner note and move on. In headless mode, apply the edit directly without prompting and surface it in the terminal report under "Instruction-file edit"
 
@@ -436,8 +454,8 @@ The orchestrator (main conversation) performs ALL of the following in one sequen
 
 1. **Extract from conversation**: Identify the problem and solution from conversation history. Also scan the "user's auto-memory" block injected into your system prompt, if present (Claude Code only) -- use any relevant notes as supplementary context alongside conversation history. Tag any memory-sourced content incorporated into the final learning with "(auto memory [claude])"
 2. **Classify**: Read `references/schema.yaml` and `references/yaml-schema.md`, then determine track (bug vs knowledge), category, and title slug
-3. **Create the learning issue**: Run the GH preflight (see "Storage: yunxing:solution GitHub issues"), ensure the `yunxing:solution` label exists, build the issue body using the appropriate track template from `assets/resolution-template.md`, then `gh issue create --title "[solution] <slug>" --label "yunxing:solution" --body-file <tmpfile>`. The body has:
-   - A fenced ```yaml block with track-appropriate fields, applying the YAML-safety quoting rule for array items (see `references/yaml-schema.md` > YAML Safety Rules)
+3. **Write the solution comment**: Run the GH preflight (see "Storage: yunxing:solution comments on the feature issue"), ensure the `yunxing:solution` label exists, resolve the feature issue `#N` (bound, or standalone-create per the Storage section), build the comment body using the appropriate track template from `assets/resolution-template.md`, then write it per `references/comment-chain-storage.md` (`gh issue comment <N> --body-file <tmpfile>` + `gh issue edit <N> --add-label "yunxing:solution"`, or PATCH an existing solution comment in place). The body has:
+   - The marker line `<!-- yunxing:solution -->` as its first line, then a fenced ```yaml block with track-appropriate fields (including `source_issue: #<N>`), applying the YAML-safety quoting rule for array items (see `references/yaml-schema.md` > YAML Safety Rules)
    - Bug track: Problem, root cause, solution with key code snippets, one prevention tip
    - Knowledge track: Context, guidance with key examples, one applicability note
 4. **Vocabulary capture (update-only)**: if `CONCEPTS.md` exists at repo root, read `references/concepts-vocabulary.md`, then scan the new learning and the conversation for qualifying terms and add/refine entries silently (same criteria as Phase 2.4). Do **not** bootstrap or seed in lightweight mode — if `CONCEPTS.md` does not exist, defer creation to a Full run, which owns seeding. Record the outcome in the output (e.g., "Vocabulary: 1 entry refined" or "scanned, no qualifying terms"). If you refined `CONCEPTS.md` and a quick read of `AGENTS.md`/`CLAUDE.md` shows it isn't surfaced there, add the discoverability tip to the output below — lightweight **tips**, it does not edit instruction files (a Full run owns that edit).
@@ -447,8 +465,8 @@ The orchestrator (main conversation) performs ALL of the following in one sequen
 ```
 ✓ Documentation complete (lightweight mode)
 
-Issue created:
-- #<N> [solution] <slug>  (<url>)
+Solution comment written on feature issue:
+- #<N> <feature title>  (<comment url>)
 
 [If discoverability check found instruction files don't surface the knowledge store:]
 Tip: Your AGENTS.md/CLAUDE.md doesn't surface the yunxing:solution issues to
@@ -463,9 +481,9 @@ Note: This was created in lightweight mode. For richer documentation
 re-run /yunxing:compound in a fresh session.
 ```
 
-**No subagents are launched. No parallel tasks. The solution issue is the one deliverable** (Phase 2.4's update-only vocabulary capture may also refine an existing `CONCEPTS.md`).
+**No subagents are launched. No parallel tasks. The solution comment is the one deliverable** (Phase 2.4's update-only vocabulary capture may also refine an existing `CONCEPTS.md`).
 
-In lightweight mode, the overlap check is skipped (no Related Docs Finder subagent). This means lightweight mode may create an issue that overlaps with an existing one. That is acceptable — `compound-refresh` will catch it later. Only suggest `compound-refresh` if there is an obvious narrow refresh target. Do not broaden into a large refresh sweep from a lightweight session.
+In lightweight mode, the overlap check is skipped (no Related Docs Finder subagent). This means lightweight mode may write a solution comment that overlaps with an existing one. That is acceptable — `compound-refresh` will catch it later. Only suggest `compound-refresh` if there is an obvious narrow refresh target. Do not broaden into a large refresh sweep from a lightweight session.
 
 ---
 
@@ -494,7 +512,7 @@ In lightweight mode, the overlap check is skipped (no Related Docs Finder subage
 
 ## What It Creates
 
-**One GitHub issue labeled `yunxing:solution`**, titled `[solution] <slug>`, whose body is a fenced ```yaml block followed by the resolution-template markdown sections. Never a local file.
+**One `yunxing:solution` comment on the feature issue** — first line `<!-- yunxing:solution -->`, then a fenced ```yaml block followed by the resolution-template markdown sections; the feature issue is labeled `yunxing:solution` for cross-feature discovery. Never a local file.
 
 **Category (a `category` slug in the YAML block, auto-detected from problem):**
 
@@ -523,11 +541,12 @@ Knowledge track:
 
 | ❌ Wrong | ✅ Correct |
 |----------|-----------|
-| Subagents write files or create/edit issues | Subagents return text data; orchestrator creates/edits the one issue |
-| Writing a learning to a local file | One GitHub issue labeled `yunxing:solution` |
+| Subagents write files or create/edit issues/comments | Subagents return text data; orchestrator writes/PATCHes the one solution comment |
+| Writing a learning to a local file | One `yunxing:solution` comment on the feature issue |
+| Creating a standalone `[solution]` issue | A solution comment on the feature issue (host req issue created first when standalone) |
 | Research and assembly run in parallel | Research completes → then assembly runs |
-| Multiple artifacts created during workflow | One solution issue created or updated (plus optional local maintenance writes: a `CONCEPTS.md` create/update from Phase 2.4 and a small instruction-file edit for discoverability) |
-| Creating a new issue when an existing issue covers the same problem | Check overlap assessment; update the existing issue when overlap is high |
+| Multiple artifacts created during workflow | One solution comment written or updated (plus optional local maintenance writes: a `CONCEPTS.md` create/update from Phase 2.4 and a small instruction-file edit for discoverability) |
+| Writing a new comment when an existing solution comment covers the same problem | Check overlap assessment; PATCH the existing comment in place when overlap is high |
 
 ## Success Output
 
@@ -538,10 +557,10 @@ Emit a structured terminal report and end the turn. No "What's next?" question, 
 ```
 ✓ Documentation complete (headless mode)
 
-Issue: #<N> [solution] <slug>  (<url>)  (created | updated)
+Solution comment: on #<N> <feature title>  (<comment url>)  (written | updated)
 Track: <bug | knowledge>
 Category: <category>
-Overlap: <none | low | moderate — see #<N> | high — existing issue updated>
+Overlap: <none | low | moderate — see #<N> | high — existing comment updated>
 Instruction-file edit: <none needed | applied to <path> | gap noted, not applied>
 CONCEPTS.md: <scanned, no qualifying terms | created with N entries (M seeded from the learning's area) | updated — N added, N refined>
 Refresh recommendation: <none | scope hint for /yunxing:compound-refresh>
@@ -578,7 +597,7 @@ Specialized Agent Reviews (Auto-Triggered):
   ✓ yunxing:code-simplicity-reviewer: Solution is appropriately minimal
 
 Written:
-- Issue #42 [solution] n-plus-one-brief-generation (created) — https://github.com/<owner>/<repo>/issues/42
+- Solution comment on #42 N+1 brief generation (written) — https://github.com/<owner>/<repo>/issues/42#issuecomment-<id>
 - CONCEPTS.md (created with 3 entries: BriefSystem, EmailQueue, Brief Status)
 
 This learning will be searchable for future reference when similar
@@ -594,17 +613,17 @@ What's next?
 
 **After displaying the interactive success output above, present the "What's next?" options using the platform's blocking question tool:** `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to numbered options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. Do not continue the workflow or end the turn without the user's selection. (Interactive mode only — headless skips this per the headless block above.)
 
-**Alternate interactive output (when updating an existing issue due to high overlap):** in headless mode, this case is communicated via the `Overlap: high — existing issue updated` line of the headless terminal report above, not as a separate output block.
+**Alternate interactive output (when updating an existing solution comment due to high overlap):** in headless mode, this case is communicated via the `Overlap: high — existing comment updated` line of the headless terminal report above, not as a separate output block.
 
 ```
-✓ Documentation updated (existing issue refreshed with current context)
+✓ Documentation updated (existing solution comment refreshed with current context)
 
-Overlap detected: #37 [solution] n-plus-one-queries
+Overlap detected: solution comment on #37 N+1 queries
   Matched dimensions: problem statement, root cause, solution, referenced files
-  Action: Updated existing issue with fresher code examples and prevention tips
+  Action: PATCHed existing comment with fresher code examples and prevention tips
 
-Issue updated:
-- #37 [solution] n-plus-one-queries (added last_updated: 2026-03-24)
+Comment updated:
+- on #37 N+1 queries (added last_updated: 2026-03-24)
 ```
 
 ## The Compounding Philosophy
@@ -612,7 +631,7 @@ Issue updated:
 This creates a compounding knowledge system:
 
 1. First time you solve "N+1 query in brief generation" → Research (30 min)
-2. Document the solution → a `yunxing:solution` issue (5 min)
+2. Document the solution → a `yunxing:solution` comment on the feature issue (5 min)
 3. Next time similar issue occurs → Quick lookup (2 min)
 4. Knowledge compounds → Team gets smarter
 
@@ -634,7 +653,7 @@ Build → Test → Find Issue → Research → Improve → Document → Validate
 
 ## Output
 
-Creates (or updates) the final learning as a GitHub issue labeled `yunxing:solution`.
+Creates (or updates) the final learning as a `yunxing:solution` comment on the feature issue (which is labeled `yunxing:solution`).
 
 ## Applicable Specialized Agents
 

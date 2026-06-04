@@ -1,7 +1,7 @@
 ---
 name: work
 description: Execute work efficiently while maintaining quality and finishing features
-argument-hint: "[yunxing:plan issue ref (#N or URL) or description of work. Blank to auto-pick the latest yunxing:plan issue]"
+argument-hint: "[feature issue ref (#N or URL) carrying a plan comment, or description of work. Blank to auto-pick the latest open yunxing:plan feature issue]"
 ---
 
 # Work Execution Command
@@ -10,9 +10,9 @@ Execute work efficiently while maintaining quality and finishing features.
 
 ## Introduction
 
-This command takes a work source — a `yunxing:plan` GitHub issue (a plan/specification stored as an issue body) or a bare prompt describing the work — and executes it systematically. The focus is on **shipping complete features** by understanding requirements quickly, following existing patterns, and maintaining quality throughout.
+This command takes a work source — a **feature issue** carrying a plan comment (the `<!-- yunxing:plan -->` marker comment on the feature issue `#N`) or a bare prompt describing the work — and executes it systematically. The focus is on **shipping complete features** by understanding requirements quickly, following existing patterns, and maintaining quality throughout.
 
-Durable per-item artifacts are GitHub issues distinguished by label, not local files. The plan that drives execution is a `yunxing:plan` issue; on shipping, the hand-off to `compound` produces a `yunxing:solution` issue. Pass and link issues by NUMBER/URL and `#<N>` references — never read or write a plan/solution as a local file.
+A feature is **one GitHub issue** for its lifetime: the requirement is the issue body, and the plan lands as a **comment** on that same feature issue (marker `<!-- yunxing:plan -->`, label `yunxing:plan`). There are no separate plan or solution issues. The feature issue `#N` is the durable handle passed across the pipeline; on shipping, the hand-off to `compound` adds a `yunxing:solution` comment to the **same** feature issue. Pass and link by feature issue NUMBER/URL and `#<N>` references — never read or write a plan/solution as a local file. Read `references/comment-chain-storage.md` for the model and the exact gh recipes.
 
 ## Interaction Method
 
@@ -28,7 +28,7 @@ At any point where work asks the user to choose among options (e.g., the branch-
 
 Determine how to proceed based on what was provided in `<input_document>`.
 
-**Plan issue** (input is a `yunxing:plan` issue ref — `#N`, a number, or an issue URL) → run the GH preflight below, then skip to Phase 1.
+**Feature issue** (input is a feature issue ref — `#N`, a number, or an issue URL — carrying a plan comment) → run the GH preflight below, then skip to Phase 1.
 
 **Bare prompt** (input is a description of work, not an issue ref):
 
@@ -64,14 +64,20 @@ Determine how to proceed based on what was provided in `<input_document>`.
 
 1. **Read Plan and Clarify** _(skip if arriving from Phase 0 with a bare prompt)_
 
-   - Read the plan issue completely. Run the GH preflight (see Phase 0) first, then read the issue body:
+   - Read the feature issue completely. Run the GH preflight (see Phase 0) first. Read the feature issue body for the requirement context:
 
      ```bash
-     gh issue view <N> --json title,body,url,labels
+     gh issue view <N>
      ```
 
-     The plan body is markdown and carries the same section names and IDs as before; section-finding works the same way (substring match on section names). Confirm the issue carries the `yunxing:plan` label before treating it as the work source.
-   - When auto-detecting the latest plan (blank invocation), list open `yunxing:plan` issues and pick the most recent:
+     Then read the plan comment on the same feature issue (the comment whose first line is the `<!-- yunxing:plan -->` marker):
+
+     ```bash
+     gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .body'
+     ```
+
+     The plan comment body is markdown and carries the same section names and IDs as before; section-finding works the same way (substring match on section names). Confirm the feature issue carries the `yunxing:plan` label before treating it as the work source.
+   - When auto-detecting the latest plan (blank invocation), list open feature issues carrying the `yunxing:plan` label and pick the most recent:
 
      ```bash
      gh issue list --label "yunxing:plan" --state open --json number,title,url,updatedAt
@@ -86,7 +92,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    - If anything is unclear or ambiguous, ask clarifying questions now
    - If clarifying questions were needed above, get user approval on the resolved answers. If no clarifications were needed, proceed without a separate approval step — plan scope is the plan's authority, not something to renegotiate
    - **Do not skip this** - better to ask questions now than build the wrong thing
-   - **Do not rewrite the plan issue body during execution.** The plan is a decision artifact; progress lives in git commits and the task tracker. As work progresses, status or notes may be posted back to the plan issue with `gh issue comment <N>` (not by overwriting the body). The only body change during work is the final status flip at shipping (see `references/shipping-workflow.md` Phase 4 Step 2). Plan bodies may contain `- [ ]` / `- [x]` marks on unit headings — ignore them as state; per-unit completion is determined during execution by reading the current code/test state.
+   - **Do not modify the plan comment during execution.** The plan is a decision artifact; progress lives in git commits and the task tracker. As work progresses, status or notes may be posted back as a fresh comment on the feature issue with `gh issue comment <N>` (not by editing the plan comment). The only plan-comment change during work is the final status update at shipping (see `references/shipping-workflow.md` Phase 4 Step 2). Plan comments may contain `- [ ]` / `- [x]` marks on unit headings — ignore them as state; per-unit completion is determined during execution by reading the current code/test state.
 
 2. **Setup Environment**
 
@@ -178,7 +184,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    - **Other platforms** without built-in worktree isolation (e.g., Codex `spawn_agent`, Pi `subagent`): subagents share the orchestrator's directory.
 
    **Subagent dispatch** uses your available subagent or task spawning mechanism. For each unit, give the subagent:
-   - The plan issue ref (`#<N>`/URL) and the relevant plan body content (for overall context)
+   - The feature issue ref (`#<N>`/URL) and the relevant plan comment content (for overall context)
    - The specific unit's Goal, Files, Approach, Execution note, Patterns, Test scenarios, and Verification
    - Any resolved deferred questions relevant to that unit
    - Instruction to check whether the unit's test scenarios cover all applicable categories (happy paths, edge cases, error paths, integration) and supplement gaps before writing tests
@@ -194,7 +200,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    1. Review the subagent's diff — verify changes match the unit's scope and `Files:` list
    2. Run the relevant test suite to confirm the tree is healthy
    3. If tests fail, diagnose and fix before proceeding — do not dispatch dependent units on a broken tree
-   4. Update the task list (do not edit the plan issue body — progress is carried by the commit)
+   4. Update the task list (do not edit the plan comment — progress is carried by the commit)
    5. Dispatch the next unit
 
    **After all parallel subagents in a batch complete (worktree-isolated mode):**
@@ -214,7 +220,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    2. Cross-check for discovered file collisions: compare the actual files modified by all subagents in the batch (not just their declared `Files:` lists). Subagents may create or modify files not anticipated during planning — this is expected, since plans describe *what* not *how*. A collision only matters when 2+ subagents in the same batch modified the same file. In a shared working directory, only the last writer's version survives — the other unit's changes to that file are lost. If a collision is detected: commit all non-colliding files from all units first, then re-run the affected units serially for the shared file so each builds on the other's committed work
    3. For each completed unit, in dependency order: review the diff, run the relevant test suite, stage only that unit's files, and commit with a conventional message derived from the unit's Goal
    4. If tests fail after committing a unit's changes, diagnose and fix before committing the next unit
-   5. Update the task list (do not edit the plan issue body — progress is carried by the commits just made)
+   5. Update the task list (do not edit the plan comment — progress is carried by the commits just made)
    6. Dispatch the next batch of independent units, or the next dependent unit
 
 ### Phase 2: Execute

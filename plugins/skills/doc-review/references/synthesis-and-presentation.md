@@ -361,11 +361,11 @@ This rule prevents two failure modes: (1) regressions where a fix didn't actuall
 
 ### Protected Artifacts
 
-During synthesis, discard any finding that recommends deleting or removing the durable yunxing artifacts these issues represent — issues labeled:
+During synthesis, discard any finding that recommends deleting or removing the durable yunxing artifacts these labels mark:
 
-- `yunxing:req`
-- `yunxing:plan`
-- `yunxing:solution`
+- `yunxing:req` — the feature issue body
+- `yunxing:plan` — the `<!-- yunxing:plan -->` marker comment on the feature issue
+- `yunxing:solution` — the `<!-- yunxing:solution -->` marker comment on the feature issue
 - `yunxing:idea`
 - `yunxing:pulse`
 

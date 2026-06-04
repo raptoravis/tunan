@@ -1,16 +1,16 @@
 ---
 name: compound-refresh
-description: "Refresh stale learning issues labeled yunxing:solution by reviewing them against the current codebase, then updating, consolidating, or closing drifted ones. Use when the user asks to refresh my learnings, audit yunxing:solution issues, clean up stale learnings, or consolidate overlapping learnings, or when compound flags an older learning as superseded. Do not trigger for general refactor, debugging, or code-review work unless the user has explicitly pointed at the yunxing:solution issues."
+description: "Refresh stale yunxing:solution learning comments (stored on feature issues labeled yunxing:solution) by reviewing them against the current codebase, then updating, consolidating, or removing drifted ones. Use when the user asks to refresh my learnings, audit yunxing:solution learnings, clean up stale learnings, or consolidate overlapping learnings, or when compound flags an older learning as superseded. Do not trigger for general refactor, debugging, or code-review work unless the user has explicitly pointed at the yunxing:solution learnings."
 argument-hint: "[optional: scope hint — directory, filename, module, or keyword] [mode:headless] "
 ---
 
 # Compound Refresh
 
-Maintain the quality of the project's `yunxing:solution` learning issues over time. This workflow reviews existing learning issues against the current codebase, then refreshes any related learnings that depend on them.
+Maintain the quality of the project's `yunxing:solution` learnings over time. This workflow reviews existing learning comments against the current codebase, then refreshes any related learnings that depend on them.
 
-## Storage: yunxing:solution GitHub issues
+## Storage: yunxing:solution comments on feature issues
 
-Learnings are GitHub issues, never local files. Each learning is one issue labeled `yunxing:solution`, titled `[solution] <slug>`, whose body is a fenced ```yaml block (the frontmatter from `references/schema.yaml`) followed by markdown sections. This skill reads, edits, and closes those issues — it never reads or writes any local learning file.
+Learnings live on GitHub, never local files. Each learning is a **comment** on a feature issue — first line `<!-- yunxing:solution -->`, then a fenced ```yaml block (the frontmatter from `references/schema.yaml`) followed by markdown sections. The host feature issue carries the `yunxing:solution` label so `gh issue list --label yunxing:solution` still indexes every feature that has a learning. This skill reads, PATCHes, and deletes those **comments** (and adjusts the host issue's label when its last solution comment goes away) — it never reads or writes any local learning file. Read `references/comment-chain-storage.md` for the comment-chain model and the exact gh recipes.
 
 **GH preflight — run before any issue read or write.** If any check fails, abort and surface the guidance; never fall back to a local file.
 
@@ -18,22 +18,26 @@ Learnings are GitHub issues, never local files. Each learning is one issue label
 2. `gh auth status` exits 0. If not, run `gh auth login` (in Claude Code, suggest typing `! gh auth login`).
 3. `gh repo view --json nameWithOwner` resolves. If not, a GitHub repo is required.
 
-**Core gh operations:**
+**Core gh operations** (the feature issue `#N` carries the label; its solution lives in a comment):
 
 ```bash
+# Find feature issues carrying a learning
 gh issue list --label "yunxing:solution" --state open --json number,title,url,labels
-gh issue view <N> --json title,body,url,labels
-gh issue edit <N> --body-file <tmpfile>
-gh issue close <N> --comment "<reason>"
+# Read the solution comment on a feature issue (id + body)
+gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:solution -->")) | {id, body}'
+# Update a solution comment in place by its comment id
+gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>
+# Remove a solution comment entirely
+gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE
 ```
 
 **Action → gh mapping:**
 
-- **Keep** — no write (optionally `gh issue edit` only if already editing for another reason).
-- **Update** — `gh issue edit <N> --body-file <tmpfile>` with the corrected body.
-- **Consolidate** — merge unique content into the canonical issue (`gh issue edit`), then close the subsumed issue (`gh issue close <N> --comment "consolidated into #<canonical>"`).
-- **Replace** — write the successor body and overwrite the issue body via `gh issue edit <N> --body-file <tmpfile>` (same issue number, fresh content). When evidence is insufficient, mark stale instead (set `status: stale`, `stale_reason`, `stale_date` in the YAML block via `gh issue edit`).
-- **Delete** — there is no hard delete; "delete/archive" = `gh issue close <N> --comment "<reason>"`. Git/issue history preserves the body. A reopen (`gh issue reopen <N>`) recovers it if needed.
+- **Keep** — no write (optionally PATCH the comment only if already editing for another reason).
+- **Update** — PATCH the solution comment with the corrected body (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>`).
+- **Consolidate** — merge unique content into the canonical learning's comment (PATCH), then remove the subsumed learning's comment (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE`); if that was the host feature issue's only solution comment, drop the now-orphaned label with `gh issue edit <N> --remove-label "yunxing:solution"`.
+- **Replace** — write the successor body and PATCH the same comment in place (same comment, fresh content). When evidence is insufficient, mark stale instead (set `status: stale`, `stale_reason`, `stale_date` in the YAML block and PATCH).
+- **Delete** — remove the solution comment (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE`); if it was the host feature issue's only solution comment, also drop the label (`gh issue edit <N> --remove-label "yunxing:solution"`). The feature issue itself stays open (its req/plan still live there); only the learning comment is removed. Deleting a comment is permanent, so prefer Consolidate or stale-marking when in doubt.
 
 ## Mode Detection
 
@@ -42,14 +46,14 @@ Check if `$ARGUMENTS` contains `mode:headless`. If present, strip it from argume
 | Mode | When | Behavior |
 |------|------|----------|
 | **Interactive** (default) | User is present and can answer questions | Ask for decisions on ambiguous cases, confirm actions |
-| **Headless** | `mode:headless` in arguments | No user interaction. Apply all unambiguous actions (Keep, Update, Consolidate, auto-Close, Replace with sufficient evidence). Mark ambiguous cases as stale. Generate a summary report at the end. |
+| **Headless** | `mode:headless` in arguments | No user interaction. Apply all unambiguous actions (Keep, Update, Consolidate, auto-Delete, Replace with sufficient evidence). Mark ambiguous cases as stale. Generate a summary report at the end. |
 
 ### Headless mode rules
 
 - **Skip all user questions.** Never pause for input.
-- **Process all learning issues in scope.** No scope narrowing questions — if no scope hint was provided, process everything.
-- **Attempt all safe actions:** Keep (no-op), Update (fix references via `gh issue edit`), Consolidate (merge then close the subsumed issue), auto-Close (unambiguous Delete criteria met → `gh issue close`), Replace (when evidence is sufficient → `gh issue edit` the body). If a write succeeds, record it as **applied**. If a write fails (e.g., gh not authed, permission denied), record the action as **recommended** in the report and continue — do not stop or ask for permissions.
-- **Mark as stale when uncertain.** If classification is genuinely ambiguous (Update vs Replace vs Consolidate vs Delete) or Replace evidence is insufficient, mark as stale by setting `status: stale`, `stale_reason`, and `stale_date` in the issue body's YAML block via `gh issue edit`. If even the stale-marking write fails, include it as a recommendation.
+- **Process all learnings in scope.** No scope narrowing questions — if no scope hint was provided, process everything.
+- **Attempt all safe actions:** Keep (no-op), Update (PATCH the solution comment), Consolidate (merge then delete the subsumed comment), auto-Delete (unambiguous Delete criteria met → DELETE the comment, drop the label if it was the last one), Replace (when evidence is sufficient → PATCH the comment body). If a write succeeds, record it as **applied**. If a write fails (e.g., gh not authed, permission denied), record the action as **recommended** in the report and continue — do not stop or ask for permissions.
+- **Mark as stale when uncertain.** If classification is genuinely ambiguous (Update vs Replace vs Consolidate vs Delete) or Replace evidence is insufficient, mark as stale by setting `status: stale`, `stale_reason`, and `stale_date` in the solution comment's YAML block and PATCHing it. If even the stale-marking write fails, include it as a recommendation.
 - **Use conservative confidence.** In interactive mode, borderline cases get a user question. In headless mode, borderline cases get marked stale. Err toward stale-marking over incorrect action.
 - **Always generate a report.** The report is the primary deliverable. It has two sections: **Applied** (actions that were successfully written) and **Recommended** (actions that could not be written, with full rationale so a human can apply them or run the skill interactively). The report structure is the same regardless of what permissions were granted — the only difference is which section each action lands in.
 
@@ -101,10 +105,10 @@ For each candidate artifact, classify it into one of five outcomes:
 | Outcome | Meaning | Default action |
 |---------|---------|----------------|
 | **Keep** | Still accurate and still useful | No edit by default; report that it was reviewed and remains trustworthy |
-| **Update** | Core solution is still correct, but references drifted | Apply evidence-backed edits to the issue body (`gh issue edit`) |
-| **Consolidate** | Two or more issues overlap heavily but are both correct | Merge unique content into the canonical issue, close the subsumed issue |
-| **Replace** | The old learning is now misleading, but there is a known better replacement | Overwrite the issue body with a trustworthy successor (`gh issue edit`) |
-| **Delete** | No longer useful, applicable, or distinct | Close the issue (`gh issue close`) — issue history preserves it; reopen recovers it |
+| **Update** | Core solution is still correct, but references drifted | Apply evidence-backed edits to the solution comment (PATCH it) |
+| **Consolidate** | Two or more learnings overlap heavily but are both correct | Merge unique content into the canonical learning's comment, delete the subsumed comment |
+| **Replace** | The old learning is now misleading, but there is a known better replacement | Overwrite the solution comment body with a trustworthy successor (PATCH it) |
+| **Delete** | No longer useful, applicable, or distinct | Delete the solution comment (drop the host label if it was the last one); the feature issue stays open |
 
 ## Core Rules
 
@@ -119,17 +123,19 @@ For each candidate artifact, classify it into one of five outcomes:
    - the user has provided enough concrete replacement context to document the successor honestly, or
    - the codebase investigation found the current approach and can document it as the successor, or
    - newer learning issues, PRs, or other issues provide strong successor evidence.
-8. **Delete (close) when the code is gone, and only after checking for inbound links.** If the referenced code, controller, or workflow no longer exists in the codebase and no successor can be found, close the issue — don't default to Keep just because the general advice is still "sound." When in doubt between Keep and Delete, ask the user (in interactive mode) or mark as stale (in headless mode). Inbound links inform classification, not cleanup: cleanup is always mechanical, but **decorative** citations (principle stated inline) allow Delete, while **substantive** citations (citing learning relies on the cited learning) signal Replace. The auto-close case is missing code, no matching successor, and citations absent or decorative.
-9. **Evaluate document-set design, not just accuracy.** In addition to checking whether each learning is accurate, evaluate whether it is still the right unit of knowledge. If two or more learnings overlap heavily, determine whether they should remain separate, be cross-scoped more clearly, or be consolidated into one canonical learning. Redundant learnings are dangerous because they drift silently — two issues saying the same thing will eventually say different things.
-10. **Close, don't archive.** When a learning is no longer useful, close its issue with a comment naming the reason. The closed issue is the archive — reopen recovers it. Do not invent an "archived" label or a local archive directory; closed-issue history already preserves everything. Find recently closed learnings with `gh issue list --label "yunxing:solution" --state closed`.
+8. **Delete (remove the comment) when the code is gone, and only after checking for inbound links.** If the referenced code, controller, or workflow no longer exists in the codebase and no successor can be found, delete the solution comment — don't default to Keep just because the general advice is still "sound." When in doubt between Keep and Delete, ask the user (in interactive mode) or mark as stale (in headless mode). Inbound links inform classification, not cleanup: cleanup is always mechanical, but **decorative** citations (principle stated inline) allow Delete, while **substantive** citations (citing learning relies on the cited learning) signal Replace. The auto-delete case is missing code, no matching successor, and citations absent or decorative.
+9. **Evaluate document-set design, not just accuracy.** In addition to checking whether each learning is accurate, evaluate whether it is still the right unit of knowledge. If two or more learnings overlap heavily, determine whether they should remain separate, be cross-scoped more clearly, or be consolidated into one canonical learning. Redundant learnings are dangerous because they drift silently — two learnings saying the same thing will eventually say different things.
+10. **Prefer Consolidate or stale-marking over hard Delete.** Deleting a comment is permanent (GitHub keeps no comment-level undo). When a learning is no longer useful, delete its comment with a clear rationale recorded in the report; if it has any unique content, Consolidate it into the canonical learning first. Do not invent an "archived" label or a local archive directory. If the deleted comment was the host feature issue's only solution, drop the `yunxing:solution` label from that issue (`gh issue edit <N> --remove-label "yunxing:solution"`) so the cross-feature index stays accurate.
 
 ## Scope Selection
 
-Start by discovering open learning issues after running the GH preflight:
+Start by discovering open feature issues that carry a learning, after running the GH preflight:
 
 ```bash
 gh issue list --label "yunxing:solution" --state open --json number,title,url,labels --limit 200
 ```
+
+Each result is a **feature issue**; its learning lives in the `<!-- yunxing:solution -->` comment, read per the Core gh operations above.
 
 **Legacy local learning files:** if pre-migration local learning files exist in the repo, note them in the report as legacy content that should be migrated into `yunxing:solution` issues (or deleted once migrated). Do not treat them as candidates for this workflow; this skill operates only on issues.
 
@@ -169,7 +175,7 @@ Before asking the user to classify anything:
 
 When scope is broad (9+ candidate issues), do a lightweight triage before deep investigation:
 
-1. **Inventory** — read the YAML block of all candidate issues (`gh issue view <N> --json body`), group by module/component/category
+1. **Inventory** — read the YAML block of each candidate's solution comment (the `gh api ... /comments` read recipe above), group by module/component/category
 2. **Impact clustering** — identify areas with the densest clusters of learnings. A cluster of 7 learnings covering the same module is higher-impact than 7 isolated single-issue areas, because staleness in one is likely to affect the others.
 3. **Spot-check drift** — for each cluster, check whether the primary referenced files still exist. Missing references in a high-impact cluster = strongest signal for where to start.
 4. **Recommend a starting area** — present the highest-impact cluster with a brief rationale and ask the user to confirm or redirect. In headless mode, skip the question and process all clusters in impact order.
@@ -191,7 +197,7 @@ Do not ask action-selection questions yet. First gather evidence.
 
 ## Phase 1: Investigate Candidate Learnings
 
-For each learning issue in scope, read its body (`gh issue view <N> --json title,body,url,labels`), cross-reference its claims against the current codebase, and form a recommendation.
+For each learning in scope, read its solution comment (`gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:solution -->")) | {id, body}'` — keep the comment id for later PATCH/DELETE), cross-reference its claims against the current codebase, and form a recommendation.
 
 A learning has several dimensions that can independently go stale. Surface-level checks catch the obvious drift, but staleness often hides deeper:
 
@@ -261,7 +267,7 @@ Detect "older narrow precursor, newer canonical doc" patterns:
 - An older doc describes a specific incident that a newer doc generalizes into a pattern
 - Two docs recommend the same fix but the newer one has better context, examples, or scope
 
-When a newer learning clearly subsumes an older one, the older issue is a consolidation candidate — its unique content (if any) should be merged into the newer issue's body, and the older issue should be closed.
+When a newer learning clearly subsumes an older one, the older learning is a consolidation candidate — its unique content (if any) should be merged into the newer learning's comment, and the older comment should be deleted.
 
 ### Canonical Doc Identification
 
@@ -273,8 +279,8 @@ For each topic cluster (docs sharing a problem domain), identify which doc is th
 
 All other learnings in the cluster are either:
 - **Distinct** — they cover a meaningfully different sub-problem and have independent retrieval value. Keep them separate.
-- **Subsumed** — their unique content fits as a section in the canonical issue. Consolidate.
-- **Redundant** — they add nothing the canonical issue doesn't already say. Delete (close).
+- **Subsumed** — their unique content fits as a section in the canonical learning's comment. Consolidate.
+- **Redundant** — they add nothing the canonical learning doesn't already say. Delete (remove the comment).
 
 ### Retrieval-Value Test
 
@@ -315,10 +321,10 @@ Use subagents for context isolation when investigating multiple artifacts — no
 
 There are two subagent roles:
 
-1. **Investigation subagents** — read-only. They must not edit files, edit issues, create successors, or close anything. Each returns: issue number, evidence, recommended action, confidence, and open questions. The orchestrator passes each subagent the issue body it already fetched (subagents do not call `gh`). These can run in parallel when artifacts are independent.
-2. **Replacement subagents** — write a single new learning body to replace a stale one. These run **one at a time, sequentially** (each replacement subagent may need to read significant code, and running multiple in parallel risks context exhaustion). They return body text only; the orchestrator applies it via `gh issue edit` and handles all closes/metadata updates after each replacement completes.
+1. **Investigation subagents** — read-only. They must not edit files, edit issues or comments, create successors, or delete anything. Each returns: feature issue number, solution comment id, evidence, recommended action, confidence, and open questions. The orchestrator passes each subagent the solution comment body it already fetched (subagents do not call `gh`). These can run in parallel when artifacts are independent.
+2. **Replacement subagents** — write a single new learning body to replace a stale one. These run **one at a time, sequentially** (each replacement subagent may need to read significant code, and running multiple in parallel risks context exhaustion). They return body text only; the orchestrator PATCHes the comment with it and handles all deletes/metadata updates after each replacement completes.
 
-The orchestrator merges investigation results, detects contradictions, coordinates replacement subagents, and performs all `gh` issue edits/closes centrally (subagents never call `gh`). In interactive mode, it asks the user questions on ambiguous cases. In headless mode, it marks ambiguous cases as stale instead. If two artifacts overlap or discuss the same root issue, investigate them together rather than parallelizing.
+The orchestrator merges investigation results, detects contradictions, coordinates replacement subagents, and performs all comment PATCH/DELETE writes centrally (subagents never call `gh`). In interactive mode, it asks the user questions on ambiguous cases. In headless mode, it marks ambiguous cases as stale instead. If two artifacts overlap or discuss the same root issue, investigate them together rather than parallelizing.
 
 ## Phase 2: Classify the Right Maintenance Action
 
@@ -326,21 +332,21 @@ After gathering evidence, assign one recommended action.
 
 ### Keep
 
-The learning is still accurate and useful. Do not edit the issue — report that it was reviewed and remains trustworthy. Only add `last_refreshed` to the YAML block if you are already making a meaningful update for another reason.
+The learning is still accurate and useful. Do not edit the comment — report that it was reviewed and remains trustworthy. Only add `last_refreshed` to the YAML block if you are already making a meaningful update for another reason.
 
 ### Update
 
-The core solution is still valid but references have drifted (paths, class names, links, code snippets, metadata). Apply the fixes directly via `gh issue edit`.
+The core solution is still valid but references have drifted (paths, class names, links, code snippets, metadata). Apply the fixes directly by PATCHing the solution comment.
 
 ### Consolidate
 
-Choose **Consolidate** when Phase 1.75 identified learning issues that overlap heavily but are both materially correct. This is different from Update (which fixes drift in a single issue) and Replace (which rewrites misleading guidance). Consolidate handles the "both right, one subsumes the other" case.
+Choose **Consolidate** when Phase 1.75 identified learnings that overlap heavily but are both materially correct. This is different from Update (which fixes drift in a single comment) and Replace (which rewrites misleading guidance). Consolidate handles the "both right, one subsumes the other" case.
 
 **When to consolidate:**
 
 - Two issues describe the same problem and recommend the same (or compatible) solution
 - One issue is a narrow precursor and a newer issue covers the same ground more broadly
-- The unique content from the subsumed issue can fit as a section or addendum in the canonical issue
+- The unique content from the subsumed learning can fit as a section or addendum in the canonical learning's comment
 - Keeping both creates drift risk without meaningful retrieval benefit
 
 **When NOT to consolidate** (apply the Retrieval-Value Test from Phase 1.75):
@@ -348,9 +354,9 @@ Choose **Consolidate** when Phase 1.75 identified learning issues that overlap h
 - The issues cover genuinely different sub-problems that someone would search for independently
 - Merging would create an unwieldy issue that harms navigation more than drift risk harms accuracy
 
-**Consolidate vs Delete:** If the subsumed issue has unique content worth preserving (edge cases, alternative approaches, extra prevention rules), use Consolidate to merge that content first. If the subsumed issue adds nothing the canonical issue doesn't already say, skip straight to Delete.
+**Consolidate vs Delete:** If the subsumed learning has unique content worth preserving (edge cases, alternative approaches, extra prevention rules), use Consolidate to merge that content first. If the subsumed learning adds nothing the canonical learning doesn't already say, skip straight to Delete.
 
-The Consolidate action is: merge unique content from the subsumed issue into the canonical issue's body (`gh issue edit`), then close the subsumed issue (`gh issue close <N> --comment "consolidated into #<canonical>"`). Not archive — close. Issue history preserves it.
+The Consolidate action is: merge unique content from the subsumed learning into the canonical learning's comment (PATCH it), then delete the subsumed comment (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE`). If the subsumed comment was its host feature issue's only solution, drop that issue's `yunxing:solution` label. The canonical learning may note `consolidated from #<subsumed>` in its body for traceability.
 
 ### Replace
 
@@ -364,7 +370,7 @@ By the time you identify a Replace candidate, Phase 1 investigation has already 
 
 - **Sufficient evidence** — you understand both what the old learning recommended AND what the current approach is. The investigation found the current code patterns, the new file locations, the changed architecture. → Proceed to write the replacement (see Phase 4 Replace Flow).
 - **Insufficient evidence** — the drift is so fundamental that you cannot confidently document the current approach. The entire subsystem was replaced, or the new architecture is too complex to understand from a file scan alone. → Mark as stale in place:
-   - Set `status: stale`, `stale_reason: [what you found]`, `stale_date: YYYY-MM-DD` in the issue body's YAML block via `gh issue edit`
+   - Set `status: stale`, `stale_reason: [what you found]`, `stale_date: YYYY-MM-DD` in the solution comment's YAML block and PATCH it
    - Report what evidence you found and what is missing
    - Recommend the user run `compound` after their next encounter with that area, when they have fresh problem-solving context
 
@@ -374,10 +380,10 @@ Choose **Delete** when:
 
 - The code or workflow no longer exists and the problem domain is gone
 - The learning is obsolete and has no modern replacement worth documenting
-- The learning is fully redundant with another issue (use Consolidate if there is unique content to merge first)
+- The learning is fully redundant with another learning (use Consolidate if there is unique content to merge first)
 - There is no meaningful successor evidence suggesting it should be replaced instead
 
-Action: close the issue (`gh issue close <N> --comment "<reason>"`). No archival label, no archive directory — just close it. Issue history preserves the body, and `gh issue reopen <N>` recovers it if needed.
+Action: delete the solution comment (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE`), then drop the host feature issue's `yunxing:solution` label if that comment was its only solution. The feature issue itself stays open — its req/plan comments still live there. Deletion is permanent (no comment-level reopen), so record the rationale in the report; when unsure, prefer Consolidate or stale-marking.
 
 ### Before deleting: check if the problem domain is still active
 
@@ -390,10 +396,10 @@ Do not search mechanically for keywords from the old learning. Instead, understa
 
 ### Before deleting: check for inbound links
 
-A learning that other artifacts cite is load-bearing in a way the learning itself does not announce. Before classifying as Delete, search for citations of the issue:
+A learning that other artifacts cite is load-bearing in a way the learning itself does not announce. Before classifying as Delete, search for citations of the learning (by its host feature issue `#<N>` or its title slug):
 
-- Other learning issues referencing it by `#<N>`: `gh issue list --label "yunxing:solution" --search "#<N>"` (also try the title slug as a search term).
-- The repo's markdown content (plans, instruction files, READMEs) referencing the issue number or title slug — use the platform's native content-search tool (e.g., Grep in Claude Code). Read context lines around each match (e.g., Grep's `-B`/`-A`), not whole files.
+- Other learnings referencing it by `#<N>`: `gh issue list --label "yunxing:solution" --search "#<N>"` (also try the title slug as a search term).
+- The repo's markdown content (plans, instruction files, READMEs) referencing the feature issue number or title slug — use the platform's native content-search tool (e.g., Grep in Claude Code). Read context lines around each match (e.g., Grep's `-B`/`-A`), not whole files.
 
 Skip source code, where citations are rare and only appear in comments.
 
@@ -401,19 +407,19 @@ Skip source code, where citations are rare and only appear in comments.
 
 Classify each citation by what it does in its citing context:
 
-- **Decorative** — principle stated inline, citation is a "see also" pointer or bare attribution. Delete (close) is fine; clean up citations in the same pass.
-- **Substantive** — citing artifact relies on the cited learning to provide content not stated inline (e.g., "see #N for details on Y" with no inline Y). Signal Replace — overwrite the same issue's body with a successor, or **Keep with narrowed scope** if the learning's actual content is broader than its title implies.
+- **Decorative** — principle stated inline, citation is a "see also" pointer or bare attribution. Delete (remove the comment) is fine; clean up citations in the same pass.
+- **Substantive** — citing artifact relies on the cited learning to provide content not stated inline (e.g., "see #N for details on Y" with no inline Y). Signal Replace — overwrite the same comment's body with a successor, or **Keep with narrowed scope** if the learning's actual content is broader than its title implies.
 - **Mixed or unclear** — stale-mark.
 
-In headless mode, Delete (close) + decorative cleanup is fine. Any substantive citation, or any genuine ambiguity, downgrades to stale-marking — writing a Replace successor is judgment-heavy and should not happen unattended.
+In headless mode, Delete (remove the comment) + decorative cleanup is fine. Any substantive citation, or any genuine ambiguity, downgrades to stale-marking — writing a Replace successor is judgment-heavy and should not happen unattended.
 
-**Auto-close only when all three hold:**
+**Auto-delete only when all three hold:**
 
 - The implementation is gone (or fully superseded by a clearly better successor, or the learning is plainly redundant).
 - The problem domain is gone — the app no longer deals with what the learning addresses.
 - Inbound links are absent or unambiguously decorative.
 
-If any condition fails, classify as Replace, Update, Consolidate, or stale-mark per the rules above. Do not close a learning whose problem domain is still active or whose principles are cited substantively — fill the gap with a replacement instead.
+If any condition fails, classify as Replace, Update, Consolidate, or stale-mark per the rules above. Do not delete a learning whose problem domain is still active or whose principles are cited substantively — fill the gap with a replacement instead.
 
 ## Pattern Guidance
 
@@ -440,8 +446,8 @@ Apply the same five outcomes (Keep, Update, Consolidate, Replace, Delete) to pat
 Most Updates and Consolidations should be applied directly without asking. Only ask the user when:
 
 - The right action is genuinely ambiguous (Update vs Replace vs Consolidate vs Delete)
-- You are about to Delete (close) a learning **and** the evidence is not unambiguous (see auto-close criteria in Phase 2). When auto-close criteria are met, proceed without asking.
-- You are about to Consolidate and the choice of canonical issue is not clear-cut
+- You are about to Delete (remove the comment) a learning **and** the evidence is not unambiguous (see auto-delete criteria in Phase 2). When auto-delete criteria are met, proceed without asking.
+- You are about to Consolidate and the choice of canonical learning is not clear-cut
 - You are about to create a successor via Replace
 
 Do **not** ask questions about whether code changes were intentional, whether the user wants to fix bugs in the code, or other concerns outside learning maintenance. Stay in your lane — learning accuracy.
@@ -490,14 +496,14 @@ For several learnings:
 2. Group obvious **Update** cases together when the fixes are straightforward
 3. Present **Consolidate** cases together when the canonical issue is clear
 4. Present **Replace** cases individually or in very small groups
-5. Present **Delete** cases individually unless they are strong auto-close candidates
+5. Present **Delete** cases individually unless they are strong auto-delete candidates
 
 Ask for confirmation in stages:
 
 1. Confirm grouped Keep/Update recommendations
 2. Then handle Consolidate groups (present the canonical issue and what gets merged)
 3. Then handle Replace one at a time
-4. Then handle Delete one at a time unless the close is unambiguous and safe to auto-apply
+4. Then handle Delete one at a time unless the removal is unambiguous and safe to auto-apply
 
 #### Broad Scope
 
@@ -514,11 +520,11 @@ Do not front-load the user with a full maintenance queue.
 
 For each candidate, execute the flow that matches its classification from Phase 2 (confirmed in Phase 3). Read `references/per-action-flows.md` and follow the matching section:
 
-- **Keep** — no issue edit by default; summarize why the learning remains trustworthy.
-- **Update** — edit the issue body (`gh issue edit`) when the solution is still substantively correct (path renames, link refreshes, module renames).
-- **Consolidate** — merge overlapping issues into a canonical issue, close subsumed issues, update cross-references. The orchestrator handles consolidation directly.
-- **Replace** — author a successor body via subagent (passing the documentation contract files), validate the YAML block, then overwrite the same issue's body via `gh issue edit`. When evidence is insufficient, mark stale instead.
-- **Delete** — final inbound-link check, then close the issue. Reclassify if late-discovered substantive citations surface.
+- **Keep** — no comment edit by default; summarize why the learning remains trustworthy.
+- **Update** — PATCH the solution comment when the solution is still substantively correct (path renames, link refreshes, module renames).
+- **Consolidate** — merge overlapping learnings into a canonical comment, delete subsumed comments (drop the host label when a comment was the last solution), update cross-references. The orchestrator handles consolidation directly.
+- **Replace** — author a successor body via subagent (passing the documentation contract files), validate the YAML block, then overwrite the same comment via PATCH. When evidence is insufficient, mark stale instead.
+- **Delete** — final inbound-link check, then delete the comment (drop the host label when it was the last solution). Reclassify if late-discovered substantive citations surface.
 
 Only one flow runs per candidate; the reference contains the per-action criteria, examples, and step-by-step instructions.
 
@@ -574,7 +580,7 @@ Then for EVERY learning issue processed, list:
 - The classification (Keep/Update/Consolidate/Replace/Delete/Stale)
 - What evidence was found -- tag any memory-sourced findings with "(auto memory [claude])" to distinguish them from codebase-sourced evidence
 - What action was taken (or recommended)
-- For Consolidate: which issue was canonical, what unique content was merged, which issue was closed
+- For Consolidate: which learning was canonical, what unique content was merged, which comment was deleted
 
 For **Keep** outcomes, list them under a reviewed-without-edits section so the result is visible without creating churn.
 
@@ -585,11 +591,11 @@ In headless mode, the report is the sole deliverable — there is no user presen
 Split actions into two sections:
 
 **Applied** (writes that succeeded):
-- For each **Updated** issue: the issue ref, what references were fixed, and why
-- For each **Consolidated** cluster: the canonical issue, what unique content was merged from each subsumed issue, and the subsumed issues that were closed
-- For each **Replaced** issue: what the old learning recommended vs what the current code does, and the issue ref whose body was overwritten
-- For each **Deleted** issue: the issue ref and why it was closed (problem domain gone, fully redundant, etc.)
-- For each **Marked stale** issue: the issue ref, what evidence was found, and why it was ambiguous
+- For each **Updated** learning: the feature issue ref, what references were fixed, and why
+- For each **Consolidated** cluster: the canonical learning, what unique content was merged from each subsumed learning, and the subsumed comments that were deleted
+- For each **Replaced** learning: what the old learning recommended vs what the current code does, and the feature issue ref whose comment was overwritten
+- For each **Deleted** learning: the feature issue ref and why the comment was removed (problem domain gone, fully redundant, etc.)
+- For each **Marked stale** learning: the feature issue ref, what evidence was found, and why it was ambiguous
 
 **Recommended** (actions that could not be written — e.g., gh not authed, permission denied):
 - Same detail as above, but framed as recommendations for a human to apply
@@ -647,27 +653,27 @@ First, run `git branch --show-current` to determine the current branch. Then pre
 ### Commit message
 
 Write a descriptive commit message that:
-- Summarizes the local changes committed (e.g., "add 2 CONCEPTS.md entries; surface yunxing:solution issues in AGENTS.md") and references the issue maintenance done this run (e.g., "refreshed 6 yunxing:solution issues")
+- Summarizes the local changes committed (e.g., "add 2 CONCEPTS.md entries; surface yunxing:solution learnings in AGENTS.md") and references the learning maintenance done this run (e.g., "refreshed 6 yunxing:solution learnings")
 - Follows the repo's existing commit conventions (check recent git log for style)
-- Is succinct — the issue-side details live in the report and the issues themselves
+- Is succinct — the learning-side details live in the report and the comments themselves
 
 ## Relationship to compound
 
-- `compound` captures a newly solved, verified problem as a `yunxing:solution` issue
-- `compound-refresh` maintains older learning issues as the codebase evolves — both their individual accuracy and their collective design as a knowledge set
+- `compound` captures a newly solved, verified problem as a `yunxing:solution` comment on its feature issue
+- `compound-refresh` maintains older learning comments as the codebase evolves — both their individual accuracy and their collective design as a knowledge set
 
 Use **Replace** only when the refresh process has enough real evidence to write a trustworthy successor. When evidence is insufficient, mark as stale and recommend `compound` for when the user next encounters that problem area.
 
-Use **Consolidate** proactively when the learning set has grown organically and redundancy has crept in. Every `compound` invocation adds a new issue — over time, multiple issues may cover the same problem from slightly different angles. Periodic consolidation keeps the learning set lean and authoritative.
+Use **Consolidate** proactively when the learning set has grown organically and redundancy has crept in. Every `compound` invocation adds a new learning comment — over time, multiple learnings may cover the same problem from slightly different angles. Periodic consolidation keeps the learning set lean and authoritative.
 
 ## Discoverability Check
 
-After the refresh report is generated, check whether the project's instruction files would lead an agent to discover and search the project's `yunxing:solution` GitHub issues before starting work in a documented area. This runs every time — the knowledge store only compounds value when agents can find it. If this check produces edits, they are committed as part of (or immediately after) the Phase 5 commit flow — see step 6 below.
+After the refresh report is generated, check whether the project's instruction files would lead an agent to discover and search the project's `yunxing:solution` learnings before starting work in a documented area. Learnings are comments (first line `<!-- yunxing:solution -->`) on feature issues that carry the `yunxing:solution` label, so the label list still indexes every feature that has one. This runs every time — the knowledge store only compounds value when agents can find it. If this check produces edits, they are committed as part of (or immediately after) the Phase 5 commit flow — see step 6 below.
 
 1. Identify which root-level instruction files exist (AGENTS.md, CLAUDE.md, or both). Read the file(s) and determine which holds the substantive content — one file may just be a shim that `@`-includes the other (e.g., `CLAUDE.md` containing only `@AGENTS.md`, or vice versa). The substantive file is the assessment and edit target; ignore shims. If neither file exists, skip this check entirely.
 2. Assess whether an agent reading the instruction files would learn three things:
-   - That a searchable knowledge store of documented solutions exists as GitHub issues labeled `yunxing:solution`
-   - Enough about its structure to search effectively (the label, and the YAML fields like `category`, `module`, `tags`, `problem_type` in each issue body)
+   - That a searchable knowledge store of documented solutions exists as `yunxing:solution` comments on feature issues labeled `yunxing:solution`
+   - Enough about its structure to search effectively (the label finds the feature issues; each carries a solution comment with a YAML block holding fields like `category`, `module`, `tags`, `problem_type`)
    - When to search it (before implementing features, debugging issues, or making decisions in documented areas — learnings may cover bugs, best practices, workflow patterns, or other institutional knowledge)
 
    This is a semantic assessment, not a string match. The information could be a line in an architecture section, a bullet in a gotchas section, spread across multiple places, or expressed without ever using the exact label `yunxing:solution`. Use judgment — if an agent would reasonably discover and use the knowledge store after reading the file, the check passes.
@@ -683,14 +689,14 @@ After the refresh report is generated, check whether the project's instruction f
 
       When there's an existing conventions or architecture section — add a line:
       ```
-      Solved-problem learnings live as GitHub issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each with a YAML block carrying category, module, tags, problem_type — search with `gh issue list --label "yunxing:solution" --search "<terms>"`.
+      Solved-problem learnings live as `yunxing:solution` comments on feature issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each comment's YAML block carrying category, module, tags, problem_type — find features with `gh issue list --label "yunxing:solution" --search "<terms>"`, then read the issue's `<!-- yunxing:solution -->` comment.
       ```
 
       When nothing in the file is a natural fit — a small headed section is appropriate:
       ```
       ## Documented Solutions
 
-      Solved-problem learnings live as GitHub issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each with a YAML block carrying `category`, `module`, `tags`, `problem_type`. Search with `gh issue list --label "yunxing:solution" --search "<terms>"`. Relevant when implementing or debugging in documented areas.
+      Solved-problem learnings live as `yunxing:solution` comments on feature issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each comment's YAML block carrying `category`, `module`, `tags`, `problem_type`. Find features with `gh issue list --label "yunxing:solution" --search "<terms>"`, then read the issue's `<!-- yunxing:solution -->` comment. Relevant when implementing or debugging in documented areas.
       ```
    c. In interactive mode, explain to the user why this matters — agents working in this repo (including fresh sessions, other tools, or collaborators without the plugin) won't know to check the `yunxing:solution` issues unless the instruction file surfaces them. Show the proposed change and where it would go, then use the platform's blocking question tool to get consent before making the edit: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to presenting the proposal in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. In headless mode, include it as a "Discoverability recommendation" line in the report — do not attempt to edit instruction files (headless scope is learning maintenance, not project config).
 

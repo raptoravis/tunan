@@ -20,7 +20,7 @@ Spawned on every review regardless of diff content.
 | Agent | Focus |
 |-------|-------|
 | `yunxing:agent-native-reviewer` | Verify new features are agent-accessible |
-| `yunxing:learnings-researcher` | Search `yunxing:solution` issues for past learnings related to this PR's modules and patterns |
+| `yunxing:learnings-researcher` | Search `yunxing:solution`-labeled feature issues (reading each solution comment) for past learnings related to this PR's modules and patterns |
 
 ## Conditional (7 personas)
 

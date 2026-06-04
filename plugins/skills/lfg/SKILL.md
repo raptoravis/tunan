@@ -8,14 +8,14 @@ CRITICAL: You MUST execute every step below IN ORDER. Do NOT skip any required s
 
 When invoking any skill referenced below, resolve its name against the available-skills list the host platform provides and use that exact entry. Some platforms list skills under a plugin namespace (e.g., `yunxing:plan`); others list the bare name. Invoking a short-form guess that isn't in the list will fail — always match a listed entry verbatim before calling the Skill/Task tool.
 
-**Artifact model: the pipeline chains via GitHub issues, not local files.** Each stage's durable artifact is a GitHub issue distinguished by label, and each stage passes the prior issue ref (NUMBER/URL, linked as `#<N>` in bodies) to the next:
+**Artifact model: one feature, one issue — the pipeline chains via comments on that issue, not separate issues or local files.** A feature is a **single GitHub issue** for its whole lifetime. Its NUMBER `#N` — the **feature issue** — is the one handle threaded through every stage. The requirement is the issue **body**; each later stage lands as a **marker comment** on the same issue and adds a label. There are **no** separate `yunxing:plan` or `yunxing:solution` issues:
 
-- `brainstorm` produces a `yunxing:req` issue
-- `plan` consumes the `yunxing:req` issue and produces a `yunxing:plan` issue
-- `work` consumes the `yunxing:plan` issue
-- `compound` produces a `yunxing:solution` issue (referencing the plan/req issue with `#<N>`)
+- `brainstorm` produces the feature issue (body = requirement, label `yunxing:req`)
+- `plan` consumes the feature issue and writes the plan as a **comment** on it (first line `<!-- yunxing:plan -->`, label `yunxing:plan` added)
+- `work` consumes the same feature issue, reading its plan comment
+- `compound` writes the solution as a **comment** on the same feature issue (first line `<!-- yunxing:solution -->`, label `yunxing:solution` added)
 
-There is no local-file fallback for these artifacts — never read or write a plan/req/solution as a local file.
+Every stage receives the **same feature issue `#N`** — never a freshly-minted plan or solution number. A stage's "done" is verified by checking the feature issue for its marker comment and label, not by listing a separate issue. There is no local-file fallback for these artifacts — never read or write a plan/req/solution as a local file.
 
 **GH PREFLIGHT (required — run before step 1; the pipeline depends on `gh`).** Run these in order; if any fails, abort the pipeline and tell the user to fix the gh setup (install `gh`, run `gh auth login`, or set the repo). Do NOT fall back to local files:
 
@@ -29,23 +29,29 @@ gh auth status
 gh repo view --json nameWithOwner
 ```
 
-1. Invoke the `plan` skill with `$ARGUMENTS`. If a prior `brainstorm` ran in this pipeline and produced a `yunxing:req` issue, pass that issue ref so the plan consumes it and links back with `#<N>`.
+1. Invoke the `plan` skill with `$ARGUMENTS`. If a prior `brainstorm` ran in this pipeline and produced a feature issue, pass that issue ref so the plan consumes it and writes its plan comment onto the same `#<N>`. When no upstream feature issue exists, `plan` creates the feature issue itself (requirement stub body) before writing the plan comment.
 
-   GATE: STOP. If plan reported the task is non-software and cannot be processed in pipeline mode, stop the pipeline and inform the user that LFG requires software tasks. Otherwise, verify that the `plan` workflow produced a `yunxing:plan` issue. Confirm with:
+   GATE: STOP. If plan reported the task is non-software and cannot be processed in pipeline mode, stop the pipeline and inform the user that LFG requires software tasks. Otherwise, **record the feature issue ref (`#<N>`/URL)** that `plan` reports, then verify the plan landed as a comment on it — confirm both the marker comment and the label are present:
 
    ```bash
-   gh issue list --label "yunxing:plan" --state open --json number,title,url,updatedAt
+   gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .id'
    ```
 
-   If no `yunxing:plan` issue was created, invoke `plan` again with `$ARGUMENTS`. Do NOT proceed to step 2 until a `yunxing:plan` issue exists. **Record the plan issue ref (`#<N>`/URL)** — it is passed to work in step 2 and to code-review in step 3.
+   A non-empty id confirms the plan comment landed. To double-check the label accumulated, read the feature issue's labels:
 
-2. Invoke the `work` skill with the `yunxing:plan` issue ref from step 1 as its work source.
+   ```bash
+   gh issue view <N> --json labels
+   ```
+
+   If the feature issue carries no `<!-- yunxing:plan -->` comment (the first command returns empty), invoke `plan` again with `$ARGUMENTS`. Do NOT proceed to step 2 until the plan comment exists on the feature issue. The feature issue ref `#<N>` is the single handle passed to work in step 2, to code-review in step 3, and to compound in step 9 — there is no separate plan number.
+
+2. Invoke the `work` skill with the **feature issue ref `#<N>`** from step 1 as its work source. `work` reads the plan comment (`<!-- yunxing:plan -->`) on that issue.
 
    GATE: STOP. Verify that implementation work was performed - files were created or modified beyond the plan. Do NOT proceed to step 3 if no code changes were made.
 
-3. Invoke the `code-review` skill with `mode:agent plan:<plan-issue-ref-from-step-1>`.
+3. Invoke the `code-review` skill with `mode:agent plan:<feature-issue-ref-from-step-1>`.
 
-   Pass the plan issue ref from step 1 so code-review can verify requirements completeness. Read the **Actionable Findings** summary the skill emits.
+   Pass the feature issue ref `#<N>` from step 1 so code-review reads its plan comment and can verify requirements completeness. Read the **Actionable Findings** summary the skill emits.
 
 4. **Apply and persist review fixes** (REQUIRED after step 3, before residual handoff)
 
@@ -90,10 +96,10 @@ gh repo view --json nameWithOwner
       gh issue create --title "[review] <branch-or-head-sha>" --label "yunxing:review" --body-file BODY_FILE
       ```
 
-      When the `yunxing:plan` issue ref from step 1 is known, reference it with `#<plan-N>` in the issue body and also post the findings as a comment on that plan issue:
+      When the feature issue ref `#<N>` from step 1 is known, reference it with `#<N>` in the `yunxing:review` issue body and also post the findings as a comment on that feature issue:
 
       ```bash
-      gh issue comment PLAN_NUMBER --body-file BODY_FILE
+      gh issue comment FEATURE_NUMBER --body-file BODY_FILE
       ```
 
       This is the durable no-PR sink. Do not output DONE until either the existing PR body has been updated or this `yunxing:review` issue has been created. If both paths fail, stop and report the failed commands; do not silently proceed.
@@ -157,8 +163,8 @@ gh repo view --json nameWithOwner
 
 9. Invoke the `compound` skill to capture the solved problem.
 
-   Pass it the `yunxing:plan` issue ref from step 1, the PR URL, and a short summary of what was built. `compound` runs its own GH preflight and produces a `yunxing:solution` GitHub issue (not a local file), referencing the plan/req issue with `#<N>` in the body. **Record the resulting solution issue ref** for the final summary. If `compound` is unavailable on the harness, note that compounding was skipped — do not write a local solution file.
+   Pass it the **feature issue ref `#<N>`** from step 1, the PR URL, and a short summary of what was built. `compound` runs its own GH preflight and writes the solution as a **comment** on that same feature issue (first line `<!-- yunxing:solution -->`, label `yunxing:solution` added) — not a separate issue or a local file. If `compound` is unavailable on the harness, note that compounding was skipped — do not write a local solution file.
 
-10. Output `<promise>DONE</promise>` when complete. Include the issue-ref chain in the summary: the `yunxing:plan` issue, the PR, and the `yunxing:solution` issue.
+10. Output `<promise>DONE</promise>` when complete. Include the chain in the summary: the **feature issue `#<N>`** (carrying its req body plus `yunxing:plan` and `yunxing:solution` comments) and the PR URL — a single issue handle, not three separate issue numbers.
 
 Start with step 1 now. Remember: GH preflight and plan FIRST, then work. Never skip the plan.

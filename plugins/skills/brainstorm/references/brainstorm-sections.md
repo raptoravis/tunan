@@ -27,7 +27,7 @@ Skip document creation when **both** hold:
   framing, or decisions worth preserving in IDed shape.
 - Any durable decisions made during the dialogue can flow naturally to
   downstream artifacts (`plan`, the commit message, a
-  `yunxing:solution` learnings issue) without a `yunxing:req` issue as an
+  `yunxing:solution` learning comment) without a `yunxing:req` issue as an
   intermediary.
 
   (When a req issue was already bound — e.g., from `newreq` — it
@@ -43,7 +43,7 @@ durable, IDed form — not just as conversational artifacts.
 this with a null check or with upstream validation?" and the agent confirms
 "upstream validation, here's why" doesn't need a `yunxing:req` issue. The
 decision flows to `plan` (or directly to commit message, or to a
-`yunxing:solution` learnings issue if it's a pattern worth carrying) without
+`yunxing:solution` learning comment if it's a pattern worth carrying) without
 a `yunxing:req` issue in the middle.
 
 Conversely, a brainstorm about a multi-actor feature with contested scope

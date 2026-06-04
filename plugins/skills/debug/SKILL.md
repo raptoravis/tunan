@@ -245,10 +245,10 @@ Options:
 
 #### After a PR is open (either path): consider offering learning capture
 
-Most bugs are localized mechanical fixes (typo, missed null check, missing import) where the only "lesson" is the bug itself. Compounding those creates low-value `yunxing:solution` issues without adding value. Decide which path applies:
+Most bugs are localized mechanical fixes (typo, missed null check, missing import) where the only "lesson" is the bug itself. Compounding those creates low-value `yunxing:solution` comments without adding value. Decide which path applies:
 
 - **Skip silently** when the fix is mechanical and there's no generalizable insight. Default to this when in doubt.
 - **Offer neutrally** when the lesson can be stated in one sentence — e.g., "X.foo() returns T | undefined when Y, not just T", or "the diagnostic path was non-obvious and worth recording." If you cannot articulate the lesson, skip rather than offer.
 - **Lean into the offer** when the pattern appears in 3+ locations OR the root cause reveals a wrong assumption about a shared dependency, framework, or convention that other code is likely to repeat.
 
-When offering, use the blocking question tool described above. If the user accepts, run `/yunxing:compound` — it captures the lesson as a `yunxing:solution` GitHub issue (not a local file). Reference the resulting solution issue `#<N>` in the PR description so the diagnosis, fix, and lesson are linked.
+When offering, use the blocking question tool described above. If the user accepts, run `/yunxing:compound` — it captures the lesson as a `<!-- yunxing:solution -->` comment on the feature issue (not a local file), adding the `yunxing:solution` label to that issue. Reference the feature issue `#<N>` (whose solution comment holds the lesson) in the PR description so the diagnosis, fix, and lesson are linked.

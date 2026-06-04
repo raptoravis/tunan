@@ -63,7 +63,7 @@ This file contains the shipping workflow (Phase 3-4). It is loaded when all Phas
      gh issue create --title "[review] <branch-or-head-sha>" --label "yunxing:review" --body-file <tmpfile>
      ```
 
-     When a related `yunxing:plan` issue is known, reference it with `#<plan-N>` in the issue body and also post the findings as a comment on that plan issue (`gh issue comment <plan-N> --body-file <tmpfile>`). Mention the resulting `yunxing:review` issue number/URL in the final summary. The user has acknowledged the risk, but the findings must not live only in the transient session.
+     When the related feature issue (carrying the plan comment) is known, reference it with `#<N>` in the issue body and also post the findings as a comment on that feature issue (`gh issue comment <N> --body-file <tmpfile>`). Mention the resulting `yunxing:review` issue number/URL in the final summary. The user has acknowledged the risk, but the findings must not live only in the transient session.
    - `Stop — do not ship` — abort the shipping workflow. The user will handle findings manually before re-invoking.
 
    Skip this gate entirely when the review reported `Actionable findings: none.` (and followup applied everything mechanical) or when only Tier 1 was used. Do not proceed past this gate on an `Accept and proceed` decision until the agent has recorded whether the durable sink is `PR Known Residuals` (when a PR exists) or a `yunxing:review` issue (when no PR). Never a local file.
@@ -96,25 +96,36 @@ This file contains the shipping workflow (Phase 3-4). It is loaded when all Phas
 
    Note whether the completed work has observable behavior (UI rendering, CLI output, API/library behavior with a runnable example, generated artifacts, or workflow output). The `commit-push-pr` skill will ask whether to capture evidence only when evidence is possible.
 
-2. **Update Plan Issue Status**
+2. **Update Plan Comment Status**
 
-   Mark the source `yunxing:plan` issue complete. The plan is a GitHub
-   issue, not a local file — run the GH preflight (gh installed,
-   `gh auth status` exits 0, `gh repo view --json nameWithOwner` resolves)
-   before touching it; if any check fails, abort and report the gh setup
-   problem rather than writing a local file.
+   Mark the plan complete on the **feature issue `#N`**. The plan is a
+   comment on the feature issue, not a local file — run the GH preflight
+   (gh installed, `gh auth status` exits 0, `gh repo view --json nameWithOwner`
+   resolves) before touching it; if any check fails, abort and report the gh
+   setup problem rather than writing a local file. Read
+   `references/comment-chain-storage.md` for the comment-chain model and
+   gh recipes.
 
-   Post a completion note and (when the project closes plan issues on ship)
-   close the issue:
+   Post a completion note as a fresh comment on the feature issue and (when
+   the project closes feature issues on ship) close the issue:
 
    ```bash
-   gh issue comment <plan-N> --body "Implementation complete; shipped. status: completed"
+   gh issue comment <N> --body "Implementation complete; shipped. status: completed"
    ```
 
-   If the plan body carries a leading `status:` marker, edit the body to
-   flip `status: active` to `status: completed` via `gh issue edit <plan-N> --body-file <tmpfile>`.
+   If the plan comment carries a leading `status:` marker in its ```yaml
+   frontmatter, update it in place: find the plan comment id, then PATCH the
+   comment to flip `status: active` to `status: completed`:
+
+   ```bash
+   gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .id'
+   ```
+   ```bash
+   gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>
+   ```
+
    If no status marker exists, the completion comment is sufficient — skip
-   the body edit.
+   the plan-comment edit.
 
 3. **Commit and Create Pull Request**
 
@@ -139,17 +150,17 @@ This file contains the shipping workflow (Phase 3-4). It is loaded when all Phas
 5. **Hand Off to Compound**
 
    On a successful ship, hand off to the `compound` skill to capture
-   the solved problem. Compound produces a `yunxing:solution` GitHub issue
-   (not a local file). Pass it the plan issue ref so the
-   solution body links back to the plan (and, through the plan, to the
-   originating `yunxing:req`) via `#<N>` references:
+   the solved problem. Compound writes a `yunxing:solution` **comment** on
+   the **same feature issue** (marker `<!-- yunxing:solution -->`, label
+   `yunxing:solution`) — not a separate issue and not a local file. Pass it
+   the **feature issue `#N`** so the solution comment lives alongside the
+   requirement body and plan comment:
 
-   - Provide `compound` the source plan issue ref (`#<plan-N>`/URL),
-     the PR link, and a short summary of what was built.
-   - `compound` runs its own GH preflight and creates the
-     `yunxing:solution` issue, referencing the plan/req issue with `#<N>` in
-     the body.
-   - Record the resulting solution issue number/URL in the final summary.
+   - Provide `compound` the **feature issue ref** (`#<N>`/URL), the PR link,
+     and a short summary of what was built.
+   - `compound` runs its own GH preflight, writes the `yunxing:solution`
+     comment onto the feature issue, and adds the `yunxing:solution` label.
+   - Record the feature issue number/URL in the final summary.
 
 ## Quality Checklist
 
