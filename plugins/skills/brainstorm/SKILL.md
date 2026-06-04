@@ -1,7 +1,7 @@
 ---
 name: brainstorm
 description: 'Explore requirements and approaches through collaborative dialogue, then capture a right-sized requirement as a GitHub issue labeled yunxing:req. Use when the user says "let''s brainstorm", "what should we build", or "help me think through X", presents a vague or ambitious feature request, or seems unsure about scope or direction -- even without explicitly asking to brainstorm. Accepts an existing req issue ref to resume and update.'
-argument-hint: "[feature idea or problem to explore, or a req issue ref #N / URL]"
+argument-hint: "[feature idea or problem to explore, or a req issue ref #N / URL] [--search]"
 ---
 
 # Brainstorm a Feature or Improvement
@@ -189,6 +189,11 @@ If nothing obvious appears after a short scan, say so and continue. Two rules go
 1. **Verify before claiming** — When the brainstorm touches checkable infrastructure (database tables, routes, config files, dependencies, model definitions), read the relevant source files to confirm what actually exists. Any claim that something is absent — a missing table, an endpoint that doesn't exist, a dependency not in the Gemfile, a config option with no current support — must be verified against the codebase first; if not verified, label it as an unverified assumption. This applies to every brainstorm regardless of topic.
 
 2. **Defer design decisions to planning** — Implementation details like schemas, migration strategies, endpoint structure, or deployment topology belong in planning, not here — unless the brainstorm is itself about a technical or architectural decision, in which case those details are the subject of the brainstorm and should be explored.
+
+**Web search** (opt-in via `--search`; default is **no-search**) — brainstorm stays intentionally shallow and does **not** go to the web by default; its job is to clarify WHAT, leaving landscape and prior-art depth to `plan`. Route by condition:
+
+- **`--search` passed (or the prompt explicitly points outside the repo — competitor/prior-art scan, "from the web", "what should we borrow", a named external tool)**: Dispatch `yunxing:web-researcher` with a focus hint plus a brief summary of the brainstorm topic, in parallel with the rest of Phase 1.1. Do not pass codebase content — it operates externally. Fold findings into constraint awareness and the Phase 2 approaches; keep them at landscape/product-shape granularity, not implementation detail. If web tools are unavailable or the researcher fails, warn and proceed without blocking.
+- **No `--search` and no explicit external signal**: Skip web research entirely (default). When the topic plausibly has relevant prior art, note once: "Run with `--search` if you want me to scan the web for prior art and alternatives."
 
 **Slack context** (opt-in, Standard and Deep only) — never auto-dispatch. Route by condition:
 

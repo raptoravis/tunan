@@ -330,9 +330,13 @@ Ask the user only if the posture would materially change sequencing or risk and 
 
 #### 1.2 Decide on External Research
 
-Based on the origin document, user signals, and local findings, decide **whether** external research adds value and, if so, **what kind**. Resolve this in three stages: explicit-request priority, intent classification, then the implicit signals below.
+**External research runs by default.** Unless the user opts out, plan performs external research as a standard step — the question this phase resolves is **what kind** (the intent classification), not _whether_. Resolve this in three stages: opt-out check, intent classification, then the scope-tuning signals below.
 
-**Stage 1 — An explicit request takes precedence.** If the user prompt **or** the origin requirements document explicitly asks for external input — a signal that the answer lives outside the repo, such as competitor/prior-art comparison, "what should we borrow", "from the web", "best practices", "official docs", "alternatives to", a market scan, or naming a specific external technology to consult — external research is **required**, regardless of how strong local patterns look. The list is illustrative; key on the signal, not the exact phrase — any wording that clearly points outside the repo qualifies. The skip conditions below do **not** apply to an explicit request. The only thing that overrides it is an explicit opt-out ("no web research", "skip external research"): honor that, skip, and note it. Improvement or quality verbs ("improve", "make better") carry no external signal on their own and never trigger research by themselves.
+**Stage 1 — Default-on, with two overrides.**
+
+- **Explicit opt-out is the only skip.** If the user prompt or the origin document explicitly says not to research externally ("no web research", "skip external research", "just use the codebase", "don't go to the web"), honor it: skip external research and note it in the plan. This is the only condition that fully skips.
+- **Explicit request sharpens, never skips.** If the user prompt **or** the origin requirements document explicitly asks for external input — competitor/prior-art comparison, "what should we borrow", "from the web", "best practices", "official docs", "alternatives to", a market scan, or naming a specific external technology — treat it as a strong steer on scope and intent (key on the signal, not the exact phrase). It cannot be skipped by any local-pattern strength.
+- **No signal either way → still run.** Absence of a request is **not** a reason to skip. Run external research at default depth, scoped by the intent classification and the signals below. Improvement or quality verbs ("improve", "make better") carry no special external signal but also do not suppress the default.
 
 **Stage 2 — Classify the research intent** (whenever external research will run, from Stage 1 or the implicit signals below) so Phase 1.3 routes correctly. Use this mechanical test, not a fixed phrase list:
 
@@ -368,30 +372,32 @@ The yunxing:repo-research-analyst output includes a structured Technology & Infr
 - The technology scan found the relevant layer absent or thin in the codebase
 - The plan's recommendations depend on a genuinely external, **unsettled** option set — which library, provider, or approach to adopt, or what competitors and prior art do — **even when local implementation patterns are strong** (intent: landscape). Bound this implicit landscape trigger by three gates: (a) the option set genuinely lives outside the repo, (b) the decision materially shapes the plan (a KTD, dependency, or architecture choice — not an incidental detail), and (c) no settled local or team choice already exists. Improvement verbs alone never satisfy this.
 
-**Skip external research when** (only when Stage 1 found no explicit request — an explicit request is never skipped):
+**Narrow (do not skip) the research when** — absent an explicit opt-out, these conditions tighten scope rather than cancelling research:
 
 - The codebase already shows a strong local pattern -- multiple direct examples (not adjacent-domain), recently touched, following current conventions
 - The user already knows the intended shape
-- Additional external context would add little practical value
 - The technology scan found the relevant layer well-established with existing examples to follow
 
-When an explicit request _did_ fire but a settled local or team choice already exists, **narrow the research rather than skipping it** — research the current pitfalls, docs, and practices for the chosen library/pattern instead of re-surveying the whole option set.
+In these cases, run a **focused** pass — confirm current pitfalls, version-specific docs, and recent best practices for the already-settled library/pattern — instead of a full landscape survey. The goal is a fast verification that the local pattern is still current, not a broad option scan. Only an explicit opt-out (Stage 1) cancels research outright.
 
 Announce the decision and the intent briefly before continuing. Examples:
 
-- "Your codebase has solid patterns for this. Proceeding without external research."
+- "Your codebase has solid patterns for this, so I'll run a focused check that they're still current (implementation-guidance)."
 - "This involves payment processing, so I'll research current best practices first (implementation-guidance)."
 - "You asked what to borrow from competitors, so I'll run a landscape scan first (landscape/option-discovery)."
+- "You said skip external research, so I'm planning from the codebase only and noting that in the plan."
 
-#### 1.3 External Research (Conditional)
+#### 1.3 External Research (Default)
 
-If Step 1.2 indicates external research is useful, dispatch by the **intent** classified in Stage 2, using the platform's subagent primitive (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi). For `yunxing:web-researcher`, pass a focus hint plus the planning context summary and do **not** pass codebase content — it operates externally.
+Unless Stage 1 found an explicit opt-out, dispatch external research by the **intent** classified in Stage 2, using the platform's subagent primitive (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi). For `yunxing:web-researcher`, pass a focus hint plus the planning context summary and do **not** pass codebase content — it operates externally.
 
 - **Implementation-guidance** — run in parallel:
   - Task yunxing:best-practices-researcher(planning context summary)
   - Task yunxing:framework-docs-researcher(planning context summary, with exact frameworks/versions from Phase 1.1 where available)
 - **Landscape / option-discovery** — Task yunxing:web-researcher(focus hint, planning context summary). When the request targets projects on a code host (e.g., "competitors on GitHub"), name the discovery dimensions in the focus hint: project names and URLs, release recency and activity, CLI/UX shape, install path, docs and examples, plugin/extension surfaces, recurring issue themes, and license — treating star counts as a weak signal only.
 - **Mixed** — **sequential, not parallel**: run `yunxing:web-researcher` first to map the landscape and produce a shortlist; then run `yunxing:framework-docs-researcher` and/or `yunxing:best-practices-researcher` against the shortlisted technologies only when their details materially shape the plan.
+
+**Deep-research escalation (default-on when load-bearing).** When the external question is broad, contested, or decision-critical — a landscape/option-discovery or mixed intent where the choice materially shapes a KTD, dependency, or architecture — escalate to a deeper multi-source pass by default rather than a single web-researcher dispatch. If the host provides a dedicated deep-research skill/harness (e.g., a `deep-research` skill), prefer it for this pass; otherwise run a deeper `yunxing:web-researcher` sweep (multiple focused queries, cross-checked sources, explicit source list). Skip the escalation only when the user opted out of external research, or when the research is a narrow implementation-guidance confirmation against a settled local pattern (per Phase 1.2's narrow-scope path).
 
 **Tool-unavailable handling.** `yunxing:web-researcher` self-checks for web tools and stops if they are missing. Never block on this: if it reports research unavailable, or any researcher fails, warn and proceed, and carry the gap into Phase 1.4 so the plan records it honestly — especially when the user explicitly requested external research, where a silent skip would leave the plan looking evidence-based when it is not.
 
@@ -790,13 +796,14 @@ Build a risk profile. Treat these as high-risk signals:
 
 ##### 5.3.2 Gate: Decide Whether to Deepen
 
-- **Lightweight** plans usually do not need deepening unless they are high-risk
-- **Standard** plans often benefit when one or more important sections still look thin
-- **Deep** or high-risk plans often benefit from a targeted second pass
-- **Thin local grounding override:** If Phase 1.2 triggered external research because local patterns were thin (fewer than 3 direct examples or adjacent-domain match), always proceed to scoring regardless of how grounded the plan appears. When the plan was built on unfamiliar territory, claims about system behavior are more likely to be assumptions than verified facts. The scoring pass is cheap — if the plan is genuinely solid, scoring finds nothing and exits quickly
+**The confidence-scoring pass runs by default.** Enter scoring unless the user opted out or the plan is trivially small. The scoring pass is cheap — if the plan is genuinely solid, scoring finds nothing and exits quickly — so default to running it rather than reasoning about whether it is needed.
+
+- **Default — run the scoring pass** for **Standard**, **Deep**, and high-risk plans, and whenever any important section still looks thin.
+- **Skip only when:** the user explicitly opted out of deepening ("skip deepening", "no deepening pass", "just write the plan"), **or** the plan is **Lightweight** and clearly low-risk (no data migrations, external contracts, security/privacy, or cross-surface behavior). Even then, the two overrides below force scoring back on.
+- **Thin local grounding override:** If Phase 1.2 produced external research because local patterns were thin (fewer than 3 direct examples or adjacent-domain match), always proceed to scoring regardless of how grounded the plan appears. When the plan was built on unfamiliar territory, claims about system behavior are more likely to be assumptions than verified facts.
 - **Load-bearing external research override:** If Phase 1.4 marked external research as load-bearing (it materially shaped a KTD, Alternative, Scope boundary, or Risk), always proceed to scoring — **even when local implementation patterns are strong**. A landscape or prior-art finding can shape recommendations the local codebase cannot verify, and the thin-grounding override above would miss it. This enters the scoring pass only; it does not force deepening
 
-If the plan already appears sufficiently grounded and neither the thin-grounding nor the load-bearing-external-research override applies, report "Confidence check passed — no sections need strengthening", then **load `references/plan-handoff.md` now and execute 5.3.8 → 5.3.9 → 5.4 in sequence**. Document review is mandatory — do not skip it because the confidence check passed. The two tools catch different classes of issues.
+If a skip condition applies and neither override fires, report "Confidence check passed — no sections need strengthening", then **load `references/plan-handoff.md` now and execute 5.3.8 → 5.3.9 → 5.4 in sequence**. Document review is mandatory — do not skip it because the confidence check passed. The two tools catch different classes of issues.
 
 ##### 5.3.3–5.3.7 Deepening Execution
 
