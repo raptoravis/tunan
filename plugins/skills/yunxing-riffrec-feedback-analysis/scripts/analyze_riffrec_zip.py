@@ -103,7 +103,7 @@ def safe_extract(zip_path: Path, dest: Path) -> None:
 
 
 def default_output_dir(zip_path: Path) -> Path:
-    # Transient media/scaffolds only; durable output goes to a GitHub issue, never docs/.
+    # Transient media/scaffolds only; durable output goes to a GitHub issue, never a local file.
     # Callers should pass an explicit temp --output-dir; this default lands in the OS temp dir.
     stem = slugify(zip_path.stem)
     return Path(tempfile.gettempdir()) / "riffrec-feedback" / stem

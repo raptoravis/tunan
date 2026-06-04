@@ -16,13 +16,13 @@ Use this path when the input is a short recording (under ~60 seconds), the user 
 
 3. Pick at most one or two screenshots from `frames/` that directly show the reported issue. Prefer frames near a verbal complaint, a failed click, a console error, or a failed network request.
 
-4. Emit a single concise bug report. Default to printing it inline in the chat so the user can confirm before anything durable is created. When the user wants it persisted, run the GH preflight from SKILL.md and create a GitHub issue (the durable bug report is a GitHub issue, never a local file under `docs/`). Write the bug-report markdown to a temp file, then:
+4. Emit a single concise bug report. Default to printing it inline in the chat so the user can confirm before anything durable is created. When the user wants it persisted, run the GH preflight from SKILL.md and create a GitHub issue (the durable bug report is a GitHub issue, never a local file). Write the bug-report markdown to a temp file, then:
 
    ```bash
    gh issue create --title "[req] <broken behavior, one line>" --label "yunxing:req" --body-file <body-file>
    ```
 
-   Add a `**Type:** bug` marker line at the top of the body so the issue is distinguishable from feature requirements. Surface the resulting issue URL. Never write the report to a local `docs/` path.
+   Add a `**Type:** bug` marker line at the top of the body so the issue is distinguishable from feature requirements. Surface the resulting issue URL. Never write the report to a local file.
 
 ## Bug report shape
 

@@ -10,7 +10,7 @@ Maintain the quality of the project's `yunxing:solution` learning issues over ti
 
 ## Storage: yunxing:solution GitHub issues
 
-Learnings are GitHub issues, never local files. Each learning is one issue labeled `yunxing:solution`, titled `[solution] <slug>`, whose body is a fenced ```yaml block (the frontmatter from `references/schema.yaml`) followed by markdown sections. This skill reads, edits, and closes those issues — it never reads or writes `docs/solutions/` or any local learning file.
+Learnings are GitHub issues, never local files. Each learning is one issue labeled `yunxing:solution`, titled `[solution] <slug>`, whose body is a fenced ```yaml block (the frontmatter from `references/schema.yaml`) followed by markdown sections. This skill reads, edits, and closes those issues — it never reads or writes any local learning file.
 
 **GH preflight — run before any issue read or write.** If any check fails, abort and surface the guidance; never fall back to a local file.
 
@@ -131,7 +131,7 @@ Start by discovering open learning issues after running the GH preflight:
 gh issue list --label "yunxing:solution" --state open --json number,title,url,labels --limit 200
 ```
 
-**Legacy `docs/solutions/` directory:** if a `docs/solutions/` directory exists in the repo, it is a pre-migration artifact — note it in the report as legacy content that should be migrated into `yunxing:solution` issues (or deleted once migrated). Do not treat its files as candidates for this workflow; this skill operates only on issues.
+**Legacy local learning files:** if pre-migration local learning files exist in the repo, note them in the report as legacy content that should be migrated into `yunxing:solution` issues (or deleted once migrated). Do not treat them as candidates for this workflow; this skill operates only on issues.
 
 If `$ARGUMENTS` is provided, use it to narrow scope before proceeding. Try these matching strategies in order, stopping at the first that produces results:
 
@@ -597,8 +597,8 @@ Split actions into two sections:
 
 If all writes succeed, the Recommended section is empty. If no writes succeed (e.g., gh unavailable), all actions appear under Recommended — the report becomes a maintenance plan.
 
-**Legacy cleanup** (if a `docs/solutions/` directory exists in the repo):
-- Note it as pre-migration content and recommend migrating each file into a `yunxing:solution` issue (or deleting it once migrated). This skill does not process local files.
+**Legacy cleanup** (if pre-migration local learning files exist in the repo):
+- Note them as pre-migration content and recommend migrating each into a `yunxing:solution` issue (or deleting once migrated). This skill does not process local files.
 
 ## Phase 5: Commit Changes
 
@@ -617,7 +617,7 @@ Use sensible defaults — no user to ask:
 
 | Context | Default action |
 |---------|---------------|
-| On main/master | Create a branch named for what was refreshed (e.g., `docs/refresh-auth-and-ci-learnings`), commit, attempt to open a PR. If PR creation fails, report the branch name. |
+| On main/master | Create a branch named for what was refreshed (e.g., `refresh/auth-and-ci-learnings`), commit, attempt to open a PR. If PR creation fails, report the branch name. |
 | On a feature branch | Commit as a separate commit on the current branch |
 | Git operations fail | Include the recommended git commands in the report and continue |
 
@@ -629,7 +629,7 @@ First, run `git branch --show-current` to determine the current branch. Then pre
 
 **If the current branch is main, master, or the repo's default branch:**
 
-1. Create a branch, commit, and open a PR (recommended) — the branch name should be specific to what was refreshed, not generic (e.g., `docs/refresh-auth-learnings` not `docs/compound-refresh`)
+1. Create a branch, commit, and open a PR (recommended) — the branch name should be specific to what was refreshed, not generic (e.g., `refresh/auth-learnings` not `refresh/compound-refresh`)
 2. Commit directly to `{current branch name}`
 3. Don't commit — I'll handle it
 

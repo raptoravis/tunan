@@ -19,7 +19,7 @@ When the input is ambiguous (e.g., a zip arrived without context), inspect the r
 
 ## Issue storage (GH preflight)
 
-Both the quick and extensive paths store their durable output as a GitHub issue, never a local file under `docs/`. Run the GH preflight before any issue read/write — abort with the guidance shown if any check fails; NEVER fall back to a local file (the analyzer's temp scaffolds are working material, not the durable artifact). The Setup path does not touch issues, so it skips this.
+Both the quick and extensive paths store their durable output as a GitHub issue, never a local file. Run the GH preflight before any issue read/write — abort with the guidance shown if any check fails; NEVER fall back to a local file (the analyzer's temp scaffolds are working material, not the durable artifact). The Setup path does not touch issues, so it skips this.
 
 1. `gh` installed. If not: tell the user to install it from `https://cli.github.com` or run `/yunxing-setup`.
 
@@ -53,8 +53,8 @@ gh label create "yunxing:req" --color 1f883d --description "yunxing requirements
 
 ## Common rules
 
-- Keep raw recordings, audio chunks, zip contents, session dumps, and extracted screenshots transient and local-only. Extract them to an OS temp dir (`${TMPDIR:-/tmp}` / `$env:TEMP`), never under `docs/`. Do not commit `raw/` or `frames/` directories.
-- Durable text artifacts (requirements, analysis summaries, problem analyses, bug reports) are stored as **GitHub issues** distinguished by label, never as local files under `docs/`. The extensive path's requirements material becomes a `yunxing:req` issue; the quick path's bug report becomes a GitHub issue. Requirements live in GitHub issues, never local files.
+- Keep raw recordings, audio chunks, zip contents, session dumps, and extracted screenshots transient and local-only. Extract them to an OS temp dir (`${TMPDIR:-/tmp}` / `$env:TEMP`). Do not commit `raw/` or `frames/` directories.
+- Durable text artifacts (requirements, analysis summaries, problem analyses, bug reports) are stored as **GitHub issues** distinguished by label, never as local files. The extensive path's requirements material becomes a `yunxing:req` issue; the quick path's bug report becomes a GitHub issue. Requirements live in GitHub issues, never local files.
 - When referencing screenshots or evidence inside an issue body, note their transient temp-dir paths and the original source location so later agents can re-extract from the source recording — the temp media is not committed and may be cleaned up by the OS.
 
 ## Analyzer entrypoint

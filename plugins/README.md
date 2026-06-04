@@ -6,7 +6,7 @@ AI-powered development tools that get smarter with every use. Make each unit of 
 
 After installing, run `/yunxing-setup` in any project. It diagnoses your environment, installs missing tools and MCP servers, and bootstraps project config in one interactive flow.
 
-**Artifacts are GitHub issues, not local files.** Durable per-item artifacts — requirements, plans, solutions, ideas, and reports — are stored as GitHub issues distinguished by label (`yunxing:req`, `yunxing:plan`, `yunxing:solution`, `yunxing:idea`, `yunxing:pulse`), never under `docs/`. This requires `gh` to be installed and authenticated (`gh auth status`); `/yunxing-setup` verifies both. Skills create their labels on demand.
+**Artifacts are GitHub issues, not local files.** Durable per-item artifacts — requirements, plans, solutions, ideas, reports, dogfood runs, and review residuals — are stored as GitHub issues distinguished by label (`yunxing:req`, `yunxing:plan`, `yunxing:solution`, `yunxing:idea`, `yunxing:pulse`, `yunxing:dogfood`, `yunxing:review`), never as local files. This requires `gh` to be installed and authenticated (`gh auth status`); `/yunxing-setup` verifies both. Skills create their labels on demand.
 
 **Windows:** the skills run on Windows as well as macOS/Linux. Bundled helper scripts ship in both bash (`.sh`) and PowerShell (`.ps1`) form — the PowerShell variants are Windows PowerShell 5.1-compatible (no extra install) and are used automatically on Windows.
 

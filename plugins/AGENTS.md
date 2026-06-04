@@ -23,7 +23,7 @@ This is easy to miss because authoring feels like using: you edit the plugin whi
 
 The plugin version lives in two manifests that must stay in sync: `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`. When a change warrants a version bump, update both to the same value in the same commit.
 
-The automated release pipeline (release-please, CI workflows, the multi-marketplace parity tooling, and the Bun converter) was removed when the repo was simplified to ship only the plugin payload. There is no `bun run` toolchain, test suite, `CHANGELOG.md` release automation, or `docs/` tree in this repo anymore — do not reference them.
+The automated release pipeline (release-please, CI workflows, the multi-marketplace parity tooling, and the Bun converter) was removed when the repo was simplified to ship only the plugin payload. There is no `bun run` toolchain, test suite, or `CHANGELOG.md` release automation in this repo anymore — do not reference them.
 
 ### Pre-Commit Checklist
 

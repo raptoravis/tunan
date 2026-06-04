@@ -14,7 +14,7 @@ argument-hint: "[feature, focus area, or constraint]"
 - `yunxing-brainstorm` answers: "What exactly should one chosen idea mean?"
 - `yunxing-plan` answers: "How should it be built?"
 
-This workflow produces a ranked ideation artifact as a **`yunxing:idea` GitHub issue** — the durable ideation record lives in a GitHub issue (markdown body), never in a local file under `docs/`. It does **not** produce requirements, plans, or code.
+This workflow produces a ranked ideation artifact as a **`yunxing:idea` GitHub issue** — the durable ideation record lives in a GitHub issue (markdown body), never in a local file. It does **not** produce requirements, plans, or code.
 
 ## Interaction Method
 

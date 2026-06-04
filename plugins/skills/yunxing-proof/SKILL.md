@@ -30,7 +30,7 @@ Human-in-the-loop iteration over a markdown source: upload to Proof, let the use
 
 The **source** is one of two shapes:
 
-- **yunxing artifact issue** (primary for the upstream handoff path) — durable requirements/plan/solution/idea/pulse artifacts are stored as GitHub issues distinguished by label (`yunxing:req`, `yunxing:plan`, `yunxing:solution`, `yunxing:idea`, `yunxing:pulse`), not as local files under `docs/`. Run GH PREFLIGHT, export the issue body to a transient temp markdown file (OS temp dir, never under `docs/`), run the Proof HITL flow on that temp file, and on proceed/sync write the reviewed markdown BACK to the issue body via `gh issue edit <N> --body-file <temp-file>`.
+- **yunxing artifact issue** (primary for the upstream handoff path) — durable requirements/plan/solution/idea/pulse artifacts are stored as GitHub issues distinguished by label (`yunxing:req`, `yunxing:plan`, `yunxing:solution`, `yunxing:idea`, `yunxing:pulse`), not as local files. Run GH PREFLIGHT, export the issue body to a transient temp markdown file (OS temp dir), run the Proof HITL flow on that temp file, and on proceed/sync write the reviewed markdown BACK to the issue body via `gh issue edit <N> --body-file <temp-file>`.
 - **local markdown file** ("elsewhere" / non-artifact source) — a markdown file the user is working on that is not a yunxing artifact. Upload it, run the flow, and on sync write back to that file. This keeps the direct-user "share this file to proof" path working.
 
 Two entry points, identical mechanics:
@@ -40,7 +40,7 @@ Two entry points, identical mechanics:
 
 ### GH PREFLIGHT (issue source only)
 
-Before any issue read or write, verify the GitHub CLI is usable. Run each check as a single simple command and abort with guidance if any fails — never fall back to writing a local `docs/` file:
+Before any issue read or write, verify the GitHub CLI is usable. Run each check as a single simple command and abort with guidance if any fails — never fall back to writing a local file:
 
 ```bash
 gh --version
@@ -471,7 +471,7 @@ curl -X POST "https://www.proofeditor.ai/api/agent/$SLUG/edit/v2?return=minimal"
 
 Sync the current Proof doc state to a local markdown file. Used by:
 
-- HITL review end-sync (`references/hitl-review.md` Phase 5). For a **local source**, this writes the reviewed markdown back to the user's file. For a **yunxing artifact issue source**, the same atomic write targets the transient temp file, which is then pushed to the issue body via `gh issue edit <N> --body-file <temp-file>` — the durable artifact is the issue, not a `docs/` file.
+- HITL review end-sync (`references/hitl-review.md` Phase 5). For a **local source**, this writes the reviewed markdown back to the user's file. For a **yunxing artifact issue source**, the same atomic write targets the transient temp file, which is then pushed to the issue body via `gh issue edit <N> --body-file <temp-file>` — the durable artifact is the issue, not a local file.
 - Ad-hoc snapshots of a Proof doc to disk (before closing the tab, archiving, handing off)
 - Refreshing a local working copy against the live Proof version
 

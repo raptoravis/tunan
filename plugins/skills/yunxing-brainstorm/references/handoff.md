@@ -77,7 +77,7 @@ Immediately load the `yunxing-work` skill in the current session using the final
 
 **If user selects "Open in Proof — review and comment to iterate with the agent":**
 
-Export the issue body to a transient markdown file in the OS temp dir (bash `${TMPDIR:-/tmp}`, PowerShell `$env:TEMP` — never under `docs/`):
+Export the issue body to a transient markdown file in the OS temp dir (bash `${TMPDIR:-/tmp}`, PowerShell `$env:TEMP`):
 
 ```bash
 gh issue view <N> --json body --jq .body > "${TMPDIR:-/tmp}/req-<N>.md"

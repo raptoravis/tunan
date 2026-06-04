@@ -49,7 +49,7 @@ Reuse `yunxing-test-browser`'s mechanics for port detection and dev-server start
 3. Serve        Detect port, start dev server, open agent-browser
 4. Execute      Work the matrix one item at a time with agent-browser
 5. Fix loop     On failure: fix -> add regression test -> commit -> continue
-6. Report       Write durable doc to docs/dogfood-reports/ (flows, matrix, fixes, learnings, verdict)
+6. Report       Write/update a yunxing:dogfood GitHub issue (flows, matrix, fixes, learnings, verdict)
 ```
 
 ### Phase 0: Scope and Get on the Right Branch
@@ -62,16 +62,16 @@ Parse `$ARGUMENTS`: a PR number, a branch name, or blank (use current branch). S
    - **Blank:** use the current branch.
 2. **Refuse to run on `main`/`master`.** If the resolved branch is the trunk, stop and tell the user — there is no diff to dogfood.
 3. **Offer isolation.** Ask whether to run in a git worktree so the main checkout stays untouched (use the platform's blocking question tool). If yes, hand off to `yunxing-worktree`; if no, continue in place.
-4. **Resume if a prior run exists.** Look for an existing report at `docs/dogfood-reports/*-<branch-slug>-dogfood.md`. If one is found with unfinished scenarios, ask whether to resume it or start fresh. To resume, re-hydrate the task list from its matrix (Pass/Fixed/Skipped stay done; Pending/Blocked/in-progress become the remaining work) and continue from there.
+4. **Resume if a prior run exists.** Look for an existing `yunxing:dogfood` issue for this branch via `gh issue list --label "yunxing:dogfood" --search "<branch-slug>" --state all --json number,title,url`. If one is found with unfinished scenarios, ask whether to resume it or start fresh. To resume, read it with `gh issue view <N>` and re-hydrate the task list from its matrix (Pass/Fixed/Skipped stay done; Pending/Blocked/in-progress become the remaining work) and continue from there.
 
 ### Resumability (stop and return at any point)
 
 This workflow is designed to be interrupted and resumed. Two pieces of state make that safe:
 
 - **The task list** (`TaskCreate`/`TaskUpdate`) is the live to-do — one task per matrix scenario. Mark each `in_progress` when you start it and `completed` only when it genuinely passes.
-- **The report doc** at `docs/dogfood-reports/<YYYY-MM-DD>-<branch-slug>-dogfood.md` is the durable checkpoint that survives across sessions. **Create it as soon as the matrix exists (end of Phase 2)** with every scenario listed as `Pending`, and **update it incrementally** — after each scenario is judged and after each fix is committed — not only at the end.
+- **The report issue** — a `yunxing:dogfood` GitHub issue titled `[dogfood] <branch-slug>` — is the durable checkpoint that survives across sessions. **Create it as soon as the matrix exists (end of Phase 2)** with every scenario listed as `Pending`, and **update its body incrementally** with `gh issue edit <N> --body-file <tmpfile>` — after each scenario is judged and after each fix is committed — not only at the end. Ensure the label exists first (`gh label list --search "yunxing:dogfood"`, then `gh label create "yunxing:dogfood" --color 1f883d --description "yunxing dogfood report"` if absent).
 
-Because tasks are session-scoped but the report doc is on disk, the report is the source of truth for resuming. Always keep the two in sync so a later run (or a teammate) can pick up exactly where this one stopped.
+Because tasks are session-scoped but the report issue lives on GitHub, the issue is the source of truth for resuming. Always keep the two in sync so a later run (or a teammate) can pick up exactly where this one stopped.
 
 ### Phase 1: Analyze Changes
 
@@ -170,7 +170,7 @@ Keep iterating until every task is `completed` or explicitly `Blocked (human dec
 
 ### Phase 6: Write the Report Artifact
 
-The report doc was created at the end of Phase 2 and updated incrementally throughout (see Resumability). When the matrix is green (or every remaining item is explicitly blocked), **finalize** it at `docs/dogfood-reports/<YYYY-MM-DD>-<branch-slug>-dogfood.md` in the repo under test, then surface a short summary in chat with the file path.
+The report issue was created at the end of Phase 2 and updated incrementally throughout (see Resumability). When the matrix is green (or every remaining item is explicitly blocked), **finalize** its body with `gh issue edit <N> --body-file <tmpfile>`, then surface a short summary in chat with the issue URL.
 
 Use `references/dogfood-report-template.md` as the shape — the same way plans and brainstorms are captured from a template. The finalized artifact must include:
 

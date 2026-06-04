@@ -250,8 +250,7 @@ to different purposes:
 ## Rendering
 
 `references/markdown-rendering.md` describes how to render these sections as
-the `yunxing:req` issue body markdown. (`references/html-rendering.md` is
-deprecated/unused — the plugin no longer writes local HTML artifacts.)
+the `yunxing:req` issue body markdown.
 
 This reference (`brainstorm-sections.md`) is about WHAT the requirement
 contains; `markdown-rendering.md` is about HOW it renders as the issue body.

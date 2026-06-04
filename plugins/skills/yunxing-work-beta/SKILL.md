@@ -13,7 +13,7 @@ Execute work efficiently while maintaining quality and finishing features.
 
 This command takes a work source — a `yunxing:plan` GitHub issue (a plan/specification stored as an issue body) or a bare prompt describing the work — and executes it systematically. The focus is on **shipping complete features** by understanding requirements quickly, following existing patterns, and maintaining quality throughout.
 
-Durable per-item artifacts are GitHub issues distinguished by label, not local files under `docs/`. The plan that drives execution is a `yunxing:plan` issue; on shipping, the hand-off to `yunxing-compound` produces a `yunxing:solution` issue. Pass and link issues by NUMBER/URL and `#<N>` references — never read or write a plan/solution as a local `docs/` file.
+Durable per-item artifacts are GitHub issues distinguished by label, not local files. The plan that drives execution is a `yunxing:plan` issue; on shipping, the hand-off to `yunxing-compound` produces a `yunxing:solution` issue. Pass and link issues by NUMBER/URL and `#<N>` references — never read or write a plan/solution as a local file.
 
 **Beta rollout note:** Invoke `yunxing-work-beta` manually when you want to trial Codex delegation. During the beta period, planning and workflow handoffs remain pointed at stable `yunxing-work` to avoid dual-path orchestration complexity.
 

@@ -15,7 +15,7 @@ When invoking any skill referenced below, resolve its name against the available
 - `yunxing-work` consumes the `yunxing:plan` issue
 - `yunxing-compound` produces a `yunxing:solution` issue (referencing the plan/req issue with `#<N>`)
 
-There is no local-file fallback for these artifacts — never read or write a plan/req/solution as a file under `docs/`.
+There is no local-file fallback for these artifacts — never read or write a plan/req/solution as a local file.
 
 **GH PREFLIGHT (required — run before step 1; the pipeline depends on `gh`).** Run these in order; if any fails, abort the pipeline and tell the user to fix the gh setup (install `gh`, run `gh auth login`, or set the repo). Do NOT fall back to local files:
 
@@ -72,7 +72,7 @@ gh repo view --json nameWithOwner
       gh pr edit PR_NUMBER --body-file BODY_FILE
       ```
 
-   6. If no open PR exists, record the residuals as a `yunxing:review` GitHub issue — never a local `docs/` file. Run the GH preflight first (`gh` installed; `gh auth status` exits 0; `gh repo view --json nameWithOwner` resolves); if any check fails, stop and report the gh setup problem. Ensure the label exists:
+   6. If no open PR exists, record the residuals as a `yunxing:review` GitHub issue — never a local file. Run the GH preflight first (`gh` installed; `gh auth status` exits 0; `gh repo view --json nameWithOwner` resolves); if any check fails, stop and report the gh setup problem. Ensure the label exists:
 
       ```bash
       gh label list --search "yunxing:review"
@@ -84,7 +84,7 @@ gh repo view --json nameWithOwner
       gh label create "yunxing:review" --color 1f883d --description "yunxing review"
       ```
 
-      Write the composed `## Residual Review Findings` section plus the source PR-review run context to an OS temp file (`${TMPDIR:-/tmp}` / `$env:TEMP`, never `docs/`), then create the issue titled `[review] <branch-or-head-sha>`:
+      Write the composed `## Residual Review Findings` section plus the source PR-review run context to an OS temp file (`${TMPDIR:-/tmp}` / `$env:TEMP`), then create the issue titled `[review] <branch-or-head-sha>`:
 
       ```bash
       gh issue create --title "[review] <branch-or-head-sha>" --label "yunxing:review" --body-file BODY_FILE
@@ -157,7 +157,7 @@ gh repo view --json nameWithOwner
 
 9. Invoke the `yunxing-compound` skill to capture the solved problem.
 
-   Pass it the `yunxing:plan` issue ref from step 1, the PR URL, and a short summary of what was built. `yunxing-compound` runs its own GH preflight and produces a `yunxing:solution` GitHub issue (not a local `docs/solutions` file), referencing the plan/req issue with `#<N>` in the body. **Record the resulting solution issue ref** for the final summary. If `yunxing-compound` is unavailable on the harness, note that compounding was skipped — do not write a local solution file.
+   Pass it the `yunxing:plan` issue ref from step 1, the PR URL, and a short summary of what was built. `yunxing-compound` runs its own GH preflight and produces a `yunxing:solution` GitHub issue (not a local file), referencing the plan/req issue with `#<N>` in the body. **Record the resulting solution issue ref** for the final summary. If `yunxing-compound` is unavailable on the harness, note that compounding was skipped — do not write a local solution file.
 
 10. Output `<promise>DONE</promise>` when complete. Include the issue-ref chain in the summary: the `yunxing:plan` issue, the PR, and the `yunxing:solution` issue.
 

@@ -10,7 +10,7 @@ argument-hint: "[feature idea or problem to explore, or a req issue ref #N / URL
 
 Brainstorming helps answer **WHAT** to build through collaborative dialogue. It precedes `/yunxing-plan`, which answers **HOW** to build it.
 
-The durable output of this workflow is a **`yunxing:req` GitHub issue** — a single issue whose markdown body holds the finished requirement. In other workflows this might be called a lightweight PRD or feature brief. In compound engineering, keep the workflow name `brainstorm`, but make the written artifact strong enough that planning does not need to invent product behavior, scope boundaries, or success criteria. Requirements live in GitHub issues, never in local files under `docs/`.
+The durable output of this workflow is a **`yunxing:req` GitHub issue** — a single issue whose markdown body holds the finished requirement. In other workflows this might be called a lightweight PRD or feature brief. In compound engineering, keep the workflow name `brainstorm`, but make the written artifact strong enough that planning does not need to invent product behavior, scope boundaries, or success criteria. Requirements live in GitHub issues, never in local files.
 
 `yunxing-newreq` already creates standalone `yunxing:req` issues. When this skill is invoked with a req issue produced by `yunxing-newreq` (or any earlier `yunxing-brainstorm` run), it **updates that same issue** rather than creating a duplicate.
 
@@ -314,7 +314,7 @@ When a requirement is warranted, compose its markdown body using:
 - `references/brainstorm-sections.md` — section contract (outcomes, hard floor, include-when-material catalog, agency rules, ID conventions).
 - `references/markdown-rendering.md` — how those sections render as the issue body markdown. Put the brainstorm metadata fields (`date`, `topic`) as a fenced ```yaml block at the top of the body.
 
-Build the body in an OS temp file (bash `${TMPDIR:-/tmp}`, PowerShell `$env:TEMP` — never under `docs/`), then write the issue:
+Build the body in an OS temp file (bash `${TMPDIR:-/tmp}`, PowerShell `$env:TEMP`), then write the issue:
 
 - **`REQ_ISSUE` is bound** (issue ref passed, or a match found in Phase 0.1): overwrite that issue's body with the finished requirement. The title becomes `[req] <topic>` (update it only if the existing title is a stale placeholder; preserve a good user-set title).
 

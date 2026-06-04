@@ -8,18 +8,18 @@ argument-hint: "[mode:headless] [#<N> | <issue-url> | path/to/document.md]"
 
 Review requirements or plan documents through multi-persona analysis. Dispatches specialized reviewer agents in parallel, auto-applies `safe_auto` fixes, and routes remaining findings through a four-option interaction (per-finding walk-through, auto-resolve with best judgment, Append-to-Open-Questions, Report-only) for user decision.
 
-The primary input is a **yunxing artifact issue** — durable requirements/plan artifacts are stored as GitHub issues distinguished by label (`yunxing:req`, `yunxing:plan`, `yunxing:solution`, `yunxing:idea`, `yunxing:pulse`), not as local files under `docs/`. Reviewing an arbitrary local markdown file (a doc that is not a yunxing artifact) is also supported. In both cases the review reads markdown, runs the persona analysis, and applies agreed findings back to the **source** — the issue body for an artifact, the file on disk for a local doc.
+The primary input is a **yunxing artifact issue** — durable requirements/plan artifacts are stored as GitHub issues distinguished by label (`yunxing:req`, `yunxing:plan`, `yunxing:solution`, `yunxing:idea`, `yunxing:pulse`), not as local files. Reviewing an arbitrary local markdown file (a doc that is not a yunxing artifact) is also supported. In both cases the review reads markdown, runs the persona analysis, and applies agreed findings back to the **source** — the issue body for an artifact, the file on disk for a local doc.
 
 ## Source resolution
 
 A single concept threads through the whole skill: the **working file** — a local markdown path that all edit-tool mechanics (safe_auto apply, the Apply-set batch edit, Open-Questions appends) operate on. How the working file maps to the source depends on the argument:
 
-- **Issue ref** — an argument of the form `#<N>`, a bare integer `<N>`, or a GitHub issue URL. Run GH PREFLIGHT (below), read the issue body via `gh issue view`, and write the body markdown to a transient working file in the OS temp dir (never under `docs/`). This is the **primary path** for yunxing artifacts. After review edits land on the working file, push it BACK to the issue body via `gh issue edit <N> --body-file <working-file>` (the SYNC-BACK step in Phase 4/walkthrough).
+- **Issue ref** — an argument of the form `#<N>`, a bare integer `<N>`, or a GitHub issue URL. Run GH PREFLIGHT (below), read the issue body via `gh issue view`, and write the body markdown to a transient working file in the OS temp dir. This is the **primary path** for yunxing artifacts. After review edits land on the working file, push it BACK to the issue body via `gh issue edit <N> --body-file <working-file>` (the SYNC-BACK step in Phase 4/walkthrough).
 - **Local path** — an argument that is a filesystem path to a markdown file that is not a yunxing artifact. The working file IS that path; edits write in place, with no SYNC-BACK step.
 
 ### GH PREFLIGHT (issue source only)
 
-Before any issue read or write, verify the GitHub CLI is usable. Run each check as a single simple command (no chaining, no error suppression) and abort with guidance if any fails — never fall back to writing a local `docs/` file:
+Before any issue read or write, verify the GitHub CLI is usable. Run each check as a single simple command (no chaining, no error suppression) and abort with guidance if any fails — never fall back to writing a local file:
 
 ```bash
 gh --version

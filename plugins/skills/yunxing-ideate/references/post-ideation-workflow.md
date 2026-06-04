@@ -76,7 +76,7 @@ Either mode can also use the other destination on explicit request ("save to Pro
 
 The GH preflight and `yunxing:idea` label check ran in SKILL.md Phase 0.1; do not fall back to a local file. Create or update the `yunxing:idea` GitHub issue:
 
-1. Compose the issue body markdown (template below) to a temp file in the OS temp dir (`${TMPDIR:-/tmp}` / `$env:TEMP`), never under `docs/`.
+1. Compose the issue body markdown (template below) to a temp file in the OS temp dir (`${TMPDIR:-/tmp}` / `$env:TEMP`).
 2. **Create** when no idea issue is bound:
 
 ```bash
@@ -143,7 +143,7 @@ If resuming:
 
 Hand off the ideation content to the `yunxing-proof` skill in HITL review mode. This uploads the doc, runs an iterative review loop (user annotates in Proof, agent ingests feedback, applies agreed edits, and replies/resolves in-thread), and (in repo mode) syncs the reviewed markdown back to the `yunxing:idea` issue body.
 
-Export the bound (or just-created) `yunxing:idea` issue body to a temp file in the OS temp dir to serve as the Proof source (`gh issue view <N> --json body --jq .body > <body-file>`); never stage the source under `docs/`. After Proof review completes, sync the reviewed markdown back to the issue with `gh issue edit <N> --body-file <body-file>`.
+Export the bound (or just-created) `yunxing:idea` issue body to a temp file in the OS temp dir to serve as the Proof source (`gh issue view <N> --json body --jq .body > <body-file>`); never stage the source as a local file. After Proof review completes, sync the reviewed markdown back to the issue with `gh issue edit <N> --body-file <body-file>`.
 
 Load the `yunxing-proof` skill in HITL-review mode with:
 

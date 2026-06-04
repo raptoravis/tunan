@@ -2,7 +2,7 @@
 
 Use this path when the input is a longer recording (over ~60 seconds), contains multiple issues, requirements, or workflow walkthroughs, or the user explicitly wants requirements material. The goal is durable requirements material — captured as a `yunxing:req` GitHub issue — that feeds `yunxing-brainstorm`. The analyzer's Compound Engineering scaffolds are transient working material read from a temp dir, not committed artifacts.
 
-Run the GH preflight from SKILL.md before any issue read/write; never fall back to a local file under `docs/`.
+Run the GH preflight from SKILL.md before any issue read/write; never fall back to a local file.
 
 ## Workflow
 

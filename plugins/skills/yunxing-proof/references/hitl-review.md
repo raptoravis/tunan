@@ -6,7 +6,7 @@ Human-in-the-loop iteration loop for a markdown document shared via Proof. Invok
 
 The source is one of two shapes (see "Source shapes" in `SKILL.md` for the full contract):
 
-- **yunxing artifact issue** — a durable requirements/plan/solution/idea/pulse artifact stored as a GitHub issue (`yunxing:req` / `yunxing:plan` / `yunxing:solution` / `yunxing:idea` / `yunxing:pulse`), named by `#<N>` or a GitHub issue URL. Run GH PREFLIGHT (`SKILL.md`), export the issue body to a transient temp markdown file under the OS temp dir (never under `docs/`), and treat that temp file as the HITL source file. On end-sync, push the reviewed markdown to the issue body via `gh issue edit <N> --body-file <temp-file>`. This is the primary path for the upstream handoff.
+- **yunxing artifact issue** — a durable requirements/plan/solution/idea/pulse artifact stored as a GitHub issue (`yunxing:req` / `yunxing:plan` / `yunxing:solution` / `yunxing:idea` / `yunxing:pulse`), named by `#<N>` or a GitHub issue URL. Run GH PREFLIGHT (`SKILL.md`), export the issue body to a transient temp markdown file under the OS temp dir, and treat that temp file as the HITL source file. On end-sync, push the reviewed markdown to the issue body via `gh issue edit <N> --body-file <temp-file>`. This is the primary path for the upstream handoff.
 - **local markdown file** — a non-artifact markdown file the user already has on disk. The source file IS that path; end-sync writes back to it. This keeps the "elsewhere" / direct-user path working.
 
 In both shapes the HITL loop operates on a real on-disk file (the user's file, or the temp export). The only differences are how the source file is obtained (Phase 1) and where end-sync writes the result (Phase 5).
@@ -328,7 +328,7 @@ Runs when the user selects **Proceed**. Before prompting anything, check whether
    gh issue edit <N> --body-file "$SOURCE"
    ```
 
-   This overwrites the issue body with the reviewed markdown. The temp file is the durable artifact's staging area, not a durable file — `docs/` is never written. (Optionally, review notes that are not part of the doc body can be posted as `gh issue comment <N> --body-file <notes-file>` instead.)
+   This overwrites the issue body with the reviewed markdown. The temp file is the durable artifact's staging area, not a durable file — no local file is ever written. (Optionally, review notes that are not part of the doc body can be posted as `gh issue comment <N> --body-file <notes-file>` instead.)
 
    On **Not yet**, skip the write/push (still clean up `$STATE_TMP`).
 

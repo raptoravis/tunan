@@ -46,7 +46,7 @@ If the line above resolved to a plain branch name (like `feat/my-branch`), inclu
 
 ## Storage: yunxing:solution GitHub issues
 
-Learnings are stored as GitHub issues, never local files. A learning is one issue labeled `yunxing:solution`, titled `[solution] <slug>`, whose body is a fenced ```yaml block (the frontmatter from `references/schema.yaml`) followed by the resolution-template markdown sections. Never write a learning to `docs/solutions/` or any local file.
+Learnings are stored as GitHub issues, never local files. A learning is one issue labeled `yunxing:solution`, titled `[solution] <slug>`, whose body is a fenced ```yaml block (the frontmatter from `references/schema.yaml`) followed by the resolution-template markdown sections. Never write a learning to a local file.
 
 **GH preflight — run before any issue read or write.** If any check fails, abort and surface the guidance; never fall back to a local file.
 
@@ -494,7 +494,7 @@ In lightweight mode, the overlap check is skipped (no Related Docs Finder subage
 
 ## What It Creates
 
-**One GitHub issue labeled `yunxing:solution`**, titled `[solution] <slug>`, whose body is a fenced ```yaml block followed by the resolution-template markdown sections. Never a local file under `docs/solutions/`.
+**One GitHub issue labeled `yunxing:solution`**, titled `[solution] <slug>`, whose body is a fenced ```yaml block followed by the resolution-template markdown sections. Never a local file.
 
 **Category (a `category` slug in the YAML block, auto-detected from problem):**
 
@@ -524,7 +524,7 @@ Knowledge track:
 | ❌ Wrong | ✅ Correct |
 |----------|-----------|
 | Subagents write files or create/edit issues | Subagents return text data; orchestrator creates/edits the one issue |
-| Writing a learning to `docs/solutions/` or any local file | One GitHub issue labeled `yunxing:solution` |
+| Writing a learning to a local file | One GitHub issue labeled `yunxing:solution` |
 | Research and assembly run in parallel | Research completes → then assembly runs |
 | Multiple artifacts created during workflow | One solution issue created or updated (plus optional local maintenance writes: a `CONCEPTS.md` create/update from Phase 2.4 and a small instruction-file edit for discoverability) |
 | Creating a new issue when an existing issue covers the same problem | Check overlap assessment; update the existing issue when overlap is high |

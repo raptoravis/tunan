@@ -131,7 +131,7 @@ yunxing pipeline artifacts are durable GitHub issues distinguished by label, not
 - `yunxing:plan` issues -- plans created by yunxing-plan (decision artifacts; execution progress is derived from git, not stored in plan bodies)
 - `yunxing:solution` issues -- solution/learning documents created during the pipeline
 
-If a reviewer flags any of these issues (or the `gh issue` calls that create or update them) for closing, deletion, or removal, discard that finding during synthesis. These artifacts are not local `docs/` files — a finding that recommends deleting or gitignoring a `docs/brainstorms`, `docs/plans`, or `docs/solutions` path is moot and should also be discarded.
+If a reviewer flags any of these issues (or the `gh issue` calls that create or update them) for closing, deletion, or removal, discard that finding during synthesis. These artifacts are not local files — a finding that recommends deleting or gitignoring a local path for these artifacts is moot and should also be discarded.
 
 ## How to Run
 
@@ -596,7 +596,7 @@ Before delivering the review, verify:
 2. **No false positives from skimming.** For each finding, verify the surrounding code was actually read. Check that the "bug" isn't handled elsewhere in the same function, that the "unused import" isn't used in a type annotation, that the "missing null check" isn't guarded by the caller.
 3. **Severity is calibrated.** A style nit is never P0. A SQL injection is never P3. Re-check every severity assignment.
 4. **Line numbers are accurate.** Verify each cited line number against the file content. A finding pointing to the wrong line is worse than no finding.
-5. **Protected artifacts are respected.** Discard any findings that recommend closing, deleting, or otherwise removing the `yunxing:req`, `yunxing:plan`, or `yunxing:solution` issues (or the `gh issue` calls that maintain them). A finding that recommends deleting or gitignoring a `docs/brainstorms`, `docs/plans`, or `docs/solutions` path is moot — those artifacts are GitHub issues now — and should also be discarded.
+5. **Protected artifacts are respected.** Discard any findings that recommend closing, deleting, or otherwise removing the `yunxing:req`, `yunxing:plan`, or `yunxing:solution` issues (or the `gh issue` calls that maintain them). A finding that recommends deleting or gitignoring a local path for these artifacts is moot — those artifacts are GitHub issues now — and should also be discarded.
 6. **Findings don't duplicate linter output.** Don't flag things the project's linter/formatter would catch (missing semicolons, wrong indentation). Focus on semantic issues.
 
 ## Language-Aware Conditionals

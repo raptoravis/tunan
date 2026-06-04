@@ -10,7 +10,7 @@ argument-hint: "[optional: feature description, a yunxing:req issue ref (#N or U
 
 `yunxing-brainstorm` defines **WHAT** to build. `yunxing-plan` defines **HOW** to build it. `yunxing-work` executes the plan. A prior brainstorm is useful context but never required — `yunxing-plan` works from any input: a `yunxing:req` requirement issue, a bug report, a feature idea, or a rough description.
 
-**The plan is stored as a GitHub issue labeled `yunxing:plan`, never a local file under `docs/`.** Requirements, plans, solutions, ideas, and reports all live as GitHub issues distinguished by label — `yunxing-plan` writes the plan to a `yunxing:plan` issue and hands its issue number downstream. There is no `docs/plans/*.md` or `.html` artifact.
+**The plan is stored as a GitHub issue labeled `yunxing:plan`, never a local file.** Requirements, plans, solutions, ideas, and reports all live as GitHub issues distinguished by label — `yunxing-plan` writes the plan to a `yunxing:plan` issue and hands its issue number downstream. There is no local plan file artifact.
 
 ## GitHub Storage Preflight
 
@@ -726,7 +726,7 @@ Requirement: #<reqN>
 
 Omit the line entirely when planning standalone (no requirement issue).
 
-Write the body to an OS temp file, never under `docs/` (bash `${TMPDIR:-/tmp}/yunxing-plan-body.md`, PowerShell `$env:TEMP\yunxing-plan-body.md`).
+Write the body to an OS temp file (bash `${TMPDIR:-/tmp}/yunxing-plan-body.md`, PowerShell `$env:TEMP\yunxing-plan-body.md`).
 
 **Create** a new plan issue (title `[plan] <topic>` from Phase 3.1):
 

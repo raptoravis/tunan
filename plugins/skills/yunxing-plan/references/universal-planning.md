@@ -153,7 +153,6 @@ After structuring the plan, ask the user how they want to receive it using the p
 **Options:**
 
 1. **Save to disk** — Write the plan as a markdown file. Ask where:
-   - `docs/plans/` (only show if this directory already exists; do not create it — the durable software-plan artifact is a `yunxing:plan` issue, discoverable via `gh issue list --label yunxing:plan`, not a `docs/plans/` glob)
    - Current working directory
    - `/tmp`
    - A custom path
