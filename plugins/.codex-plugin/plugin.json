@@ -1,6 +1,6 @@
 {
   "name": "tunan",
-  "version": "3.10.1",
+  "version": "3.11.0",
   "description": "AI-powered development tools for code review, research, design, and workflow automation.",
   "author": {
     "name": "raptoravis",
@@ -22,6 +22,7 @@
     "image-generation"
   ],
   "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Compound Engineering",
     "shortDescription": "AI-powered development tools for code review, research, design, and workflow automation.",

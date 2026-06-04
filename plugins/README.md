@@ -4,16 +4,17 @@ AI-powered development tools that get smarter with every use. Make each unit of 
 
 ## Getting Started
 
-After installing, run `/ce-setup` in any project. It diagnoses your environment, installs missing tools, and bootstraps project config in one interactive flow.
+After installing, run `/ce-setup` in any project. It diagnoses your environment, installs missing tools and MCP servers, and bootstraps project config in one interactive flow.
 
 **Windows:** the skills run on Windows as well as macOS/Linux. Bundled helper scripts ship in both bash (`.sh`) and PowerShell (`.ps1`) form — the PowerShell variants are Windows PowerShell 5.1-compatible (no extra install) and are used automatically on Windows.
 
 ## Components
 
-| Component | Count |
-| --------- | ----- |
-| Agents    | 50+   |
-| Skills    | 38+   |
+| Component   | Count |
+| ----------- | ----- |
+| Agents      | 50+   |
+| Skills      | 38+   |
+| MCP Servers | 5     |
 
 ## Skills
 
@@ -102,6 +103,25 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ce-dogfood-beta` | Diff-scoped browser QA of the active branch: builds an exhaustive test matrix of every change, drives the app with agent-browser, then auto-fixes issues, adds regression tests, and commits each fix until green |
 | `/lfg`            | Full autonomous engineering workflow                                                                                                                                                                              |
+
+## MCP Servers
+
+The plugin ships a bundled [`.mcp.json`](.mcp.json). Two lightweight, no-API-key servers load automatically the moment the plugin is enabled:
+
+| Server                | Auto-loads | Purpose                                          |
+| --------------------- | ---------- | ------------------------------------------------ |
+| `context7`            | ✅          | Up-to-date library / API documentation lookup    |
+| `sequential-thinking` | ✅          | Structured multi-step reasoning                  |
+
+Three heavier servers are **opt-in** — they pull large dependencies (browser binaries, a Python `uvx` toolchain, a Chrome install), so `/ce-setup` offers them but leaves them unchecked by default:
+
+| Server            | Installs via                          | Purpose                                  |
+| ----------------- | ------------------------------------- | ---------------------------------------- |
+| `playwright`      | `claude mcp add playwright …`         | Cross-browser automation                 |
+| `serena`          | `claude mcp add serena …`             | Codebase session memory (needs `uvx`)    |
+| `chrome-devtools` | `claude mcp add chrome-devtools …`    | Performance / DevTools inspection        |
+
+Run `/ce-setup` to check which MCP servers are registered (via `claude mcp list`) and install any missing ones interactively. MCP detection and `claude mcp add` install are Claude Code-specific; on other harnesses the MCP section is skipped.
 
 ## Agents
 

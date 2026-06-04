@@ -24,19 +24,23 @@ If a version is found, pass it to the check script via `--version`. Otherwise om
 
 Before running the script, display: "Compound Engineering -- checking your environment..."
 
-Run the bundled check script. Do not perform manual dependency checks -- the script handles all CLI tools, agent skills, repo-local CE file checks, and `.gitignore` guidance in one pass.
+Run the bundled check script. Do not perform manual dependency checks -- the script handles all CLI tools, agent skills, MCP servers, repo-local CE file checks, and `.gitignore` guidance in one pass. Pick the variant for the current OS: PowerShell (`.ps1`) on Windows, bash (`.sh`) on macOS/Linux. Both accept the same arguments and print identical output.
+
+Windows (PowerShell):
 
 ```bash
-bash scripts/check-health --version VERSION
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/check-health.ps1 --version VERSION
 ```
 
-Or without version if Step 1 could not determine it:
+macOS / Linux (bash):
 
 ```bash
-bash scripts/check-health
+bash scripts/check-health.sh --version VERSION
 ```
 
-Script reference: `scripts/check-health`
+Or without version if Step 1 could not determine it, omit the `--version VERSION` argument (e.g. `bash scripts/check-health.sh`, or `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/check-health.ps1`).
+
+Script reference: `scripts/check-health.sh` (and its `.ps1` Windows twin).
 
 Display the script's output to the user.
 
@@ -50,17 +54,19 @@ After the diagnostic report, check whether:
 
 - any CLI tools are missing (reported as yellow in the Tools section)
 - any agent skills are missing (reported as yellow in the Skills section)
+- any MCP servers are missing (reported as yellow in the MCP Servers section; the section is absent on harnesses without the `claude` CLI)
 - `tunan.local.md` is present and needs cleanup
 - `.tunan/config.local.yaml` does not exist or is not safely gitignored
 - `.tunan/config.local.example.yaml` is missing or outdated
 
-If everything is installed, no repo-local cleanup is needed, and `.tunan/config.local.yaml` already exists and is gitignored, display the tool and skill list and completion message. Parse the tool and skill names from the script output and list each with a green circle. Omit the Skills line if the Skills section is absent from the script output:
+If everything is installed (tools, skills, and any MCP servers), no repo-local cleanup is needed, and `.tunan/config.local.yaml` already exists and is gitignored, display the tool, skill, and MCP list and completion message. Parse the tool, skill, and MCP server names from the script output and list each with a green circle. Omit the Skills line if the Skills section is absent from the script output, and omit the MCP line if the MCP Servers section is absent (non-Claude harnesses):
 
 ```
  ✅ Compound Engineering setup complete
 
     Tools:  🟢 agent-browser  🟢 gh  🟢 jq  🟢 vhs  🟢 silicon  🟢 ffmpeg  🟢 ast-grep
     Skills: 🟢 ast-grep
+    MCP:    🟢 context7  🟢 sequential-thinking  🟢 playwright  🟢 serena  🟢 chrome-devtools
     Config: ✅
 
     Run /ce-setup anytime to re-check.
@@ -105,11 +111,13 @@ If the local config already exists, check whether it is safely gitignored. If no
 
 ### Step 6: Offer Installation
 
-Present the missing tools and skills using a multiSelect question with all items pre-selected. Use the install commands and URLs from the script's diagnostic output. Group items under `Tools:` and `Skills:` so the user can see which runtime each item targets; omit a group whose items are all installed.
+Present the missing tools, skills, and MCP servers using a multiSelect question. Use the install commands and URLs from the script's diagnostic output. Group items under `Tools:`, `Skills:`, and `MCP Servers:` so the user can see which runtime each item targets; omit a group whose items are all installed.
+
+Pre-select all missing tools and skills. For MCP servers, pre-select the `recommended` ones (context7, sequential-thinking) but leave the `optional` ones (playwright, serena, chrome-devtools) **unchecked** by default — they pull heavyweight dependencies (browser binaries, a Python `uvx` toolchain, a Chrome install) that many users will not want, so let the user opt in deliberately.
 
 ```
 The following items are missing. Select which to install:
-(All items are pre-selected)
+(Tools and skills are pre-selected; optional MCP servers are not)
 
 Tools:
   [x] agent-browser - Browser automation for testing and screenshots
@@ -122,9 +130,16 @@ Tools:
 
 Skills:
   [x] ast-grep - Agent skill for structural code search with ast-grep
+
+MCP Servers:
+  [x] context7 - Up-to-date library/API documentation lookup
+  [x] sequential-thinking - Structured multi-step reasoning
+  [ ] playwright - Browser automation (downloads browser binaries)
+  [ ] serena - Codebase session memory (requires uvx / Python)
+  [ ] chrome-devtools - Performance and DevTools inspection (requires Chrome)
 ```
 
-Only show items that are actually missing. Omit installed ones.
+Only show items that are actually missing. Omit installed ones. Omit the MCP Servers group entirely when the diagnostic output had no MCP Servers section (non-Claude harnesses).
 
 ### Step 7: Install Selected Dependencies
 
@@ -143,6 +158,7 @@ For each selected dependency, in order:
 2. **If approved:** Run the install command using a shell execution tool. After the command completes, verify installation:
    - For a CLI tool, run the dependency's check command (e.g., `command -v agent-browser`).
    - For an agent skill, prefer `npx --yes skills list --global --json | jq -r '.[].name' | grep -qx <skill-name>` when `npx` is available; otherwise fall back to checking that `~/.claude/skills/<skill-name>`, `~/.agents/skills/<skill-name>`, or `~/.codex/skills/<skill-name>` exists (file, directory, or symlink).
+   - For an MCP server, run `claude mcp get <name>` and treat a successful (zero exit) result as installed. The `claude mcp add ...` commands register the server at user scope by default; a server can take a few seconds to connect on first launch, so a registered-but-not-yet-connected status still counts as installed.
 
 3. **If verification succeeds:** Report success.
 

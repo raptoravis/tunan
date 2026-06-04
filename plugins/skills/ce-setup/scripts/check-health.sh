@@ -30,6 +30,21 @@ skills=(
   "ast-grep|recommended|npx skills add ast-grep/agent-skill -g -y|https://github.com/ast-grep/agent-skill"
 )
 
+# MCP servers (Claude Code). Presence is resolved via `claude mcp list`.
+# context7 and sequential-thinking ship in the plugin's .mcp.json and load
+# automatically when the plugin is enabled, so they normally report green.
+# The heavier servers (browser/Python/Chrome dependencies) are installed
+# on demand via the `claude mcp add` commands below.
+# Format: name|tier|install_cmd|url
+
+mcp=(
+  "context7|recommended|claude mcp add context7 -- npx -y @upstash/context7-mcp@latest|https://github.com/upstash/context7"
+  "sequential-thinking|recommended|claude mcp add sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking|https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking"
+  "playwright|optional|claude mcp add playwright -- npx @playwright/mcp@latest|https://github.com/microsoft/playwright-mcp"
+  "serena|optional|claude mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant|https://github.com/oraios/serena"
+  "chrome-devtools|optional|claude mcp add chrome-devtools -- npx chrome-devtools-mcp@latest|https://github.com/ChromeDevTools/chrome-devtools-mcp"
+)
+
 # =====================================================
 #  Args
 # =====================================================
@@ -134,6 +149,35 @@ for entry in "${skills[@]}"; do
 done
 
 # =====================================================
+#  Check MCP servers (Claude Code only)
+# =====================================================
+# `claude mcp list` enumerates every configured server across plugin, user,
+# project, and local scopes. When the `claude` CLI is absent (e.g. Codex or
+# other harnesses), the MCP section is skipped entirely -- MCP install on
+# those platforms is handled separately by the setup skill.
+
+has_claude="no"
+command -v claude >/dev/null 2>&1 && has_claude="yes"
+
+mcp_listing=""
+if [ "$has_claude" = "yes" ]; then
+  mcp_listing=$(claude mcp list 2>/dev/null)
+fi
+
+mcp_ok=0; mcp_total=0
+mcp_results=()
+for entry in "${mcp[@]}"; do
+  IFS='|' read -r name tier install_cmd url <<< "$entry"
+  mcp_total=$((mcp_total + 1))
+  if [ "$has_claude" = "yes" ] && printf '%s\n' "$mcp_listing" | grep -qE "^${name}[: ]"; then
+    mcp_ok=$((mcp_ok + 1))
+    mcp_results+=("$name|$tier|ok|$install_cmd|$url")
+  else
+    mcp_results+=("$name|$tier|missing|$install_cmd|$url")
+  fi
+done
+
+# =====================================================
 #  Project checks (repo only)
 # =====================================================
 
@@ -215,6 +259,24 @@ if [ "${#skills[@]}" -gt 0 ]; then
   done
 fi
 
+# --- MCP servers ---
+
+if [ "$has_claude" = "yes" ] && [ "${#mcp[@]}" -gt 0 ]; then
+  section "MCP Servers  ${mcp_ok}/${mcp_total}"
+
+  for result in "${mcp_results[@]}"; do
+    IFS='|' read -r name tier status install_cmd url <<< "$result"
+    if [ "$status" = "ok" ]; then
+      ok "$name"
+    else
+      warn "$name"
+      issues=$((issues + 1))
+      detail "$install_cmd"
+      detail "$url"
+    fi
+  done
+fi
+
 # --- Project ---
 
 if [ "$in_repo" = "yes" ]; then
@@ -256,10 +318,15 @@ fi
 # --- Bottom line ---
 
 echo ""
+summary="${cli_ok}/${cli_total} tools  ${skill_ok}/${skill_total} skills"
+if [ "$has_claude" = "yes" ]; then
+  summary="${summary}  ${mcp_ok}/${mcp_total} mcp"
+fi
+
 if [ "$issues" -eq 0 ]; then
-  echo " ✅  All clear  ${cli_ok}/${cli_total} tools  ${skill_ok}/${skill_total} skills"
+  echo " ✅  All clear  ${summary}"
 else
-  echo " ⚠️   ${issues} issue(s) found  ${cli_ok}/${cli_total} tools  ${skill_ok}/${skill_total} skills"
+  echo " ⚠️   ${issues} issue(s) found  ${summary}"
 fi
 
 echo ""

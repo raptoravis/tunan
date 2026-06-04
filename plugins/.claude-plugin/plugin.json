@@ -1,6 +1,6 @@
 {
   "name": "tunan",
-  "version": "3.10.1",
+  "version": "3.11.0",
   "description": "AI-powered development tools for code review, research, design, and workflow automation.",
   "author": {
     "name": "raptoravis",
@@ -20,5 +20,6 @@
     "typescript",
     "knowledge-management",
     "image-generation"
-  ]
+  ],
+  "mcpServers": "./.mcp.json"
 }
