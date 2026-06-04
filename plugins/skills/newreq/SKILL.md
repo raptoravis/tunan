@@ -27,7 +27,7 @@ Do not accept destructive flags. This skill never edits local files and never co
 
 ## Default mode (fast path) vs `--align`
 
-**Default** (no `--align`): emit **no** blocking questions. Take the best default at every soft decision and continue — auto-detect `kind` (fall back to `feature`), use `priority=P2`, skip the pre-create confirmation, and create the issue directly. Conversation extraction, asset preparation, token rewriting, and post-create verification still run.
+**Default** (no `--align`): emit **no** blocking questions *during capture*. Take the best default at every soft decision and continue — auto-detect `kind` (fall back to `feature`), use `priority=P2`, skip the pre-create confirmation, and create the issue directly. Conversation extraction, asset preparation, token rewriting, and post-create verification still run. This silence applies to capture-time soft decisions only; the terminal "what next" handoff in Step 8 always fires the blocking question tool regardless of mode.
 
 **`--align`:** ask at every soft decision (kind, priority, asset names, final confirmation) using the platform's blocking question tool, following the `align` protocol — at least 3 ranked options with the single best one placed first and labeled `(Recommended)`. Load the `align` skill for the full protocol. Use `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to a numbered list in chat only when no blocking tool exists or the call errors — never silently skip a question.
 
@@ -140,7 +140,7 @@ Do **not** `git add` or commit — this skill never touches the local working tr
 
 ## Step 8: Output and handoff
 
-Put the issue URL on its own line at the top with a `🔗` so it is easy to click. Then offer next steps.
+Put the issue URL on its own line at the top with a `🔗` so it is easy to click, then print the capture summary:
 
 ```
 ✅ Requirement captured: #<N> [req] <title>
@@ -152,18 +152,22 @@ Put the issue URL on its own line at the top with a `🔗` so it is easy to clic
 
 Next (if assets were referenced): open the URL, drag the files into the comment
 box, and paste their user-content URLs back into the body's TODO lines.
-
-What next?
-  1. (Recommended) brainstorm #<N>  — think it through; the finished requirements are written back into this issue
-  2. plan #<N>                       — plan the implementation directly from the captured requirement
-  3. gh issue edit #<N>                      — refine the capture by hand
 ```
+
+Then ask the "what next" handoff via the platform's **blocking question tool** — this terminal menu is an answer-alignment moment and always fires the tool, even in default mode (the default-mode "no blocking questions" rule governs capture-time soft decisions, not this handoff). Use `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Follow the `align` protocol: the single best option placed first and labeled `(Recommended)`. Use these canonical options (each label self-contained):
+
+- **brainstorm #<N> (Recommended)** — think it through; the finished requirements are written back into this issue
+- **plan #<N>** — plan the implementation directly from the captured requirement
+- **edit #<N> by hand** — refine the capture manually with `gh issue edit #<N>`
+
+Fall back to a numbered list in chat only when no blocking tool exists in the harness or the call errors — never silently skip the question.
 
 ## Common mistakes
 
 - **Falling back to a local file when `gh` is missing or unauthenticated** — abort instead; requirements live in GitHub issues.
 - **Inventing scope** — capture only what the user said; acceptance criteria and research belong to `brainstorm`.
 - **Leaving a literal `[Image #N]` token in the body** — always rewrite to a `<!-- TODO -->` comment.
-- **Asking questions in default mode, or staying silent in `--align`** — default mode is silent and takes defaults; `--align` asks at every soft decision.
+- **Asking questions in default mode, or staying silent in `--align`** — default mode is silent on capture-time soft decisions and takes defaults; `--align` asks at every soft decision. The Step 8 terminal handoff is not a soft decision — it always fires the blocking question tool in both modes.
+- **Printing the "what next" menu as a plain numbered list** — Step 8 must fire the blocking question tool (`AskUserQuestion` etc.); a chat numbered list is the fallback only when no tool exists or the call errors.
 - **Label / YAML mismatch** — the `kind:` and `priority:` labels must match the body YAML values.
 - **Forgetting to prompt for asset upload** — the body holds only placeholders; tell the user to drag the files in after creation.
