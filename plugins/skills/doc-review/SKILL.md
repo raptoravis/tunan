@@ -188,24 +188,24 @@ Tell the user which personas will review and why. For conditional personas, incl
 
 ```
 Reviewing with:
-- yunxing-coherence-reviewer (always-on)
-- yunxing-feasibility-reviewer (always-on)
-- yunxing-scope-guardian-reviewer -- plan has 12 requirements across 3 priority levels
-- yunxing-security-lens-reviewer -- plan adds API endpoints with auth flow
+- yunxing:coherence-reviewer (always-on)
+- yunxing:feasibility-reviewer (always-on)
+- yunxing:scope-guardian-reviewer -- plan has 12 requirements across 3 priority levels
+- yunxing:security-lens-reviewer -- plan adds API endpoints with auth flow
 ```
 
 ### Build Agent List
 
 Always include:
-- `yunxing-coherence-reviewer`
-- `yunxing-feasibility-reviewer`
+- `yunxing:coherence-reviewer`
+- `yunxing:feasibility-reviewer`
 
 Add activated conditional personas:
-- `yunxing-product-lens-reviewer`
-- `yunxing-design-lens-reviewer`
-- `yunxing-security-lens-reviewer`
-- `yunxing-scope-guardian-reviewer`
-- `yunxing-adversarial-document-reviewer`
+- `yunxing:product-lens-reviewer`
+- `yunxing:design-lens-reviewer`
+- `yunxing:security-lens-reviewer`
+- `yunxing:scope-guardian-reviewer`
+- `yunxing:adversarial-document-reviewer`
 
 ### Dispatch
 

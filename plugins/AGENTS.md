@@ -38,7 +38,7 @@ Before committing changes:
 
 ```
 agents/
-└── yunxing-*.md  # All agents live flat under agents/, prefixed with yunxing-
+└── *.md          # Agent files use the bare agent name; frontmatter name carries no yunxing- prefix (lfg-style)
 
 skills/
 └── */            # Skill dirs use the bare skill name (cp, plan, code-review, …) — no yunxing- prefix; lfg is the one historical bare name
@@ -61,7 +61,7 @@ Important: Just because the developer's installed plugin may be out of date, it'
 
 ## Naming Convention
 
-**Skills carry no prefix; agents keep the `yunxing-` prefix.** The two are namespaced differently because the host surfaces them differently.
+**Neither skills nor agents carry a `yunxing-` prefix.** Both get the plugin namespace from the host and surface under `yunxing:` — skills as `/yunxing:<name>` commands, agents as `yunxing:<name>` subagent types.
 
 **Skills use the bare name** — the directory name and the SKILL.md `name:` frontmatter have no prefix (`cp`, `plan`, `code-review`, …). Claude Code prepends the plugin namespace automatically, so each skill surfaces to users as `/yunxing:<name>`:
 
@@ -71,11 +71,11 @@ Important: Just because the developer's installed plugin may be out of date, it'
 - `/yunxing:work` - Execute work items systematically
 - `/yunxing:compound` - Document solved problems
 
-**Why no prefix on skills?** The host's plugin namespace already supplies the `yunxing:` qualifier. A `yunxing-` prefix on top of it produces a doubled `/yunxing:yunxing-plan`. The namespace colon is a display-layer construct only — directory names and `name:` frontmatter stay bare hyphenated lowercase (`code-review`), so there is no Windows/filesystem concern. `lfg` predates the scheme and was already prefix-free.
+**Agents use the bare name too** — the frontmatter `name:` has no prefix (`adversarial-reviewer`, `learnings-researcher`, …); the agent filename is cosmetic and does not affect resolution. The host namespaces them under the plugin, so an agent is dispatched and displayed as `yunxing:<agent-name>`. Agents are not slash commands (there is no `/`), but the `subagent_type` string a skill dispatches with still carries the `yunxing:` namespace — reference an agent as `yunxing:<agent-name>`.
 
-**Agents keep the `yunxing-` prefix** (`yunxing-adversarial-reviewer`, `yunxing-learnings-researcher`, etc.). Agents are dispatched by `subagent_type` under that bare prefixed name — they are not slash commands and receive no namespace qualifier from the host, so the prefix is what keeps them unambiguous across plugins. Reference an agent from a skill with the `yunxing-<agent-name>` form.
+**Why no prefix?** The host's plugin namespace already supplies the `yunxing:` qualifier. A `yunxing-` prefix in the name on top of it produces a doubled `/yunxing:yunxing-plan` (skills) or `yunxing:yunxing-adversarial-reviewer` (agents). The namespace colon is a display-layer construct only — directory names and `name:` frontmatter stay bare hyphenated lowercase (`code-review`), so there is no Windows/filesystem concern. `lfg` predates the scheme and was already prefix-free.
 
-**For a new skill**, the directory name, the SKILL.md `name:` frontmatter, and any README references all use the bare name (no `yunxing-`). **For a new agent**, keep the `yunxing-` prefix.
+**For a new skill or agent, use the bare name (no `yunxing-`):** the skill's directory name plus its SKILL.md `name:`, or the agent's frontmatter `name:`. They surface as `/yunxing:<skill>` and `yunxing:<agent>`.
 
 ## Skill Design Principles
 
@@ -186,7 +186,7 @@ Design rules for blocking question menus (`AskUserQuestion` / `request_user_inpu
 
 - [ ] When a skill dispatches sub-agents, instruct use of the platform's subagent primitive and name the known equivalents (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi via the `pi-subagents` extension)
 - [ ] Prefer bounded parallel execution: respect platform active-subagent limits, queue overflow work, and treat limit-related spawn errors as backpressure. Include a sequential fallback for platforms that do not support parallel dispatch
-- [ ] Prefer sub-agents shipped with this plugin (`yunxing-*`) over platform built-ins. Built-ins have different names on each target (e.g., Claude Code's `Explore` is `explorer` on Codex via `spawn_agent`'s `agent_type`, `scout` on Pi via `pi-subagents`) — using our own avoids the enumeration tax. Exception: when a built-in offers a meaningful benefit worth keeping, enumerate the per-platform equivalents inline at the call site so the model can route correctly on each target.
+- [ ] Prefer sub-agents shipped with this plugin (`yunxing:*`) over platform built-ins. Built-ins have different names on each target (e.g., Claude Code's `Explore` is `explorer` on Codex via `spawn_agent`'s `agent_type`, `scout` on Pi via `pi-subagents`) — using our own avoids the enumeration tax. Exception: when a built-in offers a meaningful benefit worth keeping, enumerate the per-platform equivalents inline at the call site so the model can route correctly on each target.
 
 ### Script Path References in Skills
 
@@ -296,7 +296,7 @@ grep -E '^description:' skills/*/SKILL.md
 ## Adding Components
 
 - **New skill:** Create `skills/<name>/SKILL.md` with required YAML frontmatter (`name`, `description`). Reference files go in `skills/<name>/references/`. Add the skill to the appropriate category table in `README.md` and update the skill count.
-- **New agent:** Create `agents/yunxing-<name>.md` with frontmatter (the `yunxing-` prefix is required). Add the agent to the appropriate topical section of `README.md` (Review, Document Review, Research, Design, Workflow, Docs) and update the agent count.
+- **New agent:** Create `agents/<name>.md` with frontmatter (`name`, `description`; bare name, no `yunxing-` prefix — it surfaces as `yunxing:<name>`). Add the agent to the appropriate topical section of `README.md` (Review, Document Review, Research, Design, Workflow, Docs) and update the agent count.
 
 ## Beta Skills
 

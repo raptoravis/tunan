@@ -135,73 +135,73 @@ Agents are specialized subagents invoked by skills — you typically don't call 
 
 | Agent                               | Description                                                                                                |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `yunxing-agent-native-reviewer`          | Verify features are agent-native (action + context parity)                                                 |
-| `yunxing-api-contract-reviewer`          | Detect breaking API contract changes                                                                       |
-| `yunxing-architecture-strategist`        | Analyze architectural decisions and compliance                                                             |
-| `yunxing-code-simplicity-reviewer`       | Final pass for simplicity and minimalism                                                                   |
-| `yunxing-correctness-reviewer`           | Logic errors, edge cases, state bugs                                                                       |
-| `yunxing-data-integrity-guardian`        | Database migrations and data integrity                                                                     |
-| `yunxing-data-migration-reviewer`        | Schema drift, migration safety, mapping verification, deploy-window checks                                 |
-| `yunxing-deployment-verification-agent`  | Create Go/No-Go deployment checklists for risky data changes                                               |
-| `yunxing-julik-frontend-races-reviewer`  | Review JavaScript/Stimulus code for race conditions                                                        |
-| `yunxing-maintainability-reviewer`       | Coupling, complexity, naming, dead code                                                                    |
-| `yunxing-pattern-recognition-specialist` | Analyze code for patterns and anti-patterns                                                                |
-| `yunxing-performance-oracle`             | Performance analysis and optimization                                                                      |
-| `yunxing-performance-reviewer`           | Runtime performance with confidence calibration                                                            |
-| `yunxing-reliability-reviewer`           | Production reliability and failure modes                                                                   |
-| `yunxing-security-reviewer`              | Exploitable vulnerabilities with confidence calibration                                                    |
-| `yunxing-security-sentinel`              | Security audits and vulnerability assessments                                                              |
-| `yunxing-swift-ios-reviewer`             | Swift and iOS code review -- SwiftUI state, retain cycles, concurrency, Core Data threading, accessibility |
-| `yunxing-testing-reviewer`               | Test coverage gaps, weak assertions                                                                        |
-| `yunxing-project-standards-reviewer`     | CLAUDE.md and AGENTS.md compliance                                                                         |
-| `yunxing-adversarial-reviewer`           | Construct failure scenarios to break implementations across component boundaries                           |
+| `yunxing:agent-native-reviewer`          | Verify features are agent-native (action + context parity)                                                 |
+| `yunxing:api-contract-reviewer`          | Detect breaking API contract changes                                                                       |
+| `yunxing:architecture-strategist`        | Analyze architectural decisions and compliance                                                             |
+| `yunxing:code-simplicity-reviewer`       | Final pass for simplicity and minimalism                                                                   |
+| `yunxing:correctness-reviewer`           | Logic errors, edge cases, state bugs                                                                       |
+| `yunxing:data-integrity-guardian`        | Database migrations and data integrity                                                                     |
+| `yunxing:data-migration-reviewer`        | Schema drift, migration safety, mapping verification, deploy-window checks                                 |
+| `yunxing:deployment-verification-agent`  | Create Go/No-Go deployment checklists for risky data changes                                               |
+| `yunxing:julik-frontend-races-reviewer`  | Review JavaScript/Stimulus code for race conditions                                                        |
+| `yunxing:maintainability-reviewer`       | Coupling, complexity, naming, dead code                                                                    |
+| `yunxing:pattern-recognition-specialist` | Analyze code for patterns and anti-patterns                                                                |
+| `yunxing:performance-oracle`             | Performance analysis and optimization                                                                      |
+| `yunxing:performance-reviewer`           | Runtime performance with confidence calibration                                                            |
+| `yunxing:reliability-reviewer`           | Production reliability and failure modes                                                                   |
+| `yunxing:security-reviewer`              | Exploitable vulnerabilities with confidence calibration                                                    |
+| `yunxing:security-sentinel`              | Security audits and vulnerability assessments                                                              |
+| `yunxing:swift-ios-reviewer`             | Swift and iOS code review -- SwiftUI state, retain cycles, concurrency, Core Data threading, accessibility |
+| `yunxing:testing-reviewer`               | Test coverage gaps, weak assertions                                                                        |
+| `yunxing:project-standards-reviewer`     | CLAUDE.md and AGENTS.md compliance                                                                         |
+| `yunxing:adversarial-reviewer`           | Construct failure scenarios to break implementations across component boundaries                           |
 
 ### Document Review
 
 | Agent                              | Description                                                                      |
 | ---------------------------------- | -------------------------------------------------------------------------------- |
-| `yunxing-coherence-reviewer`            | Review documents for internal consistency, contradictions, and terminology drift |
-| `yunxing-design-lens-reviewer`          | Review plans for missing design decisions, interaction states, and AI slop risk  |
-| `yunxing-feasibility-reviewer`          | Evaluate whether proposed technical approaches will survive contact with reality |
-| `yunxing-product-lens-reviewer`         | Challenge problem framing, evaluate scope decisions, surface goal misalignment   |
-| `yunxing-scope-guardian-reviewer`       | Challenge unjustified complexity, scope creep, and premature abstractions        |
-| `yunxing-security-lens-reviewer`        | Evaluate plans for security gaps at the plan level (auth, data, APIs)            |
-| `yunxing-adversarial-document-reviewer` | Challenge premises, surface unstated assumptions, and stress-test decisions      |
+| `yunxing:coherence-reviewer`            | Review documents for internal consistency, contradictions, and terminology drift |
+| `yunxing:design-lens-reviewer`          | Review plans for missing design decisions, interaction states, and AI slop risk  |
+| `yunxing:feasibility-reviewer`          | Evaluate whether proposed technical approaches will survive contact with reality |
+| `yunxing:product-lens-reviewer`         | Challenge problem framing, evaluate scope decisions, surface goal misalignment   |
+| `yunxing:scope-guardian-reviewer`       | Challenge unjustified complexity, scope creep, and premature abstractions        |
+| `yunxing:security-lens-reviewer`        | Evaluate plans for security gaps at the plan level (auth, data, APIs)            |
+| `yunxing:adversarial-document-reviewer` | Challenge premises, surface unstated assumptions, and stress-test decisions      |
 
 ### Research
 
 | Agent                           | Description                                                                                                                                     |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `yunxing-best-practices-researcher`  | Gather external best practices and examples                                                                                                     |
-| `yunxing-framework-docs-researcher`  | Research framework documentation and best practices                                                                                             |
-| `yunxing-git-history-analyzer`       | Analyze git history and code evolution                                                                                                          |
-| `yunxing-issue-intelligence-analyst` | Analyze GitHub issues to surface recurring themes and pain patterns                                                                             |
-| `yunxing-learnings-researcher`       | Search institutional learnings for relevant past solutions                                                                                      |
-| `yunxing-repo-research-analyst`      | Research repository structure and conventions                                                                                                   |
-| `yunxing-session-historian`          | Search prior Claude Code, Codex, and Cursor sessions for related investigation context                                                          |
-| `yunxing-slack-researcher`           | Search Slack for organizational context relevant to the current task                                                                            |
-| `yunxing-web-researcher`             | Perform iterative web research and return structured external grounding (prior art, adjacent solutions, market signals, cross-domain analogies) |
+| `yunxing:best-practices-researcher`  | Gather external best practices and examples                                                                                                     |
+| `yunxing:framework-docs-researcher`  | Research framework documentation and best practices                                                                                             |
+| `yunxing:git-history-analyzer`       | Analyze git history and code evolution                                                                                                          |
+| `yunxing:issue-intelligence-analyst` | Analyze GitHub issues to surface recurring themes and pain patterns                                                                             |
+| `yunxing:learnings-researcher`       | Search institutional learnings for relevant past solutions                                                                                      |
+| `yunxing:repo-research-analyst`      | Research repository structure and conventions                                                                                                   |
+| `yunxing:session-historian`          | Search prior Claude Code, Codex, and Cursor sessions for related investigation context                                                          |
+| `yunxing:slack-researcher`           | Search Slack for organizational context relevant to the current task                                                                            |
+| `yunxing:web-researcher`             | Perform iterative web research and return structured external grounding (prior art, adjacent solutions, market signals, cross-domain analogies) |
 
 ### Design
 
 | Agent                               | Description                                                |
 | ----------------------------------- | ---------------------------------------------------------- |
-| `yunxing-design-implementation-reviewer` | Verify UI implementations match Figma designs              |
-| `yunxing-design-iterator`                | Iteratively refine UI through systematic design iterations |
-| `yunxing-figma-design-sync`              | Synchronize web implementations with Figma designs         |
+| `yunxing:design-implementation-reviewer` | Verify UI implementations match Figma designs              |
+| `yunxing:design-iterator`                | Iteratively refine UI through systematic design iterations |
+| `yunxing:figma-design-sync`              | Synchronize web implementations with Figma designs         |
 
 ### Workflow
 
 | Agent                    | Description                                            |
 | ------------------------ | ------------------------------------------------------ |
-| `yunxing-pr-comment-resolver` | Address PR comments and implement fixes                |
-| `yunxing-spec-flow-analyzer`  | Analyze user flows and identify gaps in specifications |
+| `yunxing:pr-comment-resolver` | Address PR comments and implement fixes                |
+| `yunxing:spec-flow-analyzer`  | Analyze user flows and identify gaps in specifications |
 
 ### Docs
 
 | Agent                     | Description                                                  |
 | ------------------------- | ------------------------------------------------------------ |
-| `yunxing-ankane-readme-writer` | Create READMEs following Ankane-style template for Ruby gems |
+| `yunxing:ankane-readme-writer` | Create READMEs following Ankane-style template for Ruby gems |
 
 ## Installation
 

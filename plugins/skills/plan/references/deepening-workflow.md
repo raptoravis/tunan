@@ -99,43 +99,43 @@ Use fully-qualified agent names inside Task calls.
 **Deterministic Section-to-Agent Mapping:**
 
 **Requirements / Open Questions classification**
-- `yunxing-spec-flow-analyzer` for missing user flows, edge cases, and handoff gaps
-- `yunxing-repo-research-analyst` (Scope: `architecture, patterns`) for repo-grounded patterns, conventions, and implementation reality checks
+- `yunxing:spec-flow-analyzer` for missing user flows, edge cases, and handoff gaps
+- `yunxing:repo-research-analyst` (Scope: `architecture, patterns`) for repo-grounded patterns, conventions, and implementation reality checks
 
 **Context & Research / Sources & References gaps**
-- `yunxing-learnings-researcher` for institutional knowledge and past solved problems
-- `yunxing-framework-docs-researcher` for official framework or library behavior
-- `yunxing-best-practices-researcher` for current external patterns and industry guidance
-- `yunxing-web-researcher` for landscape/prior-art gaps — competitor patterns, market signals, or an unsettled external option set (which library/provider/approach) that recommendations depend on
-- Add `yunxing-git-history-analyzer` only when historical rationale or prior art is materially missing
+- `yunxing:learnings-researcher` for institutional knowledge and past solved problems
+- `yunxing:framework-docs-researcher` for official framework or library behavior
+- `yunxing:best-practices-researcher` for current external patterns and industry guidance
+- `yunxing:web-researcher` for landscape/prior-art gaps — competitor patterns, market signals, or an unsettled external option set (which library/provider/approach) that recommendations depend on
+- Add `yunxing:git-history-analyzer` only when historical rationale or prior art is materially missing
 
 **Key Technical Decisions**
-- `yunxing-architecture-strategist` for design integrity, boundaries, and architectural tradeoffs
-- Add `yunxing-framework-docs-researcher` or `yunxing-best-practices-researcher` when the decision needs external grounding beyond repo evidence
+- `yunxing:architecture-strategist` for design integrity, boundaries, and architectural tradeoffs
+- Add `yunxing:framework-docs-researcher` or `yunxing:best-practices-researcher` when the decision needs external grounding beyond repo evidence
 
 **High-Level Technical Design**
-- `yunxing-architecture-strategist` for validating that the technical design accurately represents the intended approach and identifying gaps
-- `yunxing-repo-research-analyst` (Scope: `architecture, patterns`) for grounding the technical design in existing repo patterns and conventions
-- Add `yunxing-best-practices-researcher` when the technical design involves a DSL, API surface, or pattern that benefits from external validation
+- `yunxing:architecture-strategist` for validating that the technical design accurately represents the intended approach and identifying gaps
+- `yunxing:repo-research-analyst` (Scope: `architecture, patterns`) for grounding the technical design in existing repo patterns and conventions
+- Add `yunxing:best-practices-researcher` when the technical design involves a DSL, API surface, or pattern that benefits from external validation
 
 **Implementation Units / Verification**
-- `yunxing-repo-research-analyst` (Scope: `patterns`) for concrete file targets, patterns to follow, and repo-specific sequencing clues
-- `yunxing-pattern-recognition-specialist` for consistency, duplication risks, and alignment with existing patterns
-- Add `yunxing-spec-flow-analyzer` when sequencing depends on user flow or handoff completeness
+- `yunxing:repo-research-analyst` (Scope: `patterns`) for concrete file targets, patterns to follow, and repo-specific sequencing clues
+- `yunxing:pattern-recognition-specialist` for consistency, duplication risks, and alignment with existing patterns
+- Add `yunxing:spec-flow-analyzer` when sequencing depends on user flow or handoff completeness
 
 **System-Wide Impact**
-- `yunxing-architecture-strategist` for cross-boundary effects, interface surfaces, and architectural knock-on impact
+- `yunxing:architecture-strategist` for cross-boundary effects, interface surfaces, and architectural knock-on impact
 - Add the specific specialist that matches the risk:
-  - `yunxing-performance-oracle` for scalability, latency, throughput, and resource-risk analysis
-  - `yunxing-security-sentinel` for auth, validation, exploit surfaces, and security boundary review
-  - `yunxing-data-integrity-guardian` for migrations, persistent state safety, consistency, and data lifecycle risks
+  - `yunxing:performance-oracle` for scalability, latency, throughput, and resource-risk analysis
+  - `yunxing:security-sentinel` for auth, validation, exploit surfaces, and security boundary review
+  - `yunxing:data-integrity-guardian` for migrations, persistent state safety, consistency, and data lifecycle risks
 
 **Risks & Dependencies / Operational Notes**
 - Use the specialist that matches the actual risk:
-  - `yunxing-security-sentinel` for security, auth, privacy, and exploit risk
-  - `yunxing-data-integrity-guardian` for migrations, backfills, persistent data safety, constraints, transaction boundaries, and production data transformation risk (plan context — not the PR-review `yunxing-data-migration-reviewer` persona)
-  - `yunxing-deployment-verification-agent` for rollout checklists, rollback planning, and launch verification
-  - `yunxing-performance-oracle` for capacity, latency, and scaling concerns
+  - `yunxing:security-sentinel` for security, auth, privacy, and exploit risk
+  - `yunxing:data-integrity-guardian` for migrations, backfills, persistent data safety, constraints, transaction boundaries, and production data transformation risk (plan context — not the PR-review `yunxing:data-migration-reviewer` persona)
+  - `yunxing:deployment-verification-agent` for rollout checklists, rollback planning, and launch verification
+  - `yunxing:performance-oracle` for capacity, latency, and scaling concerns
 
 **Agent Prompt Shape:**
 
@@ -201,7 +201,7 @@ Skip this step in auto mode — proceed directly to 5.3.7.
 
 In interactive mode, present each agent's findings to the user before integration. For each agent that returned findings:
 
-1. **Summarize the agent and its target section** — e.g., "The yunxing-architecture-strategist reviewed Key Technical Decisions and found:"
+1. **Summarize the agent and its target section** — e.g., "The yunxing:architecture-strategist reviewed Key Technical Decisions and found:"
 2. **Present the findings concisely** — bullet the key points, not the raw agent output. Include enough context for the user to evaluate: what the agent found, what evidence supports it, and what plan change it implies.
 3. **Ask the user** using the platform's blocking question tool when available (see Interaction Method):
    - **Accept** — integrate these findings into the plan

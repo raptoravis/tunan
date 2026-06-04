@@ -146,7 +146,7 @@ Use selectively — only when understanding what went wrong adds value. Cursor a
 
 ### Step 6 — Dispatch synthesis subagent
 
-Dispatch the `yunxing-session-historian` subagent via the platform's subagent primitive (`Agent` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi via the `pi-subagents` extension). Omit the `mode` parameter so the user's configured permission settings apply. Run on the mid-tier model (e.g., `model: "sonnet"` in Claude Code) — the synthesizer doesn't need frontier reasoning.
+Dispatch the `yunxing:session-historian` subagent via the platform's subagent primitive (`Agent` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi via the `pi-subagents` extension). Omit the `mode` parameter so the user's configured permission settings apply. Run on the mid-tier model (e.g., `model: "sonnet"` in Claude Code) — the synthesizer doesn't need frontier reasoning.
 
 The dispatch prompt is the agent's input contract. Pass these fields:
 
