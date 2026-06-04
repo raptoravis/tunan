@@ -32,9 +32,9 @@
     "capabilities": ["Interactive", "Read", "Write"],
     "websiteURL": "https://github.com/raptoravis/yunxing",
     "defaultPrompt": [
-      "/yunxing-brainstorm a new feature",
-      "/yunxing-plan the implementation",
-      "/yunxing-code-review my changes"
+      "/yunxing:brainstorm a new feature",
+      "/yunxing:plan the implementation",
+      "/yunxing:code-review my changes"
     ],
     "screenshots": []
   }

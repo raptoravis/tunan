@@ -6,14 +6,14 @@ argument-hint: "[feature description]"
 
 CRITICAL: You MUST execute every step below IN ORDER. Do NOT skip any required step. Do NOT jump ahead to coding or implementation. The plan phase (step 1) MUST be completed and verified BEFORE any work begins. Violating this order produces bad output.
 
-When invoking any skill referenced below, resolve its name against the available-skills list the host platform provides and use that exact entry. Some platforms list skills under a plugin namespace (e.g., `yunxing:yunxing-plan`); others list the bare name. Invoking a short-form guess that isn't in the list will fail — always match a listed entry verbatim before calling the Skill/Task tool.
+When invoking any skill referenced below, resolve its name against the available-skills list the host platform provides and use that exact entry. Some platforms list skills under a plugin namespace (e.g., `yunxing:plan`); others list the bare name. Invoking a short-form guess that isn't in the list will fail — always match a listed entry verbatim before calling the Skill/Task tool.
 
 **Artifact model: the pipeline chains via GitHub issues, not local files.** Each stage's durable artifact is a GitHub issue distinguished by label, and each stage passes the prior issue ref (NUMBER/URL, linked as `#<N>` in bodies) to the next:
 
-- `yunxing-brainstorm` produces a `yunxing:req` issue
-- `yunxing-plan` consumes the `yunxing:req` issue and produces a `yunxing:plan` issue
-- `yunxing-work` consumes the `yunxing:plan` issue
-- `yunxing-compound` produces a `yunxing:solution` issue (referencing the plan/req issue with `#<N>`)
+- `brainstorm` produces a `yunxing:req` issue
+- `plan` consumes the `yunxing:req` issue and produces a `yunxing:plan` issue
+- `work` consumes the `yunxing:plan` issue
+- `compound` produces a `yunxing:solution` issue (referencing the plan/req issue with `#<N>`)
 
 There is no local-file fallback for these artifacts — never read or write a plan/req/solution as a local file.
 
@@ -29,23 +29,23 @@ gh auth status
 gh repo view --json nameWithOwner
 ```
 
-1. Invoke the `yunxing-plan` skill with `$ARGUMENTS`. If a prior `yunxing-brainstorm` ran in this pipeline and produced a `yunxing:req` issue, pass that issue ref so the plan consumes it and links back with `#<N>`.
+1. Invoke the `plan` skill with `$ARGUMENTS`. If a prior `brainstorm` ran in this pipeline and produced a `yunxing:req` issue, pass that issue ref so the plan consumes it and links back with `#<N>`.
 
-   GATE: STOP. If yunxing-plan reported the task is non-software and cannot be processed in pipeline mode, stop the pipeline and inform the user that LFG requires software tasks. Otherwise, verify that the `yunxing-plan` workflow produced a `yunxing:plan` issue. Confirm with:
+   GATE: STOP. If plan reported the task is non-software and cannot be processed in pipeline mode, stop the pipeline and inform the user that LFG requires software tasks. Otherwise, verify that the `plan` workflow produced a `yunxing:plan` issue. Confirm with:
 
    ```bash
    gh issue list --label "yunxing:plan" --state open --json number,title,url,updatedAt
    ```
 
-   If no `yunxing:plan` issue was created, invoke `yunxing-plan` again with `$ARGUMENTS`. Do NOT proceed to step 2 until a `yunxing:plan` issue exists. **Record the plan issue ref (`#<N>`/URL)** — it is passed to yunxing-work in step 2 and to yunxing-code-review in step 3.
+   If no `yunxing:plan` issue was created, invoke `plan` again with `$ARGUMENTS`. Do NOT proceed to step 2 until a `yunxing:plan` issue exists. **Record the plan issue ref (`#<N>`/URL)** — it is passed to work in step 2 and to code-review in step 3.
 
-2. Invoke the `yunxing-work` skill with the `yunxing:plan` issue ref from step 1 as its work source.
+2. Invoke the `work` skill with the `yunxing:plan` issue ref from step 1 as its work source.
 
    GATE: STOP. Verify that implementation work was performed - files were created or modified beyond the plan. Do NOT proceed to step 3 if no code changes were made.
 
-3. Invoke the `yunxing-code-review` skill with `mode:agent plan:<plan-issue-ref-from-step-1>`.
+3. Invoke the `code-review` skill with `mode:agent plan:<plan-issue-ref-from-step-1>`.
 
-   Pass the plan issue ref from step 1 so yunxing-code-review can verify requirements completeness. Read the **Actionable Findings** summary the skill emits.
+   Pass the plan issue ref from step 1 so code-review can verify requirements completeness. Read the **Actionable Findings** summary the skill emits.
 
 4. **Apply and persist review fixes** (REQUIRED after step 3, before residual handoff)
 
@@ -100,9 +100,9 @@ gh repo view --json nameWithOwner
 
    Never block DONE on tracker filing failures once residuals have been durably recorded. A `no_sink` outcome is success only when the findings are present in the PR body or in the created `yunxing:review` issue.
 
-6. Invoke the `yunxing-test-browser` skill with `mode:pipeline`.
+6. Invoke the `test-browser` skill with `mode:pipeline`.
 
-7. Invoke the `yunxing-commit-push-pr` skill.
+7. Invoke the `commit-push-pr` skill.
 
    This commits any remaining changes, pushes the branch, and opens a pull request. If step 5 already opened a PR (check with `gh pr view --json number,url,state 2>/dev/null`), skip PR creation but still commit and push any uncommitted changes.
 
@@ -155,9 +155,9 @@ gh repo view --json nameWithOwner
 
    - Do NOT continue looping. The autopilot contract is "make residuals durable, then exit." Proceed to step 9.
 
-9. Invoke the `yunxing-compound` skill to capture the solved problem.
+9. Invoke the `compound` skill to capture the solved problem.
 
-   Pass it the `yunxing:plan` issue ref from step 1, the PR URL, and a short summary of what was built. `yunxing-compound` runs its own GH preflight and produces a `yunxing:solution` GitHub issue (not a local file), referencing the plan/req issue with `#<N>` in the body. **Record the resulting solution issue ref** for the final summary. If `yunxing-compound` is unavailable on the harness, note that compounding was skipped — do not write a local solution file.
+   Pass it the `yunxing:plan` issue ref from step 1, the PR URL, and a short summary of what was built. `compound` runs its own GH preflight and produces a `yunxing:solution` GitHub issue (not a local file), referencing the plan/req issue with `#<N>` in the body. **Record the resulting solution issue ref** for the final summary. If `compound` is unavailable on the harness, note that compounding was skipped — do not write a local solution file.
 
 10. Output `<promise>DONE</promise>` when complete. Include the issue-ref chain in the summary: the `yunxing:plan` issue, the PR, and the `yunxing:solution` issue.
 

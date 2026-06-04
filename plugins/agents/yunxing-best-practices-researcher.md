@@ -25,13 +25,13 @@ Before going online, check if curated knowledge already exists in skills:
 
 2. **Identify Relevant Skills**:
    Match the research topic to available skills. Common mappings:
-   - Rails/Ruby → `yunxing-dhh-rails-style`
-   - Frontend/Design → `yunxing-frontend-design`, `swiss-design`
+   - Rails/Ruby → `dhh-rails-style`
+   - Frontend/Design → `frontend-design`, `swiss-design`
    - TypeScript/React → `react-best-practices`
-   - AI/Agents → `yunxing-agent-native-architecture`
-   - Documentation → `yunxing-compound`
-   - File operations → `rclone`, `yunxing-worktree`
-   - Image generation → `yunxing-gemini-imagegen`
+   - AI/Agents → `agent-native-architecture`
+   - Documentation → `compound`
+   - File operations → `rclone`, `worktree`
+   - Image generation → `gemini-imagegen`
 
 3. **Extract Patterns from Skills**:
    - Read the full content of relevant SKILL.md files

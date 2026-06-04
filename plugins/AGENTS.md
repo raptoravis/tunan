@@ -14,8 +14,8 @@ agents under `agents/`, and the plugin manifests under `.claude-plugin/` and
 Consequences:
 
 - Behavioral rules that govern skill _runtime_ behavior must live inside the skill itself — in `SKILL.md` or files under its `references/`. Guidance placed in this file is invisible at runtime.
-- When two or more skills share a behavioral principle, duplicate the guidance into each skill (inline for short rules, `references/` for longer ones). There is no cross-skill shared-file mechanism (see "File References in Skills" below). When a reference file is duplicated across skills (e.g., `concepts-vocabulary.md` in both `yunxing-compound/references/` and `yunxing-compound-refresh/references/`), edits must be applied to every copy in the same commit. Drift between copies produces inconsistent agent behavior depending on which skill loaded.
-- Do not propose that runtime guidance for yunxing-ideate, yunxing-brainstorm, yunxing-plan, or any other skill live in this AGENTS.md. This file only shapes how contributors edit the plugin.
+- When two or more skills share a behavioral principle, duplicate the guidance into each skill (inline for short rules, `references/` for longer ones). There is no cross-skill shared-file mechanism (see "File References in Skills" below). When a reference file is duplicated across skills (e.g., `concepts-vocabulary.md` in both `compound/references/` and `compound-refresh/references/`), edits must be applied to every copy in the same commit. Drift between copies produces inconsistent agent behavior depending on which skill loaded.
+- Do not propose that runtime guidance for ideate, brainstorm, plan, or any other skill live in this AGENTS.md. This file only shapes how contributors edit the plugin.
 
 This is easy to miss because authoring feels like using: you edit the plugin while running inside this repo, and the repo's AGENTS.md is loaded — but that load does not follow the installed skill into a user's environment.
 
@@ -41,8 +41,7 @@ agents/
 └── yunxing-*.md  # All agents live flat under agents/, prefixed with yunxing-
 
 skills/
-├── yunxing-*/          # Core workflow skills (yunxing-plan, yunxing-code-review, etc.)
-└── */             # All other skills
+└── */            # Skill dirs use the bare skill name (cp, plan, code-review, …) — no yunxing- prefix; lfg is the one historical bare name
 ```
 
 Agents are grouped topically in `README.md` (Review, Document Review, Research, Design, Workflow, Docs) for reader navigation — those groupings are conceptual, not filesystem subdirectories.
@@ -62,19 +61,21 @@ Important: Just because the developer's installed plugin may be out of date, it'
 
 ## Naming Convention
 
-**All skills and agents** use the `yunxing-` prefix to unambiguously identify them as yunxing components:
+**Skills carry no prefix; agents keep the `yunxing-` prefix.** The two are namespaced differently because the host surfaces them differently.
 
-- `/yunxing-brainstorm` - Explore requirements and approaches before planning
-- `/yunxing-plan` - Create implementation plans
-- `/yunxing-code-review` - Run comprehensive code reviews
-- `/yunxing-work` - Execute work items systematically
-- `/yunxing-compound` - Document solved problems
+**Skills use the bare name** — the directory name and the SKILL.md `name:` frontmatter have no prefix (`cp`, `plan`, `code-review`, …). Claude Code prepends the plugin namespace automatically, so each skill surfaces to users as `/yunxing:<name>`:
 
-**Why `yunxing-`?** Claude Code has built-in `/plan` and `/review` commands. The `yunxing-` prefix (short for yunxing) makes it immediately clear these components belong to this plugin. The hyphen is used instead of a colon to avoid filesystem issues on Windows and to align directory names with frontmatter names.
+- `/yunxing:brainstorm` - Explore requirements and approaches before planning
+- `/yunxing:plan` - Create implementation plans
+- `/yunxing:code-review` - Run comprehensive code reviews
+- `/yunxing:work` - Execute work items systematically
+- `/yunxing:compound` - Document solved problems
 
-**Agents** follow the same convention: `yunxing-adversarial-reviewer`, `yunxing-learnings-researcher`, etc. When referencing agents from skills, use the bare `yunxing-<agent-name>` form (e.g., `yunxing-adversarial-reviewer`) — the `yunxing-` prefix is sufficient for uniqueness across plugins.
+**Why no prefix on skills?** The host's plugin namespace already supplies the `yunxing:` qualifier. A `yunxing-` prefix on top of it produces a doubled `/yunxing:yunxing-plan`. The namespace colon is a display-layer construct only — directory names and `name:` frontmatter stay bare hyphenated lowercase (`code-review`), so there is no Windows/filesystem concern. `lfg` predates the scheme and was already prefix-free.
 
-**The `yunxing-` prefix is required for every new skill and agent — no exceptions.** One legacy skill (`lfg`) predates the rule and remains unprefixed; treat it as the only allowed exception and do not add more. When adding a new skill, the directory name, the SKILL.md `name:` frontmatter, and any README references must all start with `yunxing-`.
+**Agents keep the `yunxing-` prefix** (`yunxing-adversarial-reviewer`, `yunxing-learnings-researcher`, etc.). Agents are dispatched by `subagent_type` under that bare prefixed name — they are not slash commands and receive no namespace qualifier from the host, so the prefix is what keeps them unambiguous across plugins. Reference an agent from a skill with the `yunxing-<agent-name>` form.
+
+**For a new skill**, the directory name, the SKILL.md `name:` frontmatter, and any README references all use the bare name (no `yunxing-`). **For a new agent**, keep the `yunxing-` prefix.
 
 ## Skill Design Principles
 
@@ -100,7 +101,7 @@ Match the level to the failure mode in both directions. Over-prescribing produce
 
 **Distinguish process exhaust from audit content.** Sections that exist for the agent's own bookkeeping are exhaust; sections that exist because downstream readers need to know something about the artifact's authorship are audit content and belong in the doc. The test is whether removing the section would degrade a downstream reader's ability to evaluate the artifact correctly.
 
-Non-interactive modes can create audit gaps, but only when the _corresponding interactive mode_ would have validated content the headless run skips. Compare per skill, not per mode. If interactive yunxing-plan walks the user through every requirement and headless yunxing-plan skips that walkthrough, the headless artifact contains decisions a reader cannot tell weren't user-confirmed — a `## Assumptions` section is audit content. If interactive yunxing-compound asks only meta-questions (Full vs Lightweight, session-history, "What's next?") while the substantive inferences (track, category, filename, overlap) are agent decisions in both modes, then labeling them only in headless is misleading — it implies interactive runs validated content they didn't. The reader needs to know what _would have been_ user-validated; if neither mode validates the inferences, the section is process exhaust dressed up as audit.
+Non-interactive modes can create audit gaps, but only when the _corresponding interactive mode_ would have validated content the headless run skips. Compare per skill, not per mode. If interactive plan walks the user through every requirement and headless plan skips that walkthrough, the headless artifact contains decisions a reader cannot tell weren't user-confirmed — a `## Assumptions` section is audit content. If interactive compound asks only meta-questions (Full vs Lightweight, session-history, "What's next?") while the substantive inferences (track, category, filename, overlap) are agent decisions in both modes, then labeling them only in headless is misleading — it implies interactive runs validated content they didn't. The reader needs to know what _would have been_ user-validated; if neither mode validates the inferences, the section is process exhaust dressed up as audit.
 
 **Test the spec by running it, not just by reading it.** Real-world test runs surface failure modes that desk review misses: load reliability, plugin caching across sessions, agent interpretation drift, conflation in menu shapes, edge-case interactions with the user's repo layout. When a test reveals unexpected behavior, ask three questions before tightening the spec:
 
@@ -200,7 +201,7 @@ These skills must run on Windows, not just macOS/Linux. The agent invokes comman
 - [ ] **Bundled scripts ship in both forms.** Every executable helper under a skill's `scripts/` has a bash `.sh` AND a PowerShell `.ps1` twin with **identical args and byte-for-byte stdout contract** (same sentinel strings, exit codes, multi-line output). When adding or changing one, change the other in the same commit (this is the OS-level analog of the stable/beta sync rule).
 - [ ] **`.ps1` targets Windows PowerShell 5.1** (ships with Windows, zero install). No 7+-only syntax: no ternary `? :`, no `ForEach-Object -Parallel`, no `Start-Process -TimeoutSec`, no `??`. Verify with `[System.Management.Automation.PSParser]::Tokenize(...)`. Gotcha: `$x = if (...) { @($a[i..j]) }` collapses a single-element slice to a scalar string — use `@($a | Select-Object -Skip n)` instead.
 - [ ] **SKILL.md invokes the OS-appropriate variant.** Show the Windows form `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/<name>.ps1 <args>` alongside the bash `bash scripts/<name>.sh <args>` form, with a one-line "pick the variant for the current OS" note. Add a `Bash(powershell.exe *<name>.ps1)` entry to `allowed-tools` next to the existing `Bash(bash *<name>.sh)` when the skill pins script permissions.
-- [ ] **Python launcher:** instruct `python3` on macOS/Linux, `python` (or `py -3`) on Windows. Avoid Unix-only pipelines (`tr '\n' '\0' | xargs -0 ...`); prefer a plain pipe into a script that reads newline-delimited stdin (see `yunxing-sessions` `extract-metadata.py --paths-stdin`).
+- [ ] **Python launcher:** instruct `python3` on macOS/Linux, `python` (or `py -3`) on Windows. Avoid Unix-only pipelines (`tr '\n' '\0' | xargs -0 ...`); prefer a plain pipe into a script that reads newline-delimited stdin (see `sessions` `extract-metadata.py --paths-stdin`).
 - [ ] **Python file I/O must be encoding-safe.** Open text files with `encoding="utf-8"` and, for scripts that read stdin, `sys.stdin.reconfigure(encoding="utf-8", errors="replace")`. Windows defaults to the legacy ANSI code page (e.g. GBK on zh-CN), which raises `UnicodeDecodeError` on UTF-8 content. Do not rely on the locale default.
 - [ ] **Temp/scratch paths:** never hardcode `/tmp`. In bash use `${TMPDIR:-/tmp}/...`; in PowerShell use `$env:TEMP\...`; in Python use `tempfile.gettempdir()`. For a path the skill resolves once and reuses, a `$SCRATCH`/`<scratch-dir>` placeholder is clearest.
 - [ ] **No Unix-only commands without a Windows path:** `uuidgen` is absent even in Git Bash — use `$(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')`. For file/URL openers, offer all three: `open`/`open -a` (macOS), `xdg-open` (Linux), `start`/`Start-Process` (Windows). `mktemp` is fine in bash blocks (Git Bash provides it); give a `$env:TEMP` + `[guid]::NewGuid()` alternative only for prominent standalone scratch-setup steps.
@@ -211,8 +212,8 @@ This plugin is authored once, then converted for other agent platforms. Commands
 
 - [ ] Because of that, slash references inside command or agent content are acceptable when they point to real published commands; target-specific conversion can remap them.
 - [ ] Inside a pass-through `SKILL.md`, do not assume slash references will be remapped for another platform. Write references according to what will still make sense after the skill is copied as-is.
-- [ ] When one skill refers to another skill, prefer semantic wording such as "load the `yunxing-doc-review` skill" rather than slash syntax.
-- [ ] Use slash syntax only when referring to an actual published command or workflow such as `/yunxing-work` or `/yunxing-compound`.
+- [ ] When one skill refers to another skill, prefer semantic wording such as "load the `doc-review` skill" rather than slash syntax.
+- [ ] Use slash syntax only when referring to an actual published command or workflow such as `/yunxing:work` or `/yunxing:compound`.
 
 ### Tool Selection in Agents and Skills
 

@@ -6,16 +6,16 @@ model: sonnet
 
 <examples>
 <example>
-Context: yunxing-ideate is running Phase 1 and dispatches research agents in parallel to gather grounding context.
-user: "/yunxing-ideate authentication improvements"
+Context: ideate is running Phase 1 and dispatches research agents in parallel to gather grounding context.
+user: "/yunxing:ideate authentication improvements"
 assistant: "I'll dispatch the yunxing-slack-researcher agent to search Slack for organizational discussions about authentication that could ground the ideation."
-<commentary>The yunxing-ideate skill dispatches this agent as a conditional parallel Phase 1 scan alongside codebase context, learnings search, and (conditional) issue intelligence. The agent searches Slack for relevant org context about the focus area.</commentary>
+<commentary>The ideate skill dispatches this agent as a conditional parallel Phase 1 scan alongside codebase context, learnings search, and (conditional) issue intelligence. The agent searches Slack for relevant org context about the focus area.</commentary>
 </example>
 <example>
-Context: yunxing-plan is gathering context before structuring an implementation plan for a billing migration.
+Context: plan is gathering context before structuring an implementation plan for a billing migration.
 user: "Plan the migration from Stripe to the new billing provider"
 assistant: "I'll dispatch the yunxing-slack-researcher agent to search Slack for discussions about the billing migration -- there may be decisions or constraints discussed there that aren't in the codebase."
-<commentary>The yunxing-plan skill dispatches this agent during Phase 1.1 Local Research to surface organizational context that might affect implementation decisions -- prior discussions about the migration, constraints from other teams, or decisions already made.</commentary>
+<commentary>The plan skill dispatches this agent during Phase 1.1 Local Research to surface organizational context that might affect implementation decisions -- prior discussions about the migration, constraints from other teams, or decisions already made.</commentary>
 </example>
 <example>
 Context: A developer wants to understand what the team has discussed about a topic before making changes.

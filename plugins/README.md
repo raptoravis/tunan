@@ -4,9 +4,9 @@ AI-powered development tools that get smarter with every use. Make each unit of 
 
 ## Getting Started
 
-After installing, run `/yunxing-setup` in any project. It diagnoses your environment, installs missing tools and MCP servers, and bootstraps project config in one interactive flow.
+After installing, run `/yunxing:setup` in any project. It diagnoses your environment, installs missing tools and MCP servers, and bootstraps project config in one interactive flow.
 
-**Artifacts are GitHub issues, not local files.** Durable per-item artifacts — requirements, plans, solutions, ideas, reports, dogfood runs, and review residuals — are stored as GitHub issues distinguished by label (`yunxing:req`, `yunxing:plan`, `yunxing:solution`, `yunxing:idea`, `yunxing:pulse`, `yunxing:dogfood`, `yunxing:review`), never as local files. This requires `gh` to be installed and authenticated (`gh auth status`); `/yunxing-setup` verifies both. Skills create their labels on demand.
+**Artifacts are GitHub issues, not local files.** Durable per-item artifacts — requirements, plans, solutions, ideas, reports, dogfood runs, and review residuals — are stored as GitHub issues distinguished by label (`yunxing:req`, `yunxing:plan`, `yunxing:solution`, `yunxing:idea`, `yunxing:pulse`, `yunxing:dogfood`, `yunxing:review`), never as local files. This requires `gh` to be installed and authenticated (`gh auth status`); `/yunxing:setup` verifies both. Skills create their labels on demand.
 
 **Windows:** the skills run on Windows as well as macOS/Linux. Bundled helper scripts ship in both bash (`.sh`) and PowerShell (`.ps1`) form — the PowerShell variants are Windows PowerShell 5.1-compatible (no extra install) and are used automatically on Windows.
 
@@ -24,88 +24,88 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 
 ### Core Workflow
 
-`yunxing-strategy` anchors the loop upstream; `yunxing-product-pulse` closes it with a read on user outcomes.
+`strategy` anchors the loop upstream; `product-pulse` closes it with a read on user outcomes.
 
 | Skill                                                              | Description                                                                                                                                                                                                                                                                             |
 | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`/yunxing-strategy`](../../docs/skills/yunxing-strategy.md)                 | Create or maintain `STRATEGY.md` — the product's target problem, approach, persona, key metrics, and tracks. Re-runnable to update. Read as grounding by `/yunxing-ideate`, `/yunxing-brainstorm`, and `/yunxing-plan` when present                                                                    |
-| [`/yunxing-ideate`](../../docs/skills/yunxing-ideate.md)                     | Optional big-picture ideation: generate and critically evaluate grounded ideas, then route the strongest one into brainstorming. Stores the ideation record as a GitHub issue labeled `yunxing:idea`                                                                                     |
-| [`/yunxing-newreq`](../../docs/skills/yunxing-newreq.md)                     | Capture a requirement described in conversation (text plus screenshots/videos) into a GitHub issue labeled `yunxing:req` — the source of truth that `/yunxing-brainstorm` and `/yunxing-plan` read and write back to                                                                     |
-| [`/yunxing-brainstorm`](../../docs/skills/yunxing-brainstorm.md)             | Interactive Q&A to think through a feature or problem; writes a right-sized requirements doc into a GitHub issue labeled `yunxing:req` (the source of truth) before planning. Pass a `yunxing:req` issue ref to resume or expand one captured by `/yunxing-newreq`                        |
-| [`/yunxing-plan`](../../docs/skills/yunxing-plan.md)                         | Create structured plans for any multi-step task -- software features, research workflows, events, study plans -- with automatic confidence checking. Writes the plan into a GitHub issue labeled `yunxing:plan`, linked to its `yunxing:req` issue, and reads requirements from that issue |
-| [`/yunxing-code-review`](../../docs/skills/yunxing-code-review.md)           | Structured code review with tiered persona agents, confidence gating, and dedup pipeline                                                                                                                                                                                                |
-| [`/yunxing-work`](../../docs/skills/yunxing-work.md)                         | Execute work items systematically                                                                                                                                                                                                                                                       |
-| [`/yunxing-debug`](../../docs/skills/yunxing-debug.md)                       | Systematically find root causes and fix bugs -- traces causal chains, forms testable hypotheses, and implements test-first fixes                                                                                                                                                        |
-| [`/yunxing-compound`](../../docs/skills/yunxing-compound.md)                 | Document solved problems to compound team knowledge                                                                                                                                                                                                                                     |
-| [`/yunxing-compound-refresh`](../../docs/skills/yunxing-compound-refresh.md) | Refresh stale or drifting learnings and decide whether to keep, update, replace, or archive them                                                                                                                                                                                        |
-| [`/yunxing-optimize`](../../docs/skills/yunxing-optimize.md)                 | Run iterative optimization loops with parallel experiments, measurement gates, and LLM-as-judge quality scoring                                                                                                                                                                         |
-| [`/yunxing-product-pulse`](../../docs/skills/yunxing-product-pulse.md)       | Generate a single-page, time-windowed report on usage, performance, errors, and followups. Stores each report as a GitHub issue labeled `yunxing:pulse`; the labeled issue list is the browseable timeline of what users experienced                                                                                                    |
+| [`/yunxing:strategy`](../../docs/skills/yunxing-strategy.md)                 | Create or maintain `STRATEGY.md` — the product's target problem, approach, persona, key metrics, and tracks. Re-runnable to update. Read as grounding by `/yunxing:ideate`, `/yunxing:brainstorm`, and `/yunxing:plan` when present                                                                    |
+| [`/yunxing:ideate`](../../docs/skills/yunxing-ideate.md)                     | Optional big-picture ideation: generate and critically evaluate grounded ideas, then route the strongest one into brainstorming. Stores the ideation record as a GitHub issue labeled `yunxing:idea`                                                                                     |
+| [`/yunxing:newreq`](../../docs/skills/yunxing-newreq.md)                     | Capture a requirement described in conversation (text plus screenshots/videos) into a GitHub issue labeled `yunxing:req` — the source of truth that `/yunxing:brainstorm` and `/yunxing:plan` read and write back to                                                                     |
+| [`/yunxing:brainstorm`](../../docs/skills/yunxing-brainstorm.md)             | Interactive Q&A to think through a feature or problem; writes a right-sized requirements doc into a GitHub issue labeled `yunxing:req` (the source of truth) before planning. Pass a `yunxing:req` issue ref to resume or expand one captured by `/yunxing:newreq`                        |
+| [`/yunxing:plan`](../../docs/skills/yunxing-plan.md)                         | Create structured plans for any multi-step task -- software features, research workflows, events, study plans -- with automatic confidence checking. Writes the plan into a GitHub issue labeled `yunxing:plan`, linked to its `yunxing:req` issue, and reads requirements from that issue |
+| [`/yunxing:code-review`](../../docs/skills/yunxing-code-review.md)           | Structured code review with tiered persona agents, confidence gating, and dedup pipeline                                                                                                                                                                                                |
+| [`/yunxing:work`](../../docs/skills/yunxing-work.md)                         | Execute work items systematically                                                                                                                                                                                                                                                       |
+| [`/yunxing:debug`](../../docs/skills/yunxing-debug.md)                       | Systematically find root causes and fix bugs -- traces causal chains, forms testable hypotheses, and implements test-first fixes                                                                                                                                                        |
+| [`/yunxing:compound`](../../docs/skills/yunxing-compound.md)                 | Document solved problems to compound team knowledge                                                                                                                                                                                                                                     |
+| [`/yunxing:compound-refresh`](../../docs/skills/yunxing-compound-refresh.md) | Refresh stale or drifting learnings and decide whether to keep, update, replace, or archive them                                                                                                                                                                                        |
+| [`/yunxing:optimize`](../../docs/skills/yunxing-optimize.md)                 | Run iterative optimization loops with parallel experiments, measurement gates, and LLM-as-judge quality scoring                                                                                                                                                                         |
+| [`/yunxing:product-pulse`](../../docs/skills/yunxing-product-pulse.md)       | Generate a single-page, time-windowed report on usage, performance, errors, and followups. Stores each report as a GitHub issue labeled `yunxing:pulse`; the labeled issue list is the browseable timeline of what users experienced                                                                                                    |
 
 ### Research & Context
 
 | Skill                                                                               | Description                                                                                                                                                                                                                 |
 | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`/yunxing-sessions`](../../docs/skills/yunxing-sessions.md)                                  | Ask questions about session history across Claude Code, Codex, and Cursor                                                                                                                                                   |
-| [`/yunxing-slack-research`](../../docs/skills/yunxing-slack-research.md)                      | Search Slack for interpreted organizational context -- decisions, constraints, and discussion arcs                                                                                                                          |
-| [`yunxing-riffrec-feedback-analysis`](../../docs/skills/yunxing-riffrec-feedback-analysis.md) | Convert [Riffrec](https://github.com/kieranklaassen/riffrec) recordings, videos, audio, or notes into structured feedback. Routes between setup, quick bug report, and extensive analysis that hands off to `yunxing-brainstorm` |
+| [`/yunxing:sessions`](../../docs/skills/yunxing-sessions.md)                                  | Ask questions about session history across Claude Code, Codex, and Cursor                                                                                                                                                   |
+| [`/yunxing:slack-research`](../../docs/skills/yunxing-slack-research.md)                      | Search Slack for interpreted organizational context -- decisions, constraints, and discussion arcs                                                                                                                          |
+| [`riffrec-feedback-analysis`](../../docs/skills/yunxing-riffrec-feedback-analysis.md) | Convert [Riffrec](https://github.com/kieranklaassen/riffrec) recordings, videos, audio, or notes into structured feedback. Routes between setup, quick bug report, and extensive analysis that hands off to `brainstorm` |
 
 ### Git Workflow
 
 | Skill                                                                   | Description                                                                                                                                               |
 | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`yunxing-clean-gone-branches`](../../docs/skills/yunxing-clean-gone-branches.md) | Clean up local branches whose remote tracking branch is gone                                                                                              |
-| [`yunxing-commit`](../../docs/skills/yunxing-commit.md)                           | Create a git commit with a value-communicating message                                                                                                    |
-| [`yunxing-commit-push-pr`](../../docs/skills/yunxing-commit-push-pr.md)           | Commit, push, and open a PR with an adaptive description; also update an existing PR description, or generate a description on its own without committing |
-| [`yunxing-worktree`](../../docs/skills/yunxing-worktree.md)                       | Manage Git worktrees for parallel development                                                                                                             |
+| [`clean-gone-branches`](../../docs/skills/yunxing-clean-gone-branches.md) | Clean up local branches whose remote tracking branch is gone                                                                                              |
+| [`commit`](../../docs/skills/yunxing-commit.md)                           | Create a git commit with a value-communicating message                                                                                                    |
+| [`commit-push-pr`](../../docs/skills/yunxing-commit-push-pr.md)           | Commit, push, and open a PR with an adaptive description; also update an existing PR description, or generate a description on its own without committing |
+| [`worktree`](../../docs/skills/yunxing-worktree.md)                       | Manage Git worktrees for parallel development                                                                                                             |
 
 ### Workflow Utilities
 
 | Skill                                                                    | Description                                                                                                                                                                                                    |
 | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`/yunxing-demo-reel`](../../docs/skills/yunxing-demo-reel.md)                     | Capture a visual demo reel (GIF demos, terminal recordings, screenshots) for PRs with project-type-aware tier selection                                                                                        |
-| [`/yunxing-promote`](../../docs/skills/yunxing-promote.md)                         | Draft user-facing announcement copy for a shipped feature (X post, changelog blurb, LinkedIn, email); voice-matched via the Spiral CLI when installed, a lite layer of editorial & social expertise without it |
-| [`/yunxing-report-bug`](../../docs/skills/yunxing-report-bug.md)                   | Report a bug in the yunxing plugin                                                                                                                                                                               |
-| [`/yunxing-resolve-pr-feedback`](../../docs/skills/yunxing-resolve-pr-feedback.md) | Resolve PR review feedback in parallel                                                                                                                                                                         |
-| [`/yunxing-test-browser`](../../docs/skills/yunxing-test-browser.md)               | Run browser tests on PR-affected pages                                                                                                                                                                         |
-| [`/yunxing-test-xcode`](../../docs/skills/yunxing-test-xcode.md)                   | Build and test iOS apps on simulator using XcodeBuildMCP                                                                                                                                                       |
-| [`/yunxing-setup`](../../docs/skills/yunxing-setup.md)                             | Diagnose environment, install missing tools, and bootstrap project config                                                                                                                                      |
-| [`/yunxing-update`](../../docs/skills/yunxing-update.md)                           | Check yunxing plugin version and fix stale cache (Claude Code only)                                                                                                                                              |
-| [`/yunxing-release-notes`](../../docs/skills/yunxing-release-notes.md)             | Summarize recent yunxing plugin releases, or answer a question about a past release with a version citation                                                                                                      |
-| `/yunxing-align`                                                                 | AI-initiated alignment: at every decision point, surface at least 3 ranked options with the best pre-selected as the default, so the sponsor confirms the optimal choice in one tap. Invoked by other skills at decision points |
+| [`/yunxing:demo-reel`](../../docs/skills/yunxing-demo-reel.md)                     | Capture a visual demo reel (GIF demos, terminal recordings, screenshots) for PRs with project-type-aware tier selection                                                                                        |
+| [`/yunxing:promote`](../../docs/skills/yunxing-promote.md)                         | Draft user-facing announcement copy for a shipped feature (X post, changelog blurb, LinkedIn, email); voice-matched via the Spiral CLI when installed, a lite layer of editorial & social expertise without it |
+| [`/yunxing:report-bug`](../../docs/skills/yunxing-report-bug.md)                   | Report a bug in the yunxing plugin                                                                                                                                                                               |
+| [`/yunxing:resolve-pr-feedback`](../../docs/skills/yunxing-resolve-pr-feedback.md) | Resolve PR review feedback in parallel                                                                                                                                                                         |
+| [`/yunxing:test-browser`](../../docs/skills/yunxing-test-browser.md)               | Run browser tests on PR-affected pages                                                                                                                                                                         |
+| [`/yunxing:test-xcode`](../../docs/skills/yunxing-test-xcode.md)                   | Build and test iOS apps on simulator using XcodeBuildMCP                                                                                                                                                       |
+| [`/yunxing:setup`](../../docs/skills/yunxing-setup.md)                             | Diagnose environment, install missing tools, and bootstrap project config                                                                                                                                      |
+| [`/yunxing:update`](../../docs/skills/yunxing-update.md)                           | Check yunxing plugin version and fix stale cache (Claude Code only)                                                                                                                                              |
+| [`/yunxing:release-notes`](../../docs/skills/yunxing-release-notes.md)             | Summarize recent yunxing plugin releases, or answer a question about a past release with a version citation                                                                                                      |
+| `/yunxing:align`                                                                 | AI-initiated alignment: at every decision point, surface at least 3 ranked options with the best pre-selected as the default, so the sponsor confirms the optimal choice in one tap. Invoked by other skills at decision points |
 
 ### Development Frameworks
 
 | Skill                                                           | Description                                                                                                                                           |
 | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `yunxing-agent-native-architecture`                                  | Build AI agents using prompt-native architecture                                                                                                      |
-| `yunxing-dhh-rails-style`                                            | Write Ruby/Rails code in DHH's 37signals style                                                                                                        |
-| [`yunxing-frontend-design`](../../docs/skills/yunxing-frontend-design.md) | Create production-grade frontend interfaces                                                                                                           |
-| [`yunxing-polish`](../../docs/skills/yunxing-polish.md)                   | Conversational UX polish — start a dev server, open the feature in a browser, and iterate together; auto-detects 8 frameworks. Manual invocation only |
+| `agent-native-architecture`                                  | Build AI agents using prompt-native architecture                                                                                                      |
+| `dhh-rails-style`                                            | Write Ruby/Rails code in DHH's 37signals style                                                                                                        |
+| [`frontend-design`](../../docs/skills/yunxing-frontend-design.md) | Create production-grade frontend interfaces                                                                                                           |
+| [`polish`](../../docs/skills/yunxing-polish.md)                   | Conversational UX polish — start a dev server, open the feature in a browser, and iterate together; auto-detects 8 frameworks. Manual invocation only |
 
 ### Review & Quality
 
 | Skill                                                        | Description                                                                                                                                 |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`yunxing-doc-review`](../../docs/skills/yunxing-doc-review.md)        | Review documents using parallel persona agents for role-specific feedback                                                                   |
-| [`/yunxing-simplify-code`](../../docs/skills/yunxing-simplify-code.md) | Simplify recent code changes for reuse, quality, and efficiency — parallel reviewers find issues, fixes applied, behavior verified by tests |
+| [`doc-review`](../../docs/skills/yunxing-doc-review.md)        | Review documents using parallel persona agents for role-specific feedback                                                                   |
+| [`/yunxing:simplify-code`](../../docs/skills/yunxing-simplify-code.md) | Simplify recent code changes for reuse, quality, and efficiency — parallel reviewers find issues, fixes applied, behavior verified by tests |
 
 ### Content & Collaboration
 
 | Skill                                       | Description                                                      |
 | ------------------------------------------- | ---------------------------------------------------------------- |
-| [`yunxing-proof`](../../docs/skills/yunxing-proof.md) | Create, edit, and share documents via Proof collaborative editor |
+| [`proof`](../../docs/skills/yunxing-proof.md) | Create, edit, and share documents via Proof collaborative editor |
 
 ### Automation & Tools
 
 | Skill                | Description                                        |
 | -------------------- | -------------------------------------------------- |
-| `yunxing-gemini-imagegen` | Generate and edit images using Google's Gemini API |
+| `gemini-imagegen` | Generate and edit images using Google's Gemini API |
 
 ### Beta / Experimental
 
 | Skill             | Description                                                                                                                                                                                                       |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `yunxing-dogfood-beta` | Diff-scoped browser QA of the active branch: builds an exhaustive test matrix of every change, drives the app with agent-browser, then auto-fixes issues, adds regression tests, and commits each fix until green |
+| `dogfood-beta` | Diff-scoped browser QA of the active branch: builds an exhaustive test matrix of every change, drives the app with agent-browser, then auto-fixes issues, adds regression tests, and commits each fix until green |
 | `/lfg`            | Full autonomous engineering workflow                                                                                                                                                                              |
 
 ## MCP Servers
@@ -117,7 +117,7 @@ The plugin ships a bundled [`.mcp.json`](.mcp.json). Two lightweight, no-API-key
 | `context7`            | ✅          | Up-to-date library / API documentation lookup    |
 | `sequential-thinking` | ✅          | Structured multi-step reasoning                  |
 
-Three heavier servers are **opt-in** — they pull large dependencies (browser binaries, a Python `uvx` toolchain, a Chrome install), so `/yunxing-setup` offers them but leaves them unchecked by default:
+Three heavier servers are **opt-in** — they pull large dependencies (browser binaries, a Python `uvx` toolchain, a Chrome install), so `/yunxing:setup` offers them but leaves them unchecked by default:
 
 | Server            | Installs via                          | Purpose                                  |
 | ----------------- | ------------------------------------- | ---------------------------------------- |
@@ -125,7 +125,7 @@ Three heavier servers are **opt-in** — they pull large dependencies (browser b
 | `serena`          | `claude mcp add serena …`             | Codebase session memory (needs `uvx`)    |
 | `chrome-devtools` | `claude mcp add chrome-devtools …`    | Performance / DevTools inspection        |
 
-Run `/yunxing-setup` to check which MCP servers are registered (via `claude mcp list`) and install any missing ones interactively. MCP detection and `claude mcp add` install are Claude Code-specific; on other harnesses the MCP section is skipped.
+Run `/yunxing:setup` to check which MCP servers are registered (via `claude mcp list`) and install any missing ones interactively. MCP detection and `claude mcp add` install are Claude Code-specific; on other harnesses the MCP section is skipped.
 
 ## Agents
 
@@ -207,7 +207,7 @@ Agents are specialized subagents invoked by skills — you typically don't call 
 
 See the repo root [Install section](../../README.md#install) for current installation instructions across Claude Code, Codex, Cursor, Copilot, Droid, Qwen, and converter-backed targets.
 
-Then run `/yunxing-setup` to check your environment and install recommended tools.
+Then run `/yunxing:setup` to check your environment and install recommended tools.
 
 ## Version History
 
