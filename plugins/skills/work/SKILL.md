@@ -14,6 +14,10 @@ This command takes a work source — a `yunxing:plan` GitHub issue (a plan/speci
 
 Durable per-item artifacts are GitHub issues distinguished by label, not local files. The plan that drives execution is a `yunxing:plan` issue; on shipping, the hand-off to `compound` produces a `yunxing:solution` issue. Pass and link issues by NUMBER/URL and `#<N>` references — never read or write a plan/solution as a local file.
 
+## Interaction Method
+
+At any point where work asks the user to choose among options (e.g., the branch-rename decision in Phase 1, or any fork in how to proceed), use the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Do not improvise a numbered list in chat as the default — that is the fallback only when no blocking tool exists or the call errors, or when 5+ distinct options genuinely overflow the 4-option cap (then include a "pick a number or describe" hint). Never silently skip the question. Load the `align` skill for the full protocol.
+
 ## Input Document
 
 <input_document> #$ARGUMENTS </input_document>

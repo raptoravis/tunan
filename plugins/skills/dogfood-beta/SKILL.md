@@ -61,8 +61,8 @@ Parse `$ARGUMENTS`: a PR number, a branch name, or blank (use current branch). S
    - **Branch name:** check it out (probe for an existing worktree first).
    - **Blank:** use the current branch.
 2. **Refuse to run on `main`/`master`.** If the resolved branch is the trunk, stop and tell the user — there is no diff to dogfood.
-3. **Offer isolation.** Ask whether to run in a git worktree so the main checkout stays untouched (use the platform's blocking question tool). If yes, hand off to `worktree`; if no, continue in place.
-4. **Resume if a prior run exists.** Look for an existing `yunxing:dogfood` issue for this branch via `gh issue list --label "yunxing:dogfood" --search "<branch-slug>" --state all --json number,title,url`. If one is found with unfinished scenarios, ask whether to resume it or start fresh. To resume, read it with `gh issue view <N>` and re-hydrate the task list from its matrix (Pass/Fixed/Skipped stay done; Pending/Blocked/in-progress become the remaining work) and continue from there.
+3. **Offer isolation.** Ask whether to run in a git worktree so the main checkout stays untouched, using the platform's blocking question tool — `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini/Pi; fall back to a chat prompt only when no blocking tool exists or the call errors. If yes, hand off to `worktree`; if no, continue in place.
+4. **Resume if a prior run exists.** Look for an existing `yunxing:dogfood` issue for this branch via `gh issue list --label "yunxing:dogfood" --search "<branch-slug>" --state all --json number,title,url`. If one is found with unfinished scenarios, ask whether to resume it or start fresh — through the same blocking question tool. Never silently skip these questions. To resume, read it with `gh issue view <N>` and re-hydrate the task list from its matrix (Pass/Fixed/Skipped stay done; Pending/Blocked/in-progress become the remaining work) and continue from there.
 
 ### Resumability (stop and return at any point)
 

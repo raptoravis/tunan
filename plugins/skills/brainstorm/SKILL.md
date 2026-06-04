@@ -350,3 +350,5 @@ Follow the format set by existing entries. Apply edits silently. (If Phase 3 ski
 ### Phase 4: Handoff
 
 Present next-step options and execute the user's selection. Read `references/handoff.md` for the option logic, dispatch instructions, and closing summary format.
+
+**REQUIRED — route the next-step menu through the blocking question tool, not an ad-hoc chat list.** This is an answer-alignment moment: when 4 or fewer options are visible (the common case), present them with the platform's blocking question tool — `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini/Pi. Do **not** improvise a "接下来做什么 / what next" numbered list in chat as a substitute, and do **not** invent options — use the canonical handoff options from `references/handoff.md`, shown only when their state conditions hold. A bare numbered list in chat is the fallback **only** when 5+ options are visible, no blocking tool exists, or the call errors — never a default convenience. Never silently skip the question.
