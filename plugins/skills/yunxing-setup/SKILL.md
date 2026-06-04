@@ -55,6 +55,7 @@ If the line above resolved to an absolute path (starts with `/` and contains no 
 After the diagnostic report, check whether:
 
 - any CLI tools are missing (reported as yellow in the Tools section)
+- `gh` is present but not authenticated (reported as yellow `gh (not authenticated)` in the Tools section). The yunxing workflow stores requirements and state in GitHub issues, so a valid `gh auth status` is required — not just an installed `gh`. The fix is `gh auth login`, not reinstalling the tool.
 - any agent skills are missing (reported as yellow in the Skills section)
 - any MCP servers are missing (reported as yellow in the MCP Servers section; the section is absent on harnesses without the `claude` CLI)
 - `yunxing.local.md` is present and needs cleanup
@@ -142,6 +143,8 @@ MCP Servers:
 ```
 
 Only show items that are actually missing. Omit installed ones. Omit the MCP Servers group entirely when the diagnostic output had no MCP Servers section (non-Claude harnesses).
+
+**`gh` authentication is not an install.** If `gh` is reported as `gh (not authenticated)`, do not offer a package-manager install command for it — `gh` is already on the machine. Instead, offer to run `gh auth login` (interactive). Because `gh auth login` is an interactive login that the agent cannot complete on the user's behalf, instruct the user to run it themselves (in Claude Code, suggest typing `! gh auth login` so its output lands in the session), then re-run `/yunxing-setup` to confirm. Treat this as its own item, separate from the install list.
 
 ### Step 7: Install Selected Dependencies
 

@@ -83,8 +83,15 @@ for entry in "${deps[@]}"; do
   IFS='|' read -r name tier install_cmd url <<< "$entry"
   cli_total=$((cli_total + 1))
   if command -v "$name" >/dev/null 2>&1; then
-    cli_ok=$((cli_ok + 1))
-    results+=("$name|$tier|ok|$install_cmd|$url")
+    # gh must be installed AND authenticated to be usable. The whole yunxing
+    # workflow stores requirements/state in GitHub issues, so an unauthenticated
+    # gh is as broken as a missing one -- flag it and count it as not-ok.
+    if [ "$name" = "gh" ] && ! gh auth status >/dev/null 2>&1; then
+      results+=("$name|$tier|unauthenticated|$install_cmd|$url")
+    else
+      cli_ok=$((cli_ok + 1))
+      results+=("$name|$tier|ok|$install_cmd|$url")
+    fi
   else
     results+=("$name|$tier|missing|$install_cmd|$url")
   fi
@@ -227,6 +234,10 @@ for result in "${results[@]}"; do
   IFS='|' read -r name tier status install_cmd url <<< "$result"
   if [ "$status" = "ok" ]; then
     ok "$name"
+  elif [ "$status" = "unauthenticated" ]; then
+    warn "$name (not authenticated)"
+    issues=$((issues + 1))
+    detail "Run: gh auth login"
   else
     warn "$name"
     issues=$((issues + 1))

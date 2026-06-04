@@ -86,7 +86,15 @@ foreach ($entry in $deps) {
   $p = $entry.Split('|'); $name = $p[0]; $tier = $p[1]; $install = $p[2]; $url = $p[3]
   $cli_total++
   if (Get-Command $name -ErrorAction SilentlyContinue) {
-    $cli_ok++; $st = 'ok'
+    # gh must be installed AND authenticated to be usable. The whole yunxing
+    # workflow stores requirements/state in GitHub issues, so an unauthenticated
+    # gh is as broken as a missing one -- flag it and count it as not-ok.
+    if ($name -eq 'gh') {
+      & gh auth status 2>$null | Out-Null
+      if ($LASTEXITCODE -eq 0) { $cli_ok++; $st = 'ok' } else { $st = 'unauthenticated' }
+    } else {
+      $cli_ok++; $st = 'ok'
+    }
   } else {
     $st = 'missing'
   }
@@ -215,6 +223,10 @@ Add-Section "Tools  $cli_ok/$cli_total"
 foreach ($r in $results) {
   if ($r.status -eq 'ok') {
     Add-Ok $r.name
+  } elseif ($r.status -eq 'unauthenticated') {
+    Add-Warn "$($r.name) (not authenticated)"
+    $issues++
+    Add-Detail "Run: gh auth login"
   } else {
     Add-Warn $r.name
     $issues++
