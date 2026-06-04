@@ -78,6 +78,24 @@ When a doc is warranted, these are present.
   continuous across groups (R1, R2 in the first group; R3, R4 in the
   second; never restart at R1 per group).
 
+## Preserve `newreq`-authored sections (merge, do not clobber)
+
+When the requirement is written to a `REQ_ISSUE` that already has a populated
+body — the common case for an issue created by `newreq` — read the current
+body first and carry these sections forward **verbatim**; they are part of the
+finished requirement, not scaffolding to discard:
+
+- **`## Background / original words`** — the sponsor's verbatim words. Source of
+  truth for what the user actually asked; the agent-synthesized Problem Frame
+  does NOT replace it. Keep it.
+- **`## Assets to upload`** — its to-upload checklist and any
+  `<!-- TODO: drag in ... -->` placeholder comments. Dropping it loses the
+  pending-asset list and the drag-in instructions the user still needs.
+- the `kind:` / `priority:` metadata fields — merge into the metadata block
+  alongside `date` / `topic` rather than replacing the whole block.
+
+Overwriting a `newreq` body without preserving these is a regression.
+
 ## Include when material
 
 The agent decides per brainstorm whether each section carries information

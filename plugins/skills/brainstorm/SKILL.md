@@ -116,7 +116,7 @@ The handoff to `plan` passes the req issue ref (`#<N>` or URL), not a file path 
 
 Resume from a `yunxing:req` issue — never from a local file.
 
-- **A `REQ_ISSUE` was bound in Phase 0.0** (issue ref passed): its body is already the resume source. Read it (`gh issue view <N> --json title,body,url,labels`), summarize the current state briefly, and continue from its existing decisions and outstanding questions. If the issue was created by `newreq` and holds only the captured requirement (no finished brainstorm sections yet), treat its body as the feature description and proceed through the dialogue phases normally — Phase 3 will overwrite the body with the finished requirement.
+- **A `REQ_ISSUE` was bound in Phase 0.0** (issue ref passed): its body is already the resume source. Read it (`gh issue view <N> --json title,body,url,labels`), summarize the current state briefly, and continue from its existing decisions and outstanding questions. If the issue was created by `newreq` and holds only the captured requirement (no finished brainstorm sections yet), treat its body as the feature description and proceed through the dialogue phases normally. Phase 3 then **merges** the finished requirement into the body — it preserves the `newreq`-authored capture (the sponsor's verbatim original words and the asset placeholders), it does not clobber them.
 - **No `REQ_ISSUE`, but the user references an existing brainstorm topic:** locate a candidate issue by topic before starting fresh:
 
 ```bash
@@ -321,7 +321,14 @@ When a requirement is warranted, compose its markdown body using:
 
 Build the body in an OS temp file (bash `${TMPDIR:-/tmp}`, PowerShell `$env:TEMP`), then write the issue:
 
-- **`REQ_ISSUE` is bound** (issue ref passed, or a match found in Phase 0.1): overwrite that issue's body with the finished requirement. The title becomes `[req] <topic>` (update it only if the existing title is a stale placeholder; preserve a good user-set title).
+- **`REQ_ISSUE` is bound** (issue ref passed, or a match found in Phase 0.1): rewrite that issue's body with the finished requirement. The title becomes `[req] <topic>` (update it only if the existing title is a stale placeholder; preserve a good user-set title).
+
+  **Merge, do not clobber.** When the bound issue already has a populated body — the common case for a `newreq` issue — read the current body first and **carry forward verbatim** the sections `newreq` authored that the finished requirement does not regenerate:
+  - the sponsor's original words (the `## Background / original words` section) — this is the verbatim source of truth for what the user asked; the agent-synthesized Problem Frame does not replace it.
+  - the assets section (`## Assets to upload`, its to-upload checklist, and any `<!-- TODO: drag in ... -->` placeholder comments) — dropping it loses the pending-asset list and the drag-in instructions the user still needs.
+  - the `kind:` and `priority:` YAML fields — merge them into the metadata block alongside `date` / `topic`; do not lose them by replacing the whole block.
+
+  Dropping the verbatim sponsor words, the pending-asset checklist, or the `kind`/`priority` fields when overwriting a `newreq` body is a regression. Build the merged body, then write it:
 
 ```bash
 gh issue edit <N> --body-file <body-file>
