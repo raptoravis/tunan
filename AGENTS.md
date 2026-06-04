@@ -1,7 +1,9 @@
 # Plugin Instructions
 
-These instructions apply when working under `plugins/compound-engineering/`.
-They supplement the repo-root `AGENTS.md`.
+These instructions apply when working in this repo, which ships the
+`compound-engineering` plugin directly from the root: skills under `skills/`,
+agents under `agents/`, and the plugin manifests under `.claude-plugin/` and
+`.codex-plugin/`.
 
 # Compounding Engineering Plugin Development
 
@@ -13,40 +15,23 @@ Consequences:
 
 - Behavioral rules that govern skill *runtime* behavior must live inside the skill itself — in `SKILL.md` or files under its `references/`. Guidance placed in this file is invisible at runtime.
 - When two or more skills share a behavioral principle, duplicate the guidance into each skill (inline for short rules, `references/` for longer ones). There is no cross-skill shared-file mechanism (see "File References in Skills" below). When a reference file is duplicated across skills (e.g., `concepts-vocabulary.md` in both `ce-compound/references/` and `ce-compound-refresh/references/`), edits must be applied to every copy in the same commit. Drift between copies produces inconsistent agent behavior depending on which skill loaded.
-- Do not propose that runtime guidance for ce-ideate, ce-brainstorm, ce-plan, or any other skill live in this AGENTS.md or in the repo-root AGENTS.md. Those files only shape how contributors edit the plugin.
+- Do not propose that runtime guidance for ce-ideate, ce-brainstorm, ce-plan, or any other skill live in this AGENTS.md. This file only shapes how contributors edit the plugin.
 
 This is easy to miss because authoring feels like using: you edit the plugin while running inside this repo, and the repo's AGENTS.md is loaded — but that load does not follow the installed skill into a user's environment.
 
-## Versioning Requirements
+## Versioning
 
-**IMPORTANT**: Routine PRs should not cut releases for this plugin.
+The plugin version lives in two manifests that must stay in sync: `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`. When a change warrants a version bump, update both to the same value in the same commit.
 
-The repo uses an automated release process to prepare plugin releases, including version selection and changelog generation. Because multiple PRs may merge before the next release, contributors cannot know the final released version from within an individual PR.
-
-**If `bun run release:validate` reports drift, see `docs/solutions/workflow/release-please-version-drift-recovery.md`** for the file-relationship map, the recovery decision tree (forward-sync vs. backward-revert vs. `release-as` pin), and worked examples. That doc answers questions the rules below don't: *why these files are release-managed, how they sync via `extra-files` and `linked-versions`, and what to do when the rules below were violated.*
-
-### Contributor Rules
-
-- Do **not** manually bump `.claude-plugin/plugin.json` version in a normal feature PR.
-- Do **not** manually bump `.cursor-plugin/plugin.json` version in a normal feature PR.
-- Do **not** manually bump `.codex-plugin/plugin.json` version in a normal feature PR — release-please owns this via `extra-files` in `.github/release-please-config.json`, parallel to the Claude and Cursor entries.
-- Do **not** manually bump `.claude-plugin/marketplace.json` plugin version in a normal feature PR.
-- Do **not** hand-edit `.agents/plugins/marketplace.json` except to add or remove a plugin. Plugin-list, name, and description drift between the Claude, Cursor, and Codex marketplaces is caught by `bun run release:validate`.
-- Do **not** cut a release section in the canonical root `CHANGELOG.md` for a normal feature PR.
-- Do update substantive docs that are part of the actual change, such as `README.md`, component tables, usage instructions, or counts when they would otherwise become inaccurate.
+The automated release pipeline (release-please, CI workflows, the multi-marketplace parity tooling, and the Bun converter) was removed when the repo was simplified to ship only the plugin payload. There is no `bun run` toolchain, test suite, `CHANGELOG.md` release automation, or `docs/` tree in this repo anymore — do not reference them.
 
 ### Pre-Commit Checklist
 
-Before committing ANY changes:
+Before committing changes:
 
-- [ ] No manual release-version bump in `.claude-plugin/plugin.json`
-- [ ] No manual release-version bump in `.cursor-plugin/plugin.json`
-- [ ] No manual release-version bump in `.codex-plugin/plugin.json`
-- [ ] No manual release-version bump in `.claude-plugin/marketplace.json`
-- [ ] No manual release entry added to the root `CHANGELOG.md`
-- [ ] `bun run release:validate` passes (enforces Claude/Cursor/Codex manifest parity)
+- [ ] `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` versions match
 - [ ] README.md component counts verified
-- [ ] README.md tables accurate (agents, commands, skills)
+- [ ] README.md tables accurate (agents, skills)
 - [ ] plugin.json description matches current counts
 
 ### Directory Structure
@@ -88,11 +73,7 @@ Important: Just because the developer's installed plugin may be out of date, it'
 
 **Agents** follow the same convention: `ce-adversarial-reviewer`, `ce-learnings-researcher`, etc. When referencing agents from skills, use the bare `ce-<agent-name>` form (e.g., `ce-adversarial-reviewer`) — the `ce-` prefix is sufficient for uniqueness across plugins.
 
-**The `ce-` prefix is required for every new skill and agent — no exceptions.** Three legacy skills (`every-style-editor`, `file-todos`, `lfg`) predate the rule and remain unprefixed; they are pinned in `tests/frontmatter.test.ts` as the only allowed exceptions. Do not add to that allowlist. When adding a new skill, the directory name, the SKILL.md `name:` frontmatter, and any README references must all start with `ce-`. The frontmatter test enforces this and will fail on a missing prefix.
-
-## Known External Limitations
-
-**Proof HITL surfaces a ghost "AI collaborator" agent** (noted 2026-04-16, may change): The Proof API auto-joins any header-less `/state` read under a synthetic `ai:auto-<hash>` identity, so docs created by the `skills/proof/` HITL workflow show a phantom participant alongside `Compound Engineering`. The only way to suppress it is to set `ownerId: "agent:ai:compound-engineering"` on create — but that transfers document ownership to the agent and prevents the user from claiming it into their Proof library, so we don't use it. Treat as cosmetic noise; don't reintroduce the `ownerId` workaround. Tracked upstream: https://github.com/EveryInc/proof/issues/951.
+**The `ce-` prefix is required for every new skill and agent — no exceptions.** One legacy skill (`lfg`) predates the rule and remains unprefixed; treat it as the only allowed exception and do not add more. When adding a new skill, the directory name, the SKILL.md `name:` frontmatter, and any README references must all start with `ce-`.
 
 ## Skill Design Principles
 
@@ -136,9 +117,9 @@ When adding or modifying skills, verify compliance with the skill spec:
 
 - [ ] `name:` present and matches directory name (lowercase-with-hyphens)
 - [ ] `description:` present and describes **what it does and when to use it** (per official spec: "Explains code with diagrams. Use when exploring how code works.")
-- [ ] `description:` is no longer than 1024 characters -- some coding harnesses reject longer skill descriptions. Enforced by `tests/frontmatter.test.ts`.
-- [ ] `description:` value is quoted (single or double) if it contains colons -- unquoted colons break `js-yaml` strict parsing and crash `install --to opencode/codex`. Run `bun test tests/frontmatter.test.ts` to verify.
-- [ ] `description:` value does not contain raw angle-bracket tokens like `<skill-name>`, `<tag>`, or `<placeholder>` -- Cowork's plugin validator parses descriptions as HTML and rejects unknown tags with a generic "Plugin validation failed" banner (see issue #602). Claude Code tolerates them, so the bug only surfaces downstream. Backtick-wrap the token (`` `<skill-name>` ``) or rephrase. Enforced by `tests/frontmatter.test.ts`.
+- [ ] `description:` is no longer than 1024 characters -- some coding harnesses reject longer skill descriptions.
+- [ ] `description:` value is quoted (single or double) if it contains colons -- unquoted colons break `js-yaml` strict parsing and crash `install --to opencode/codex`.
+- [ ] `description:` value does not contain raw angle-bracket tokens like `<skill-name>`, `<tag>`, or `<placeholder>` -- Cowork's plugin validator parses descriptions as HTML and rejects unknown tags with a generic "Plugin validation failed" banner (see issue #602). Claude Code tolerates them, so the bug only surfaces downstream. Backtick-wrap the token (`` `<skill-name>` ``) or rephrase.
 
 ### Reference File Inclusion (Required if references/ exists)
 
@@ -168,7 +149,7 @@ Skill content loaded at trigger time is carried in every subsequent message — 
 
 Every line in `SKILL.md` loads on every invocation. Include rationale only when it changes what the agent does at runtime — if behavior wouldn't differ without the sentence, cut it.
 
-Keep rationale at the highest-level location that covers it; restate behavioral directives at the point they take effect. A 500-line skill shouldn't hinge on the agent remembering line 9 by line 400. Portability notes, defenses against mistakes the agent wasn't going to make, and meta-commentary about this repo's authoring rules belong in commit messages or `docs/solutions/`, not in the skill body.
+Keep rationale at the highest-level location that covers it; restate behavioral directives at the point they take effect. A 500-line skill shouldn't hinge on the agent remembering line 9 by line 400. Portability notes, defenses against mistakes the agent wasn't going to make, and meta-commentary about this repo's authoring rules belong in commit messages, not in the skill body.
 
 ### Cross-Platform User Interaction
 
@@ -236,7 +217,7 @@ Why: shell-heavy exploration causes avoidable permission prompts in sub-agent wo
   - **`$(...)` containing a double-quoted string** (e.g., `basename "$(dirname "$common")"`) is rejected as `Unhandled node type: string` (issue #709). Extract the logic to a script under `scripts/` — do NOT replace with parameter expansion (see next bullet).
   - **Bash parameter expansion operators** (`${var%pattern}`, `${var##pattern}`, `${var#pattern}`, `${var%%pattern}`, `${var/pat/repl}`, `${var:-default}`, etc.) are rejected as `Contains expansion`. Simple `${var}` is fine; operators after the variable name are not. This means paths like `${common%/.git}` (strip-suffix) or `${repo##*/}` (strip-prefix) cannot be used in `!` pre-resolution. To derive a directory name or strip a path component, extract to a script.
 
-  When the logic is non-trivial, prefer extracting to a script under the skill's `scripts/` directory; the safety check then sees only `bash <quoted-path>`, which sidesteps both current and future safety-check tightenings. Tests in `tests/skill-shell-safety.test.ts` enforce all four patterns.
+  When the logic is non-trivial, prefer extracting to a script under the skill's `scripts/` directory; the safety check then sees only `bash <quoted-path>`, which sidesteps both current and future safety-check tightenings.
 
   **Permission gate on extracted scripts — invoke from the skill body, not from `!` pre-resolution.** A pre-resolution `bash "${CLAUDE_SKILL_DIR}/scripts/<name>.sh"` form passes the safety check but trips Claude Code's permission check at skill-load time, which does *not* honor `defaultMode: bypassPermissions`. Allow-listing via `allowed-tools` frontmatter is unreliable at *load time*: empirically, broad `Bash(bash *)` patterns appear to load with bypass on but narrow filename-pinned patterns like `Bash(bash *upstream-version.sh)` fail with bypass off. Move the script invocation into the skill body so it runs via the runtime Bash tool instead. Two pieces are required for it to actually work:
 
@@ -301,52 +282,12 @@ grep -E '^description:' skills/*/SKILL.md
 - **New skill:** Create `skills/<name>/SKILL.md` with required YAML frontmatter (`name`, `description`). Reference files go in `skills/<name>/references/`. Add the skill to the appropriate category table in `README.md` and update the skill count.
 - **New agent:** Create `agents/ce-<name>.md` with frontmatter (the `ce-` prefix is required). Add the agent to the appropriate topical section of `README.md` (Review, Document Review, Research, Design, Workflow, Docs) and update the agent count.
 
-### Adding a New Plugin to This Repo
-
-When adding a new plugin alongside `compound-engineering` and `coding-tutor`, the repo ships to three marketplace formats (Claude, Cursor, Codex). All three must stay in parity or `bun run release:validate` will fail on next run. Checklist:
-
-- [ ] `.claude-plugin/marketplace.json` — add the plugin to `plugins[]`
-- [ ] `.cursor-plugin/marketplace.json` — add the plugin to `plugins[]`
-- [ ] `.agents/plugins/marketplace.json` — add the plugin to `plugins[]` (Codex schema: nested `source: { source: "local", path: "./plugins/<name>" }`, `policy`, `category`)
-- [ ] `plugins/<name>/.claude-plugin/plugin.json` — create with `name`, `version`, `description`
-- [ ] `plugins/<name>/.cursor-plugin/plugin.json` — create with matching `name`, `version`, `description`
-- [ ] `plugins/<name>/.codex-plugin/plugin.json` — create with matching `name`, `version`, `description`, plus Codex-specific fields (`skills: "./skills/"` if skills exist, plus `interface{}` block)
-- [ ] `.github/release-please-config.json` — add a `plugins/<name>` package entry with `extra-files` for all three plugin.json paths
-- [ ] `.github/.release-please-manifest.json` — add the initial version entry for the new package
-- [ ] `src/release/metadata.ts` — extend `syncReleaseMetadata` with a cross-check target for the new plugin (follow the `codexPluginTargets` pattern)
-- [ ] Run `bun run release:validate` and confirm it reports the new manifests without drift
-
-The validator enforces: plugin-list parity across all three marketplaces, name/version/description parity across each plugin's three plugin.json files, and existence of any `skills:` directory declared in the Codex manifest. Note that only `description` drift is auto-corrected on `write: true` — version drift is detect-only because release-please owns the write.
-
 ## Beta Skills
 
-Beta skills use a `-beta` suffix and `disable-model-invocation: true` to prevent accidental auto-triggering. See `docs/solutions/skill-design/beta-skills-framework.md` for naming, validation, and promotion rules.
+Beta skills use a `-beta` suffix and `disable-model-invocation: true` to prevent accidental auto-triggering.
 
 **Caveat on non-beta use of `disable-model-invocation`:** The flag blocks all model-initiated invocations via the Skill tool, which includes scheduled re-entry from `/loop`. Only a user typing a slash command directly bypasses it. If a skill is intended to be schedulable (e.g., `resolve-pr-feedback`), do not set this flag — rely on description specificity and argument requirements to prevent accidental auto-fire instead.
 
 ### Stable/Beta Sync
 
 When modifying a skill that has a `-beta` counterpart (or vice versa), always check the other version and **state your sync decision explicitly** before committing — e.g., "Propagated to beta — shared test guidance" or "Not propagating — this is the experimental delegate mode beta exists to test." Syncing to both, stable-only, and beta-only are all valid outcomes. The goal is deliberate reasoning, not a default rule.
-
-## Skill Documentation
-
-Many skills have a user-facing doc at `docs/skills/<skill>.md` (repo-root `docs/`, not under `plugins/`) that explains the skill's high-level purpose, novel mechanics, and chain position — separate from the runtime SKILL.md. The `docs/skills/README.md` index lists all documented skills grouped by category.
-
-When modifying such a skill, **state your skill-doc sync decision explicitly** before committing — e.g., "doc updated — added new framing for surprise-me mode" or "doc not updated — change is internal to Phase 2, doesn't surface at doc level." **Most changes don't warrant an update**: internal phase refactors, prompt-tuning, and mechanic-level bug fixes typically don't surface at the doc's level of abstraction.
-
-Update the skill doc when:
-
-- The skill's high-level purpose or framing has shifted
-- A highlighted novel mechanic changed materially or was removed
-- A new mechanic emerged that belongs in "What Makes It Novel"
-- The doc's quick example, FAQ, or use cases would mislead a reader
-
-Edit just the parts that became inaccurate; don't rewrite to match SKILL.md. Skills without a doc need no check — creating one is a deliberate decision, not a reflexive one. When adding a doc for a skill that didn't have one, also link it from the skill's row in `plugins/compound-engineering/README.md` and add it to the appropriate category in `docs/skills/README.md`.
-
-## Documented Solutions
-
-`docs/solutions/` holds documented solutions to past problems — bugs, architecture patterns, design patterns, tooling decisions, conventions, workflow practices, and other institutional knowledge. Entries use YAML frontmatter with fields including `module`, `tags`, and `problem_type`. Knowledge-track `problem_type` values are `architecture_pattern`, `design_pattern`, `tooling_decision`, `convention`, `workflow_issue`, `developer_experience`, `documentation_gap`, and `best_practice` (fallback). Bug-track values cover `build_error`, `test_failure`, `runtime_error`, `performance_issue`, `database_issue`, `security_issue`, `ui_bug`, `integration_issue`, and `logic_error`. Search this directory before designing new solutions so institutional memory compounds across changes.
-
-## Documentation
-
-See `docs/solutions/plugin-versioning-requirements.md` for detailed versioning workflow.
