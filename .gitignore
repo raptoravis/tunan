@@ -9,4 +9,4 @@ todos/
 __pycache__/
 *.pyc
 
-.compound-engineering/*.local.yaml
+.tunan/*.local.yaml

@@ -39,7 +39,6 @@ This file contains the shipping workflow (Phase 3-4). It is loaded when all Phas
    **When Tier 1 is unavailable and Tier 2 criteria are not met:** skip a dedicated review step. Phase 2 testing, simplify (when run), lint, and Final Validation still apply. Note in the shipping summary: `Code review: skipped (no Tier 1 tool; Tier 2 criteria not met).`
 
    Escalate to Tier 2 when **any** of the following is true:
-
    - **Sensitive surface touched.** The diff modifies any of: authentication or authorization, payments or billing, data migrations or backfills, cryptography or secret handling, security-relevant configuration, public API or library contracts, or dependency manifests.
    - **Large and diffuse change.** The diff exceeds >=400 changed lines **and** spans more than 3 directories or 2 distinct subsystems. Either alone is a soft signal; together they are an escalation trigger.
    - **Very large change.** The diff exceeds >=1,000 changed lines regardless of diffusion.
@@ -49,7 +48,7 @@ This file contains the shipping workflow (Phase 3-4). It is loaded when all Phas
 
 4. **Residual Work Gate** (REQUIRED when Tier 2 ran)
 
-   After Tier 2 code review and review-findings followup, inspect the **Actionable Findings** summary (or read the run artifact at `/tmp/compound-engineering/ce-code-review/<run-id>/` if the summary was truncated). If one or more actionable `downstream-resolver` findings were not applied in followup, do not proceed to Final Validation until the user decides how to handle them.
+   After Tier 2 code review and review-findings followup, inspect the **Actionable Findings** summary (or read the run artifact at `/tmp/tunan/ce-code-review/<run-id>/` if the summary was truncated). If one or more actionable `downstream-resolver` findings were not applied in followup, do not proceed to Final Validation until the user decides how to handle them.
 
    Ask the user using the platform's blocking question tool (`AskUserQuestion` in Claude Code with `ToolSearch select:AskUserQuestion` pre-loaded if needed, `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension)). Fall back to numbered options in chat only when the harness genuinely lacks a blocking tool. Never silently skip the gate.
 
@@ -95,7 +94,6 @@ This file contains the shipping workflow (Phase 3-4). It is loaded when all Phas
 
    Update the plan's `status` field from `active` to `completed`. The
    mechanic depends on the plan's format:
-
    - **Markdown plan (`.md`).** YAML frontmatter at the top of the file
      carries the status. Edit the YAML directly:
      ```
@@ -159,6 +157,7 @@ Before creating PR, verify:
 **Skip dedicated review** when no Tier 1 and Tier 2 criteria not met (document in summary).
 
 Escalate to Tier 2 when any of these holds:
+
 - Sensitive surface touched (auth/authz, payments/billing, data migrations or backfills, cryptography or secrets, security-relevant config, public API or library contracts, dependency manifests)
 - Large and diffuse change (>=400 changed lines AND >3 directories or 2 subsystems)
 - Very large change (>=1,000 changed lines)

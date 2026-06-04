@@ -7,6 +7,7 @@ This file contains post-plan-writing instructions: document review, post-generat
 **Format gate.** This phase runs only when `OUTPUT_FORMAT=md` (resolved in SKILL.md Phase 0.0). `ce-doc-review`'s mutation mechanics are markdown-specific — its walkthrough applies `gated_auto`/`manual` fixes as "single-file markdown changes" via the platform's edit tool, and its Append-to-Open-Questions flow inserts `##`/`###` markdown headings (see `references/walkthrough.md` and `references/open-questions-defer.md` in the ce-doc-review skill). Running those mutators against an HTML artifact would produce malformed output. Until ce-doc-review gains HTML-aware mutation, HTML plans skip this phase entirely.
 
 **When `OUTPUT_FORMAT=html`:** Skip the ce-doc-review invocation. Capture a synthetic "skipped" envelope so the menu summary line in 5.4 can name the limitation explicitly:
+
 - `fixes_applied = 0`
 - `proposed_fixes_count = 0`, `decisions_count = 0`, `fyi_count = 0`
 - `skipped_reason = "output_format_html"`
@@ -18,10 +19,12 @@ Then proceed directly to Final Checks (5.3.9). Do not block on this — the conf
 Headless is the default at this phase because most users want to start work after planning, not adjudicate every reviewer concern up front. Headless applies `safe_auto` fixes silently and returns structured findings text — no walkthrough, no per-finding routing, no blocking prompts. The post-generation menu (see 5.4) offers `Run deeper doc review` as a first-class option so users can opt into the full interactive walkthrough when they want it.
 
 The confidence check and ce-doc-review are complementary:
+
 - The confidence check strengthens rationale, sequencing, risk treatment, and grounding
 - Document-review checks coherence, feasibility, scope alignment, and surfaces role-specific issues
 
 Capture the headless envelope so it can drive the contextual summary above the post-generation menu:
+
 - The number of fixes auto-applied
 - The count of remaining findings, broken out by user-facing bucket (proposed fixes, decisions, FYI observations)
 - The severity breakdown of decisions and proposed fixes (specifically the P0/P1 count, since those benefit from explicit user attention)
@@ -33,11 +36,13 @@ When ce-doc-review returns "Review complete", proceed to Final Checks.
 ## 5.3.9 Final Checks and Cleanup
 
 Before proceeding to post-generation options:
+
 - Confirm the plan is stronger in specific ways, not merely longer
 - Confirm the planning boundary is intact
 - Confirm origin decisions were preserved when an origin document exists
 
 If artifact-backed mode was used:
+
 - Clean up the temporary scratch directory after the plan is safely updated
 - If cleanup is not practical on the current platform, note where the artifacts were left
 
@@ -58,12 +63,13 @@ After all mutations in this run have settled (initial write, deepening synthesis
 **Question:** "Plan ready at `<absolute path to plan>`. What would you like to do next?"
 
 **Options:**
+
 1. **Start `/ce-work`** (recommended) - Begin implementing this plan in the current session
 2. **Run deeper doc review** - Walk through the remaining findings interactively (full ce-doc-review walkthrough)
 3. **Create Issue** - Create a tracked issue from this plan in your configured issue tracker (GitHub or Linear)
 4. **Open in Proof (web app) — review and comment to iterate with the agent** - Open the doc in Every's Proof editor, iterate with the agent via comments, or copy a link to share with others. **Render only when `OUTPUT_FORMAT=md`.**
-4. **Open in browser** - Open the HTML plan file locally for review and sharing. **Render only when `OUTPUT_FORMAT=html`.**
-5. **Done for now** - Pause; the plan file is saved and can be resumed later
+5. **Open in browser** - Open the HTML plan file locally for review and sharing. **Render only when `OUTPUT_FORMAT=html`.**
+6. **Done for now** - Pause; the plan file is saved and can be resumed later
 
 **Option 4 format-keyed label.** Under exclusive output mode, the plan exists as exactly one artifact — `.md` or `.html`, never both. Render the option 4 label matching the produced format. Proof operates on markdown plans (it ingests the `.md` source and rewrites markdown), so it does not apply to HTML runs; the browser option opens the local `.html` file directly. `/ce-work` remains the recommended option in both modes — `ce-work` reads either format (see the ce-work skill's plan-input handling).
 
@@ -72,13 +78,14 @@ After all mutations in this run have settled (initial write, deepening synthesis
 **Hide `Run deeper doc review` when no actionable findings remain or doc review was skipped.** Show option 2 only when the headless envelope reports `proposed_fixes_count + decisions_count > 0` — i.e., at least one `gated_auto` or `manual` finding at confidence anchor `75` or `100`. Drop the option in any other case, including FYI-only state. FYI observations (anchor `50`) do not enter `ce-doc-review`'s interactive routing question or walkthrough — that flow is gated to actionable findings — so a `Run deeper doc review` option that only has FYIs to show is a dead-end: ce-doc-review would re-dispatch the persona team, find the same FYIs, skip the routing question, and fall through to the terminal question with nothing to walk through. The user paid the dispatch cost for no engagement surface. **Also drop option 2 when the envelope carries `skipped_reason: output_format_html`** — ce-doc-review's mutation mechanics are markdown-only today (see Phase 5.3.8 format gate), so a `Run deeper doc review` option on an HTML plan would route into the same markdown-oriented walkthrough the gate exists to prevent. When option 2 is dropped, the menu becomes 4 options (1, 3, 4, 5 above), falls back to `AskUserQuestion` on Claude Code, and renumbers 1-4 in display so users see a clean sequence. The summary line above the menu still names the FYI count when present (`Doc review applied 3 fixes. 2 FYI observations remain.`) so the user sees what was found, even though there is no menu action attached to it — the FYIs are visible in the headless envelope text the menu rendered alongside.
 
 Based on selection (the bare per-option routing is also stated inline in the SKILL.md so it cannot be missed when this reference is not loaded; the elaborate sub-flows below are the reason this reference still exists):
+
 - **Start `/ce-work`** -> Invoke the `ce-work` skill via the platform's skill-invocation primitive (`Skill` in Claude Code, `Skill` in Codex, the equivalent on Gemini/Pi), passing the plan path as the skill argument. Do not merely tell the user to type `/ce-work` — fire the invocation now so the plan executes in this session.
 - **Run deeper doc review** -> Re-invoke the `ce-doc-review` skill on the plan path **without** `mode:headless` so the interactive routing question and walkthrough fire. The headless pass already applied `safe_auto` fixes and recorded its findings in the session, so the interactive pass picks up where headless stopped — its R29 suppression rule prevents prior-round Skipped/Deferred entries from re-raising. After it returns, re-render this menu with the refreshed counts so the user can pick what to do next.
 - **Create Issue** -> Follow the Issue Creation section below
 - **Open in Proof (web app) — review and comment to iterate with the agent** -> Load the `ce-proof` skill in HITL-review mode with:
   - source file: `docs/plans/<plan_filename>.md`
   - doc title: `Plan: <plan title from frontmatter>`
-  - identity: `ai:compound-engineering` / `Compound Engineering`
+  - identity: `ai:tunan` / `Compound Engineering`
   - recommended next step: `/ce-work` (shown in the ce-proof skill's final terminal output)
 
   Follow `references/hitl-review.md` in the ce-proof skill. It uploads the plan, prompts the user for review in Proof's web UI, ingests filtered comment threads, applies agreed edits through the current Proof edit APIs, replies/resolves in-thread, and syncs the final markdown back to the plan file atomically on proceed.
@@ -92,6 +99,7 @@ Based on selection (the bare per-option routing is also stated inline in the SKI
   - `status: aborted` -> fall back to the options without changes.
 
   If the initial upload fails (network error, Proof API down), retry once after a short wait. If it still fails, tell the user the upload didn't succeed and briefly explain why, then return to the options — don't leave them wondering why the option did nothing.
+
 - **Open in browser** -> Display the absolute path to the `.html` plan file so the user can open it locally. Where the platform exposes a browser-opening primitive (e.g., `open` on macOS, `xdg-open` on Linux, `start` on Windows), the agent may invoke it directly; otherwise print the absolute path and let the user open it. After the path is displayed (or the browser is opened), return to the post-generation options so the user can pick a follow-up action.
 - **Done for now** -> Display a brief confirmation that the plan file is saved and end the turn. Do not start follow-up work without an explicit further user prompt.
 - **Free-form prompts that target the findings** (e.g., the user types "review", "walk through", "deep review" instead of picking a numbered option) -> route as if they had picked `Run deeper doc review`. Do not loop back to the menu without firing the deeper review. **Exception:** when the envelope carries `skipped_reason: output_format_html`, do not fire ce-doc-review — instead, reply once with `ce-doc-review is markdown-only today; the HTML plan can't be reviewed without HTML-aware mutation support. Switch to /ce-plan output:md to regenerate as markdown if you want a review pass.` and loop back to the menu.
@@ -122,5 +130,6 @@ When the user selects "Create Issue", detect their project tracker:
 5. If the detected tracker's CLI is not installed or not authenticated, surface a clear error (e.g., "`gh` CLI not found — install it or create the issue manually") and return to the options.
 
 After issue creation:
+
 - Display the issue URL
 - Ask whether to proceed to `/ce-work` using the platform's blocking question tool

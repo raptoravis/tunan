@@ -2,7 +2,7 @@
 # This is the canonical schema for the experiment log file that accumulates
 # across an optimization run.
 #
-# Location: .context/compound-engineering/ce-optimize/<spec-name>/experiment-log.yaml
+# Location: .context/tunan/ce-optimize/<spec-name>/experiment-log.yaml
 #
 # PERSISTENCE MODEL:
 # The experiment log on disk is the SINGLE SOURCE OF TRUTH. The agent's
@@ -26,7 +26,6 @@
 # ============================================================================
 
 structure:
-
   spec:
     type: string
     required: true
@@ -120,7 +119,6 @@ structure:
 
 experiment_entry:
   required_children:
-
     iteration:
       type: integer
       description: "Sequential experiment number (1-indexed, monotonically increasing)"
@@ -140,15 +138,15 @@ experiment_entry:
     outcome:
       type: enum
       values:
-        - measured                # measurement finished and metrics were persisted, awaiting batch evaluation
-        - kept                    # primary metric improved, gates passed -> merged to optimization branch
-        - reverted                # primary metric did not improve or was worse -> changes discarded
-        - degenerate              # degenerate gate failed -> immediately reverted, no judge evaluation
-        - error                   # measurement command crashed, timed out, or produced malformed output
+        - measured # measurement finished and metrics were persisted, awaiting batch evaluation
+        - kept # primary metric improved, gates passed -> merged to optimization branch
+        - reverted # primary metric did not improve or was worse -> changes discarded
+        - degenerate # degenerate gate failed -> immediately reverted, no judge evaluation
+        - error # measurement command crashed, timed out, or produced malformed output
         - deferred_needs_approval # experiment needs an unapproved dependency -> set aside for batch approval
-        - timeout                 # measurement command exceeded timeout_seconds
-        - runner_up_kept          # file-disjoint runner-up that was cherry-picked and re-measured successfully
-        - runner_up_reverted      # file-disjoint runner-up that was cherry-picked but combined measurement was not better
+        - timeout # measurement command exceeded timeout_seconds
+        - runner_up_kept # file-disjoint runner-up that was cherry-picked and re-measured successfully
+        - runner_up_reverted # file-disjoint runner-up that was cherry-picked but combined measurement was not better
       description: >
         Load-bearing state: the loop branches on this value.
         'measured' is the only non-terminal state and exists so CP-3 can persist
@@ -158,7 +156,6 @@ experiment_entry:
         All other states are terminal for that experiment.
 
   optional_children:
-
     changes:
       type: array
       description: "Files modified by this experiment"
@@ -245,7 +242,7 @@ experiment_entry:
 # ============================================================================
 #
 # Written after each batch to:
-#   .context/compound-engineering/ce-optimize/<spec-name>/strategy-digest.md
+#   .context/tunan/ce-optimize/<spec-name>/strategy-digest.md
 #
 # Contains a compressed summary of:
 # - What hypothesis categories have been tried

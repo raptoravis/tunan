@@ -1,22 +1,21 @@
 {
-  "name": "compound-engineering",
-  "version": "3.10.0",
+  "name": "tunan",
+  "version": "3.10.1",
   "description": "AI-powered development tools for code review, research, design, and workflow automation.",
   "author": {
-    "name": "Kieran Klaassen",
-    "email": "kieran@every.to",
-    "url": "https://github.com/kieranklaassen"
+    "name": "raptoravis",
+    "email": "raptoravis@gmail.com",
+    "url": "https://github.com/raptoravis"
   },
-  "homepage": "https://every.to/source-code/my-ai-had-already-fixed-the-code-before-i-saw-it",
-  "repository": "https://github.com/EveryInc/compound-engineering-plugin",
+  "homepage": "",
+  "repository": "https://github.com/raptoravis/tunan",
   "license": "MIT",
   "keywords": [
     "ai-powered",
-    "compound-engineering",
+    "tunan",
     "workflow-automation",
     "code-review",
     "rails",
-    "ruby",
     "python",
     "typescript",
     "knowledge-management",

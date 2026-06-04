@@ -1,5 +1,5 @@
 # Compound Engineering -- local config
-# Copy to .compound-engineering/config.local.yaml in your project root.
+# Copy to .tunan/config.local.yaml in your project root.
 # All settings are optional. Invalid values fall through to defaults.
 
 # --- Work delegation (Codex) ---

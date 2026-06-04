@@ -51,7 +51,7 @@ For a friendly overview of what this skill is for, when to use hard metrics vs L
 
 **CRITICAL: The experiment log on disk is the single source of truth. The conversation context is NOT durable storage. Results that exist only in the conversation WILL be lost.**
 
-The files under `.context/compound-engineering/ce-optimize/<spec-name>/` are local scratch state. They are ignored by git, so they survive local resumes on the same machine but are not preserved by commits, branches, or pushes unless the user exports them separately.
+The files under `.context/tunan/ce-optimize/<spec-name>/` are local scratch state. They are ignored by git, so they survive local resumes on the same machine but are not preserved by commits, branches, or pushes unless the user exports them separately.
 
 This skill runs for hours. Context windows compact, sessions crash, and agents restart. Every piece of state that matters MUST live on disk, not in the agent's memory.
 
@@ -77,33 +77,35 @@ This skill runs for hours. Context windows compact, sessions crash, and agents r
 
 These are non-negotiable write-then-verify steps. At each checkpoint, the agent MUST write the specified file and then read it back to confirm the write succeeded.
 
-| Checkpoint | File Written | Phase |
-|---|---|---|
-| CP-0: Spec saved | `spec.yaml` | Phase 0, after user approval |
-| CP-1: Baseline recorded | `experiment-log.yaml` (initial with baseline) | Phase 1, after baseline measurement |
-| CP-2: Hypothesis backlog saved | `experiment-log.yaml` (hypothesis_backlog section) | Phase 2, after hypothesis generation |
-| CP-3: Each experiment result | `experiment-log.yaml` (append experiment entry) | Phase 3.3, immediately after each measurement |
-| CP-4: Batch summary | `experiment-log.yaml` (outcomes + best) + `strategy-digest.md` | Phase 3.5, after batch evaluation |
-| CP-5: Final summary | `experiment-log.yaml` (final state) | Phase 4, at wrap-up |
+| Checkpoint                     | File Written                                                   | Phase                                         |
+| ------------------------------ | -------------------------------------------------------------- | --------------------------------------------- |
+| CP-0: Spec saved               | `spec.yaml`                                                    | Phase 0, after user approval                  |
+| CP-1: Baseline recorded        | `experiment-log.yaml` (initial with baseline)                  | Phase 1, after baseline measurement           |
+| CP-2: Hypothesis backlog saved | `experiment-log.yaml` (hypothesis_backlog section)             | Phase 2, after hypothesis generation          |
+| CP-3: Each experiment result   | `experiment-log.yaml` (append experiment entry)                | Phase 3.3, immediately after each measurement |
+| CP-4: Batch summary            | `experiment-log.yaml` (outcomes + best) + `strategy-digest.md` | Phase 3.5, after batch evaluation             |
+| CP-5: Final summary            | `experiment-log.yaml` (final state)                            | Phase 4, at wrap-up                           |
 
 **Format of a verification step:**
+
 1. Write the file using the native file-write tool
 2. Read the file back using the native file-read tool
 3. Confirm the expected content is present
 4. If verification fails, retry the write. If it fails twice, alert the user.
 
-### File Locations (all under `.context/compound-engineering/ce-optimize/<spec-name>/`)
+### File Locations (all under `.context/tunan/ce-optimize/<spec-name>/`)
 
-| File | Purpose | Written When |
-|------|---------|-------------|
-| `spec.yaml` | Optimization spec (immutable during run) | Phase 0 (CP-0) |
-| `experiment-log.yaml` | Full history of all experiments | Initialized at CP-1, appended at CP-3, updated at CP-4 |
-| `strategy-digest.md` | Compressed learnings for hypothesis generation | Written at CP-4 after each batch |
-| `<worktree>/result.yaml` | Per-experiment crash-recovery marker | Immediately after measurement, before CP-3 |
+| File                     | Purpose                                        | Written When                                           |
+| ------------------------ | ---------------------------------------------- | ------------------------------------------------------ |
+| `spec.yaml`              | Optimization spec (immutable during run)       | Phase 0 (CP-0)                                         |
+| `experiment-log.yaml`    | Full history of all experiments                | Initialized at CP-1, appended at CP-3, updated at CP-4 |
+| `strategy-digest.md`     | Compressed learnings for hypothesis generation | Written at CP-4 after each batch                       |
+| `<worktree>/result.yaml` | Per-experiment crash-recovery marker           | Immediately after measurement, before CP-3             |
 
 ### On Resume
 
 When Phase 0.4 detects an existing run:
+
 1. Read the experiment log from disk — this is the ground truth
 2. Scan worktree directories for `result.yaml` markers not yet in the log
 3. Recover any measured-but-unlogged experiments
@@ -116,12 +118,14 @@ When Phase 0.4 detects an existing run:
 ### 0.1 Determine Input Type
 
 Check whether the input is:
+
 - **A spec file path** (ends in `.yaml` or `.yml`): read and validate it
 - **A description of the optimization goal**: help the user create a spec interactively
 
 ### 0.2 Load or Create Spec
 
 **If spec file provided:**
+
 1. Read the YAML spec file. The orchestrating agent parses YAML natively -- no shell script parsing.
 2. Validate against `references/optimize-spec-schema.yaml`:
    - All required fields present
@@ -137,6 +141,7 @@ Check whether the input is:
 3. If validation fails, report errors and ask the user to fix them
 
 **If description provided:**
+
 1. Analyze the project to understand what can be measured
 2. **Detect whether the optimization target is qualitative or quantitative** — this determines `type: hard` vs `type: judge` and is the single most important spec decision:
 
@@ -171,15 +176,16 @@ Check whether the input is:
    - **What total sample size balances cost vs signal?** (default: 30 items, adjust based on output volume)
 
    Example stratified sampling for clustering:
+
    ```yaml
    stratification:
-     - bucket: "top_by_size"     # largest clusters — check for degenerate mega-clusters
+     - bucket: "top_by_size" # largest clusters — check for degenerate mega-clusters
        count: 10
-     - bucket: "mid_range"       # middle of non-solo cluster size range — representative quality
+     - bucket: "mid_range" # middle of non-solo cluster size range — representative quality
        count: 10
-     - bucket: "small_clusters"  # clusters with 2-3 items — check if connections are real
+     - bucket: "small_clusters" # clusters with 2-3 items — check if connections are real
        count: 10
-   singleton_sample: 15          # singletons — check for false negatives (items that should cluster)
+   singleton_sample: 15 # singletons — check for false negatives (items that should cluster)
    ```
 
    The sampling strategy is domain-specific. For search relevance, strata might be "top-3 results", "results 4-10", "tail results". For summarization, strata might be "short documents", "long documents", "multi-topic documents".
@@ -195,6 +201,7 @@ Check whether the input is:
    - Does NOT assume bigger/more is better — "3 items per cluster average" is not inherently good or bad
 
    Example for clustering:
+
    ```yaml
    rubric: |
      Rate this cluster 1-5:
@@ -213,7 +220,7 @@ Check whether the input is:
    - Any constraints or dependencies?
    - If this is the first run: recommend `execution.mode: serial`, `execution.max_concurrent: 1`, `stopping.max_iterations: 4`, and `stopping.max_hours: 1`
    - If `type: judge`: recommend `sample_size: 10`, `batch_size: 5`, and `max_total_cost_usd: 5` until the rubric and harness are trusted
-6. Write the spec to `.context/compound-engineering/ce-optimize/<spec-name>/spec.yaml`
+6. Write the spec to `.context/tunan/ce-optimize/<spec-name>/spec.yaml`
 7. Present the spec to the user for approval before proceeding
 
 ### 0.3 Search Prior Learnings
@@ -228,9 +235,10 @@ Check if `optimize/<spec-name>` branch already exists:
 git rev-parse --verify "optimize/<spec-name>" 2>/dev/null
 ```
 
-**If branch exists**, check for an existing experiment log at `.context/compound-engineering/ce-optimize/<spec-name>/experiment-log.yaml`.
+**If branch exists**, check for an existing experiment log at `.context/tunan/ce-optimize/<spec-name>/experiment-log.yaml`.
 
 Present the user with a choice via the platform question tool:
+
 - **Resume**: read ALL state from the experiment log on disk (do not rely on any in-memory context from a prior session). Recover any measured-but-unlogged experiments by scanning worktree directories for `result.yaml` markers. Continue from the last iteration number in the log.
 - **Fresh start**: archive the old branch to `optimize-archive/<spec-name>/archived-<timestamp>`, clear the experiment log, start from scratch
 
@@ -241,8 +249,9 @@ git checkout -b "optimize/<spec-name>"  # or switch to existing if resuming
 ```
 
 Create scratch directory:
+
 ```bash
-mkdir -p .context/compound-engineering/ce-optimize/<spec-name>/
+mkdir -p .context/tunan/ce-optimize/<spec-name>/
 ```
 
 ---
@@ -260,6 +269,7 @@ git status --porcelain
 ```
 
 Filter the output against the scope paths. If any in-scope files have uncommitted changes:
+
 - Report which files are dirty
 - Ask the user to commit or stash before proceeding
 - Do NOT continue until the working tree is clean for in-scope files
@@ -267,6 +277,7 @@ Filter the output against the scope paths. If any in-scope files have uncommitte
 ### 1.2 Build or Validate Measurement Harness
 
 **If user provides a measurement harness** (the `measurement.command` already exists):
+
 1. Run it once via the measurement script:
    ```bash
    bash scripts/measure.sh "<measurement.command>" <timeout_seconds> "<measurement.working_directory or .>"
@@ -278,6 +289,7 @@ Filter the output against the scope paths. If any in-scope files have uncommitte
 3. If validation fails, report what is missing and ask the user to fix the harness
 
 **If agent must build the harness:**
+
 1. Analyze the codebase to understand the current approach and what should be measured
 2. Build an evaluation script (e.g., `evaluate.py`, `evaluate.sh`, or equivalent)
 3. Add the evaluation script path to `scope.immutable` -- the experiment agent must not modify it
@@ -289,12 +301,14 @@ Filter the output against the scope paths. If any in-scope files have uncommitte
 Run the measurement harness on the current code.
 
 **If stability mode is `repeat`:**
+
 1. Run the harness `repeat_count` times
 2. Aggregate results using the configured aggregation method (median, mean, min, max)
 3. Calculate variance across runs
 4. If variance exceeds `noise_threshold`, warn the user and suggest increasing `repeat_count`
 
 Record the baseline in the experiment log:
+
 ```yaml
 baseline:
   timestamp: "<current ISO 8601 timestamp>"
@@ -311,6 +325,7 @@ If primary type is `judge`, also run the judge evaluation on baseline output to 
 ### 1.4 Parallelism Readiness Probe
 
 Run the parallelism probe script:
+
 ```bash
 bash scripts/parallel-probe.sh "<project_directory>" "<measurement.command>" "<measurement.working_directory>" <shared_files...>
 ```
@@ -320,11 +335,13 @@ Read the JSON output. Present any blockers to the user with suggested mitigation
 ### 1.5 Worktree Budget Check
 
 Count existing worktrees:
+
 ```bash
 bash scripts/experiment-worktree.sh count
 ```
 
 If count + `execution.max_concurrent` would exceed 12:
+
 - Warn the user
 - Suggest cleaning up existing worktrees or reducing `max_concurrent`
 - Do NOT block -- the user may proceed at their own risk
@@ -333,7 +350,7 @@ If count + `execution.max_concurrent` would exceed 12:
 
 **MANDATORY CHECKPOINT.** Before presenting results to the user, write the initial experiment log with baseline metrics to disk:
 
-1. Create the experiment log file at `.context/compound-engineering/ce-optimize/<spec-name>/experiment-log.yaml`
+1. Create the experiment log file at `.context/tunan/ce-optimize/<spec-name>/experiment-log.yaml`
 2. Include all required top-level sections from `references/experiment-log-schema.yaml`: `spec`, `run_id`, `started_at`, `baseline`, `experiments`, and `best`
 3. Seed `experiments` as an empty array and seed `best` from the baseline snapshot (use `iteration: 0`, baseline metrics, and baseline judge scores if present) so later phases have a valid current-best state to compare against
 4. Optionally seed `hypothesis_backlog: []` here as well so the log shape is stable before Phase 2 populates it
@@ -352,6 +369,7 @@ Present to the user via the platform question tool:
 - **Judge budget**: estimated per-experiment judge cost and configured `max_total_cost_usd` cap (or an explicit note that spend is uncapped)
 
 **Options:**
+
 1. **Proceed** -- approve baseline and parallel config, move to Phase 2
 2. **Adjust spec** -- modify spec settings before proceeding
 3. **Fix issues** -- user needs to resolve blockers first
@@ -369,6 +387,7 @@ If primary type is `judge` and `max_total_cost_usd` is null, call that out as un
 ### 2.1 Analyze Current Approach
 
 Read the code within `scope.mutable` to understand:
+
 - The current implementation approach
 - Obvious improvement opportunities
 - Constraints and dependencies between components
@@ -378,6 +397,7 @@ Optionally dispatch `ce-repo-research-analyst` for deeper codebase analysis if t
 ### 2.2 Generate Hypothesis List
 
 Generate an initial set of hypotheses. Each hypothesis should have:
+
 - **Description**: what to try
 - **Category**: one of the standard categories (signal-extraction, graph-signals, embedding, algorithm, preprocessing, parameter-tuning, architecture, data-handling) or a domain-specific category
 - **Priority**: high, medium, or low based on expected impact and feasibility
@@ -392,6 +412,7 @@ Aim for 10-30 hypotheses in the initial backlog. More can be generated during th
 Collect all unique new dependencies across all hypotheses.
 
 If any hypotheses require new dependencies:
+
 1. Present the full dependency list to the user via the platform question tool
 2. Ask for bulk approval
 3. Mark each hypothesis's `dep_status` as `approved` or `needs_approval`
@@ -401,6 +422,7 @@ Hypotheses with unapproved dependencies remain in the backlog but are skipped du
 ### 2.4 Record Hypothesis Backlog (CP-2)
 
 **MANDATORY CHECKPOINT.** Write the initial backlog to the experiment log file and verify:
+
 ```yaml
 hypothesis_backlog:
   - description: "Remove template boilerplate before embedding"
@@ -424,6 +446,7 @@ This phase repeats in batches until a stopping criterion is met.
 ### 3.1 Batch Selection
 
 Select hypotheses for this batch:
+
 - Build a runnable backlog by excluding hypotheses with `dep_status: needs_approval`
 - If `execution.mode` is `serial`, force `batch_size = 1`
 - Otherwise, `batch_size = min(runnable_backlog_size, execution.max_concurrent)`
@@ -438,6 +461,7 @@ If the backlog is non-empty but no runnable hypotheses remain because everything
 For each hypothesis in the batch, dispatch according to `execution.mode`. In `serial` mode, run exactly one experiment to completion before selecting the next hypothesis. In `parallel` mode, dispatch the full batch concurrently.
 
 **Worktree backend:**
+
 1. Create experiment worktree:
    ```bash
    WORKTREE_PATH=$(bash scripts/experiment-worktree.sh create "<spec_name>" <exp_index> "optimize/<spec_name>" <shared_files...>)  # creates optimize-exp/<spec_name>/exp-<NNN>
@@ -453,6 +477,7 @@ For each hypothesis in the batch, dispatch according to `execution.mode`. In `se
 4. Dispatch a subagent with the filled prompt, working in the experiment worktree
 
 **Codex backend:**
+
 1. Check environment guard -- do NOT delegate if already inside a Codex sandbox:
    ```bash
    # If these exist, we're already in Codex -- fall back to subagent
@@ -473,9 +498,11 @@ Process experiments as they complete — do NOT wait for the entire batch to fin
 For each completed experiment, **immediately**:
 
 1. **Run measurement** in the experiment's worktree:
+
    ```bash
    bash scripts/measure.sh "<measurement.command>" <timeout_seconds> "<worktree_path>/<measurement.working_directory or .>" <env_vars...>
    ```
+
    - If stability mode is `repeat`, run the measurement harness `repeat_count` times in that working directory and aggregate the results exactly as in Phase 1 before evaluating gates or ranking the experiment.
    - Use the aggregated metrics as the experiment's score; if variance exceeds `noise_threshold`, record that in learnings so the operator knows the result is noisy.
 
@@ -501,7 +528,7 @@ For each completed experiment, **immediately**:
 6. **If gates pass AND primary type is `hard`**:
    - Use the metric value directly from the measurement output
 
-7. **IMMEDIATELY append to experiment log on disk (CP-3)** — do not defer this to batch evaluation. Write the experiment entry (iteration, hypothesis, outcome, metrics, learnings) to `.context/compound-engineering/ce-optimize/<spec-name>/experiment-log.yaml` right now. Use the transitional outcome `measured` once the experiment has valid metrics but has not yet been compared to the current best. Update the outcome to `kept`, `reverted`, or another terminal state in the evaluation step, but the raw metrics are on disk and safe from context compaction.
+7. **IMMEDIATELY append to experiment log on disk (CP-3)** — do not defer this to batch evaluation. Write the experiment entry (iteration, hypothesis, outcome, metrics, learnings) to `.context/tunan/ce-optimize/<spec-name>/experiment-log.yaml` right now. Use the transitional outcome `measured` once the experiment has valid metrics but has not yet been compared to the current best. Update the outcome to `kept`, `reverted`, or another terminal state in the evaluation step, but the raw metrics are on disk and safe from context compaction.
 
 8. **VERIFY the write (CP-3 verification)** — read the experiment log back from disk and confirm the entry just written is present. If verification fails, retry the write. Do NOT proceed to the next experiment until this entry is confirmed on disk.
 
@@ -547,7 +574,7 @@ After all experiments in the batch have been measured:
 
 3. **Update the `best` section** in the experiment log if a new best was found. Write to disk.
 
-4. **Write strategy digest** to `.context/compound-engineering/ce-optimize/<spec-name>/strategy-digest.md`:
+4. **Write strategy digest** to `.context/tunan/ce-optimize/<spec-name>/strategy-digest.md`:
    - Categories tried so far (with success/failure counts)
    - Key learnings from this batch and overall
    - Exploration frontier: what categories and approaches remain untried
@@ -568,6 +595,7 @@ After all experiments in the batch have been measured:
 ### 3.6 Check Stopping Criteria
 
 Stop the loop if ANY of these are true:
+
 - **Target reached**: `stopping.target_reached` is true, `metric.primary.target` is set, and the primary metric reaches that target according to `metric.primary.direction` (`>=` for `maximize`, `<=` for `minimize`)
 - **Max iterations**: total experiments run >= `stopping.max_iterations`
 - **Max hours**: wall-clock time since Phase 3 start >= `stopping.max_hours`
@@ -583,11 +611,13 @@ If no stopping criterion is met, proceed to the next batch (step 3.1).
 **Codex failure cascade**: Track consecutive Codex delegation failures. After 3 consecutive failures, auto-disable Codex for remaining experiments and fall back to subagent dispatch. Log the switch.
 
 **Error handling**: If an experiment's measurement command crashes, times out, or produces malformed output:
+
 - Log as outcome `error` or `timeout` with the error message
 - Revert the experiment (cleanup worktree)
 - The loop continues with remaining experiments in the batch
 
 **Progress reporting**: After each batch, report:
+
 - Batch N of estimated M (based on backlog size)
 - Experiments run this batch and total
 - Current best metric and improvement from baseline
@@ -602,6 +632,7 @@ If no stopping criterion is met, proceed to the next batch (step 3.1).
 ### 4.1 Present Deferred Hypotheses
 
 If any hypotheses were deferred due to unapproved dependencies:
+
 1. List them with their dependency requirements
 2. Ask the user whether to approve, skip, or save for a future run
 3. If approved: add to backlog and offer to re-enter Phase 3 for one more round
@@ -643,6 +674,7 @@ Present post-completion options via the platform question tool:
 1. **Run `/ce-code-review`** on the cumulative diff (baseline to final). Load the `ce-code-review` skill on the optimization branch (interactive or `mode:agent`). To land eligible fixes before the next option, apply the mechanical-apply bar below.
 
    **Mechanical-apply bar:** apply any finding with a concrete `suggested_fix` that is a clear, reversible improvement; push back (keep, don't apply) when the reviewer is wrong, noting why. Defer anything whose right fix needs a design or product decision (architecture direction, contract shape, behavior change needing sign-off) and any finding with no concrete fix to act on — surface what was deferred. Confirm evidence still matches at `file:line` before editing. After applying, run tests (at least targeted tests for what changed; broader suite for multi-file edits). Do not commit or push from this step — leave the diff on the optimization branch for the Create PR option.
+
 2. **Run `/ce-compound`** to document the winning strategy as an institutional learning.
 3. **Create PR** from the optimization branch to the default branch.
 4. **Continue** with more experiments: re-enter Phase 3 with the current state. State re-read first.
@@ -651,10 +683,11 @@ Present post-completion options via the platform question tool:
 ### 4.4 Cleanup
 
 Clean up scratch space:
+
 ```bash
 # Keep the experiment log for local resume/audit on this machine
 # Remove temporary batch artifacts
-rm -f .context/compound-engineering/ce-optimize/<spec-name>/strategy-digest.md
+rm -f .context/tunan/ce-optimize/<spec-name>/strategy-digest.md
 ```
 
 Do NOT delete the experiment log if the user may resume locally or wants a local audit trail. If they need a durable shared artifact, summarize or export the results into a tracked path before cleanup.

@@ -1,7 +1,7 @@
 # Plugin Instructions
 
 These instructions apply when working in this repo, which ships the
-`compound-engineering` plugin directly from the root: skills under `skills/`,
+`tunan` plugin directly from the root: skills under `skills/`,
 agents under `agents/`, and the plugin manifests under `.claude-plugin/` and
 `.codex-plugin/`.
 
@@ -9,11 +9,11 @@ agents under `agents/`, and the plugin manifests under `.claude-plugin/` and
 
 ## Runtime vs Authoring Context
 
-**This plugin's `AGENTS.md` and `CLAUDE.md` files are authoring context — they do not ship with the installed plugin.** Skills are packaged and installed into end-user environments (their own repos, or folders that may not even be git repos), where they run against *the user's* `AGENTS.md`/`CLAUDE.md`, not this repo's.
+**This plugin's `AGENTS.md` and `CLAUDE.md` files are authoring context — they do not ship with the installed plugin.** Skills are packaged and installed into end-user environments (their own repos, or folders that may not even be git repos), where they run against _the user's_ `AGENTS.md`/`CLAUDE.md`, not this repo's.
 
 Consequences:
 
-- Behavioral rules that govern skill *runtime* behavior must live inside the skill itself — in `SKILL.md` or files under its `references/`. Guidance placed in this file is invisible at runtime.
+- Behavioral rules that govern skill _runtime_ behavior must live inside the skill itself — in `SKILL.md` or files under its `references/`. Guidance placed in this file is invisible at runtime.
 - When two or more skills share a behavioral principle, duplicate the guidance into each skill (inline for short rules, `references/` for longer ones). There is no cross-skill shared-file mechanism (see "File References in Skills" below). When a reference file is duplicated across skills (e.g., `concepts-vocabulary.md` in both `ce-compound/references/` and `ce-compound-refresh/references/`), edits must be applied to every copy in the same commit. Drift between copies produces inconsistent agent behavior depending on which skill loaded.
 - Do not propose that runtime guidance for ce-ideate, ce-brainstorm, ce-plan, or any other skill live in this AGENTS.md. This file only shapes how contributors edit the plugin.
 
@@ -62,14 +62,15 @@ Important: Just because the developer's installed plugin may be out of date, it'
 
 ## Naming Convention
 
-**All skills and agents** use the `ce-` prefix to unambiguously identify them as compound-engineering components:
+**All skills and agents** use the `ce-` prefix to unambiguously identify them as tunan components:
+
 - `/ce-brainstorm` - Explore requirements and approaches before planning
 - `/ce-plan` - Create implementation plans
 - `/ce-code-review` - Run comprehensive code reviews
 - `/ce-work` - Execute work items systematically
 - `/ce-compound` - Document solved problems
 
-**Why `ce-`?** Claude Code has built-in `/plan` and `/review` commands. The `ce-` prefix (short for compound-engineering) makes it immediately clear these components belong to this plugin. The hyphen is used instead of a colon to avoid filesystem issues on Windows and to align directory names with frontmatter names.
+**Why `ce-`?** Claude Code has built-in `/plan` and `/review` commands. The `ce-` prefix (short for tunan) makes it immediately clear these components belong to this plugin. The hyphen is used instead of a colon to avoid filesystem issues on Windows and to align directory names with frontmatter names.
 
 **Agents** follow the same convention: `ce-adversarial-reviewer`, `ce-learnings-researcher`, etc. When referencing agents from skills, use the bare `ce-<agent-name>` form (e.g., `ce-adversarial-reviewer`) — the `ce-` prefix is sufficient for uniqueness across plugins.
 
@@ -99,7 +100,7 @@ Match the level to the failure mode in both directions. Over-prescribing produce
 
 **Distinguish process exhaust from audit content.** Sections that exist for the agent's own bookkeeping are exhaust; sections that exist because downstream readers need to know something about the artifact's authorship are audit content and belong in the doc. The test is whether removing the section would degrade a downstream reader's ability to evaluate the artifact correctly.
 
-Non-interactive modes can create audit gaps, but only when the *corresponding interactive mode* would have validated content the headless run skips. Compare per skill, not per mode. If interactive ce-plan walks the user through every requirement and headless ce-plan skips that walkthrough, the headless artifact contains decisions a reader cannot tell weren't user-confirmed — a `## Assumptions` section is audit content. If interactive ce-compound asks only meta-questions (Full vs Lightweight, session-history, "What's next?") while the substantive inferences (track, category, filename, overlap) are agent decisions in both modes, then labeling them only in headless is misleading — it implies interactive runs validated content they didn't. The reader needs to know what *would have been* user-validated; if neither mode validates the inferences, the section is process exhaust dressed up as audit.
+Non-interactive modes can create audit gaps, but only when the _corresponding interactive mode_ would have validated content the headless run skips. Compare per skill, not per mode. If interactive ce-plan walks the user through every requirement and headless ce-plan skips that walkthrough, the headless artifact contains decisions a reader cannot tell weren't user-confirmed — a `## Assumptions` section is audit content. If interactive ce-compound asks only meta-questions (Full vs Lightweight, session-history, "What's next?") while the substantive inferences (track, category, filename, overlap) are agent decisions in both modes, then labeling them only in headless is misleading — it implies interactive runs validated content they didn't. The reader needs to know what _would have been_ user-validated; if neither mode validates the inferences, the section is process exhaust dressed up as audit.
 
 **Test the spec by running it, not just by reading it.** Real-world test runs surface failure modes that desk review misses: load reliability, plugin caching across sessions, agent interpretation drift, conflation in menu shapes, edge-case interactions with the user's repo layout. When a test reveals unexpected behavior, ask three questions before tightening the spec:
 
@@ -134,7 +135,7 @@ When adding or modifying skills, verify compliance with the skill spec:
   @./references/schema.json
   ```
   This resolves relative to the SKILL.md and substitutes content before the model sees it. If a file is over ~150 lines, prefer a backtick path even if it is always needed
-- [ ] For files the agent needs to *execute* (scripts, shell templates), always use backtick paths -- `@` would inline the script as text content instead of keeping it as an executable file
+- [ ] For files the agent needs to _execute_ (scripts, shell templates), always use backtick paths -- `@` would inline the script as text content instead of keeping it as an executable file
 
 ### Conditional and Late-Sequence Extraction
 
@@ -168,7 +169,7 @@ Design rules for blocking question menus (`AskUserQuestion` / `request_user_inpu
 - [ ] Keep total options to 4 or fewer (`AskUserQuestion` caps at 4 across platforms we target)
 - [ ] Do not offer "still working" / "I'll come back" options — the blocking tool already waits; such options are no-op wrappers. If the user needs to go do something, they simply leave the prompt open
 - [ ] Refer to the agent in third person ("the agent") in labels and stems — first-person "me" / "I'll" is ambiguous in a tool-mediated exchange where it's unclear whether the speaker is the user, the agent, or the tool
-- [ ] Phrase labels from the user's intent, not the system's internal state — each option should complete "I want to ___" from the user's POV; avoid leaking mode names like "end-sync" or "phase-3" into labels
+- [ ] Phrase labels from the user's intent, not the system's internal state — each option should complete "I want to \_\_\_" from the user's POV; avoid leaking mode names like "end-sync" or "phase-3" into labels
 - [ ] Use the question stem as a teaching surface for first-time mechanics — teach the mechanic there (e.g., "Highlight text in Proof to leave a comment"), not in option descriptions that may be hidden
 - [ ] When renaming a display label, rename its matching routing block (`**If user selects "X":**`) in the same edit — the model matches selections by verbatim label string, so a missed rename silently breaks routing
 - [ ] Front-load the distinguishing word when options share a prefix — "Proceed to planning" vs "Proceed directly to work" look identical when truncated; put the differentiator in the first 3-4 words
@@ -219,8 +220,7 @@ Why: shell-heavy exploration causes avoidable permission prompts in sub-agent wo
 
   When the logic is non-trivial, prefer extracting to a script under the skill's `scripts/` directory; the safety check then sees only `bash <quoted-path>`, which sidesteps both current and future safety-check tightenings.
 
-  **Permission gate on extracted scripts — invoke from the skill body, not from `!` pre-resolution.** A pre-resolution `bash "${CLAUDE_SKILL_DIR}/scripts/<name>.sh"` form passes the safety check but trips Claude Code's permission check at skill-load time, which does *not* honor `defaultMode: bypassPermissions`. Allow-listing via `allowed-tools` frontmatter is unreliable at *load time*: empirically, broad `Bash(bash *)` patterns appear to load with bypass on but narrow filename-pinned patterns like `Bash(bash *upstream-version.sh)` fail with bypass off. Move the script invocation into the skill body so it runs via the runtime Bash tool instead. Two pieces are required for it to actually work:
-
+  **Permission gate on extracted scripts — invoke from the skill body, not from `!` pre-resolution.** A pre-resolution `bash "${CLAUDE_SKILL_DIR}/scripts/<name>.sh"` form passes the safety check but trips Claude Code's permission check at skill-load time, which does _not_ honor `defaultMode: bypassPermissions`. Allow-listing via `allowed-tools` frontmatter is unreliable at _load time_: empirically, broad `Bash(bash *)` patterns appear to load with bypass on but narrow filename-pinned patterns like `Bash(bash *upstream-version.sh)` fail with bypass off. Move the script invocation into the skill body so it runs via the runtime Bash tool instead. Two pieces are required for it to actually work:
   1. **Use `${CLAUDE_SKILL_DIR}` for the script path**, not bare relative paths. The runtime Bash tool runs from the user's project CWD, not the skill directory — `bash scripts/<name>.sh` fails with "No such file or directory" empirically. The `${CLAUDE_SKILL_DIR}` env var resolves correctly across `claude --plugin-dir` and standard marketplace-cached installs.
   2. **Declare narrow `allowed-tools` patterns** pinned to each script filename. At runtime, `allowed-tools` granting is documented to apply, so users without `bypassPermissions` skip the approval prompt. Pin per filename rather than using broad `Bash(bash *)`.
 
@@ -240,6 +240,7 @@ Why: shell-heavy exploration causes avoidable permission prompts in sub-agent wo
   ````
 
   Use this whenever a `!` pre-resolution would invoke `bash <path>`. Reserve pre-resolution for commands whose first token already matches common user allow rules (`git status`, `gh api`, `cat <path>`, `command -v <name>`).
+
 - [ ] Do not encode shell recipes for routine exploration when native tools can do the job; encode intent and preferred tool classes instead
 - [ ] For shell-only workflows (e.g., `gh`, `git`, `bundle show`, project CLIs), explicit command examples are acceptable when they are simple, task-scoped, and not chained together
 
@@ -253,15 +254,17 @@ When dispatching sub-agents, **omit the `mode` parameter** on the Agent/Task too
 
 ### Reading Config Files from Skills
 
-Plugin config lives at `.compound-engineering/config.local.yaml` in the repo root. This file is gitignored (machine-local settings), which creates two gotchas:
+Plugin config lives at `.tunan/config.local.yaml` in the repo root. This file is gitignored (machine-local settings), which creates two gotchas:
 
 1. **Path resolution:** Never read the config relative to CWD — the user may invoke a skill from a subdirectory. Always resolve from the repo root. In pre-resolution commands, use `git rev-parse --show-toplevel` to find the root.
 
 2. **Worktrees:** Gitignored files are per-worktree. A config file created in the main checkout does not exist in worktrees. Use `--show-toplevel` to find the root:
+
    ```
-   !`cat "$(git rev-parse --show-toplevel 2>/dev/null)/.compound-engineering/config.local.yaml" 2>/dev/null || echo '__NO_CONFIG__'`
+   !`cat "$(git rev-parse --show-toplevel 2>/dev/null)/.tunan/config.local.yaml" 2>/dev/null || echo '__NO_CONFIG__'`
    ```
-   Outside a git repo, `git rev-parse` emits empty and `cat "/.compound-engineering/config.local.yaml"` fails (permission denied or not found, suppressed by `2>/dev/null`), so the `__NO_CONFIG__` sentinel fires. Note: the previous pattern used `(top=$(...); [ -n "$top" ] && cat "$top/...")` with a semicolon to guard the empty-root case, but `;` is rejected by Claude Code's safety checker as `Unhandled node type: ;` (see Pre-resolution exception above) and must not be used in `!` pre-resolution.
+
+   Outside a git repo, `git rev-parse` emits empty and `cat "/.tunan/config.local.yaml"` fails (permission denied or not found, suppressed by `2>/dev/null`), so the `__NO_CONFIG__` sentinel fires. Note: the previous pattern used `(top=$(...); [ -n "$top" ] && cat "$top/...")` with a semicolon to guard the empty-root case, but `;` is rejected by Claude Code's safety checker as `Unhandled node type: ;` (see Pre-resolution exception above) and must not be used in `!` pre-resolution.
 
    Note: in a worktree, `--show-toplevel` returns the worktree path, so config from the main checkout will not be found. This is acceptable — config is optional and users who work from worktrees can add a config file there. A previous pattern used `git-common-dir` with `${common%/.git}` to derive the main repo root as a fallback, but bash parameter expansion operators are rejected as "Contains expansion" (see Pre-resolution exception above), so that approach is no longer viable without a script.
 

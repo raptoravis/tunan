@@ -4,15 +4,15 @@ This is a format-rendering reference — it describes how to render any
 artifact in HTML, independent of which skill is producing it.
 
 It is paired with a section contract (`plan-sections.md`,
-`brainstorm-sections.md`, etc.) that describes *what* the artifact contains.
-This reference describes *how* HTML specifically presents it. The same
+`brainstorm-sections.md`, etc.) that describes _what_ the artifact contains.
+This reference describes _how_ HTML specifically presents it. The same
 content rendered by different skills shares the same HTML principles.
 
-The HTML artifact is the *only* artifact the skill produces for that run —
+The HTML artifact is the _only_ artifact the skill produces for that run —
 output mode is exclusive (markdown OR HTML, never both). Downstream
 consumers that read HTML today (`ce-work`, human readers) do so directly;
 the agent-consumability rules below make that work. `ce-doc-review` is
-*not* currently an HTML consumer — its mutation mechanics are markdown-only,
+_not_ currently an HTML consumer — its mutation mechanics are markdown-only,
 so the ce-plan handoff gates the 5.3.8 doc-review pass to `OUTPUT_FORMAT=md`
 runs and skips it for HTML.
 
@@ -39,6 +39,7 @@ These hold regardless of which skill produced the artifact.
 
   The text-and-attribute redundancy in `<time datetime="2026-05-12">2026-05-12</time>`
   is acceptable because the attribute is a parser hint, not a hidden copy.
+
 - **Editable status renders as `<span class="status">{value}</span>`.**
   Downstream tooling (`ce-work` shipping flip, future HTML-aware
   consumers) finds and rewrites status by selector. Embedding the
@@ -104,7 +105,7 @@ these locations, first match wins:
 
 1. Worktree root (resolve via `git rev-parse --show-toplevel`).
 2. `docs/DESIGN.md`.
-3. `.compound-engineering/DESIGN.md`.
+3. `.tunan/DESIGN.md`.
 
 Read once at compose time. Absent → fall through to the fallback default.
 
@@ -122,7 +123,7 @@ defend against:
 
 - **Scope mismatch (product UI vs doc surface).** A DESIGN.md aimed at
   product marketing or app UI may name page-surface colors, button
-  states, input borders, or hero backgrounds that are tied to *that*
+  states, input borders, or hero backgrounds that are tied to _that_
   surface, not to a generic doc. Page-surface colors are the canonical
   trap — `--surface: #c0f0fb` belongs on the product's marketing page,
   not on every plan or requirements doc the team writes. Extract the
@@ -275,7 +276,7 @@ contracts — the agent picks shapes that fit the content.
   bullets at smaller counts. Concern-grouping takes precedence over the
   flat-table default: when requirements span distinct concerns, group them
   under bold inline headers (or per-group sections) first, then apply the
-  5+ table default *within* each group rather than flattening the whole
+  5+ table default _within_ each group rather than flattening the whole
   section into one table. Each row has the R-ID as visible text in
   its own column. Consider adding a "covered by" column for reverse
   traceability when ID-anchored items have downstream references in
@@ -291,9 +292,9 @@ contracts — the agent picks shapes that fit the content.
   primary always-visible surface; subsection labels (`<summary>`) are
   clickable affordances for readers to expand on demand. A single unit
   with no secondary content can skip `<details>` entirely; the rule
-  fires when content exists to hide. The `<dl>` strip is for *descriptive*
-  fields (Goal, Files, Dependencies). A *directive* field — `Execution
-  note` is the canonical case, carrying a procedural instruction the
+  fires when content exists to hide. The `<dl>` strip is for _descriptive_
+  fields (Goal, Files, Dependencies). A _directive_ field — `Execution
+note` is the canonical case, carrying a procedural instruction the
   implementer must act on (e.g. "start with a failing integration test") —
   does not belong in the strip, where it renders as a passive pair styled
   like a date and gets skimmed past. Render it as an advisory callout (see
@@ -325,7 +326,7 @@ relationships, a topology diagram; if it's process flow across
 participants, a swim lane; etc.
 
 **Conceptual diagrams are not wireframes.** The wireframe affordance below
-is scoped to brainstorm requirements docs about *visual products* and is
+is scoped to brainstorm requirements docs about _visual products_ and is
 excluded for non-visual systems. That exclusion is about wireframes only —
 a brainstorm about a data model, schema, agent workflow, or migration is
 still free to use a conceptual diagram (a before/after field map, a
@@ -390,7 +391,7 @@ specification" do not belong on plan diagrams or on unit-card
 technical-design subsections. Plan diagrams render the same authoritative
 content as the surrounding prose; the prose-is-authoritative rule
 already governs disagreement. Hedging language is reserved for the
-wireframe affordance below, which carries a *required* directional
+wireframe affordance below, which carries a _required_ directional
 caption because the wireframe is explicitly NOT a spec.
 
 ## Wireframe mockups (requirements docs only)
@@ -415,9 +416,9 @@ When a wireframe is included:
 - **Anti-padding.** One wireframe per distinct visual concept.
 - **Mandatory directional caption.** Every wireframe carries an explicit
   "directional, not the spec" note adjacent to it. Required wording (or
-  close paraphrase): *"Directional only — illustrates the intended
+  close paraphrase): _"Directional only — illustrates the intended
   user-facing shape. Exact colors, spacing, copy, and component choices
-  are placeholders for review, not requirements."*
+  are placeholders for review, not requirements."_
 
 Without this caption the wireframe risks being read as a binding visual
 spec, which the affordance is explicitly designed to avoid.
@@ -488,7 +489,7 @@ understanding is reachable in source:
   framing — but the load-bearing section heading matches the contract
   name.)
 - **All semantic content lives in actual HTML text.** No CSS `::before
-  { content: "..." }` carrying meaning, no background images as
+{ content: "..." }` carrying meaning, no background images as
   content, no semantic info that only renders. Whatever the agent sees
   in source is what it knows.
 - **Stable structure is the public API.** Element types, the ID and

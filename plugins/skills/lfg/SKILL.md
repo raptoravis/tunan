@@ -6,7 +6,7 @@ argument-hint: "[feature description]"
 
 CRITICAL: You MUST execute every step below IN ORDER. Do NOT skip any required step. Do NOT jump ahead to coding or implementation. The plan phase (step 1) MUST be completed and verified BEFORE any work begins. Violating this order produces bad output.
 
-When invoking any skill referenced below, resolve its name against the available-skills list the host platform provides and use that exact entry. Some platforms list skills under a plugin namespace (e.g., `compound-engineering:ce-plan`); others list the bare name. Invoking a short-form guess that isn't in the list will fail — always match a listed entry verbatim before calling the Skill/Task tool.
+When invoking any skill referenced below, resolve its name against the available-skills list the host platform provides and use that exact entry. Some platforms list skills under a plugin namespace (e.g., `tunan:ce-plan`); others list the bare name. Invoking a short-form guess that isn't in the list will fail — always match a listed entry verbatim before calling the Skill/Task tool.
 
 1. Invoke the `ce-plan` skill with `$ARGUMENTS`.
 
@@ -27,7 +27,6 @@ When invoking any skill referenced below, resolve its name against the available
 5. **Autonomous residual handoff** (only when step 3 reported one or more actionable `downstream-resolver` findings not applied in step 4; skip when it reported `Actionable findings: none.`)
 
    Do not prompt the user. This step embraces the autopilot contract: residuals must become durable before DONE, but the agent never stops to ask.
-
    1. Load `references/tracker-defer.md` in **non-interactive mode**. Pass the residual actionable findings from step 3/4 (or the run artifact when the summary was truncated).
    2. Collect the structured return: `{ filed: [...], failed: [...], no_sink: [...] }`.
    3. Compose a `## Residual Review Findings` markdown section from the structured return:
@@ -65,7 +64,6 @@ When invoking any skill referenced below, resolve its name against the available
    ```
 
    For up to **3 fix iterations**, repeat:
-
    1. Wait for CI to complete:
 
       ```bash
@@ -97,7 +95,6 @@ When invoking any skill referenced below, resolve its name against the available
    5. Return to iteration (1) with the next attempt counter.
 
    GATE: STOP iterating after 3 failed attempts. If CI is still red after 3 fix cycles:
-
    - Compose a `## CI Failures Unresolved` markdown section listing each remaining failing check, the failure summary, and the run/check URL.
    - Append or replace this section in the PR body, write the new body to an OS temp file, then run:
 

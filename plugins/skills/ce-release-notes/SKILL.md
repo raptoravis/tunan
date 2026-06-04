@@ -1,15 +1,15 @@
 ---
 name: ce-release-notes
-description: Summarize recent compound-engineering plugin releases, or answer a specific question about a past release with a version citation. Use when the user types `/ce-release-notes` or asks "what changed in compound-engineering recently?" or "what happened to `<skill-name>`?".
+description: Summarize recent tunan plugin releases, or answer a specific question about a past release with a version citation. Use when the user types `/ce-release-notes` or asks "what changed in tunan recently?" or "what happened to `<skill-name>`?".
 argument-hint: "[optional: question about a past release]"
 disable-model-invocation: true
 ---
 
 # Compound-Engineering Release Notes
 
-Look up what shipped in recent releases of the compound-engineering plugin. Bare invocation summarizes the last 5 plugin releases. Argument invocation searches the last 40 releases and answers a specific question, citing the release version that introduced the change.
+Look up what shipped in recent releases of the tunan plugin. Bare invocation summarizes the last 5 plugin releases. Argument invocation searches the last 40 releases and answers a specific question, citing the release version that introduced the change.
 
-Data comes from the GitHub Releases API for `EveryInc/compound-engineering-plugin`, filtered to the `compound-engineering-v*` tag prefix so sibling components (`cli-v*`, `coding-tutor-v*`, `marketplace-v*`, `cursor-marketplace-v*`) are excluded.
+Data comes from the GitHub Releases API for `EveryInc/tunan-plugin`, filtered to the `tunan-v*` tag prefix so sibling components (`cli-v*`, `coding-tutor-v*`, `marketplace-v*`, `cursor-marketplace-v*`) are excluded.
 
 ## Phase 1 — Parse Arguments
 
@@ -18,7 +18,7 @@ Split the argument string on whitespace. Strip every token that starts with `mod
 - Empty result → **summary mode** (continue to Phase 2).
 - Non-empty result → **query mode** (skip to Phase 5).
 
-Version-like inputs (`2.65.0`, `v2.65.0`, `compound-engineering-v2.65.0`) are query strings, not a separate lookup-by-version mode. They flow through query mode like any other text.
+Version-like inputs (`2.65.0`, `v2.65.0`, `tunan-v2.65.0`) are query strings, not a separate lookup-by-version mode. They flow through query mode like any other text.
 
 ## Phase 2 — Fetch Releases (Summary Mode)
 
@@ -32,7 +32,7 @@ The helper always exits 0 and emits a single JSON object on stdout. It owns all 
 
 If the helper subprocess itself fails to launch (non-zero exit AND empty or non-JSON stdout — e.g., `python3` is not installed, the script is not executable, or the interpreter crashes before emitting the contract), tell the user:
 
-> `python3` is required to run `/ce-release-notes`. Install Python 3.x and retry, or open https://github.com/EveryInc/compound-engineering-plugin/releases directly.
+> `python3` is required to run `/ce-release-notes`. Install Python 3.x and retry, or open https://github.com/EveryInc/tunan-plugin/releases directly.
 
 Then stop. This is distinct from the helper returning `ok: false`, which means the helper ran successfully but both transports failed (handled below).
 
@@ -44,7 +44,7 @@ Parse the JSON. The shape on success is:
   "source": "gh" | "anon",
   "fetched_at": "...",
   "releases": [
-    {"tag": "compound-engineering-v2.67.0", "version": "2.67.0", "name": "...",
+    {"tag": "tunan-v2.67.0", "version": "2.67.0", "name": "...",
      "published_at": "2026-04-17T05:59:30Z", "url": "...", "body": "...",
      "linked_prs": [568, 575]}
   ]
@@ -64,7 +64,7 @@ The shape on failure is:
 
 If `ok: false`, print `error.message`, a blank line, then `error.user_hint`. Stop.
 
-If `ok: true`, take the first 5 entries from `releases` (the helper has already filtered to `compound-engineering-v*` and sorted newest first). If fewer than 5 are available, render whatever count came back without warning.
+If `ok: true`, take the first 5 entries from `releases` (the helper has already filtered to `tunan-v*` and sorted newest first). If fewer than 5 are available, render whatever count came back without warning.
 
 For each release, render:
 
@@ -78,13 +78,13 @@ For each release, render:
 
 `{published_at_human}` is the date in `YYYY-MM-DD` form derived from `published_at`. `{body}` is the release-please body verbatim, with one transformation:
 
-**Soft 25-line cap.** If the body exceeds 25 rendered lines, keep the first 25 lines and append `— N more changes, [see full release notes →]({url})`. Truncation must be **markdown-fence aware**: count the triple-backtick fence lines that appear in the kept portion. If the count is odd, the cut landed inside an open code fence; close it with a `` ``` `` line on the truncated output before appending the "see more" link, so renderers do not swallow the link or following content.
+**Soft 25-line cap.** If the body exceeds 25 rendered lines, keep the first 25 lines and append `— N more changes, [see full release notes →]({url})`. Truncation must be **markdown-fence aware**: count the triple-backtick fence lines that appear in the kept portion. If the count is odd, the cut landed inside an open code fence; close it with a ` ``` ` line on the truncated output before appending the "see more" link, so renderers do not swallow the link or following content.
 
 After all releases are rendered, append a two-line footer:
 
 ```
 Showing the last 5 releases. For older history, ask a specific question (e.g., `/ce-release-notes what happened to <skill>?`).
-Browse all releases at https://github.com/EveryInc/compound-engineering-plugin/releases
+Browse all releases at https://github.com/EveryInc/tunan-plugin/releases
 ```
 
 Stop. Summary mode is done.
@@ -122,7 +122,7 @@ If no confident match exists, skip to Phase 9.
 For each cited release (the most recent match as primary, plus up to 2 older matches), if the release's `linked_prs` array is non-empty, fetch the first PR for grounding context:
 
 ```bash
-gh pr view <linked_prs[0]> --repo EveryInc/compound-engineering-plugin --json title,body,url
+gh pr view <linked_prs[0]> --repo EveryInc/tunan-plugin --json title,body,url
 ```
 
 Always pass the PR number as a separate argument (list-form) — never interpolate it into a shell string. This call is best-effort:
@@ -149,7 +149,7 @@ Stop.
 Print this line literally — the URL is hardcoded so it cannot drift:
 
 ```
-I couldn't find this in the last 40 plugin releases. Browse the full history at https://github.com/EveryInc/compound-engineering-plugin/releases
+I couldn't find this in the last 40 plugin releases. Browse the full history at https://github.com/EveryInc/tunan-plugin/releases
 ```
 
 Stop.

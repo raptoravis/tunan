@@ -33,4 +33,4 @@ python scripts/analyze_riffrec_zip.py /path/to/input
 
 Accepted inputs: a Riffrec `.zip`, an `.mp4` / `.mov` / `.webm` video, an `.m4a` / `.mp3` / `.wav` audio file, or a meeting-notes `.md`. Use `--output-dir <dir>` to control where artifacts land. In repos with `docs/brainstorms/`, the default is `docs/brainstorms/riffrec-feedback/`. The quick path overrides the output dir to a temp location so nothing pollutes the repo.
 
-The Compound Engineering output format used by the extensive path is documented in `references/compound-engineering-feedback-format.md`.
+The Compound Engineering output format used by the extensive path is documented in `references/tunan-feedback-format.md`.

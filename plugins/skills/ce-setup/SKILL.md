@@ -1,6 +1,6 @@
 ---
 name: ce-setup
-description: "Diagnose and configure compound-engineering environment. Checks CLI dependencies, plugin version, and repo-local config. Offers guided installation for missing tools. Use when troubleshooting missing tools, verifying setup, or before onboarding."
+description: "Diagnose and configure tunan environment. Checks CLI dependencies, plugin version, and repo-local config. Offers guided installation for missing tools. Use when troubleshooting missing tools, verifying setup, or before onboarding."
 disable-model-invocation: true
 ---
 
@@ -10,13 +10,13 @@ disable-model-invocation: true
 
 Ask the user each question below using the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to presenting each question as a numbered list in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip or auto-configure. For multiSelect questions, accept comma-separated numbers (e.g. `1, 3`).
 
-Interactive setup for compound-engineering — diagnoses environment health, cleans obsolete repo-local CE config, and helps configure required tools. Review agent selection is handled automatically by `ce-code-review`; project-specific review guidance belongs in `CLAUDE.md` or `AGENTS.md`.
+Interactive setup for tunan — diagnoses environment health, cleans obsolete repo-local CE config, and helps configure required tools. Review agent selection is handled automatically by `ce-code-review`; project-specific review guidance belongs in `CLAUDE.md` or `AGENTS.md`.
 
 ## Phase 1: Diagnose
 
 ### Step 1: Determine Plugin Version
 
-Detect the installed compound-engineering plugin version by reading the plugin metadata or manifest. This is platform-specific -- use whatever mechanism is available (e.g., reading `plugin.json` from the plugin root or cache directory). If the version cannot be determined, skip this step.
+Detect the installed tunan plugin version by reading the plugin metadata or manifest. This is platform-specific -- use whatever mechanism is available (e.g., reading `plugin.json` from the plugin root or cache directory). If the version cannot be determined, skip this step.
 
 If a version is found, pass it to the check script via `--version`. Otherwise omit the flag.
 
@@ -50,11 +50,11 @@ After the diagnostic report, check whether:
 
 - any CLI tools are missing (reported as yellow in the Tools section)
 - any agent skills are missing (reported as yellow in the Skills section)
-- `compound-engineering.local.md` is present and needs cleanup
-- `.compound-engineering/config.local.yaml` does not exist or is not safely gitignored
-- `.compound-engineering/config.local.example.yaml` is missing or outdated
+- `tunan.local.md` is present and needs cleanup
+- `.tunan/config.local.yaml` does not exist or is not safely gitignored
+- `.tunan/config.local.example.yaml` is missing or outdated
 
-If everything is installed, no repo-local cleanup is needed, and `.compound-engineering/config.local.yaml` already exists and is gitignored, display the tool and skill list and completion message. Parse the tool and skill names from the script output and list each with a green circle. Omit the Skills line if the Skills section is absent from the script output:
+If everything is installed, no repo-local cleanup is needed, and `.tunan/config.local.yaml` already exists and is gitignored, display the tool and skill list and completion message. Parse the tool and skill names from the script output and list each with a green circle. Omit the Skills line if the Skills section is absent from the script output:
 
 ```
  ✅ Compound Engineering setup complete
@@ -76,15 +76,15 @@ Otherwise proceed to Phase 2 to resolve any issues. Handle repo-local cleanup (S
 
 ### Step 4: Resolve Repo-Local CE Issues
 
-Resolve the repository root (`git rev-parse --show-toplevel`). If `compound-engineering.local.md` exists at the repo root, explain that it is obsolete because review-agent selection is automatic and CE now uses `.compound-engineering/config.local.yaml` for any surviving machine-local state. Ask whether to delete it now. Use the repo-root path when deleting.
+Resolve the repository root (`git rev-parse --show-toplevel`). If `tunan.local.md` exists at the repo root, explain that it is obsolete because review-agent selection is automatic and CE now uses `.tunan/config.local.yaml` for any surviving machine-local state. Ask whether to delete it now. Use the repo-root path when deleting.
 
 ### Step 5: Bootstrap Project Config
 
 Resolve the repository root (`git rev-parse --show-toplevel`). All paths below are relative to the repo root, not the current working directory.
 
-**Example file (always refresh):** Copy `references/config-template.yaml` to `<repo-root>/.compound-engineering/config.local.example.yaml`, creating the directory if needed. This file is committed to the repo and always overwritten with the latest template so teammates can see available settings.
+**Example file (always refresh):** Copy `references/config-template.yaml` to `<repo-root>/.tunan/config.local.example.yaml`, creating the directory if needed. This file is committed to the repo and always overwritten with the latest template so teammates can see available settings.
 
-**Local config (create once):** If `.compound-engineering/config.local.yaml` does not exist, ask whether to create it:
+**Local config (create once):** If `.tunan/config.local.yaml` does not exist, ask whether to create it:
 
 ```
 Set up a local config file for this project?
@@ -95,10 +95,10 @@ Everything starts commented out -- you only enable what you need.
 2. No thanks
 ```
 
-If the user approves, copy `references/config-template.yaml` to `<repo-root>/.compound-engineering/config.local.yaml`. If `.compound-engineering/config.local.yaml` is not already covered by `.gitignore`, offer to add the entry:
+If the user approves, copy `references/config-template.yaml` to `<repo-root>/.tunan/config.local.yaml`. If `.tunan/config.local.yaml` is not already covered by `.gitignore`, offer to add the entry:
 
 ```text
-.compound-engineering/*.local.yaml
+.tunan/*.local.yaml
 ```
 
 If the local config already exists, check whether it is safely gitignored. If not, offer to add the `.gitignore` entry as above.

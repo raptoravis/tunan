@@ -16,7 +16,7 @@ Inputs:
 - **Doc title** (required): display title for the Proof doc. Upstream callers pass this explicitly; on direct-user invocation, default to the file's H1 heading, falling back to the filename (minus extension) if no H1 exists.
 - **Recommended next step** (optional, caller-specific): short string the caller wants echoed in the final terminal output (e.g., "Recommended next: `/ce-plan`"). Not used on direct-user invocation — the terminal report simply summarizes the iteration and asks what's next.
 
-Agent identity is fixed, not a parameter: every API call uses agent ID `ai:compound-engineering` and display name `Compound Engineering`. Callers do not override this.
+Agent identity is fixed, not a parameter: every API call uses agent ID `ai:tunan` and display name `Compound Engineering`. Callers do not override this.
 
 Return shape (used by upstream callers to resume their handoff; also shown to the user in the terminal when invoked directly):
 
@@ -33,7 +33,7 @@ Return shape (used by upstream callers to resume their handoff; also shown to th
 
 1. Read the local markdown file into memory. Remember this content as `uploadedMarkdown` — Phase 5 compares against it to detect whether anything changed during the session.
 2. `POST https://www.proofeditor.ai/share/markdown` with `{title, markdown}` → capture `slug`, `accessToken`, `tokenUrl`
-3. `POST /api/agent/{slug}/presence` with `X-Agent-Id: ai:compound-engineering`, `x-share-token: <token>`, body `{"name":"Compound Engineering","status":"reading","summary":"Uploaded doc for review"}`
+3. `POST /api/agent/{slug}/presence` with `X-Agent-Id: ai:tunan`, `x-share-token: <token>`, body `{"name":"Compound Engineering","status":"reading","summary":"Uploaded doc for review"}`
 4. Display prominently in the terminal:
 
    ```
@@ -70,6 +70,7 @@ Headers: x-share-token: <token>
 ```
 
 Capture:
+
 - `markdown` (current body — includes any user direct edits and accepted suggestions)
 - `revision`
 - `marks` (object keyed by markId, filtered to comment marks)
@@ -96,19 +97,32 @@ Real feedback blends types — "this is wrong, rename to Y" is both objection an
 
 **Is this a question with a clear answer?** Answer in-thread. Resolve if the answer stands on its own. If answering surfaces a new decision the user should weigh in on, leave open and surface it in the terminal report.
 
-**Is this a disagreement?** ("this is wrong", "contradicts §2", "this won't work"). Evaluate the claim against current content. If the agent agrees, fix and reply "Agreed — updated to X". If the agent disagrees, reply with the reasoning and leave open. Don't silently apply an objection without evaluating it — the whole point is that the user flagged it *because* they think the plan is wrong.
+**Is this a disagreement?** ("this is wrong", "contradicts §2", "this won't work"). Evaluate the claim against current content. If the agent agrees, fix and reply "Agreed — updated to X". If the agent disagrees, reply with the reasoning and leave open. Don't silently apply an objection without evaluating it — the whole point is that the user flagged it _because_ they think the plan is wrong.
 
 **Is the intent genuinely unclear?** First try: attempt the most reasonable interpretation, apply it, and reply "I read this as X — let me know if I should revert." That's cheaper than a round-trip when stakes are low. Ask for clarification only when the interpretations lead to meaningfully different outcomes. When asking, use the platform's blocking question tool for a quick multiple-choice when the options are discrete, or leave it as an open thread comment when free-form response is more natural. Either way the thread stays open so the next pass picks up the user's reply.
 
-**Invariant:** every attention-needing mark ends the pass with an agent reply in its thread. Unreplied = "still to do" — the next pass re-classifies it. This is what makes the loop idempotent without a sidecar: mark state *is* the state. Even when the agent disagrees or can't decide, reply (with reasoning or a question) rather than silently skip.
+**Invariant:** every attention-needing mark ends the pass with an agent reply in its thread. Unreplied = "still to do" — the next pass re-classifies it. This is what makes the loop idempotent without a sidecar: mark state _is_ the state. Even when the agent disagrees or can't decide, reply (with reasoning or a question) rather than silently skip.
 
 **Batch thread replies and resolves.** Build all thread responses during the pass, then write them with a single `/ops` batch whenever possible. `comment.reply` accepts `resolve: true`, so a handled thread should usually be one operation, not `reply` plus `resolve`. The batched `/ops` shape uses one `baseToken` and one mutation:
 
 ```json
-{"by":"ai:compound-engineering","baseToken":"<token>","operations":[
-  {"type":"comment.reply","markId":"<id-1>","text":"Updated the terminology.","resolve":true},
-  {"type":"comment.reply","markId":"<id-2>","text":"I disagree because X; leaving this open."}
-]}
+{
+  "by": "ai:tunan",
+  "baseToken": "<token>",
+  "operations": [
+    {
+      "type": "comment.reply",
+      "markId": "<id-1>",
+      "text": "Updated the terminology.",
+      "resolve": true
+    },
+    {
+      "type": "comment.reply",
+      "markId": "<id-2>",
+      "text": "I disagree because X; leaving this open."
+    }
+  ]
+}
 ```
 
 Only include existing-thread comment mutations in a batch: `comment.reply`, `comment.resolve`, and `comment.unresolve`. Leave `resolve` off (or set it false) when the thread remains open for a user decision. This replaces the older pattern of N separate reply/resolve calls or sub-agent parallelism; batching is faster, easier to reason about, and creates one authoritative marks mutation.
@@ -119,10 +133,18 @@ The user is collaborating in the doc, not waiting on approval. Every mutation wo
 
 **Default: `/edit/v2` for agent-applied content changes.** The comment thread is the review/audit trail: the user asked for the change, the agent applies it, then replies in-thread with what changed. Use block edits for direct fixes, insertions, deletions, and coordinated rewrites so the doc does not accumulate extra suggestion marks for work the user already requested.
 
-**Use `suggestion.add` with `status: "accepted"`** when a visible track-change mark is itself valuable — for example, the user asked to preserve a reject-to-revert affordance for a specific edit, or the change is judgment-sensitive enough that the visible suggestion trail is clearer than only replying in the comment thread. One call creates the suggestion mark *and* commits the change.
+**Use `suggestion.add` with `status: "accepted"`** when a visible track-change mark is itself valuable — for example, the user asked to preserve a reject-to-revert affordance for a specific edit, or the change is judgment-sensitive enough that the visible suggestion trail is clearer than only replying in the comment thread. One call creates the suggestion mark _and_ commits the change.
 
 ```json
-{"type":"suggestion.add","kind":"replace","quote":"<anchor>","content":"<new>","by":"ai:compound-engineering","status":"accepted","baseToken":"<token>"}
+{
+  "type": "suggestion.add",
+  "kind": "replace",
+  "quote": "<anchor>",
+  "content": "<new>",
+  "by": "ai:tunan",
+  "status": "accepted",
+  "baseToken": "<token>"
+}
 ```
 
 Use `kind: "insert" | "delete" | "replace"` as appropriate; all three support `status: "accepted"`.
@@ -130,7 +152,7 @@ Use `kind: "insert" | "delete" | "replace"` as appropriate; all three support `s
 **Use `/edit/v2` especially when:**
 
 - **Atomicity is required** — multiple coordinated edits must commit together or not at all (e.g., insert new section + update a reference in another block + delete the obsolete paragraph). `/edit/v2` takes an `operations` array that commits atomically; separate `suggestion.add` calls can partially succeed.
-- **Pre-user self-correction** — the agent is fixing its own output *before* the user has looked at the doc (e.g., spotted a mistake mid-ingest-pass). A tracked mark would imply "there was an old version," which is misleading from the user's perspective.
+- **Pre-user self-correction** — the agent is fixing its own output _before_ the user has looked at the doc (e.g., spotted a mistake mid-ingest-pass). A tracked mark would imply "there was an old version," which is misleading from the user's perspective.
 - **Pure structural insertion with no quote anchor** — adding an entirely new block/section where no existing text serves as an anchor. `suggestion.add` requires a `quote`; `/edit/v2` has `insert_before` / `insert_after` keyed on block `ref`.
 - **Structural list-item or block removal** — `suggestion.add` with `kind: "delete"` only deletes the text inside a list item; the bullet marker (`*`, `-`, or numeric `1.`) stays behind as an orphan line. Use `/edit/v2 delete_block` to remove an entire block, or `find_replace_in_block` to splice out the item plus its surrounding whitespace cleanly.
 
@@ -140,8 +162,8 @@ curl -s "https://www.proofeditor.ai/api/agent/{slug}/snapshot" -H "x-share-token
 # Apply
 curl -X POST "https://www.proofeditor.ai/api/agent/{slug}/edit/v2" \
   -H "Content-Type: application/json" -H "x-share-token: <token>" \
-  -H "X-Agent-Id: ai:compound-engineering" -H "Idempotency-Key: <uuid>" \
-  -d '{"by":"ai:compound-engineering","baseToken":"<token>","operations":[...]}'
+  -H "X-Agent-Id: ai:tunan" -H "Idempotency-Key: <uuid>" \
+  -d '{"by":"ai:tunan","baseToken":"<token>","operations":[...]}'
 ```
 
 Per-op body shape (singular `block` for `replace_block`; plural `blocks:[{markdown},...]` for anything that can add content; the server returns 422 on the wrong shape):
@@ -161,7 +183,12 @@ Block `ref` values are opaque request tokens tied to the snapshot/baseToken. Re-
 **Bulk mechanical sweep — prefer `find_replace_in_doc` when the rule is literal.** For terminology renames, punctuation swaps, or other literal doc-wide replacements, use one `/edit/v2` operation:
 
 ```json
-{"op":"find_replace_in_doc","find":"old term","replace":"new term","occurrence":"all"}
+{
+  "op": "find_replace_in_doc",
+  "find": "old term",
+  "replace": "new term",
+  "occurrence": "all"
+}
 ```
 
 Run the same payload through `/edit/v2?dryRun=1` first for large sweeps; dry-run returns `valid`, `appliedCount`, and per-op `results[]` without writing. For the real write, use `/edit/v2?return=minimal` when you only need `ok`, `revision`, `appliedCount`, and the next `mutationBase.token`. Responses with `operationResults` include per-block match counts; treat those refs as reporting/display data and re-read `/snapshot` before follow-up block-ref mutations.
@@ -176,7 +203,7 @@ When the edit is semantic rather than literal, batch `replace_block`, `insert_*`
 
 - Top-level field is `type` on single `/ops` writes; top-level `operations` on `/ops` comment batches; `operations[].op` on `/edit/v2`. Do not mix `/ops` `type` entries with `/edit/v2` `op` entries.
 - Include `baseToken` from `/state.mutationBase.token` (or `/snapshot.mutationBase.token` for `/edit/v2`).
-- Set `by: "ai:compound-engineering"` and header `X-Agent-Id: ai:compound-engineering`.
+- Set `by: "ai:tunan"` and header `X-Agent-Id: ai:tunan`.
 - Include an `Idempotency-Key` header. Reuse the same key only for an exact same-body resend; if you rebuild the body with a fresh `baseToken`, mint a new key.
 - Successful mutation responses include the next `mutationBase.token`; reuse it for the next write instead of re-reading only to get a token.
 - Reply and resolve together when done: `{"type":"comment.reply","markId":"<id>","text":"...","resolve":true}` inside a `/ops` batch. Reopen if needed: `{"type":"comment.unresolve", ...}`.
@@ -280,12 +307,14 @@ Runs when the user selects **Proceed**. Before prompting anything, check whether
 6. Display one of:
 
    Synced:
+
    ```
    Doc synced to <localPath> (revision <N>).
    Doc: <tokenUrl>
    ```
 
    Declined:
+
    ```
    Review complete. Local file kept as-is — pull from Proof when ready.
    Doc: <tokenUrl>
@@ -316,7 +345,7 @@ Two retry classes, and they behave differently. The helper below only covers the
 ```bash
 SLUG=<slug>
 TOKEN=<accessToken>
-AGENT_ID=ai:compound-engineering
+AGENT_ID=ai:tunan
 BASE=<cached from most recent /state or /snapshot read>
 
 mutate() {
@@ -369,7 +398,7 @@ The `Idempotency-Key` is minted for the exact request body being sent. If a retr
 STATE=$(curl -s "https://www.proofeditor.ai/api/agent/$SLUG/state" \
   -H "x-share-token: $TOKEN")
 LANDED=$(printf '%s' "$STATE" | jq --arg q "X" --arg t "Y" \
-  '[.marks[]? | select(.by == "ai:compound-engineering" and .quote == $q and (.thread[0].text // .text) == $t)] | length')
+  '[.marks[]? | select(.by == "ai:tunan" and .quote == $q and (.thread[0].text // .text) == $t)] | length')
 if [ "$LANDED" -gt 0 ]; then
   echo "Already applied — skipping retry."
 else
@@ -387,7 +416,8 @@ When extracting fields from API responses with jq's `//` alternative operator, p
 ### Identity
 
 All ops must include:
-- `by: "ai:compound-engineering"` in the request body
-- `X-Agent-Id: ai:compound-engineering` in headers (required for presence; recommended for ops for consistent attribution)
+
+- `by: "ai:tunan"` in the request body
+- `X-Agent-Id: ai:tunan` in headers (required for presence; recommended for ops for consistent attribution)
 
 Display name `Compound Engineering` is bound via `POST /presence` with `{"name":"Compound Engineering", ...}`. Set this once after upload; it carries across subsequent ops.

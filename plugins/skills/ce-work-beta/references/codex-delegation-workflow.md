@@ -9,19 +9,22 @@ If `work_delegate_decision` is `ask`, present the recommendation and wait for th
 **When recommending Codex delegation:**
 
 > "Codex delegation active. [N] implementation units -- delegating in one batch."
-> 1. Delegate to Codex *(recommended)*
+>
+> 1. Delegate to Codex _(recommended)_
 > 2. Execute with Claude Code instead
 
 **When recommending Codex delegation, multiple batches:**
 
 > "Codex delegation active. [N] implementation units -- delegating in [X] batches."
-> 1. Delegate to Codex *(recommended)*
+>
+> 1. Delegate to Codex _(recommended)_
 > 2. Execute with Claude Code instead
 
 **When recommending Claude Code (all units are trivial):**
 
 > "Codex delegation active, but these are small changes where the cost of delegating outweighs having Claude Code do them."
-> 1. Execute with Claude Code *(recommended)*
+>
+> 1. Execute with Claude Code _(recommended)_
 > 2. Delegate to Codex anyway
 
 If the user chooses the delegation option, proceed to Pre-Delegation Checks below. If the user chooses the Claude Code option, set `delegation_active` to false and return to standard execution in the parent skill.
@@ -66,6 +69,7 @@ Otherwise — empty, an unresolved command string like `command -v codex 2>/dev/
 If `consent_granted` is not true (from config `work_delegate_consent`):
 
 Present a one-time consent warning using the platform's blocking question tool (`AskUserQuestion` in Claude Code, `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension)). The consent warning explains:
+
 - Delegation sends implementation units to `codex exec` as a structured prompt
 - **yolo mode** (`--dangerously-bypass-approvals-and-sandbox`): Full system access including network. Required for verification steps that run tests or install dependencies. **Recommended.**
 - **full-auto mode** (`-s workspace-write`): Workspace-write sandbox, no network access by default. Network can be re-enabled by setting `network_access = true` under `[sandbox_workspace_write]` in `~/.codex/config.toml`.
@@ -73,13 +77,15 @@ Present a one-time consent warning using the platform's blocking question tool (
 Present the sandbox mode choice: (1) yolo (recommended), (2) full-auto.
 
 On acceptance:
-- Resolve the repo root: `git rev-parse --show-toplevel`. Write `work_delegate_consent: true` and `work_delegate_sandbox: <chosen-mode>` to `<repo-root>/.compound-engineering/config.local.yaml`
-- To write: (1) if file or directory does not exist, create `<repo-root>/.compound-engineering/` and write the YAML file; (2) if file exists, merge new keys preserving existing keys
+
+- Resolve the repo root: `git rev-parse --show-toplevel`. Write `work_delegate_consent: true` and `work_delegate_sandbox: <chosen-mode>` to `<repo-root>/.tunan/config.local.yaml`
+- To write: (1) if file or directory does not exist, create `<repo-root>/.tunan/` and write the YAML file; (2) if file exists, merge new keys preserving existing keys
 - Update `consent_granted` and `sandbox_mode` in the resolved state
 
 On decline:
+
 - Ask whether to disable delegation entirely for this project
-- If yes: write `work_delegate: false` to `<repo-root>/.compound-engineering/config.local.yaml` (using the same repo root resolved above). To write: (1) if file or directory does not exist, create `<repo-root>/.compound-engineering/` and write the YAML file; (2) if file exists, merge new keys preserving existing keys. Set `delegation_active` to false, proceed in standard mode
+- If yes: write `work_delegate: false` to `<repo-root>/.tunan/config.local.yaml` (using the same repo root resolved above). To write: (1) if file or directory does not exist, create `<repo-root>/.tunan/` and write the YAML file; (2) if file exists, merge new keys preserving existing keys. Set `delegation_active` to false, proceed in standard mode
 - If no: set `delegation_active` to false for this invocation only, proceed in standard mode
 
 **Headless consent:** If running in a headless or non-interactive context, delegation proceeds only if `work_delegate_consent` is already `true` in the config file. If consent is not recorded, set `delegation_active` to false silently.
@@ -104,7 +110,8 @@ Pick the level that best fits the batch. These are signals to weigh, not boxes t
 When in doubt, lean up one level — under-resourcing risky work costs more than over-resourcing routine work. Briefly note the picked level and the signal that drove it (e.g., "`high` — touches db/migrations") so the choice is auditable.
 
 A few edge cases worth handling explicitly:
-- **Test-only batches:** classify by what the tests *exercise*, not by file paths. Tests for auth flows, payment logic, or migrations get the same level the equivalent implementation work would get.
+
+- **Test-only batches:** classify by what the tests _exercise_, not by file paths. Tests for auth flows, payment logic, or migrations get the same level the equivalent implementation work would get.
 - **Mixed-complexity batches:** the batch picks one level. If a single batch combines a typo unit and a payments rewrite, pick the higher level. If the spread feels wasteful, prefer splitting at the batching step (see Batching above) over averaging it out.
 - **Deletion-only batches:** classify by the risk of what is being removed, not by counts of remaining content. Removing an auth module is `high` even if the batch produces zero `Modify` content.
 - **Documentation- or comment-only batches:** `default`.
@@ -226,7 +233,13 @@ Write the result schema to `<scratch-dir>/result-schema.json` (using the absolut
     "summary": { "type": "string" },
     "verification_summary": { "type": "string" }
   },
-  "required": ["status", "files_modified", "issues", "summary", "verification_summary"],
+  "required": [
+    "status",
+    "files_modified",
+    "issues",
+    "summary",
+    "verification_summary"
+  ],
   "additionalProperties": false
 }
 ```
@@ -314,17 +327,18 @@ If the output is "Waiting for Codex...", issue the same polling command again as
 
 **Result classification:** Codex is responsible for running verification internally and fixing failures before reporting -- the orchestrator does not re-run verification independently.
 
-| # | Signal | Classification | Action |
-|---|--------|---------------|--------|
-| 1 | Exit code != 0 | CLI failure | Rollback to HEAD. Fall back to standard mode for ALL remaining work. |
-| 2 | Exit code 0, result JSON missing or malformed | Task failure | Rollback to HEAD. Increment `consecutive_failures`. |
-| 3 | Exit code 0, `status: "failed"` | Task failure | Rollback to HEAD. Increment `consecutive_failures`. |
-| 4 | Exit code 0, `status: "partial"` | Partial success | Keep the diff. Complete remaining work locally, verify, and commit. Increment `consecutive_failures`. |
-| 5 | Exit code 0, `status: "completed"` | Success | Commit changes. Reset `consecutive_failures` to 0. |
+| #   | Signal                                        | Classification  | Action                                                                                                |
+| --- | --------------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------- |
+| 1   | Exit code != 0                                | CLI failure     | Rollback to HEAD. Fall back to standard mode for ALL remaining work.                                  |
+| 2   | Exit code 0, result JSON missing or malformed | Task failure    | Rollback to HEAD. Increment `consecutive_failures`.                                                   |
+| 3   | Exit code 0, `status: "failed"`               | Task failure    | Rollback to HEAD. Increment `consecutive_failures`.                                                   |
+| 4   | Exit code 0, `status: "partial"`              | Partial success | Keep the diff. Complete remaining work locally, verify, and commit. Increment `consecutive_failures`. |
+| 5   | Exit code 0, `status: "completed"`            | Success         | Commit changes. Reset `consecutive_failures` to 0.                                                    |
 
 **Result handoff — surface to user:** After reading the result JSON and before committing or rolling back, display a summary so the user sees what happened. Format:
 
 > **Codex batch <batch-num> — <classification>**
+>
 > <summary from result JSON>
 >
 > **Files:** <comma-separated list from files_modified>
@@ -351,7 +365,7 @@ git add $(git diff --name-only HEAD; git ls-files --others --exclude-standard)
 git commit -m "feat(<scope>): <batch summary>"
 ```
 
-**Between batches** (plans split into multiple batches): Report what completed, test results, and what's next. Continue immediately unless the user intervenes -- the checkpoint exists so the user *can* steer, not so they *must*.
+**Between batches** (plans split into multiple batches): Report what completed, test results, and what's next. Continue immediately unless the user intervenes -- the checkpoint exists so the user _can_ steer, not so they _must_.
 
 **Circuit breaker:** After 3 consecutive failures, set `delegation_active` to false and emit: "Codex delegation disabled after 3 consecutive failures -- completing remaining units in standard mode."
 
@@ -360,6 +374,7 @@ git commit -m "feat(<scope>): <batch summary>"
 ## Mixed-Model Attribution
 
 When some units are executed by Codex and others locally:
+
 - If all units used delegation: attribute to the Codex model
 - If all units used standard mode: attribute to the current agent's model
 - If mixed: note which units were delegated in the PR description and credit both models

@@ -1,39 +1,45 @@
 ---
 name: ce-report-bug
-description: Report a bug in the compound-engineering plugin
+description: Report a bug in the tunan plugin
 argument-hint: "[optional: brief description of the bug]"
 disable-model-invocation: true
 ---
 
 # Report a Compound Engineering Plugin Bug
 
-Report bugs encountered while using the compound-engineering plugin. This skill gathers structured information and creates a GitHub issue for the maintainer.
+Report bugs encountered while using the tunan plugin. This skill gathers structured information and creates a GitHub issue for the maintainer.
 
 ## Step 1: Gather Bug Information
 
 Ask the user the following questions using the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to numbered options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question:
 
 **Question 1: Bug Category**
+
 - What type of issue are you experiencing?
 - Options: Agent not working, Command not working, Skill not working, MCP server issue, Installation problem, Other
 
 **Question 2: Specific Component**
+
 - Which specific component is affected?
 - Ask for the name of the agent, command, skill, or MCP server
 
 **Question 3: What Happened (Actual Behavior)**
+
 - Ask: "What happened when you used this component?"
 - Get a clear description of the actual behavior
 
 **Question 4: What Should Have Happened (Expected Behavior)**
+
 - Ask: "What did you expect to happen instead?"
 - Get a clear description of expected behavior
 
 **Question 5: Steps to Reproduce**
+
 - Ask: "What steps did you take before the bug occurred?"
 - Get reproduction steps
 
 **Question 6: Error Messages**
+
 - Ask: "Did you see any error messages? If so, please share them."
 - Capture any error output
 
@@ -42,16 +48,19 @@ Ask the user the following questions using the platform's blocking question tool
 Automatically gather environment details. Detect the coding agent platform and collect what is available:
 
 **OS info (all platforms):**
+
 ```bash
 uname -a
 ```
 
 **Plugin version:** Read the plugin manifest or installed plugin metadata. Common locations:
+
 - Claude Code: `~/.claude/plugins/installed_plugins.json`
 - Codex: `.codex/plugins/` or project config
 - Other platforms: check the platform's plugin registry
 
 **Agent CLI version:** Run the platform's version command:
+
 - Claude Code: `claude --version`
 - Codex: `codex --version`
 - Other platforms: use the appropriate CLI version flag
@@ -98,7 +107,8 @@ Create a well-structured bug report with:
 [Any other relevant information]
 
 ---
-*Reported via `/ce-report-bug` skill*
+
+_Reported via `/ce-report-bug` skill_
 ```
 
 ## Step 4: Create GitHub Issue
@@ -107,23 +117,25 @@ Use the GitHub CLI to create the issue:
 
 ```bash
 gh issue create \
-  --repo EveryInc/compound-engineering-plugin \
-  --title "[compound-engineering] Bug: [Brief description]" \
+  --repo EveryInc/tunan-plugin \
+  --title "[tunan] Bug: [Brief description]" \
   --body "[Formatted bug report from Step 3]" \
-  --label "bug,compound-engineering"
+  --label "bug,tunan"
 ```
 
 **Note:** If labels don't exist, create without labels:
+
 ```bash
 gh issue create \
-  --repo EveryInc/compound-engineering-plugin \
-  --title "[compound-engineering] Bug: [Brief description]" \
+  --repo EveryInc/tunan-plugin \
+  --title "[tunan] Bug: [Brief description]" \
   --body "[Formatted bug report]"
 ```
 
 ## Step 5: Confirm Submission
 
 After the issue is created:
+
 1. Display the issue URL to the user
 2. Thank them for reporting the bug
 3. Let them know the maintainer (Kieran Klaassen) will be notified
@@ -133,10 +145,10 @@ After the issue is created:
 ```
 Bug report submitted successfully!
 
-Issue: https://github.com/EveryInc/compound-engineering-plugin/issues/[NUMBER]
-Title: [compound-engineering] Bug: [description]
+Issue: https://github.com/EveryInc/tunan-plugin/issues/[NUMBER]
+Title: [tunan] Bug: [description]
 
-Thank you for helping improve the compound-engineering plugin!
+Thank you for helping improve the tunan plugin!
 The maintainer will review your report and respond as soon as possible.
 ```
 
@@ -149,6 +161,7 @@ The maintainer will review your report and respond as soon as possible.
 ## Privacy Notice
 
 This skill does NOT collect:
+
 - Personal information
 - API keys or credentials
 - Private code from projects

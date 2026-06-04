@@ -1,6 +1,6 @@
 # Product Pulse First-Run Interview
 
-Loaded by `SKILL.md` at the start of Phase 1. Captures the configuration that will be merged into `.compound-engineering/config.local.yaml` (the unified CE local config, gitignored, machine-local) as `pulse_*` keys and re-read on every subsequent run.
+Loaded by `SKILL.md` at the start of Phase 1. Captures the configuration that will be merged into `.tunan/config.local.yaml` (the unified CE local config, gitignored, machine-local) as `pulse_*` keys and re-read on every subsequent run.
 
 For each section: ask the opening question, evaluate the answer against the quality bar, push back when it falls into a named anti-pattern, and capture the final answer in the user's own language.
 
@@ -8,7 +8,7 @@ For each section: ask the opening question, evaluate the answer against the qual
 
 1. **Push back, but don't spiral.** One round of pushback per section max. If the second answer still isn't usable, capture what the user gave, flag it in the config as `needs-review`, and move on.
 2. **Name events in the user's own words.** The config will be readable by the whole team - use the terms they actually use, not a generic template.
-3. **Ask about tools, not credentials.** The interview captures *which* tool and *what shape of query*. It does not collect API keys, tokens, or database passwords. Those stay in the user's environment.
+3. **Ask about tools, not credentials.** The interview captures _which_ tool and _what shape of query_. It does not collect API keys, tokens, or database passwords. Those stay in the user's environment.
 4. **Honor strategy seeds.** If `SKILL.md` Phase 1.0 surfaced a product name or a list of key metrics from `STRATEGY.md`, start with those as defaults and let the user edit. Do not re-ask questions that the strategy doc already answered unambiguously.
 5. **Evaluate metrics against the SMART bar.** Every event, metric, and signal the user proposes should be:
    - **Specific** - a named event or a named metric, not a category. `message_sent` passes; "engagement" does not.
@@ -40,12 +40,12 @@ This is the heartbeat of the pulse. Pick one event - the one that represents a u
 
 **Apply the SMART bar** (see Overall Rules). The event must be specific (a named event), measurable (the analytics tool returns a count), actionable (if it moves, the team notices), relevant (ties to the product's job), and timely (reads cleanly in short windows).
 
-**Engagement vs value test.** After the user names an event, ask yourself: does this event fire when the user is *using* the product, or when the user has *gotten value* from it? Engagement is earlier (they're in it). Value is later (it worked). If the candidate is really value-realization, push back: "That sounds like the moment the product *worked* for them. What event happens earlier - when they're in the middle of using it? The value event belongs in section 3." Common slips: `agent_accepted_draft` (value) vs `agent_received_draft` (engagement); `ride_completed` (value) vs `ride_started` (engagement); `question_answered_correctly` (value) vs `question_asked` (engagement).
+**Engagement vs value test.** After the user names an event, ask yourself: does this event fire when the user is _using_ the product, or when the user has _gotten value_ from it? Engagement is earlier (they're in it). Value is later (it worked). If the candidate is really value-realization, push back: "That sounds like the moment the product _worked_ for them. What event happens earlier - when they're in the middle of using it? The value event belongs in section 3." Common slips: `agent_accepted_draft` (value) vs `agent_received_draft` (engagement); `ride_completed` (value) vs `ride_started` (engagement); `question_answered_correctly` (value) vs `question_asked` (engagement).
 
 **Anti-patterns and pushback:**
 
-- **Page view or visit** ("pageview", "app opened", "login") -> "Those tell you someone showed up. I'm looking for the event that says they actually *used* the product. What fires when a user is doing the thing the product is for?"
-- **Multiple events with no clear primary** ("well, it could be X or Y or Z depending on the flow") -> "For the pulse, pick the one that's closest to 'a user is active using the core product.' If two candidates are genuinely tied, pick the one that happens *when the user spends time in exchange for value* - for async products that's usually 'contributed content' over 'opened app'."
+- **Page view or visit** ("pageview", "app opened", "login") -> "Those tell you someone showed up. I'm looking for the event that says they actually _used_ the product. What fires when a user is doing the thing the product is for?"
+- **Multiple events with no clear primary** ("well, it could be X or Y or Z depending on the flow") -> "For the pulse, pick the one that's closest to 'a user is active using the core product.' If two candidates are genuinely tied, pick the one that happens _when the user spends time in exchange for value_ - for async products that's usually 'contributed content' over 'opened app'."
 - **Too deep in the funnel** ("purchase_completed") -> "That's a conversion event - we'll capture that separately. For the primary engagement event, what happens earlier - when they're using the product, not when they've already converted?"
 - **Vague** ("interaction", "activity") -> "Is there a specific event name in your analytics tool? I want to write down the literal event name so this is repeatable."
 
@@ -66,7 +66,7 @@ Different from engagement. Engagement says "they're using it"; value-realization
 - **Same as engagement event, accidentally** -> "Is that the same as the engagement event you gave me? If so, that's fine - some products have one event that covers both. Want to confirm, or is there a later signal that says 'this user got the thing they came for'?"
 - **Revenue event** ("purchase") -> "Purchase is a conversion event - we'll capture that separately. For value-realization, I'm looking for the moment a user knows the product worked for them, which is usually before or separate from payment."
 - **Value is a feeling, not an event** ("they feel like the team aligned", "they trust the output") -> "That's real, but we can't measure a feeling directly in the pulse. What's a proxy event that correlates? Common patterns: a completion event (workflow finished), a time-to-first-X metric (seconds from open to output), a short-window return rate (came back the next day), or a copy/share/export event (took the output into their actual work). Pick the one closest to the feeling."
-- **Can't name one** -> "That's useful to know. If there's no discrete event, is there a session or workflow *completion* that stands in? Something like 'they finished the task they opened the product to do.' If not, we'll treat engagement as the value proxy and note it in the config."
+- **Can't name one** -> "That's useful to know. If there's no discrete event, is there a session or workflow _completion_ that stands in? Something like 'they finished the task they opened the product to do.' If not, we'll treat engagement as the value proxy and note it in the config."
 
 **Capture:** Event name verbatim, or `same-as-engagement` with a note, or `not-defined` with a note.
 
@@ -224,30 +224,30 @@ Skipping this entirely is fine - the skill does not require a schedule to functi
 
 ## Config File Shape
 
-After the interview completes, merge a `pulse_*` block into `<repo-root>/.compound-engineering/config.local.yaml`. Resolve the repo root with `git rev-parse --show-toplevel`. Preserve any non-pulse keys that already exist in the file (e.g., `work_delegate_*`); only add or update `pulse_*` keys.
+After the interview completes, merge a `pulse_*` block into `<repo-root>/.tunan/config.local.yaml`. Resolve the repo root with `git rev-parse --show-toplevel`. Preserve any non-pulse keys that already exist in the file (e.g., `work_delegate_*`); only add or update `pulse_*` keys.
 
-If the file does not yet exist, create the directory and file. If `.compound-engineering/config.local.yaml` is not already covered by `.gitignore`, offer to add the entry before writing.
+If the file does not yet exist, create the directory and file. If `.tunan/config.local.yaml` is not already covered by `.gitignore`, offer to add the entry before writing.
 
 The pulse block uses these flat keys (matches the `work_delegate_*` precedent for consistency):
 
-~~~yaml
+```yaml
 # --- Product pulse ---
 
 pulse_product_name: "{{product_name}}"
-pulse_lookback_default: {{24h | 7d | 1h | other}}    # default 24h if omitted
+pulse_lookback_default: { { 24h | 7d | 1h | other } } # default 24h if omitted
 pulse_primary_event: "{{event_name}}"
-pulse_value_event: "{{event_name}}"                  # may equal pulse_primary_event; omit if not defined
-pulse_completion_events: "{{event,event,event}}"     # comma-separated, 0-3 events; omit if none
-pulse_quality_scoring: {{true | false}}              # AI products only; default false
-pulse_quality_dimension: "{{dimension}}"             # only meaningful when pulse_quality_scoring is true
-pulse_analytics_source: {{posthog | mixpanel | custom | omit}}
-pulse_tracing_source: {{sentry | datadog | custom | omit}}
-pulse_payments_source: {{stripe | custom | omit}}    # omit if not used
-pulse_db_enabled: {{true | false}}                   # default false; read-only DB access only
-pulse_metric_sources: "{{metric=source,metric=source}}"  # strategy-metric -> source overrides; omit metrics that use the class default (pulse_analytics_source for analytics-class, pulse_payments_source for revenue, etc.)
-pulse_pending_metrics: "{{metric,metric}}"           # strategy metrics deferred for instrumentation; render as 'no data'; omit if none
-pulse_excluded_metrics: "{{metric,metric}}"          # strategy metrics intentionally not in pulse; omit if none
-~~~
+pulse_value_event: "{{event_name}}" # may equal pulse_primary_event; omit if not defined
+pulse_completion_events: "{{event,event,event}}" # comma-separated, 0-3 events; omit if none
+pulse_quality_scoring: { { true | false } } # AI products only; default false
+pulse_quality_dimension: "{{dimension}}" # only meaningful when pulse_quality_scoring is true
+pulse_analytics_source: { { posthog | mixpanel | custom | omit } }
+pulse_tracing_source: { { sentry | datadog | custom | omit } }
+pulse_payments_source: { { stripe | custom | omit } } # omit if not used
+pulse_db_enabled: { { true | false } } # default false; read-only DB access only
+pulse_metric_sources: "{{metric=source,metric=source}}" # strategy-metric -> source overrides; omit metrics that use the class default (pulse_analytics_source for analytics-class, pulse_payments_source for revenue, etc.)
+pulse_pending_metrics: "{{metric,metric}}" # strategy metrics deferred for instrumentation; render as 'no data'; omit if none
+pulse_excluded_metrics: "{{metric,metric}}" # strategy metrics intentionally not in pulse; omit if none
+```
 
 **Notes on what is NOT persisted in config:**
 

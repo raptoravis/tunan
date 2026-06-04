@@ -34,7 +34,7 @@ These rules apply to every brainstorm, including the universal (non-software) fl
 3. **Use multi-select rarely and intentionally** - Use it only for compatible sets such as goals, constraints, non-goals, or success criteria that can all coexist. If prioritization matters, follow up by asking which selected item is primary.
 4. **Default to the platform's blocking question tool** - Use `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). These tools include a free-text fallback (e.g., "Other" in Claude Code), so options scaffold the answer without confining it — well-chosen options surface dimensions the user may not have separated, and pick-plus-optional-note is lower activation energy than composing prose from scratch. This default holds for opening and elicitation questions too, not only narrowing. Fall back to numbered options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question.
 5. **Use an open-ended question only when the question is genuinely open** - Drop the blocking tool only when (a) the answer is inherently narrative ("walk me through how you got here"), (b) the question is diagnostic or introspective and presented options would unintentionally influence the user's answer (e.g., "what concerns you most?" — a 4-option menu would nudge them toward those axes rather than the ones actually on their mind), or (c) you cannot write 3-4 genuinely distinct, plausibly-correct options that cover the space without padding or strawmen. The test: if you'd be straining to fill the option slots, the question is open — ask it open-ended. Rule 1 still applies: still one question per turn.
-6. **Open-ended questions earn their place only when they're specific enough to elicit a substantive answer** - Apply Rule 5 silently: just ask the question, do not narrate the form choice. The question itself must give the user something concrete to anchor on. Good: *"What's the most concrete thing someone's already done about this — paid for it, built a workaround, quit a tool over it?"* (this is one of Phase 1.2's rigor probes — it earns its open-endedness by naming what counts as an answer). Too thin: *"What's your take?"* (nothing to bite into; user defaults to a one-liner that wastes the open question). Avoid (a) narrating the form choice ("the most useful question I can ask here is..."), (b) framings that imply a short answer ("briefly", "in one sentence"), (c) yes/no traps, and (d) AI-slop warmth wrappers ("take it wherever feels relevant").
+6. **Open-ended questions earn their place only when they're specific enough to elicit a substantive answer** - Apply Rule 5 silently: just ask the question, do not narrate the form choice. The question itself must give the user something concrete to anchor on. Good: _"What's the most concrete thing someone's already done about this — paid for it, built a workaround, quit a tool over it?"_ (this is one of Phase 1.2's rigor probes — it earns its open-endedness by naming what counts as an answer). Too thin: _"What's your take?"_ (nothing to bite into; user defaults to a one-liner that wastes the open question). Avoid (a) narrating the form choice ("the most useful question I can ask here is..."), (b) framings that imply a short answer ("briefly", "in one sentence"), (c) yes/no traps, and (d) AI-slop warmth wrappers ("take it wherever feels relevant").
 
 ## Output Guidance
 
@@ -58,7 +58,7 @@ Do not proceed until you have a feature description from the user.
 Determine `OUTPUT_FORMAT` before any other phase fires. Output mode is **exclusive** — the requirements doc is written as either markdown (`.md`) OR HTML (`.html`), never both. Precedence: CLI arg > config > default (`md`), with a hard pipeline-mode override.
 
 **Read config (pre-resolved at skill load):**
-!`cat "$(git rev-parse --show-toplevel 2>/dev/null)/.compound-engineering/config.local.yaml" 2>/dev/null || echo '__NO_CONFIG__'`
+!`cat "$(git rev-parse --show-toplevel 2>/dev/null)/.tunan/config.local.yaml" 2>/dev/null || echo '__NO_CONFIG__'`
 
 Resolution steps:
 
@@ -76,11 +76,12 @@ Resolution steps:
 - When `OUTPUT_FORMAT=md`, read `references/markdown-rendering.md` for format principles.
 - When `OUTPUT_FORMAT=html`, read `references/html-rendering.md` for format principles.
 
-The `output:` preference does NOT auto-propagate to `ce-plan` on handoff — ce-plan re-resolves its own `plan_output` config independently. Asymmetric output (`requirements.html` + `plan.md`) is acceptable; users who want HTML for both set both keys in `.compound-engineering/config.local.yaml`.
+The `output:` preference does NOT auto-propagate to `ce-plan` on handoff — ce-plan re-resolves its own `plan_output` config independently. Asymmetric output (`requirements.html` + `plan.md`) is acceptable; users who want HTML for both set both keys in `.tunan/config.local.yaml`.
 
 #### 0.1 Resume Existing Work When Appropriate
 
 If the user references an existing brainstorm topic or document, or there is an obvious recent matching `*-requirements.{md,html}` file in `docs/brainstorms/`:
+
 - Read the document
 - Confirm with the user before resuming: "Found an existing requirements doc for [topic]. Should I continue from this, or start fresh?"
 - If resuming, summarize the current state briefly, continue from its existing decisions and outstanding questions, and update the existing document instead of creating a duplicate
@@ -88,11 +89,12 @@ If the user references an existing brainstorm topic or document, or there is an 
 
 #### 0.1b Classify Task Domain
 
-Before proceeding to Phase 0.2, classify whether this is a software task. The key question is: **does the task involve building, modifying, or architecting software?** -- not whether the task *mentions* software topics.
+Before proceeding to Phase 0.2, classify whether this is a software task. The key question is: **does the task involve building, modifying, or architecting software?** -- not whether the task _mentions_ software topics.
 
 **Software** (continue to Phase 0.2) -- the task references code, repositories, APIs, databases, or asks to build/modify/debug/deploy software.
 
 **Non-software brainstorming** (route to universal brainstorming) -- BOTH conditions must be true:
+
 - None of the software signals above are present
 - The task describes something the user wants to explore, decide, or think through in a non-software domain
 
@@ -103,6 +105,7 @@ Before proceeding to Phase 0.2, classify whether this is a software task. The ke
 #### 0.2 Assess Whether Brainstorming Is Needed
 
 **Clear requirements indicators:**
+
 - Specific acceptance criteria provided
 - Referenced existing patterns to follow
 - Described exact expected behavior
@@ -114,6 +117,7 @@ Keep the interaction brief. Confirm understanding and present concise next-step 
 #### 0.3 Assess Scope
 
 Use the feature description plus a light repo scan to classify the work:
+
 - **Lightweight** - small, well-bounded, low ambiguity
 - **Standard** - normal feature or bounded refactor with some decisions to make
 - **Deep** - cross-cutting, strategic, or highly ambiguous
@@ -137,9 +141,9 @@ Scan the repo before substantive brainstorming. Match depth to scope:
 
 **Standard and Deep** — Two passes:
 
-*Constraint Check* — Check project instruction files (`AGENTS.md`, and `CLAUDE.md` only if retained as compatibility context) for workflow, product, or scope constraints that affect the brainstorm. Also read `STRATEGY.md` if it exists — the product's target problem, approach, persona, and active tracks are direct input to what this brainstorm should deliver and should shape scope, success criteria, and which approaches are aligned vs out-of-scope. Also read `CONCEPTS.md` at repo root if it exists — the project's authoritative vocabulary. Use these names in dialogue, approaches, and the requirements doc; map user-offered synonyms back. If any of these add nothing, move on.
+_Constraint Check_ — Check project instruction files (`AGENTS.md`, and `CLAUDE.md` only if retained as compatibility context) for workflow, product, or scope constraints that affect the brainstorm. Also read `STRATEGY.md` if it exists — the product's target problem, approach, persona, and active tracks are direct input to what this brainstorm should deliver and should shape scope, success criteria, and which approaches are aligned vs out-of-scope. Also read `CONCEPTS.md` at repo root if it exists — the project's authoritative vocabulary. Use these names in dialogue, approaches, and the requirements doc; map user-offered synonyms back. If any of these add nothing, move on.
 
-*Topic Scan* — Search for relevant terms. Read the most relevant existing artifact if one exists (brainstorm, plan, spec, skill, feature doc). Skim adjacent examples covering similar behavior.
+_Topic Scan_ — Search for relevant terms. Read the most relevant existing artifact if one exists (brainstorm, plan, spec, skill, feature doc). Skim adjacent examples covering similar behavior.
 
 If nothing obvious appears after a short scan, say so and continue. Two rules govern technical depth during the scan:
 
@@ -160,6 +164,7 @@ Before generating approaches, scan the user's opening for rigor gaps. Match dept
 This is agent-internal analysis, not a user-facing checklist. Read the opening, note which gaps actually exist, and raise only those as questions during Phase 1.3 — folded into the normal flow of dialogue, not fired as a pre-flight gauntlet. A fuzzy opening may earn three or four probes; a concrete, well-framed one may earn zero because no scope-appropriate gaps were found.
 
 **Lightweight:**
+
 - Is this solving the real user problem?
 - Are we duplicating something that already covers this?
 - Is there a clearly better framing with near-zero extra cost?
@@ -175,12 +180,14 @@ This is agent-internal analysis, not a user-facing checklist. Read the opening, 
 - **Attachment gap.** The opening treats a particular solution shape as the thing being built, rather than the value that shape is supposed to deliver, and hasn't been examined against smaller forms that might deliver the same value. When present, ask what the smallest version that still delivers real value would look like.
 
 Plus these synthesis questions — not gap lenses, product-judgment the agent weighs in its own reasoning:
+
 - Is there a nearby framing that creates more user value without more carrying cost? If so, what complexity does it add?
 - Given the current project state, user goal, and constraints, what is the single highest-leverage move right now: the request as framed, a reframing, one adjacent addition, a simplification, or doing nothing?
 
 Favor moves that compound value, reduce future carrying cost, or make the product meaningfully more useful or compelling. Use the result to sharpen the conversation, not to bulldoze the user's intent.
 
 **Deep** — Standard lenses and synthesis questions plus:
+
 - Is this a local patch, or does it move the broader system toward where it wants to be?
 
 **Deep — product** — Deep plus:
@@ -197,9 +204,10 @@ These questions force an explicit product thesis and feed the Scope Boundaries s
 Follow the Interaction Rules above. Use the platform's blocking question tool when available.
 
 **Guidelines:**
+
 - Ask what the user is already thinking before offering your own ideas. This surfaces hidden context and prevents fixation on AI-generated framings.
 - Start broad (problem, users, value) then narrow (constraints, exclusions, edge cases)
-- **Rigor probes fire before Phase 2 and are open-ended, not menus.** Narrowing is legitimate, but Phase 1 cannot end with un-probed rigor gaps. Each scope-appropriate gap from Phase 1.2 fires as a **separate** direct open-ended probe — one probe satisfies one gap, not multiple. Standard brainstorms scan four gap lenses (evidence, specificity, counterfactual, attachment); Deep-product adds durability (five total), but only the gaps actually present in the opening must be probed. Surface those probes progressively across the conversation — interleaving with narrowing moves is fine, as long as every scope-appropriate gap that was found in Phase 1.2 has been probed open-ended before Phase 2. Rigor probes map to Interaction Rule 5(b): a 4-option menu signals which kinds of evidence count and lets the user pick rather than produce. Open-ended questions force them to produce real observation or surface their uncertainty. Examples (one per gap): *evidence — "What's the most concrete thing someone's already done about this — paid, built a workaround, quit a tool over it?"* / *specificity — "Can you name a team you've actually watched hit this, or are you reasoning?"* / *counterfactual — "What do teams do today when this breaks — who reconciles?"* / *attachment — "Before we move to shapes or approaches — what's the smallest version that would still prove the bet right, and what's excluded?"* — **attachment is the final rigor probe before Phase 2 when the attachment gap is present. Fire it regardless of whether a specific shape has emerged through narrowing; its job is to pressure-test the user's implicit framing of the product before Phase 2 inherits it** / *durability — "Under the most plausible near-term shifts, how does this bet hold?"* If the answer reveals genuine uncertainty, record it as an explicit assumption in the requirements document rather than skipping the probe.
+- **Rigor probes fire before Phase 2 and are open-ended, not menus.** Narrowing is legitimate, but Phase 1 cannot end with un-probed rigor gaps. Each scope-appropriate gap from Phase 1.2 fires as a **separate** direct open-ended probe — one probe satisfies one gap, not multiple. Standard brainstorms scan four gap lenses (evidence, specificity, counterfactual, attachment); Deep-product adds durability (five total), but only the gaps actually present in the opening must be probed. Surface those probes progressively across the conversation — interleaving with narrowing moves is fine, as long as every scope-appropriate gap that was found in Phase 1.2 has been probed open-ended before Phase 2. Rigor probes map to Interaction Rule 5(b): a 4-option menu signals which kinds of evidence count and lets the user pick rather than produce. Open-ended questions force them to produce real observation or surface their uncertainty. Examples (one per gap): _evidence — "What's the most concrete thing someone's already done about this — paid, built a workaround, quit a tool over it?"_ / _specificity — "Can you name a team you've actually watched hit this, or are you reasoning?"_ / _counterfactual — "What do teams do today when this breaks — who reconciles?"_ / _attachment — "Before we move to shapes or approaches — what's the smallest version that would still prove the bet right, and what's excluded?"_ — **attachment is the final rigor probe before Phase 2 when the attachment gap is present. Fire it regardless of whether a specific shape has emerged through narrowing; its job is to pressure-test the user's implicit framing of the product before Phase 2 inherits it** / _durability — "Under the most plausible near-term shifts, how does this bet hold?"_ If the answer reveals genuine uncertainty, record it as an explicit assumption in the requirements document rather than skipping the probe.
 - Clarify the problem frame, validate assumptions, and ask about success criteria
 - Make requirements concrete enough that planning will not need to invent behavior
 - Surface dependencies or prerequisites only when they materially affect scope
@@ -219,11 +227,13 @@ Use at least one non-obvious angle — inversion (what if we did the opposite?),
 Present approaches first, then evaluate. Let the user see all options before hearing which one is recommended — leading with a recommendation before the user has seen alternatives anchors the conversation prematurely.
 
 When useful, include one deliberately higher-upside alternative:
+
 - Identify what adjacent addition or reframing would most increase usefulness, compounding value, or durability without disproportionate carrying cost. Present it as a challenger option alongside the baseline, not as the default. Omit it when the work is already obviously over-scoped or the baseline request is clearly the right move.
 
-At product tier, alternatives should differ on *what* is built (product shape, actor set, positioning), not *how* it is built. Implementation-variant alternatives belong at feature tier.
+At product tier, alternatives should differ on _what_ is built (product shape, actor set, positioning), not _how_ it is built. Implementation-variant alternatives belong at feature tier.
 
 For each approach, provide:
+
 - Brief description (2-3 sentences)
 - Pros and cons
 - Key risks or unknowns
@@ -236,6 +246,7 @@ After presenting all approaches, state your recommendation and explain why. Pref
 If one approach is clearly best and alternatives are not meaningful, skip the menu and state the recommendation directly.
 
 If relevant, call out whether the choice is:
+
 - Reuse an existing pattern
 - Extend an existing capability
 - Build something net new
