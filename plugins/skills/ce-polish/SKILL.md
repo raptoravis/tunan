@@ -17,6 +17,8 @@ Start the dev server, open the feature in a browser, and iterate. You use the fe
 
 ## Phase 1: Start the dev server
 
+**Script invocation (per OS):** the bundled helper scripts ship in both forms. On Windows run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/<name>.ps1`; on macOS/Linux run `bash scripts/<name>.sh`. The commands below show the bash form — substitute the PowerShell form on Windows.
+
 ### 1.1 Check for `.claude/launch.json`
 
 Run `bash scripts/read-launch-json.sh`. If it finds a configuration, use it — the user already told us how to start the project.
@@ -82,8 +84,8 @@ Reference files (loaded on demand):
 - `references/dev-server-sveltekit.md` — SvelteKit dev-server defaults
 - `references/dev-server-procfile.md` — Procfile-based dev-server defaults
 
-Scripts (invoked via `bash scripts/<name>`):
-- `scripts/read-launch-json.sh` — launch.json reader
-- `scripts/detect-project-type.sh` — project-type classifier
-- `scripts/resolve-package-manager.sh` — lockfile-based package-manager resolver
-- `scripts/resolve-port.sh` — port resolution cascade
+Scripts (invoked via `bash scripts/<name>.sh`, or `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/<name>.ps1` on Windows — both forms ship side by side):
+- `read-launch-json` — launch.json reader (`.sh` / `.ps1`)
+- `detect-project-type` — project-type classifier (`.sh` / `.ps1`)
+- `resolve-package-manager` — lockfile-based package-manager resolver (`.sh` / `.ps1`)
+- `resolve-port` — port resolution cascade (`.sh` / `.ps1`)

@@ -353,7 +353,7 @@ mutate() {
   local IDEM_KEY BODY RESP CODE NEXT_BASE
   # Fresh key for this request body. If the body changes, including because
   # baseToken changes after STALE_BASE, the retry below mints a new key.
-  IDEM_KEY=$(uuidgen)
+  IDEM_KEY=$(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')
   BODY=$(jq -n --arg base "$BASE" --argjson payload "$PAYLOAD" '$payload + {baseToken: $base}')
   RESP=$(curl -s -X POST "https://www.proofeditor.ai/api/agent/$SLUG/ops" \
     -H "Content-Type: application/json" \
@@ -373,7 +373,7 @@ mutate() {
     BASE=$(curl -s "https://www.proofeditor.ai/api/agent/$SLUG/state" \
       -H "x-share-token: $TOKEN" | jq -r '.mutationBase.token')
     BODY=$(jq -n --arg base "$BASE" --argjson payload "$PAYLOAD" '$payload + {baseToken: $base}')
-    IDEM_KEY=$(uuidgen)
+    IDEM_KEY=$(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')
     RESP=$(curl -s -X POST "https://www.proofeditor.ai/api/agent/$SLUG/ops" \
       -H "Content-Type: application/json" \
       -H "x-share-token: $TOKEN" \

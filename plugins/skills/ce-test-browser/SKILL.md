@@ -157,11 +157,11 @@ else
     # Auto-start in pipeline — pick the right command for this project
     echo "Starting dev server on port ${PORT}..."
     if [ -f "bin/dev" ]; then
-      PORT=${PORT} bin/dev > /tmp/dev-server-${PORT}.log 2>&1 &
+      PORT=${PORT} bin/dev > ${TMPDIR:-/tmp}/dev-server-${PORT}.log 2>&1 &
     elif [ -f "bin/rails" ]; then
-      bin/rails server -p ${PORT} > /tmp/dev-server-${PORT}.log 2>&1 &
+      bin/rails server -p ${PORT} > ${TMPDIR:-/tmp}/dev-server-${PORT}.log 2>&1 &
     elif [ -f "package.json" ]; then
-      PORT=${PORT} npm run dev > /tmp/dev-server-${PORT}.log 2>&1 &
+      PORT=${PORT} npm run dev > ${TMPDIR:-/tmp}/dev-server-${PORT}.log 2>&1 &
     fi
     # Wait up to 30 seconds for server to become ready
     for i in $(seq 1 30); do
@@ -170,7 +170,7 @@ else
     done
     if ! lsof -i ":${PORT}" -sTCP:LISTEN -t >/dev/null 2>&1; then
       echo "Server did not start in 30s. Last output:"
-      tail -20 /tmp/dev-server-${PORT}.log 2>/dev/null
+      tail -20 ${TMPDIR:-/tmp}/dev-server-${PORT}.log 2>/dev/null
       exit 1
     fi
   else

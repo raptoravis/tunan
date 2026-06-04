@@ -21,7 +21,7 @@ The last line of output is the preview URL (e.g., `https://litter.catbox.moe/abc
 
 For multiple files (static screenshots tier), upload each file separately.
 
-**If upload fails** after retry, fall back to opening the local file with the platform file-opener (`open` on macOS, `xdg-open` on Linux) so the user can still review it. Include the local path in the destination choice question instead of a URL.
+**If upload fails** after retry, fall back to opening the local file with the platform file-opener (`open` on macOS, `xdg-open` on Linux, `Start-Process <file>` on Windows) so the user can still review it. Include the local path in the destination choice question instead of a URL.
 
 ## Step 2: Destination Choice
 
@@ -33,7 +33,7 @@ Present the preview URL to the user and ask how to handle the evidence. Use the 
 
 1. **Upload to R2 (public URL)** -- upload to Cloudflare R2 for permanent PR embedding (available when R2 env vars are set)
 2. **Upload to catbox (public URL)** -- promote to catbox permanent hosting for PR embedding
-3. **Save locally** -- save to a stable OS-temp path (/tmp/tunan/ce-demo-reel/)
+3. **Save locally** -- save to a stable OS-temp path (${TMPDIR:-/tmp}/tunan/ce-demo-reel/)
 4. **Recapture** -- provide instructions on what to change
 5. **Proceed without evidence** -- set evidence to null and proceed
 

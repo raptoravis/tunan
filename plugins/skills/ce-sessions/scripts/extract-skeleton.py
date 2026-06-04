@@ -35,7 +35,22 @@ parser.add_argument(
     metavar="PATH",
     help="Write extracted skeleton to PATH instead of stdout. Stdout receives a one-line _meta status.",
 )
+parser.add_argument(
+    "--input",
+    metavar="PATH",
+    help="Read session JSONL from PATH instead of stdin. Preferred on Windows, "
+    "where PowerShell mangles UTF-8 piped to a process's stdin.",
+)
 args = parser.parse_args()
+
+# Force UTF-8 on stdin/stdout regardless of the platform locale. Windows
+# defaults to the legacy ANSI code page (e.g. GBK on zh-CN), which raises
+# UnicodeDecodeError on UTF-8 session files. reconfigure() is Python 3.7+.
+try:
+    sys.stdin.reconfigure(encoding="utf-8", errors="replace")
+    sys.stdout.reconfigure(encoding="utf-8")
+except AttributeError:
+    pass
 
 # Capture-and-redirect when --output is set: prints in the rest of the script
 # go to the buffer; at the end the buffer is written to PATH and a status
@@ -323,7 +338,8 @@ def handle_cursor(obj):
 detected = None
 buffer = []
 
-for line in sys.stdin:
+_src = open(args.input, encoding="utf-8", errors="replace") if args.input else sys.stdin
+for line in _src:
     line = line.strip()
     if not line:
         continue
@@ -359,7 +375,7 @@ print(json.dumps({"_meta": True, **stats}))
 if args.output:
     body = sys.stdout.getvalue()
     sys.stdout = _original_stdout
-    with open(args.output, "w") as f:
+    with open(args.output, "w", encoding="utf-8") as f:
         f.write(body)
     bytes_written = os.path.getsize(args.output)
     print(json.dumps({"_meta": True, "wrote": args.output, "bytes": bytes_written, **stats}))

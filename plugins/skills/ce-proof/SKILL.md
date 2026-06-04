@@ -346,7 +346,7 @@ OP_RESP=$(curl -s -X POST "https://www.proofeditor.ai/api/agent/abc123/ops" \
   -H "Content-Type: application/json" \
   -H "x-share-token: xxx" \
   -H "X-Agent-Id: ai:tunan" \
-  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Idempotency-Key: $(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')" \
   -d "$(jq -n --arg base "$BASE" '{type:"comment.add",quote:"text",by:"ai:tunan",text:"comment",baseToken:$base}')")
 NEXT_BASE=$(printf '%s' "$OP_RESP" | jq -r '.mutationBase.token // empty')
 [ -n "$NEXT_BASE" ] && BASE="$NEXT_BASE"
@@ -356,7 +356,7 @@ OP_RESP=$(curl -s -X POST "https://www.proofeditor.ai/api/agent/abc123/ops" \
   -H "Content-Type: application/json" \
   -H "x-share-token: xxx" \
   -H "X-Agent-Id: ai:tunan" \
-  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Idempotency-Key: $(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')" \
   -d "$(jq -n --arg base "$BASE" '{type:"suggestion.add",kind:"replace",quote:"old",by:"ai:tunan",content:"new",baseToken:$base}')")
 NEXT_BASE=$(printf '%s' "$OP_RESP" | jq -r '.mutationBase.token // empty')
 [ -n "$NEXT_BASE" ] && BASE="$NEXT_BASE"
@@ -366,7 +366,7 @@ OP_RESP=$(curl -s -X POST "https://www.proofeditor.ai/api/agent/abc123/ops" \
   -H "Content-Type: application/json" \
   -H "x-share-token: xxx" \
   -H "X-Agent-Id: ai:tunan" \
-  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Idempotency-Key: $(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')" \
   -d "$(jq -n --arg base "$BASE" '{type:"suggestion.add",kind:"replace",quote:"old",by:"ai:tunan",content:"new",status:"accepted",baseToken:$base}')")
 NEXT_BASE=$(printf '%s' "$OP_RESP" | jq -r '.mutationBase.token // empty')
 [ -n "$NEXT_BASE" ] && BASE="$NEXT_BASE"
@@ -379,7 +379,7 @@ curl -X POST "https://www.proofeditor.ai/api/agent/abc123/edit/v2?return=minimal
   -H "Content-Type: application/json" \
   -H "x-share-token: xxx" \
   -H "X-Agent-Id: ai:tunan" \
-  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Idempotency-Key: $(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')" \
   -d "$(jq -n --arg base "$EDIT_BASE" '{by:"ai:tunan",baseToken:$base,operations:[{op:"find_replace_in_doc",find:"old",replace:"new",occurrence:"all"}]}')"
 ```
 
@@ -413,7 +413,7 @@ OP_RESP=$(curl -s -X POST "https://www.proofeditor.ai/api/agent/$SLUG/ops" \
   -H "Content-Type: application/json" \
   -H "x-share-token: $TOKEN" \
   -H "X-Agent-Id: ai:tunan" \
-  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Idempotency-Key: $(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')" \
   -d "$(jq -n --arg base "$BASE" '{type:"comment.add",quote:"Content here",by:"ai:tunan",text:"Added a note",baseToken:$base}')")
 NEXT_BASE=$(printf '%s' "$OP_RESP" | jq -r '.mutationBase.token // empty')
 [ -n "$NEXT_BASE" ] && BASE="$NEXT_BASE"
@@ -426,7 +426,7 @@ curl -X POST "https://www.proofeditor.ai/api/agent/$SLUG/edit/v2?return=minimal"
   -H "Content-Type: application/json" \
   -H "x-share-token: $TOKEN" \
   -H "X-Agent-Id: ai:tunan" \
-  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Idempotency-Key: $(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')" \
   -d "$(jq -n --arg base "$EDIT_BASE" '{by:"ai:tunan",baseToken:$base,operations:[{op:"find_replace_in_doc",find:"Content",replace:"Updated content",occurrence:"all"}]}')"
 ```
 

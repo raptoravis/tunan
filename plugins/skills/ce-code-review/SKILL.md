@@ -53,7 +53,7 @@ Same pipeline for default and `mode:agent`:
 | Invocation       | Deliverable                                                                                                 |
 | ---------------- | ----------------------------------------------------------------------------------------------------------- |
 | **Default**      | Markdown report (pipe-delimited finding tables) + Actionable Findings summary                               |
-| **`mode:agent`** | One JSON object (see ### JSON output format below) + the same `/tmp/.../ce-code-review/<run-id>/` artifacts |
+| **`mode:agent`** | One JSON object (see ### JSON output format below) + the same `${TMPDIR:-/tmp}/.../ce-code-review/<run-id>/` artifacts |
 
 `mode:agent` is **report-only**: it skips the Stage 5c apply (the caller applies) and serializes findings as JSON instead of markdown. It does not change reviewer selection, merge logic, or scope rules — the JSON is the deterministic contract for programmatic and cross-harness callers (Codex, Gemini, etc.). The default markdown is the human view; keep it ASCII-safe (pipe tables, `->` not middot `·`, no box-drawing) so it degrades gracefully across terminals.
 
@@ -345,10 +345,10 @@ Generate a unique run identifier before dispatching any agents. This ID scopes a
 
 ```bash
 RUN_ID=$(date +%Y%m%d-%H%M%S)-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')
-mkdir -p "/tmp/tunan/ce-code-review/$RUN_ID"
+mkdir -p "${TMPDIR:-/tmp}/tunan/ce-code-review/$RUN_ID"
 ```
 
-Pass `{run_id}` to every persona sub-agent so they can write their full analysis to `/tmp/tunan/ce-code-review/{run_id}/{reviewer_name}.json`.
+Pass `{run_id}` to every persona sub-agent so they can write their full analysis to `${TMPDIR:-/tmp}/tunan/ce-code-review/{run_id}/{reviewer_name}.json`.
 
 **Large shared context — pass paths, not contents.** The diff and file list go to every reviewer and validator. When inlining them into each subagent prompt would be wasteful (many files / a big diff), write them once into the run dir (e.g. `full.diff`, `files.txt`) and pass those **paths** in the diff / changed-files slots instead of inline content — the subagent and validator templates instruct the child to Read a staged path. Inline a small diff directly.
 
@@ -371,11 +371,11 @@ Spawn each selected persona reviewer using the subagent template included below.
 7. **For `project-standards` only:** the standards file path list from Stage 3b, wrapped in a `<standards-paths>` block appended to the review context
 8. **For `data-migration` only:** the resolved review base ref from Stage 1 (`BASE:` marker), wrapped in `<review-base>` inside the review context so schema drift checks never assume `main`
 
-Persona sub-agents are **read-only** with respect to the project: they review and return structured JSON. They do not edit project files or propose refactors. The one permitted write is saving their full analysis to the run-artifact path specified in the output contract (under `/tmp/tunan/ce-code-review/<run-id>/`).
+Persona sub-agents are **read-only** with respect to the project: they review and return structured JSON. They do not edit project files or propose refactors. The one permitted write is saving their full analysis to the run-artifact path specified in the output contract (under `${TMPDIR:-/tmp}/tunan/ce-code-review/<run-id>/`).
 
 Read-only here means **non-mutating**, not "no shell access." Reviewer sub-agents may use non-mutating inspection commands when needed to gather evidence or verify scope, including read-oriented `git` / `gh` usage such as `git diff`, `git show`, `git blame`, `git log`, and `gh pr view`. In **`pr-remote`** or **`branch-remote`** scope (see Stage 1), inspect changed files via `git show <remote-head-ref>:<path>` or diff hunks — do not Read/Grep workspace paths for files in scope. They must not edit project files, change branches, commit, push, create PRs, or otherwise mutate the checkout or repository state.
 
-Each persona sub-agent writes full JSON (all schema fields) to `/tmp/tunan/ce-code-review/{run_id}/{reviewer_name}.json` and returns compact JSON with merge-tier fields only:
+Each persona sub-agent writes full JSON (all schema fields) to `${TMPDIR:-/tmp}/tunan/ce-code-review/{run_id}/{reviewer_name}.json` and returns compact JSON with merge-tier fields only:
 
 ```json
 {
@@ -459,7 +459,7 @@ Independent verification gate. Spawn one validator sub-agent per surviving findi
 2. **Apply dispatch budget cap.** If the selected set exceeds 15 findings, validate the highest-severity 15 (P0 first, then P1, then P2, then P3, breaking ties by anchor descending), dropping only from the P2/P3 tail. **Never drop a P0 or P1 from validation** — if P0/P1 findings alone exceed 15, raise the cap to include all of them. Record the over-budget count (the dropped P2/P3 tail) for the Coverage section.
 3. **Spawn validators with bounded parallelism.** One sub-agent per finding, dispatched independently using the validator template and the same bounded scheduler from Stage 4. Each validator receives:
    - The finding's title, severity, file, line, suggested_fix, original reviewer name, and confidence anchor
-   - `why_it_matters` when available — loaded from the per-agent artifact file at `/tmp/tunan/ce-code-review/{run_id}/{reviewer_name}.json`; omit when the file is absent or the artifact write failed. The validator proceeds without it, using the diff and cited code directly.
+   - `why_it_matters` when available — loaded from the per-agent artifact file at `${TMPDIR:-/tmp}/tunan/ce-code-review/{run_id}/{reviewer_name}.json`; omit when the file is absent or the artifact write failed. The validator proceeds without it, using the diff and cited code directly.
    - The full diff
    - The scope mode and remote head ref, mirroring the Stage 4 reviewer bundle: inject `<pr-scope-mode>local-aligned | pr-remote | branch-remote</pr-scope-mode>` and, when set, `<pr-head-ref>...</pr-head-ref>` or `<branch-head-ref>...</branch-head-ref>`. The validator template defaults to local-aligned workspace inspection when these are absent, so omitting them in `pr-remote`/`branch-remote` makes validators verify findings against the stale working tree — dropping valid findings or confirming false ones on the wrong tree.
    - Inspection access scoped by mode: in `local-aligned`, Read/Grep/git blame the cited code, callers, guards, framework defaults, and history; in `pr-remote`/`branch-remote`, inspect via `git show <remote-head-ref>:<path>` or the provided diff hunks only — do not Read/Grep workspace paths for files in scope.
@@ -547,7 +547,7 @@ Do not include time estimates.
 
 ### JSON output format (`mode:agent` only)
 
-Emit **one raw JSON object** as the primary response — a single bare JSON value, **no markdown code fence**. A leading ` ```json ` fence makes the response start with backticks and breaks naive `JSON.parse` consumers, so never wrap it. Also write `review.json` under `/tmp/tunan/ce-code-review/<run-id>/` with the same payload.
+Emit **one raw JSON object** as the primary response — a single bare JSON value, **no markdown code fence**. A leading ` ```json ` fence makes the response start with backticks and breaks naive `JSON.parse` consumers, so never wrap it. Also write `review.json` under `${TMPDIR:-/tmp}/tunan/ce-code-review/<run-id>/` with the same payload.
 
 `mode:agent` does not apply fixes — the caller does — so there is no `applied_fixes` field; the handoff is `actionable_findings`. Applied work surfaces only in the default-mode markdown Applied section (Stage 5c/6).
 
@@ -577,7 +577,7 @@ Minimum shape:
   "residual_risks": [],
   "testing_gaps": [],
   "coverage": {},
-  "artifact_path": "/tmp/tunan/ce-code-review/<run-id>/",
+  "artifact_path": "${TMPDIR:-/tmp}/tunan/ce-code-review/<run-id>/",
   "run_id": "<run-id>"
 }
 ```
@@ -612,7 +612,7 @@ After Stage 6, stop. Never push, open PRs, or file tickets from this skill. In d
 After Stage 6 **in default mode**, emit a compact **Actionable Findings** summary for callers:
 
 - List each actionable finding (`gated_auto` or `manual` with `downstream-resolver`) with stable `#`, severity, file:line, title, `autofix_class`, whether `suggested_fix` is present, and `confidence`.
-- Include the run-artifact path when one was written: `/tmp/tunan/ce-code-review/<run-id>/`
+- Include the run-artifact path when one was written: `${TMPDIR:-/tmp}/tunan/ce-code-review/<run-id>/`
 - When the actionable queue is empty, state `Actionable findings: none.` explicitly.
 
 In `mode:agent` do **not** emit this markdown summary — the actionable findings are carried solely by the `actionable_findings` field of the JSON object. Emit nothing after the JSON object, so the response stays a single parseable JSON value.
@@ -630,7 +630,7 @@ Do not offer push/PR/create-branch next steps from this skill.
 
 #### Run artifacts
 
-Always write run artifacts under `/tmp/tunan/ce-code-review/<run-id>/`:
+Always write run artifacts under `${TMPDIR:-/tmp}/tunan/ce-code-review/<run-id>/`:
 
 - synthesized findings
 - actionable findings list

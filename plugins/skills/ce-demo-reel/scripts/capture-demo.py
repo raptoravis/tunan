@@ -375,7 +375,7 @@ def _stitch_frames(output, frames, duration=3.0, min_frame_bytes=DEFAULT_MIN_FRA
 
         # Write concat file
         concat_file = os.path.join(tmpdir, "concat.txt")
-        with open(concat_file, "w") as fh:
+        with open(concat_file, "w", encoding="utf-8") as fh:
             for f in normalized:
                 fh.write(f"file '{os.path.basename(f)}'\n")
                 fh.write(f"duration {duration}\n")
@@ -761,7 +761,7 @@ Commands:
     p_save = sub.add_parser("save-local", help="Save artifact locally instead of uploading")
     p_save.add_argument("--file", required=True, help="Artifact file to save")
     p_save.add_argument("--branch", default="", help="Branch name for filename")
-    default_dir = "/tmp/tunan/ce-demo-reel"
+    default_dir = os.path.join(tempfile.gettempdir(), "tunan", "ce-demo-reel")
     p_save.add_argument("--output-dir", default=default_dir, help="Target directory")
 
     args = parser.parse_args()

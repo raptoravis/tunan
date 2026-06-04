@@ -1,7 +1,7 @@
 ---
 name: ce-worktree
 description: Create an isolated git worktree for parallel feature work or PR review. Use when starting work that should not disturb the current checkout, or when `ce-work` or `ce-code-review` offers a worktree option.
-allowed-tools: Bash(bash *worktree-manager.sh)
+allowed-tools: Bash(bash *worktree-manager.sh), Bash(powershell.exe *worktree-manager.ps1)
 ---
 
 # Worktree Creation
@@ -15,8 +15,14 @@ Create a worktree under `.worktrees/<branch>` with branch-specific setup that `g
 
 ## Creating a worktree
 
-Invoke the bundled script via the runtime Bash tool. On Claude Code, `${CLAUDE_SKILL_DIR}` resolves to the skill's own directory across both marketplace-cached installs and `claude --plugin-dir` local development; the runtime Bash tool's CWD is the user's project, not the skill directory, so a bare `bash scripts/worktree-manager.sh` fails. On other targets (Codex, Gemini, Pi, etc.) `${CLAUDE_SKILL_DIR}` is unset and the `:-.` fallback yields the bare relative path those harnesses expect.
+Invoke the bundled script via the runtime Bash tool, picking the variant for the current OS — PowerShell (`.ps1`) on Windows, bash (`.sh`) on macOS/Linux. On Claude Code, `${CLAUDE_SKILL_DIR}` resolves to the skill's own directory across both marketplace-cached installs and `claude --plugin-dir` local development; the runtime Bash tool's CWD is the user's project, not the skill directory, so a bare relative path fails. On other targets (Codex, Gemini, Pi, etc.) `${CLAUDE_SKILL_DIR}` is unset and the `:-.` fallback yields the bare relative path those harnesses expect. The Bash tool (Git Bash on Windows) expands `${CLAUDE_SKILL_DIR:-.}` and forward slashes, which `powershell.exe -File` accepts.
 
+Windows (PowerShell):
+```bash
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_SKILL_DIR:-.}/scripts/worktree-manager.ps1" create <branch-name> [from-branch]
+```
+
+macOS / Linux (bash):
 ```bash
 bash "${CLAUDE_SKILL_DIR:-.}/scripts/worktree-manager.sh" create <branch-name> [from-branch]
 ```
@@ -25,7 +31,7 @@ Defaults:
 - `from-branch` defaults to origin's default branch (or `main` if that cannot be resolved)
 - The new branch is created at `origin/<from-branch>` (or the local ref if the remote is unavailable)
 
-Examples:
+Examples (bash form shown; on Windows swap to the PowerShell variant above):
 ```bash
 bash "${CLAUDE_SKILL_DIR:-.}/scripts/worktree-manager.sh" create feat/login
 bash "${CLAUDE_SKILL_DIR:-.}/scripts/worktree-manager.sh" create fix/email-validation develop
@@ -69,7 +75,7 @@ Do not create a worktree for single-task work that can happen on a branch in the
 
 ## Integration
 
-`ce-work` and `ce-code-review` offer this skill as an option. When the user selects "worktree" in those flows, invoke `bash "${CLAUDE_SKILL_DIR:-.}/scripts/worktree-manager.sh" create <branch>` with a meaningful branch name derived from the work description (e.g., `feat/crowd-sniff`, `fix/email-validation`). Avoid auto-generated names like `worktree-jolly-beaming-raven` that obscure the work.
+`ce-work` and `ce-code-review` offer this skill as an option. When the user selects "worktree" in those flows, invoke the worktree-manager `create <branch>` command (the PowerShell `.ps1` variant on Windows, the bash `.sh` variant elsewhere — see "Creating a worktree" above) with a meaningful branch name derived from the work description (e.g., `feat/crowd-sniff`, `fix/email-validation`). Avoid auto-generated names like `worktree-jolly-beaming-raven` that obscure the work.
 
 ## Troubleshooting
 

@@ -276,6 +276,8 @@ Filter the output against the scope paths. If any in-scope files have uncommitte
 
 ### 1.2 Build or Validate Measurement Harness
 
+**Script invocation (per OS).** The bundled scripts (`measure`, `parallel-probe`, `experiment-worktree`) ship in both forms and share identical args and stdout contracts. Every `bash scripts/<name>.sh ...` below is the macOS/Linux form; on Windows run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/<name>.ps1 ...` instead. The `measure` script runs `<measurement.command>` through the platform shell (`bash -c` on Unix, `cmd /c` on Windows), so author the measurement command for the target OS.
+
 **If user provides a measurement harness** (the `measurement.command` already exists):
 
 1. Run it once via the measurement script:
@@ -487,7 +489,7 @@ For each hypothesis in the batch, dispatch according to `execution.mode`. In `se
 3. Write the filled prompt to a temp file
 4. Dispatch via Codex:
    ```bash
-   cat /tmp/optimize-exp-XXXXX.txt | codex exec --skip-git-repo-check - 2>&1
+   cat ${TMPDIR:-/tmp}/optimize-exp-XXXXX.txt | codex exec --skip-git-repo-check - 2>&1
    ```
 5. Security posture: use the user's selection (ask once per session if not set in spec)
 

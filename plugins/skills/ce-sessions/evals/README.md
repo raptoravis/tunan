@@ -42,7 +42,7 @@ This suite is narrowly scoped to the terminology-preservation question. It does 
 
 This suite is run via the `skill-creator` framework, not manually. The framework spawns subagents in parallel to invoke ce-sessions, captures findings to a workspace, grades them, aggregates, and opens a viewer.
 
-**Workspace location:** `/tmp/tunan/ce-sessions/evals/iteration-<N>/` (per repo AGENTS.md scratch conventions — `/tmp` for cross-invocation reusable scratch, accessible for grep/inspection).
+**Workspace location:** `${TMPDIR:-/tmp}/tunan/ce-sessions/evals/iteration-<N>/` (per repo AGENTS.md scratch conventions — `/tmp` for cross-invocation reusable scratch, accessible for grep/inspection).
 
 **One subagent dispatch per eval × per run.** Each dispatched subagent receives the eval prompt, invokes `/ce-sessions <prompt>`, captures the findings text verbatim, and writes to `<workspace>/iteration-<N>/eval-<ID>-<name>/run-<R>/findings.txt`.
 

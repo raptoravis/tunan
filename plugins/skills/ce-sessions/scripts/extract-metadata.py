@@ -109,7 +109,7 @@ def _extract_user_assistant_text(filepath):
     """
     chunks = []
     try:
-        with open(filepath, "r", errors="replace") as f:
+        with open(filepath, "r", encoding="utf-8", errors="replace") as f:
             for line in f:
                 try:
                     obj = json.loads(line.strip())
@@ -191,7 +191,7 @@ def process_file(filepath):
     content scan cost."""
     try:
         size = os.path.getsize(filepath)
-        with open(filepath, "r") as f:
+        with open(filepath, "r", encoding="utf-8", errors="replace") as f:
             lines = []
             for i, line in enumerate(f):
                 if i >= MAX_LINES:
@@ -221,10 +221,11 @@ def process_file(filepath):
         return None, filepath
 
 
-# Parse arguments: files and optional --cwd-filter / --keyword
+# Parse arguments: files and optional --cwd-filter / --keyword / --paths-stdin
 files = []
 cwd_filter = None
 keywords = None
+paths_stdin = False
 args = sys.argv[1:]
 i = 0
 while i < len(args):
@@ -234,11 +235,21 @@ while i < len(args):
     elif args[i] == "--keyword" and i + 1 < len(args):
         keywords = [k for k in args[i + 1].split(",") if k]
         i += 2
+    elif args[i] == "--paths-stdin":
+        # Read newline-delimited file paths from stdin into batch mode. This is
+        # the cross-platform replacement for the Unix `... | tr '\n' '\0' |
+        # xargs -0 ...` hardening: a plain pipe works identically in PowerShell
+        # and POSIX shells, with no tr/xargs dependency.
+        paths_stdin = True
+        i += 1
     elif not args[i].startswith("-"):
         files.append(args[i])
         i += 1
     else:
         i += 1
+
+if paths_stdin:
+    files.extend(line.strip() for line in sys.stdin if line.strip())
 
 if files:
     # Batch mode: process all files

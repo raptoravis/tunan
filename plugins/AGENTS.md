@@ -193,6 +193,18 @@ Design rules for blocking question menus (`AskUserQuestion` / `request_user_inpu
 - [ ] All platforms resolve script paths relative to the skill's directory; no env var prefix is needed
 - [ ] Reference the script with a backtick path (e.g., `` `scripts/my-script` ``) so agents can locate it; a markdown link is not needed since the bash code block already provides the invocation
 
+### Cross-Platform OS Support (Windows / PowerShell)
+
+These skills must run on Windows, not just macOS/Linux. The agent invokes commands through the runtime Bash tool, which is Git Bash on Windows (so `${VAR}`, pipes, `mktemp`, `/tmp`, and `.sh` scripts all work there) — but the project prioritizes native Windows + PowerShell. Follow these conventions:
+
+- [ ] **Bundled scripts ship in both forms.** Every executable helper under a skill's `scripts/` has a bash `.sh` AND a PowerShell `.ps1` twin with **identical args and byte-for-byte stdout contract** (same sentinel strings, exit codes, multi-line output). When adding or changing one, change the other in the same commit (this is the OS-level analog of the stable/beta sync rule).
+- [ ] **`.ps1` targets Windows PowerShell 5.1** (ships with Windows, zero install). No 7+-only syntax: no ternary `? :`, no `ForEach-Object -Parallel`, no `Start-Process -TimeoutSec`, no `??`. Verify with `[System.Management.Automation.PSParser]::Tokenize(...)`. Gotcha: `$x = if (...) { @($a[i..j]) }` collapses a single-element slice to a scalar string — use `@($a | Select-Object -Skip n)` instead.
+- [ ] **SKILL.md invokes the OS-appropriate variant.** Show the Windows form `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/<name>.ps1 <args>` alongside the bash `bash scripts/<name>.sh <args>` form, with a one-line "pick the variant for the current OS" note. Add a `Bash(powershell.exe *<name>.ps1)` entry to `allowed-tools` next to the existing `Bash(bash *<name>.sh)` when the skill pins script permissions.
+- [ ] **Python launcher:** instruct `python3` on macOS/Linux, `python` (or `py -3`) on Windows. Avoid Unix-only pipelines (`tr '\n' '\0' | xargs -0 ...`); prefer a plain pipe into a script that reads newline-delimited stdin (see `ce-sessions` `extract-metadata.py --paths-stdin`).
+- [ ] **Python file I/O must be encoding-safe.** Open text files with `encoding="utf-8"` and, for scripts that read stdin, `sys.stdin.reconfigure(encoding="utf-8", errors="replace")`. Windows defaults to the legacy ANSI code page (e.g. GBK on zh-CN), which raises `UnicodeDecodeError` on UTF-8 content. Do not rely on the locale default.
+- [ ] **Temp/scratch paths:** never hardcode `/tmp`. In bash use `${TMPDIR:-/tmp}/...`; in PowerShell use `$env:TEMP\...`; in Python use `tempfile.gettempdir()`. For a path the skill resolves once and reuses, a `$SCRATCH`/`<scratch-dir>` placeholder is clearest.
+- [ ] **No Unix-only commands without a Windows path:** `uuidgen` is absent even in Git Bash — use `$(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')`. For file/URL openers, offer all three: `open`/`open -a` (macOS), `xdg-open` (Linux), `start`/`Start-Process` (Windows). `mktemp` is fine in bash blocks (Git Bash provides it); give a `$env:TEMP` + `[guid]::NewGuid()` alternative only for prominent standalone scratch-setup steps.
+
 ### Cross-Platform Reference Rules
 
 This plugin is authored once, then converted for other agent platforms. Commands and agents are transformed during that conversion, but `plugin.skills` are usually copied almost exactly as written.

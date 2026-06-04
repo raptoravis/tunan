@@ -41,6 +41,13 @@ These rules apply at all times during orchestration and synthesis.
 
 ## Execution
 
+**Platform note.** Command examples below use the macOS/Linux (bash) form. On Windows, translate each as you run it:
+- Bundled `.sh` scripts → their PowerShell twin: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/<name>.ps1 <args>` (same args/output contract).
+- `python3` → `python` (or `py -3`).
+- Scratch dir `mktemp -d` → `$env:TEMP` (see Step 4).
+
+The extractor scripts take `--input <file>` (used below) so no stdin redirection is needed — important on Windows, where PowerShell corrupts UTF-8 piped to a process's stdin.
+
 If no question argument is provided, ask what the user wants to know about their session history. Use the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to asking in plain text only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question.
 
 ### Step 1 — Determine scan window
@@ -58,11 +65,13 @@ Claude Code retains session history for ~30 days by default. Wider windows may f
 
 ### Step 2 — Discover sessions and extract metadata
 
-Run the discovery + metadata pipeline (preserving the null-delimited xargs hardening that lets `extract-metadata.py` run in batch mode):
+Run the discovery + metadata pipeline. `--paths-stdin` makes `extract-metadata.py` read the newline-delimited paths from stdin in batch mode — a plain pipe that behaves identically in PowerShell and POSIX shells, with no `tr`/`xargs` dependency:
 
 ```bash
-bash scripts/discover-sessions.sh <repo> <days> | tr '\n' '\0' | xargs -0 python3 scripts/extract-metadata.py --cwd-filter <repo>
+bash scripts/discover-sessions.sh <repo> <days> | python3 scripts/extract-metadata.py --paths-stdin --cwd-filter <repo>
 ```
+
+(Windows: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/discover-sessions.ps1 <repo> <days> | python scripts/extract-metadata.py --paths-stdin --cwd-filter <repo>`.)
 
 Each output line is a JSON object describing a session (platform, file, size, ts, session, plus platform-specific fields). The final `_meta` line carries `files_processed` and `parse_errors`.
 
@@ -102,14 +111,19 @@ Create a per-run throwaway scratch directory:
 SCRATCH=$(mktemp -d -t ce-sessions-XXXXXX)
 ```
 
-Capture the absolute path; thread it into Step 5 and Step 6. The OS handles cleanup on session end; an explicit `rm -rf "$SCRATCH"` at the end of Step 7 is harmless and makes intent explicit.
+On Windows PowerShell (no `mktemp`):
+```powershell
+$SCRATCH = Join-Path $env:TEMP ("ce-sessions-" + [guid]::NewGuid().ToString('N').Substring(0,8)); New-Item -ItemType Directory -Path $SCRATCH | Out-Null
+```
+
+Capture the absolute path; thread it into Step 5 and Step 6. The OS handles cleanup on session end; an explicit cleanup of `$SCRATCH` at the end of Step 7 (`rm -rf` / `Remove-Item -Recurse -Force`) is harmless and makes intent explicit.
 
 ### Step 5 — Extract per-session content (file-mediated)
 
 For each selected session, run the skeleton extractor with `--output` so content writes directly to the scratch file — extraction bytes never round-trip through the orchestrator's tool results:
 
 ```bash
-python3 scripts/extract-skeleton.py --output "$SCRATCH/<session-id>.skeleton.txt" < <session-file>
+python3 scripts/extract-skeleton.py --input <session-file> --output "$SCRATCH/<session-id>.skeleton.txt"
 ```
 
 Stdout receives only a one-line JSON status (`{"_meta": true, "wrote": "...", "bytes": N, ...}`). Capture `bytes` and `parse_errors` from each status line.
@@ -117,7 +131,7 @@ Stdout receives only a one-line JSON status (`{"_meta": true, "wrote": "...", "b
 **Conditional tail-extract** — if a skeleton terminates mid-investigation (last visible turn is a tool call with no resolution, or the assistant is mid-debugging without a conclusion), re-extract with a `tail` shape:
 
 ```bash
-python3 scripts/extract-skeleton.py --output "$SCRATCH/<session-id>.skeleton.tail.txt" < <session-file>
+python3 scripts/extract-skeleton.py --input <session-file> --output "$SCRATCH/<session-id>.skeleton.tail.txt"
 ```
 
 (The skeleton script does not accept a `tail:N` cap directly; if a tail-only view is needed, post-process the scratch file in shell with `tail -n 50` after extraction. Use this only when the head output suggests the session was truncated mid-investigation.)
@@ -125,7 +139,7 @@ python3 scripts/extract-skeleton.py --output "$SCRATCH/<session-id>.skeleton.tai
 **Conditional errors-mode** — for sessions where investigation dead-ends are likely valuable:
 
 ```bash
-python3 scripts/extract-errors.py --output "$SCRATCH/<session-id>.errors.txt" < <session-file>
+python3 scripts/extract-errors.py --input <session-file> --output "$SCRATCH/<session-id>.errors.txt"
 ```
 
 Use selectively — only when understanding what went wrong adds value. Cursor agent transcripts don't log tool results, so errors-mode produces nothing for Cursor sessions.
@@ -163,9 +177,9 @@ Synthesize findings from these prior sessions:
 Problem topic: <one-line topic>
 
 Sessions to read (paths in $SCRATCH):
-1. /tmp/ce-sessions-XXXX/abc123.skeleton.txt
+1. $SCRATCH/abc123.skeleton.txt
    platform=claude branch=feat/auth-fix ts=2026-05-01
-2. /tmp/ce-sessions-XXXX/def456.skeleton.txt  errors=/tmp/ce-sessions-XXXX/def456.errors.txt
+2. $SCRATCH/def456.skeleton.txt  errors=$SCRATCH/def456.errors.txt
    platform=codex cwd=/Users/.../my-project ts=2026-05-03
 ...
 

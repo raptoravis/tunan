@@ -6,6 +6,8 @@ AI-powered development tools that get smarter with every use. Make each unit of 
 
 After installing, run `/ce-setup` in any project. It diagnoses your environment, installs missing tools, and bootstraps project config in one interactive flow.
 
+**Windows:** the skills run on Windows as well as macOS/Linux. Bundled helper scripts ship in both bash (`.sh`) and PowerShell (`.ps1`) form — the PowerShell variants are Windows PowerShell 5.1-compatible (no extra install) and are used automatically on Windows.
+
 ## Components
 
 | Component | Count |

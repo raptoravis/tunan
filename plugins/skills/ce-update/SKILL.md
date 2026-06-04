@@ -9,7 +9,7 @@ description: |
   Code — it relies on the plugin harness cache layout.
 disable-model-invocation: true
 ce_platforms: [claude]
-allowed-tools: Bash(bash *upstream-version.sh), Bash(bash *currently-loaded-version.sh), Bash(bash *marketplace-name.sh)
+allowed-tools: Bash(bash *upstream-version.sh), Bash(bash *currently-loaded-version.sh), Bash(bash *marketplace-name.sh), Bash(powershell.exe *upstream-version.ps1), Bash(powershell.exe *currently-loaded-version.ps1), Bash(powershell.exe *marketplace-name.ps1)
 ---
 
 # Check Plugin Version
@@ -26,20 +26,30 @@ between releases).
 
 ## Step 1: Probe versions
 
-Run these three scripts in parallel via the Bash tool. Each prints a single
-line of output; capture the values for the decision logic below. Use
-`${CLAUDE_SKILL_DIR}` so the path resolves correctly in both `claude --plugin-dir`
-local-development sessions and standard marketplace-cached installs.
+Run these three scripts in parallel via the Bash tool, picking the variant for
+the current OS — PowerShell (`.ps1`) on Windows, bash (`.sh`) on macOS/Linux.
+Each prints a single line of output; capture the values for the decision logic
+below. Use `${CLAUDE_SKILL_DIR}` so the path resolves correctly in both
+`claude --plugin-dir` local-development sessions and standard marketplace-cached
+installs (the Bash tool — Git Bash on Windows — expands it for either variant).
 
+Windows (PowerShell):
+```bash
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_SKILL_DIR}/scripts/upstream-version.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_SKILL_DIR}/scripts/currently-loaded-version.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_SKILL_DIR}/scripts/marketplace-name.ps1"
+```
+
+macOS / Linux (bash):
 ```bash
 bash "${CLAUDE_SKILL_DIR}/scripts/upstream-version.sh"
 bash "${CLAUDE_SKILL_DIR}/scripts/currently-loaded-version.sh"
 bash "${CLAUDE_SKILL_DIR}/scripts/marketplace-name.sh"
 ```
 
-`scripts/upstream-version.sh` reads `plugin.json` on `main` via `gh api`. It
-prints the version string, or the sentinel `__CE_UPDATE_VERSION_FAILED__` if
-`gh` is unavailable or rate-limited.
+`scripts/upstream-version.sh` (and its `.ps1` Windows twin) reads `plugin.json`
+on `main` via `gh api`. It prints the version string, or the sentinel
+`__CE_UPDATE_VERSION_FAILED__` if `gh` is unavailable or rate-limited.
 
 `scripts/currently-loaded-version.sh` and `scripts/marketplace-name.sh` parse
 `${CLAUDE_SKILL_DIR}` against the marketplace-cache layout
