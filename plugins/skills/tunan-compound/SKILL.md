@@ -61,6 +61,8 @@ When spawning subagents, pass the relevant file contents into the task prompt so
 
 **In interactive mode**, present the user with two options before proceeding, using the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to presenting options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question.
 
+**Alignment protocol.** When asking the sponsor to choose between options, follow the tunan-align protocol: offer at least 3 ranked options with the single best one pre-selected as the default — place it first and append `(Recommended)` to its label — so the sponsor lands on the optimal choice by accepting the default. Load the `tunan-align` skill for the full protocol. Never hand an open-ended choice back to the sponsor.
+
 ```
 1. Full (recommended) — the complete compound workflow. Researches,
    cross-references, and reviews your solution to produce documentation

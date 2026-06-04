@@ -18,6 +18,8 @@ Default to the platform's blocking question tool: `AskUserQuestion` in Claude Co
 
 Ask one question at a time. Prefer free-form responses for the substantive sections (problem, approach, persona); reserve single-select for routing decisions (which section to revisit). Each option label must be self-contained.
 
+**Alignment protocol.** When asking the sponsor to choose between options, follow the tunan-align protocol: offer at least 3 ranked options with the single best one pre-selected as the default — place it first and append `(Recommended)` to its label — so the sponsor lands on the optimal choice by accepting the default. Load the `tunan-align` skill for the full protocol. Never hand an open-ended choice back to the sponsor.
+
 ## Focus Hint
 
 <focus_hint> #$ARGUMENTS </focus_hint>

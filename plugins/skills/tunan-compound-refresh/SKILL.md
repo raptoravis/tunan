@@ -33,6 +33,8 @@ If invoked specifically to create or bootstrap `CONCEPTS.md` (e.g., "create a CO
 1. **Create CONCEPTS.md (build the concept map)** — seed the repo-wide concept map and commit it; skip only the docs/solutions classification phases (Phases 0–4). Read `references/concepts-vocabulary.md` and follow its **Seed goal** and **Scope of a seed** (repo-wide) rules: seed the project's core domain nouns from the declared domain model (schema, core types, primary models, top-level domain docs), each meeting the qualifying bar, the codebase setting the count. Write the preamble (see Phase 4.5), cluster per the organization rules, and run the Discoverability Check so `AGENTS.md`/`CLAUDE.md` surface the new file. Then **enter Phase 5 (Commit Changes)** to commit/PR the new `CONCEPTS.md` and any instruction-file edit through the same durable-write flow the refresh uses — do not leave the bootstrap uncommitted.
 2. **Run a refresh cycle** — proceed with the normal refresh flow below; `CONCEPTS.md` is seeded (if absent) and reconciled as part of Phase 4.5.
 
+**Alignment protocol.** When asking the sponsor to choose between options, follow the tunan-align protocol: offer at least 3 ranked options with the single best one pre-selected as the default — place it first and append `(Recommended)` to its label — so the sponsor lands on the optimal choice by accepting the default. Load the `tunan-align` skill for the full protocol. Never hand an open-ended choice back to the sponsor.
+
 In headless mode there is no user to ask: default to the refresh cycle (vocabulary is seeded and reconciled within Phase 4.5 regardless) and note in the report that a standalone repo-wide bootstrap was not run.
 
 ## Interaction Principles

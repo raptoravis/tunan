@@ -68,6 +68,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | [`/tunan-setup`](../../docs/skills/tunan-setup.md)                             | Diagnose environment, install missing tools, and bootstrap project config                                                                                                                                      |
 | [`/tunan-update`](../../docs/skills/tunan-update.md)                           | Check tunan plugin version and fix stale cache (Claude Code only)                                                                                                                                              |
 | [`/tunan-release-notes`](../../docs/skills/tunan-release-notes.md)             | Summarize recent tunan plugin releases, or answer a question about a past release with a version citation                                                                                                      |
+| `/tunan-align`                                                                 | AI-initiated alignment: at every decision point, surface at least 3 ranked options with the best pre-selected as the default, so the sponsor confirms the optimal choice in one tap. Invoked by other skills at decision points |
 
 ### Development Frameworks
 

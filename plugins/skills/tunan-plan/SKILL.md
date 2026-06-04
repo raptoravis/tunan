@@ -20,6 +20,8 @@ When asking the user a question, use the platform's blocking question tool: `Ask
 
 Ask one question at a time. Prefer a concise single-select choice when natural options exist.
 
+**Alignment protocol.** When asking the sponsor to choose between options, follow the tunan-align protocol: offer at least 3 ranked options with the single best one pre-selected as the default — place it first and append `(Recommended)` to its label — so the sponsor lands on the optimal choice by accepting the default. Load the `tunan-align` skill for the full protocol. Never hand an open-ended choice back to the sponsor.
+
 ## Feature Description
 
 <feature_description> #$ARGUMENTS </feature_description>
