@@ -1,30 +1,34 @@
 # Markdown Rendering
 
-This is a format-rendering reference — it describes how to render any
-artifact in markdown, independent of which skill is producing it.
+This reference describes how the requirement renders as the markdown
+**body of a `yunxing:req` GitHub issue**. The durable artifact is the issue,
+not a local file — there is no `.md`/`.html` file on disk and no exclusive
+output mode anymore.
 
-It is paired with a section contract (`plan-sections.md`,
-`brainstorm-sections.md`, etc.) that describes *what* the artifact contains.
-This reference describes *how* markdown specifically presents it. The same
-content rendered by different skills shares the same markdown principles.
+It is paired with a section contract (`brainstorm-sections.md`) that
+describes *what* the requirement contains. This reference describes *how*
+markdown specifically presents those sections inside the issue body.
 
 ## Hard invariants
 
-These hold regardless of which skill produced the artifact.
+These hold for every `yunxing:req` issue body.
 
-- **YAML frontmatter at the top of the file.** Standard `---` delimited block
-  containing the artifact's stable metadata (title, status, date, type, etc.
-  — exact fields are per-skill, defined in the section contract). Editable
-  in place; tools and agents that do status flips (`active → completed`)
-  update the YAML directly.
+- **Metadata as a fenced `yaml` block at the top of the body.** GitHub issues
+  have no frontmatter delimiters, so the stable metadata (e.g. `date`,
+  `topic`) renders as a fenced ```` ```yaml ```` block at the very top of the
+  issue body rather than a `---`-delimited frontmatter. Exact fields are
+  defined in `brainstorm-sections.md`. The block is editable in place;
+  agents that update the issue overwrite the body via
+  `gh issue edit <N> --body-file <tmpfile>`.
 - **ASCII identifiers in anchors.** Markdown headings auto-generate anchors
   from the heading text. Keep headings ASCII so anchors are predictable
   (`#implementation-units`, not `#implementación-units`).
 - **Repo-relative paths for file references.** Always. Never absolute paths
   — they break portability across machines, worktrees, teammates.
-- **No HTML mixed in.** Keep the markdown pure. No `<div>`, no `<details>`,
-  no inline `<style>`. If a layout idea only works as HTML, defer it to the
-  HTML rendering. Markdown stays markdown.
+- **No raw HTML layout.** Keep the body markdown. No `<div>`, no inline
+  `<style>`. GitHub renders a constrained markdown subset; `<details>` is
+  the one HTML element GitHub supports and is acceptable for collapsible
+  sections, but avoid raw layout HTML — it does not render in issue views.
 
 ## Format principles
 
@@ -138,11 +142,10 @@ flowchart TB
 (`TB` direction default — keeps diagrams narrow in source view and in
 narrow rendered viewports.)
 
-Markdown's diagram affordances are limited compared to HTML. For
+GitHub renders fenced `mermaid` blocks natively in issue bodies. For
 quantitative comparisons (bar charts, scatter plots) markdown has no
 native equivalent — use a table with the data and let prose or caption
-carry the interpretation. The richer visualization happens in the HTML
-rendering.
+carry the interpretation.
 
 ## Inline code and code blocks
 
@@ -173,35 +176,31 @@ Engineering process metadata stays out of the artifact:
 This information belongs in commit messages, tool output, and agent
 transcripts — not in the artifact a reader returns to weeks later.
 
-## Frontmatter shape
+## Metadata block shape
 
-Per-skill frontmatter fields are defined in each skill's section contract
-(`plan-sections.md` lists plan frontmatter; `brainstorm-sections.md` lists
-brainstorm frontmatter). Common rules:
+The metadata fields are defined in `brainstorm-sections.md` (`date`,
+`topic`). Common rules:
 
-- YAML at the top of the file, delimited by `---` on its own line above
-  and below.
-- Field names in lowercase snake_case (`status`, `created_at`, not
-  `Status`, `CreatedAt`).
-- **Status lifecycle is per-contract.** When the section contract
-  defines a `status` field with a lifecycle (plans use
-  `active → completed`, flipped by yunxing-work at shipping time via direct
-  YAML edit), it is editable in place. When the section contract does
-  not define a status lifecycle (brainstorms, for example, have no
-  `active → completed` flip — they are upstream of plans and
-  referenced via the plan's `origin:`), do not introduce one.
-- Stable across artifact revisions — never rename or repurpose a field.
+- Render as a fenced ```` ```yaml ```` block at the very top of the issue
+  body — GitHub issues have no `---` frontmatter delimiters.
+- Field names in lowercase snake_case (`created_at`, not `CreatedAt`).
+- Brainstorm requirements have no `status` lifecycle — they are upstream of
+  plans and referenced from a plan by the req issue `#<N>`. Do not introduce
+  a `status` field. (Issue open/closed state is GitHub's own lifecycle, not
+  a body field.)
+- Stable across revisions — never rename or repurpose a field.
 
 ## Post-write audit
 
-Before declaring the markdown file written, scan it for these common
-slips:
+Before declaring the issue body written (or updated), scan it for these
+common slips:
 
 - All stable IDs are plain-prefix format, not bolded.
-- No HTML elements mixed in.
+- No raw HTML layout elements.
 - All file paths are repo-relative.
-- Horizontal rule separators between H2s (for Standard / Deep artifacts).
+- Horizontal rule separators between H2s (for Standard / Deep requirements).
 - No process exhaust (Phase X notes, Next Steps pointers, provenance
   lines).
 - Tables only where 5+ uniform-shape items justify them.
-- Frontmatter has all the per-skill required fields with reasonable values.
+- The leading ```` ```yaml ```` block has the required fields (`date`,
+  `topic`) with reasonable values.

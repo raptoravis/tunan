@@ -10,6 +10,8 @@ This template describes the Phase 4 interactive presentation — what the user s
 
 **Vocabulary note.** Internal enum values (`safe_auto`, `gated_auto`, `manual`, `FYI`) live in the schema and synthesis pipeline. User-facing rendered text uses plain-language labels instead: fixes (for `safe_auto`), proposed fixes (for `gated_auto`), decisions (for `manual`), and FYI observations (for `FYI`). The `Tier` column in the tables below is the one place that still names the internal enum so the user can see the synthesis decision; everything else reads as plain language.
 
+**Document line.** The `**Document:**` header names the review source. For a yunxing artifact issue, show the label, issue number, title, and URL — e.g. `yunxing:plan issue #142 — "User auth plan" (<url>)`. For a local markdown file (non-artifact source), show the file path. The URL/path lets the reader open the source the review ran against.
+
 **Confidence column.** The `Confidence` column shows the integer anchor value (`50`, `75`, or `100`) — never a decimal or percentage. Anchor `50` = advisory (routed to FYI); anchor `75` = verified, will hit in practice; anchor `100` = certain, evidence directly confirms. Anchors `0` and `25` are dropped by synthesis before this layer and never appear in the rendered output. Cross-persona agreement promotes by one anchor step; when this happens, the Reviewer column notes it (e.g., `coherence, feasibility (+1 anchor)`).
 
 ## Example
@@ -17,7 +19,7 @@ This template describes the Phase 4 interactive presentation — what the user s
 ```markdown
 ## Document Review Results
 
-**Document:** docs/plans/2026-03-15-feat-user-auth-plan.md
+**Document:** yunxing:plan issue #142 — "User auth plan" (https://github.com/owner/repo/issues/142)
 **Type:** plan
 **Reviewers:** coherence, feasibility, security-lens, scope-guardian
 - security-lens -- plan adds public API endpoint with auth flow

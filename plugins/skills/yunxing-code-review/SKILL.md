@@ -26,7 +26,7 @@ Parse `$ARGUMENTS` for optional tokens. Strip each recognized token before inter
 | `mode:headless`     | `mode:headless`                                   | **Deprecated alias** for `mode:agent`                                                                                                                                                             |
 | `mode:report-only`  | `mode:report-only`                                | **Deprecated — ignored.** Former no-artifacts mode; default behavior is review-only without checkout                                                                                              |
 | `base:<sha-or-ref>` | `base:abc1234` or `base:origin/main`              | Diff base on the **current checkout** (explicit; skips auto base detection)                                                                                                                       |
-| `plan:<path>`       | `plan:docs/plans/2026-03-25-001-feat-foo-plan.md` | Plan file for requirements verification (explicit)                                                                                                                                                |
+| `plan:#<N>`         | `plan:#812` or a `yunxing:plan` issue URL         | `yunxing:plan` issue (number or URL) for requirements verification (explicit); read it with `gh issue view`                                                                                                                                                |
 
 **Mode alias:** `mode:headless` normalizes to `mode:agent`. `mode:agent` + `mode:headless` is not a conflict.
 
@@ -125,13 +125,13 @@ Every review spawns all 4 always-on personas plus the 2 CE always-on agents, the
 
 ## Protected Artifacts
 
-The following paths are yunxing pipeline artifacts and must never be flagged for deletion, removal, or gitignore by any reviewer:
+yunxing pipeline artifacts are durable GitHub issues distinguished by label, not local files. They must never be flagged for closing, deletion, or any "stop creating these" cleanup by any reviewer:
 
-- `docs/brainstorms/*` -- requirements documents created by yunxing-brainstorm
-- `docs/plans/*.md` -- plan files created by yunxing-plan (decision artifacts; execution progress is derived from git, not stored in plan bodies)
-- `docs/solutions/*.md` -- solution documents created during the pipeline
+- `yunxing:req` issues -- requirements created by yunxing-brainstorm / yunxing-newreq
+- `yunxing:plan` issues -- plans created by yunxing-plan (decision artifacts; execution progress is derived from git, not stored in plan bodies)
+- `yunxing:solution` issues -- solution/learning documents created during the pipeline
 
-If a reviewer flags any file in these directories for cleanup or removal, discard that finding during synthesis.
+If a reviewer flags any of these issues (or the `gh issue` calls that create or update them) for closing, deletion, or removal, discard that finding during synthesis. These artifacts are not local `docs/` files — a finding that recommends deleting or gitignoring a `docs/brainstorms`, `docs/plans`, or `docs/solutions` path is moot and should also be discarded.
 
 ## How to Run
 
@@ -270,9 +270,9 @@ Pass this to every reviewer in their spawn prompt. Intent shapes _how hard each 
 
 Locate the plan document so Stage 6 can verify requirements completeness. Check these sources in priority order — stop at the first hit:
 
-1. **`plan:` argument.** If the caller passed a plan path, use it directly. Read the file to confirm it exists.
-2. **PR body.** If PR metadata was fetched in Stage 1, scan the body for paths matching `docs/plans/*.md`. If exactly one match is found and the file exists, use it as `plan_source: explicit`. If multiple plan paths appear, treat as ambiguous — demote to `plan_source: inferred` for the most recent match that exists on disk, or skip if none exist or none clearly relate to the PR title/intent. Always verify the selected file exists before using it — stale or copied plan links in PR descriptions are common.
-3. **Auto-discover.** Extract 2-3 keywords from the branch name (e.g., `feat/onboarding-skill` -> `onboarding`, `skill`). Glob `docs/plans/*` and filter filenames containing those keywords. If exactly one match, use it. If multiple matches or the match looks ambiguous (e.g., generic keywords like `review`, `fix`, `update` that could hit many plans), **skip auto-discovery** — a wrong plan is worse than no plan. If zero matches, skip.
+1. **`plan:` argument.** If the caller passed a `yunxing:plan` issue ref (`#<N>` or URL), read it with `gh issue view <N> --json title,body,url,labels` to confirm it exists and carries the `yunxing:plan` label.
+2. **PR body.** If PR metadata was fetched in Stage 1, scan the body for `yunxing:plan` issue references (`#<N>` or issue URLs). For a candidate, confirm with `gh issue view <N> --json title,body,url,labels` that it exists and is labeled `yunxing:plan`. If exactly one such issue is referenced, use it as `plan_source: explicit`. If multiple plan issues appear, treat as ambiguous — demote to `plan_source: inferred` for the one whose title most clearly relates to the PR title/intent, or skip if none clearly relate. Always verify the issue exists and is labeled before using it — stale or copied issue links in PR descriptions are common.
+3. **Auto-discover.** Extract 2-3 keywords from the branch name (e.g., `feat/onboarding-skill` -> `onboarding`, `skill`). Discover the plan issue with `gh issue list --label "yunxing:plan" --search "<keywords>" --json number,title,url`. If exactly one match, use it. If multiple matches or the match looks ambiguous (e.g., generic keywords like `review`, `fix`, `update` that could hit many plans), **skip auto-discovery** — a wrong plan is worse than no plan. If zero matches, skip.
 
 **Confidence tagging:** Record how the plan was found:
 
@@ -281,7 +281,7 @@ Locate the plan document so Stage 6 can verify requirements completeness. Check 
 - Multiple/ambiguous PR body matches -> `plan_source: inferred` (lower confidence)
 - Auto-discover with single unambiguous match -> `plan_source: inferred` (lower confidence)
 
-If a plan is found, read its **Requirements** section — `## Requirements` in current plans, `## Requirements Trace` in legacy ones — and the R-IDs (R1, R2, etc.) listed there, plus **Implementation Units** (current numeric subsections such as `### U1.`, `### U2.`, or `### Unit 1:` under `## Implementation Units`; legacy bullet or checkbox unit entries under that section also count). Store the extracted requirements list and `plan_source` for Stage 6. Do not block the review if no plan is found — requirements verification is additive, not required.
+If a plan issue is found, read its body (`gh issue view <N> --json body`) and locate the **Requirements** section — `## Requirements` in current plans, `## Requirements Trace` in legacy ones — and the R-IDs (R1, R2, etc.) listed there, plus **Implementation Units** (current numeric subsections such as `### U1.`, `### U2.`, or `### Unit 1:` under `## Implementation Units`; legacy bullet or checkbox unit entries under that section also count). Store the extracted requirements list and `plan_source` for Stage 6. Do not block the review if no plan is found — requirements verification is additive, not required.
 
 ### Stage 3: Select reviewers
 
@@ -535,7 +535,7 @@ Per-severity tables are **5 columns** — `Route` is not shown here (it appears 
      Omit this section entirely when no plan was found — do not mention the absence of a plan.
 5. **Actionable Findings.** Include when the actionable queue is non-empty — findings the caller should address (`gated_auto` / `manual` with `downstream-resolver`), plus anything Stage 5c chose not to apply. In default mode, findings already applied appear in the Applied section, not here.
 6. **Pre-existing.** Separate section, does not count toward verdict.
-7. **Learnings & Past Solutions.** Surface yunxing-learnings-researcher results: if past solutions are relevant, flag them as "Known Pattern" with links to docs/solutions/ files.
+7. **Learnings & Past Solutions.** Surface yunxing-learnings-researcher results: the researcher searches `yunxing:solution` issues, so if a past solution is relevant, flag it as "Known Pattern" with its `#<N>` issue link.
 8. **Agent-Native Gaps.** Surface yunxing-agent-native-reviewer results. Omit section if no gaps found.
 9. **Deployment Notes.** If yunxing-deployment-verification-agent ran, surface the key Go/No-Go items: blocking pre-deploy checks, the most important verification queries, rollback caveats, and monitoring focus areas. Keep the checklist actionable rather than dropping it into Coverage. Schema drift appears in the findings tables as `data-migration` P1 rows — do not add a separate Schema Drift section.
 10. **Coverage.** Applied count (when Stage 5c ran), suppressed count by anchor (e.g., "N findings suppressed at anchor 50, M at anchor 25"), mode-aware demotion count, validator drop count and reasons (when Stage 5b ran), any P0/P1 with degraded validation (kept on validator infra failure), validator over-budget drops (when the 15-cap fired), residual risks, testing gaps, failed/timed-out reviewers, and inferred-intent uncertainty when applicable.
@@ -596,7 +596,7 @@ Before delivering the review, verify:
 2. **No false positives from skimming.** For each finding, verify the surrounding code was actually read. Check that the "bug" isn't handled elsewhere in the same function, that the "unused import" isn't used in a type annotation, that the "missing null check" isn't guarded by the caller.
 3. **Severity is calibrated.** A style nit is never P0. A SQL injection is never P3. Re-check every severity assignment.
 4. **Line numbers are accurate.** Verify each cited line number against the file content. A finding pointing to the wrong line is worse than no finding.
-5. **Protected artifacts are respected.** Discard any findings that recommend deleting or gitignoring files in `docs/brainstorms/`, `docs/plans/`, or `docs/solutions/`.
+5. **Protected artifacts are respected.** Discard any findings that recommend closing, deleting, or otherwise removing the `yunxing:req`, `yunxing:plan`, or `yunxing:solution` issues (or the `gh issue` calls that maintain them). A finding that recommends deleting or gitignoring a `docs/brainstorms`, `docs/plans`, or `docs/solutions` path is moot — those artifacts are GitHub issues now — and should also be discarded.
 6. **Findings don't duplicate linter output.** Don't flag things the project's linter/formatter would catch (missing semicolons, wrong indentation). Focus on semantic issues.
 
 ## Language-Aware Conditionals

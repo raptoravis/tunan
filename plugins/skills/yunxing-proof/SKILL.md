@@ -26,10 +26,47 @@ Set the display name once per doc session by posting to presence with the `X-Age
 
 ## Human-in-the-Loop Review Mode
 
-Human-in-the-loop iteration over an existing local markdown file: upload to Proof, let the user annotate in Proof's web UI, ingest feedback as in-thread replies and agreed edits, and sync the final doc back to disk. Two entry points, identical mechanics — load `references/hitl-review.md` for the full loop spec (invocation contract, mark classification, idempotent ingest passes, exception-based terminal reporting, end-sync atomic write) in either case:
+Human-in-the-loop iteration over a markdown source: upload to Proof, let the user annotate in Proof's web UI, ingest feedback as in-thread replies and agreed edits, and sync the final doc back to the source. Load `references/hitl-review.md` for the full loop spec (invocation contract, source resolution, mark classification, idempotent ingest passes, exception-based terminal reporting, end-sync write).
 
-- **Direct user request** — a bare user phrase naming a local markdown file and asking to iterate collaboratively via Proof: "share this to proof so we can iterate", "iterate with proof on this doc", "HITL this file with me", "let's get feedback on this in proof", "open this in proof editor so I can review". The file is whichever markdown the user just created, edited, or referenced; if ambiguous, ask which file. This is a first-class entry point — do not require an upstream caller.
-- **Upstream skill handoff** — `yunxing-brainstorm`, `yunxing-ideate`, or `yunxing-plan` finishes a draft and hands it off for human review before the next phase, passing the file path and title explicitly.
+The **source** is one of two shapes:
+
+- **yunxing artifact issue** (primary for the upstream handoff path) — durable requirements/plan/solution/idea/pulse artifacts are stored as GitHub issues distinguished by label (`yunxing:req`, `yunxing:plan`, `yunxing:solution`, `yunxing:idea`, `yunxing:pulse`), not as local files under `docs/`. Run GH PREFLIGHT, export the issue body to a transient temp markdown file (OS temp dir, never under `docs/`), run the Proof HITL flow on that temp file, and on proceed/sync write the reviewed markdown BACK to the issue body via `gh issue edit <N> --body-file <temp-file>`.
+- **local markdown file** ("elsewhere" / non-artifact source) — a markdown file the user is working on that is not a yunxing artifact. Upload it, run the flow, and on sync write back to that file. This keeps the direct-user "share this file to proof" path working.
+
+Two entry points, identical mechanics:
+
+- **Direct user request** — a bare user phrase naming a source and asking to iterate collaboratively via Proof: "share this to proof so we can iterate", "iterate with proof on this doc", "HITL this with me", "let's get feedback on this in proof", "open this in proof editor so I can review". The source is whichever markdown the user just created, edited, or referenced — a local file, or a yunxing artifact issue named by `#<N>` or URL; if ambiguous, ask which source. This is a first-class entry point — do not require an upstream caller.
+- **Upstream skill handoff** — `yunxing-brainstorm`, `yunxing-ideate`, or `yunxing-plan` finishes a draft (now stored as a `yunxing:*` issue) and hands it off for human review before the next phase, passing the **issue ref** and title explicitly. "Source" is the issue ref and "sync back" targets the issue body.
+
+### GH PREFLIGHT (issue source only)
+
+Before any issue read or write, verify the GitHub CLI is usable. Run each check as a single simple command and abort with guidance if any fails — never fall back to writing a local `docs/` file:
+
+```bash
+gh --version
+gh auth status
+gh repo view --json nameWithOwner
+```
+
+If `gh` is missing, `gh auth status` is non-zero, or the repo does not resolve, stop and tell the user how to fix it (install `gh`, `gh auth login`, or run from inside a GitHub-backed repo). Do not silently degrade to a local file — the artifact lives in the issue.
+
+### Export an issue to a temp file (issue source)
+
+```bash
+gh issue view <N> --json title,body,url
+```
+
+Use `title` as the Proof doc title (overridable by an explicit caller title), `body` as the markdown, and echo `url` in the terminal report. Write `body` to a transient temp markdown file under the OS temp dir (`${TMPDIR:-/tmp}` on macOS/Linux, `$env:TEMP` on Windows) — e.g. `${TMPDIR:-/tmp}/yunxing-proof-<N>.md`. That temp file is the HITL "source file" for the rest of the flow.
+
+### Sync back to the issue (issue source)
+
+On end-sync, write the reviewed Proof markdown to the temp file (the existing atomic-write recipe), then push it to the issue body:
+
+```bash
+gh issue edit <N> --body-file <temp-file>
+```
+
+This replaces the file-write-back for issue sources. See `references/hitl-review.md` Phase 5 for the full end-sync flow.
 
 ## Web API (Primary for Sharing)
 
@@ -434,7 +471,7 @@ curl -X POST "https://www.proofeditor.ai/api/agent/$SLUG/edit/v2?return=minimal"
 
 Sync the current Proof doc state to a local markdown file. Used by:
 
-- HITL review end-sync (`references/hitl-review.md` Phase 5) when the doc originated from a local file
+- HITL review end-sync (`references/hitl-review.md` Phase 5). For a **local source**, this writes the reviewed markdown back to the user's file. For a **yunxing artifact issue source**, the same atomic write targets the transient temp file, which is then pushed to the issue body via `gh issue edit <N> --body-file <temp-file>` — the durable artifact is the issue, not a `docs/` file.
 - Ad-hoc snapshots of a Proof doc to disk (before closing the tab, archiving, handing off)
 - Refreshing a local working copy against the live Proof version
 

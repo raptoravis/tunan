@@ -55,7 +55,7 @@ The block below is the literal content to write. Replace every `{{placeholder}}`
 - {{3-5 items max; trim if thin}}
 
 ---
-_Source windows: analytics [{{start}} -> {{end}}], tracing [{{start}} -> {{end}}], payments [{{start}} -> {{end}}]. Trailing buffer: 15m. Saved to `docs/pulse-reports/{{YYYY-MM-DD}}_{{HH-MM}}.md`._
+_Source windows: analytics [{{start}} -> {{end}}], tracing [{{start}} -> {{end}}], payments [{{start}} -> {{end}}]. Trailing buffer: 15m. Stored as GitHub issue labeled `yunxing:pulse`._
 ~~~
 
 ## Variations
@@ -67,7 +67,7 @@ _Source windows: analytics [{{start}} -> {{end}}], tracing [{{start}} -> {{end}}
 
 ## Post-write checklist
 
-Before saving and surfacing to chat:
+Before creating the pulse issue and surfacing to chat:
 
 - [ ] Total length is 30-40 lines (give or take 5).
 - [ ] Headlines exist and lead with the most notable item.
@@ -76,14 +76,15 @@ Before saving and surfacing to chat:
 - [ ] Top 5 errors (or the configured count), not top 10. Trim if the query returned more.
 - [ ] Strategy metrics carried forward from config are rendered in Usage, or marked `no data`.
 - [ ] Followups are specific - each one should be actionable as a sentence.
-- [ ] Filename and in-file timestamp use the same wall-clock time.
+- [ ] Issue title is `[pulse] <window>` (e.g., `[pulse] 2026-05-28..2026-06-04`) and the in-body window matches.
 
 ## What to surface in chat
 
-After writing the file, post back:
+After creating the pulse issue, post back:
 
 - The Headlines section verbatim
 - The top Followup, if action looks urgent
-- The saved file path so the user can open the full report
+- The issue URL returned by `gh issue create` so the user can open the full report
+- A reminder that `gh issue list --label yunxing:pulse` browses past pulses
 
-Do not paste the full report into chat - the file is the artifact.
+Do not paste the full report into chat - the issue is the artifact.

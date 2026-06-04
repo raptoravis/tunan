@@ -5,7 +5,7 @@
 ## Step 3 — invoke review
 
 ```
-yunxing-code-review mode:agent plan:<plan-path-from-step-1>
+yunxing-code-review mode:agent plan:<plan-issue-ref-from-step-1>
 ```
 
 Read the **Actionable Findings** summary and artifact path. Do not pass `mode:autofix`.

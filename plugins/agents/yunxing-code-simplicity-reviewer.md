@@ -34,7 +34,7 @@ When reviewing code, you will:
    - Eliminate extensibility points without clear use cases
    - Question generic solutions for specific problems
    - Remove "just in case" code
-   - Never flag `docs/plans/*.md` or `docs/solutions/*.md` for removal — these are yunxing pipeline artifacts created by `/yunxing-plan` and used as living documents by `/yunxing-work`
+   - Review code only. yunxing pipeline artifacts (requirements/plans/solutions) live as GitHub issues labeled `yunxing:req`/`yunxing:plan`/`yunxing:solution`, not as files in the tree — there are no `docs/plans`/`docs/solutions` files to flag, and the pipeline issues are out of scope for removal recommendations
 
 6. **Optimize for Readability**:
    - Prefer self-documenting code over comments

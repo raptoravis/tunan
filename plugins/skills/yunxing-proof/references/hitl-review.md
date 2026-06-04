@@ -1,8 +1,17 @@
 # HITL Review Mode
 
-Human-in-the-loop iteration loop for a markdown document shared via Proof. Invoked either by an upstream skill (`yunxing-brainstorm`, `yunxing-ideate`, `yunxing-plan`) handing off a draft it produced, or directly by the user asking to iterate on an existing markdown file they already have on disk ("share this to proof and iterate", "HITL this doc with me"). Mechanics are identical in both cases: upload the local doc, let the user annotate in Proof's web UI, ingest feedback as in-thread replies and agreed edits, and sync the final doc back to disk.
+Human-in-the-loop iteration loop for a markdown document shared via Proof. Invoked either by an upstream skill (`yunxing-brainstorm`, `yunxing-ideate`, `yunxing-plan`) handing off a draft artifact it produced (now stored as a `yunxing:*` GitHub issue), or directly by the user asking to iterate on a source they already have ("share this to proof and iterate", "HITL this doc with me"). Mechanics are identical in both cases: upload the markdown to Proof, let the user annotate in Proof's web UI, ingest feedback as in-thread replies and agreed edits, and sync the final doc back to the source.
 
-This mode assumes a local markdown file exists. There is no "from scratch" entry — if the user wants a fresh doc, create one with the normal proof create workflow first, then invoke HITL.
+## Source shapes
+
+The source is one of two shapes (see "Source shapes" in `SKILL.md` for the full contract):
+
+- **yunxing artifact issue** — a durable requirements/plan/solution/idea/pulse artifact stored as a GitHub issue (`yunxing:req` / `yunxing:plan` / `yunxing:solution` / `yunxing:idea` / `yunxing:pulse`), named by `#<N>` or a GitHub issue URL. Run GH PREFLIGHT (`SKILL.md`), export the issue body to a transient temp markdown file under the OS temp dir (never under `docs/`), and treat that temp file as the HITL source file. On end-sync, push the reviewed markdown to the issue body via `gh issue edit <N> --body-file <temp-file>`. This is the primary path for the upstream handoff.
+- **local markdown file** — a non-artifact markdown file the user already has on disk. The source file IS that path; end-sync writes back to it. This keeps the "elsewhere" / direct-user path working.
+
+In both shapes the HITL loop operates on a real on-disk file (the user's file, or the temp export). The only differences are how the source file is obtained (Phase 1) and where end-sync writes the result (Phase 5).
+
+This mode assumes a markdown source already exists. There is no "from scratch" entry — if the user wants a fresh doc, create one with the normal proof create workflow first, then invoke HITL.
 
 Load this file when HITL review mode is requested — whether by an upstream caller or directly by the user.
 
@@ -12,8 +21,8 @@ Load this file when HITL review mode is requested — whether by an upstream cal
 
 Inputs:
 
-- **Source file path** (required): absolute or repo-relative path to the local markdown file. When an upstream caller invokes this mode, it passes the path explicitly. When the user invokes directly ("share that doc to proof and let's iterate"), derive the path from conversation context — the file the user just referenced, created, or edited. If ambiguous, ask the user which file.
-- **Doc title** (required): display title for the Proof doc. Upstream callers pass this explicitly; on direct-user invocation, default to the file's H1 heading, falling back to the filename (minus extension) if no H1 exists.
+- **Source** (required): either a **yunxing artifact issue ref** (`#<N>` or a GitHub issue URL) or a **local markdown file path** (absolute or repo-relative). When an upstream caller invokes this mode, it passes the issue ref explicitly. When the user invokes directly ("share that doc to proof and let's iterate"), derive the source from conversation context — the issue or file the user just referenced, created, or edited. If ambiguous, ask the user which source.
+- **Doc title** (required): display title for the Proof doc. Upstream callers pass this explicitly. For an issue source with no explicit title, default to the issue `title` from `gh issue view`. For a local source with no explicit title, default to the file's H1 heading, falling back to the filename (minus extension) if no H1 exists.
 - **Recommended next step** (optional, caller-specific): short string the caller wants echoed in the final terminal output (e.g., "Recommended next: `/yunxing-plan`"). Not used on direct-user invocation — the terminal report simply summarizes the iteration and asks what's next.
 
 Agent identity is fixed, not a parameter: every API call uses agent ID `ai:yunxing` and display name `Compound Engineering`. Callers do not override this.
@@ -21,8 +30,9 @@ Agent identity is fixed, not a parameter: every API call uses agent ID `ai:yunxi
 Return shape (used by upstream callers to resume their handoff; also shown to the user in the terminal when invoked directly):
 
 - `status`: `proceeded` | `done_for_now` | `aborted`
-- `localPath`: the source file path (same as input)
-- `localSynced`: `true` if Phase 5 wrote the reviewed doc back to `localPath`; `false` if the user declined the sync and local is stale. Only present on `proceeded`.
+- `source`: the source identifier — `issue:#<N>` for an issue source, or the file path for a local source
+- `sourceUrl`: for an issue source, the issue URL; omitted for a local source
+- `synced`: `true` if Phase 5 wrote the reviewed doc back to the source (issue body for an issue source, file for a local source); `false` if the user declined the sync and the source is stale. Only present on `proceeded`.
 - `docUrl`: the tokenUrl for the Proof doc
 - `openThreadCount`: number of unresolved threads still in the doc
 - `revision`: final doc revision after end-sync (only on `proceeded`)
@@ -31,7 +41,10 @@ Return shape (used by upstream callers to resume their handoff; also shown to th
 
 ## Phase 1: Upload and Wait
 
-1. Read the local markdown file into memory. Remember this content as `uploadedMarkdown` — Phase 5 compares against it to detect whether anything changed during the session.
+0. **Resolve the source file.**
+   - **Issue source:** run GH PREFLIGHT (`SKILL.md`). Then `gh issue view <N> --json title,body,url` and write `body` to a transient temp markdown file under the OS temp dir (e.g. `${TMPDIR:-/tmp}/yunxing-proof-<N>.md` on macOS/Linux, `$env:TEMP\yunxing-proof-<N>.md` on Windows). This temp file is the "source file" (`$SOURCE`) for the rest of the flow. Record the issue number and `url` for Phase 5 sync-back and the terminal report. Use the issue `title` as the doc title unless the caller passed an explicit title.
+   - **Local source:** the source file (`$SOURCE`) is the user's file path directly. No export step.
+1. Read the source file into memory. Remember this content as `uploadedMarkdown` — Phase 5 compares against it to detect whether anything changed during the session.
 2. `POST https://www.proofeditor.ai/share/markdown` with `{title, markdown}` → capture `slug`, `accessToken`, `tokenUrl`
 3. `POST /api/agent/{slug}/presence` with `X-Agent-Id: ai:yunxing`, `x-share-token: <token>`, body `{"name":"Compound Engineering","status":"reading","summary":"Uploaded doc for review"}`
 4. Display prominently in the terminal:
@@ -42,7 +55,7 @@ Return shape (used by upstream callers to resume their handoff; also shown to th
 
 5. Ask the user with the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to presenting options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question.
 
-   **Question:** "Highlight text in Proof to leave a comment. The agent will read each one, reply in-thread or apply the fix, then sync changes back to your local file. What's next?"
+   **Question:** "Highlight text in Proof to leave a comment. The agent will read each one, reply in-thread or apply the fix, then sync changes back to the source (issue #<N>'s body for an artifact, or your local file). What's next?"
 
    **Options:**
    - **I'm done with feedback — read it and apply**
@@ -249,14 +262,14 @@ Offer options that cover these intents — use concrete user-facing labels, not 
 
 - **Discuss** → `Discuss — walk through the open threads in terminal`
   Talk through open threads in the terminal; the agent echoes decisions back to Proof threads. Only useful when escalations are open.
-- **Proceed** → `Save — save the reviewed doc back to the local file`
+- **Proceed** → `Save — sync the reviewed doc back to the source` (name the concrete target in the label: `Save — sync back to issue #<N>` for an issue source, `Save — sync back to the local file` for a local source)
   Go to Phase 5 end-sync. If escalations are still open, name that in the label (e.g., `Save with 3 threads still open`) so the user is accepting the tradeoff explicitly instead of via a nested confirm.
 - **Another pass** → `Re-check — look for new comments in Proof`
   Re-read state and re-ingest. Worth offering even after a clean pass, since the user may have added comments while the report rendered.
 - **Done for now** → `Pause — stop without saving`
   Stop without syncing; return to caller with `status: done_for_now`, no end-sync.
 
-The sync confirmation happens in Phase 5 regardless of whether threads are open — this step only asks what the user wants next, not whether to overwrite the local file.
+The sync confirmation happens in Phase 5 regardless of whether threads are open — this step only asks what the user wants next, not whether to overwrite the source (the issue body or the local file).
 
 ---
 
@@ -268,28 +281,37 @@ Runs when the user selects **Proceed**. Before prompting anything, check whether
 
 2. Compare `state.markdown` to `uploadedMarkdown` (captured in Phase 1).
 
-   **If identical** — no content changes happened during the session. Skip the sync prompt entirely. Display:
+   **If identical** — no content changes happened during the session. Skip the sync prompt entirely. Display one of:
+
+   Issue source:
+
+   ```
+   No changes to sync. Issue #<N> is unchanged.
+   Doc: <tokenUrl>
+   ```
+
+   Local source:
 
    ```
    No changes to sync. Local file is unchanged.
    Doc: <tokenUrl>
    ```
 
-   Set presence `status: completed`, summary `"Review complete, no changes"`. Return to the caller with `status: proceeded`, `localSynced: true` (local matches Proof — no write needed, local is not stale), `revision: <state.revision>`, and the rest of the standard fields.
+   Set presence `status: completed`, summary `"Review complete, no changes"`. Return to the caller with `status: proceeded`, `synced: true` (source matches Proof — no write needed, source is not stale), `revision: <state.revision>`, and the rest of the standard fields.
 
    **If different** — continue to step 3.
 
 3. Ask with the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to presenting options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question.
 
-   **Question:** "Sync the reviewed doc back to `<localPath>`? Proof has your review changes; local still has the pre-review copy."
+   **Question:** name the concrete sync target — for an issue source, "Sync the reviewed doc back to issue #<N>'s body? Proof has your review changes; the issue still has the pre-review copy." For a local source, "Sync the reviewed doc back to `<sourcePath>`? Proof has your review changes; local still has the pre-review copy."
 
    **Options:**
    - **Yes, sync now** (default, recommended)
-   - **Not yet, I'll pull it later** (returns to caller with `localSynced: false`)
+   - **Not yet, I'll pull it later** (returns to caller with `synced: false`)
 
-   Why the extra prompt: the user may have started review hours ago and lost track of the local file at stake. A brief confirm makes the file write visible rather than a silent side-effect of clicking Proceed earlier. The caller signals via `localSynced` so downstream workflows can warn that local is stale.
+   Why the extra prompt: the user may have started review hours ago and lost track of the source at stake. A brief confirm makes the write visible rather than a silent side-effect of clicking Proceed earlier. The caller signals via `synced` so downstream workflows can warn that the source is stale.
 
-4. On **Yes, sync now**, write the fetched markdown to local — see `Workflow: Pull a Proof Doc to Local` in `SKILL.md`:
+4. On **Yes, sync now**, first write the fetched markdown to the source file (`$SOURCE` — the user's file for a local source, or the temp export for an issue source) — see `Workflow: Pull a Proof Doc to Local` in `SKILL.md`:
 
    ```bash
    # $STATE_TMP is the temp file holding the /state response from step 1.
@@ -300,31 +322,48 @@ Runs when the user selects **Proceed**. Before prompting anything, check whether
 
    Stream `.markdown` bytes directly from the saved state file with `jq -jr` — do not capture the markdown into a shell variable, since `$(...)` would strip trailing newlines and corrupt the write. `$REVISION` (extracted separately in step 1) is safe to keep as a variable; it's an opaque scalar.
 
-   On **Not yet**, skip the write (still clean up `$STATE_TMP`).
+   **Issue source — push the temp file to the issue body:**
 
-5. Set presence `status: completed`, summary `"Review synced to <localPath>"` (or `"Review complete, local not updated"` if sync was declined) so the Proof UI shows the loop has finished.
+   ```bash
+   gh issue edit <N> --body-file "$SOURCE"
+   ```
+
+   This overwrites the issue body with the reviewed markdown. The temp file is the durable artifact's staging area, not a durable file — `docs/` is never written. (Optionally, review notes that are not part of the doc body can be posted as `gh issue comment <N> --body-file <notes-file>` instead.)
+
+   On **Not yet**, skip the write/push (still clean up `$STATE_TMP`).
+
+5. Set presence `status: completed`. Summary: `"Review synced to issue #<N>"` / `"Review synced to <sourcePath>"` when synced, or `"Review complete, source not updated"` when declined, so the Proof UI shows the loop has finished.
 
 6. Display one of:
 
-   Synced:
+   Synced (issue source):
 
    ```
-   Doc synced to <localPath> (revision <N>).
+   Doc synced to issue #<N> (revision <N>).
+   Issue: <issueUrl>
+   Doc: <tokenUrl>
+   ```
+
+   Synced (local source):
+
+   ```
+   Doc synced to <sourcePath> (revision <N>).
    Doc: <tokenUrl>
    ```
 
    Declined:
 
    ```
-   Review complete. Local file kept as-is — pull from Proof when ready.
+   Review complete. Source kept as-is — sync from Proof when ready.
    Doc: <tokenUrl>
    ```
 
 7. Return to the caller with:
    ```
    status: proceeded
-   localPath: <source>
-   localSynced: true | false
+   source: issue:#<N> | <sourcePath>
+   sourceUrl: <issueUrl>   # issue source only
+   synced: true | false
    docUrl: <tokenUrl>
    openThreadCount: <K>
    revision: <N>

@@ -1,6 +1,8 @@
 # Open Questions Deferral
 
-This reference defines the Defer action's in-doc append mechanic. When the user chooses Defer on a finding (from the walk-through or from the bulk-preview Append-to-Open-Questions path), an entry for that finding appends to a `## Deferred / Open Questions` section at the end of the document under review.
+This reference defines the Defer action's in-doc append mechanic. When the user chooses Defer on a finding (from the walk-through or from the bulk-preview Append-to-Open-Questions path), an entry for that finding appends to a `## Deferred / Open Questions` section at the end of the working file.
+
+The working file is the issue body markdown fetched to the OS temp dir (issue source) or the local markdown file (local source) — see "Source resolution" in `SKILL.md`. All append mechanics below operate on that file via the platform's edit tool. For an issue source, appends become durable on the issue body only when the end-of-walk-through SYNC-BACK push (`gh issue edit <N> --body-file <working-file>`, see `references/walkthrough.md`) runs — there is no per-append `gh` call. For a local source the working file IS the durable artifact, so each append is immediately durable.
 
 Interactive mode only. Invoked by `references/walkthrough.md` (per-finding Defer option) and `references/bulk-preview.md` (routing option C Proceed).
 

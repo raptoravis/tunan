@@ -63,24 +63,35 @@ When the user picks an option in Phase 6 that requires a durable record (Open an
 
 **Mode-determined defaults:**
 
-| Action             | Repo mode default                              | Elsewhere mode default                    |
-| ------------------ | ---------------------------------------------- | ----------------------------------------- |
-| Save               | `docs/ideation/YYYY-MM-DD-<topic>-ideation.md` | Proof                                     |
-| Share              | Proof (additional)                             | Proof (primary)                           |
-| Brainstorm handoff | `yunxing-brainstorm`                                | `yunxing-brainstorm` (universal-brainstorming) |
-| End                | Conversation only is fine                      | Conversation only is fine                 |
+| Action             | Repo mode default                  | Elsewhere mode default                         |
+| ------------------ | ---------------------------------- | ---------------------------------------------- |
+| Save               | `yunxing:idea` GitHub issue        | Proof                                          |
+| Share              | Proof (additional)                 | Proof (primary)                                |
+| Brainstorm handoff | `yunxing-brainstorm`               | `yunxing-brainstorm` (universal-brainstorming) |
+| End                | Conversation only is fine          | Conversation only is fine                      |
 
-Either mode can also use the other destination on explicit request ("save to Proof even though this is repo mode", "save to a local file even though this is elsewhere"). Honor such overrides directly.
+Either mode can also use the other destination on explicit request ("save to Proof even though this is repo mode", "create the issue even though this is elsewhere"). Honor such overrides directly.
 
-### 5.1 File Save (default for repo mode; on request for elsewhere mode)
+### 5.1 Issue Save (default for repo mode; on request for elsewhere mode)
 
-1. Ensure `docs/ideation/` exists
-2. Choose the file path:
-   - `docs/ideation/YYYY-MM-DD-<topic>-ideation.md`
-   - `docs/ideation/YYYY-MM-DD-open-ideation.md` when no focus exists
-3. Write or update the ideation document
+The GH preflight and `yunxing:idea` label check ran in SKILL.md Phase 0.1; do not fall back to a local file. Create or update the `yunxing:idea` GitHub issue:
 
-Use this structure and omit clearly irrelevant fields only when necessary:
+1. Compose the issue body markdown (template below) to a temp file in the OS temp dir (`${TMPDIR:-/tmp}` / `$env:TEMP`), never under `docs/`.
+2. **Create** when no idea issue is bound:
+
+```bash
+gh issue create --title "[idea] <topic>" --label "yunxing:idea" --body-file <body-file>
+```
+
+3. **Update** when resuming a bound idea issue (Phase 0.1):
+
+```bash
+gh issue edit <N> --body-file <body-file>
+```
+
+Capture the resulting issue number/URL — it is the handoff reference passed downstream (Brainstorm) and the canonical record reported at exit.
+
+Use this body structure and omit clearly irrelevant fields only when necessary (the YAML block is the issue body's leading frontmatter, not a file header):
 
 ```markdown
 ---
@@ -125,16 +136,18 @@ mode: <repo-grounded | elsewhere-software | elsewhere-non-software>
 
 If resuming:
 
-- update the existing file in place
+- update the bound `yunxing:idea` issue body in place (`gh issue edit <N> --body-file <body-file>`)
 - preserve explored markers
 
 ### 5.2 Proof Save (default for elsewhere mode; on request for repo mode)
 
-Hand off the ideation content to the `yunxing-proof` skill in HITL review mode. This uploads the doc, runs an iterative review loop (user annotates in Proof, agent ingests feedback, applies agreed edits, and replies/resolves in-thread), and (in repo mode) syncs the reviewed markdown back to `docs/ideation/`.
+Hand off the ideation content to the `yunxing-proof` skill in HITL review mode. This uploads the doc, runs an iterative review loop (user annotates in Proof, agent ingests feedback, applies agreed edits, and replies/resolves in-thread), and (in repo mode) syncs the reviewed markdown back to the `yunxing:idea` issue body.
+
+Export the bound (or just-created) `yunxing:idea` issue body to a temp file in the OS temp dir to serve as the Proof source (`gh issue view <N> --json body --jq .body > <body-file>`); never stage the source under `docs/`. After Proof review completes, sync the reviewed markdown back to the issue with `gh issue edit <N> --body-file <body-file>`.
 
 Load the `yunxing-proof` skill in HITL-review mode with:
 
-- **source content:** the survivors and rejection summary from Phase 4 (in repo mode, this is the file written in 5.1; in elsewhere mode, render to a temp file as the source for upload)
+- **source content:** the survivors and rejection summary from Phase 4 (in repo mode, this is the `yunxing:idea` issue body created in 5.1, exported to a temp file for upload; in elsewhere mode, render to a temp file as the source for upload)
 - **doc title:** `Ideation: <topic>` or the H1 of the ideation doc
 - **identity:** `ai:yunxing` / `Compound Engineering`
 - **recommended next step:** `/yunxing-brainstorm` (shown in the proof skill's final terminal output)
@@ -144,16 +157,16 @@ The Proof failure ladder in Phase 6.5 governs what happens when this hand-off fa
 **Caller-aware return.** The return-rule bullets below describe the default control flow, but the next step depends on which Phase 6 option invoked the Proof save. Apply the right branch for the caller:
 
 - **§6.2 Open and iterate in Proof.** Behavior is mode-aware:
-  - _Repo mode:_ return to the Phase 6 menu on every status. The Proof-reviewed content is now synced locally, and the user typically has a follow-up action in the repo (brainstorm toward a plan, save and end, or keep refining).
-  - _Elsewhere mode:_ on a successful Proof return (`proceeded` or `done_for_now`), exit cleanly — narrate that the artifact lives at `docUrl` (including any stale-local note if applicable) and stop. Proof iteration is often the terminal act in elsewhere mode; forcing another menu choice after the user already got what they came for produces decision fatigue. Only the `aborted` branch returns to the Phase 6 menu so the user can retry or pick another path.
-- **§6.3 Brainstorm a selected idea.** On a successful Proof return (`proceeded` or `done_for_now`), do **not** stop at the Phase 6 menu — after applying the per-status handling below (including any stale-local pull offer), continue into §6.3's remaining bullets (mark the chosen idea as `Explored`, then load `yunxing-brainstorm`). Only the `aborted` branch returns to the Phase 6 menu, since no durable record was written.
-- **§6.4 Save and end.** On a successful Proof return (`proceeded` or `done_for_now`), exit cleanly: narrate that the ideation was saved, surface the `docUrl` (and the local-path note if applicable), and stop. Do **not** re-ask the Phase 6 question — the user already chose to end. Only the `aborted` branch returns to the Phase 6 menu so the user can retry or pick a different path.
+  - _Repo mode:_ return to the Phase 6 menu on every status. The Proof-reviewed content is now synced back to the `yunxing:idea` issue, and the user typically has a follow-up action in the repo (brainstorm toward a plan, save and end, or keep refining).
+  - _Elsewhere mode:_ on a successful Proof return (`proceeded` or `done_for_now`), exit cleanly — narrate that the artifact lives at `docUrl` (including any stale-issue note if applicable) and stop. Proof iteration is often the terminal act in elsewhere mode; forcing another menu choice after the user already got what they came for produces decision fatigue. Only the `aborted` branch returns to the Phase 6 menu so the user can retry or pick another path.
+- **§6.3 Brainstorm a selected idea.** On a successful Proof return (`proceeded` or `done_for_now`), do **not** stop at the Phase 6 menu — after applying the per-status handling below (including any stale-issue pull offer), continue into §6.3's remaining bullets (mark the chosen idea as `Explored`, then load `yunxing-brainstorm`). Only the `aborted` branch returns to the Phase 6 menu, since no durable record was written.
+- **§6.4 Save and end.** On a successful Proof return (`proceeded` or `done_for_now`), exit cleanly: narrate that the ideation was saved, surface the `docUrl` (and the issue URL if applicable), and stop. Do **not** re-ask the Phase 6 question — the user already chose to end. Only the `aborted` branch returns to the Phase 6 menu so the user can retry or pick a different path.
 
-When the proof skill returns control:
+When the proof skill returns control (the proof skill's contract still uses `localSynced`/`localPath` to mean the temp-file copy it round-trips; sync that temp file's reviewed content back to the `yunxing:idea` issue body with `gh issue edit <N> --body-file <temp-file>`):
 
-- `status: proceeded` with `localSynced: true` → the ideation doc on disk now reflects the review. Apply the caller-aware return rule above for the invoking branch.
-- `status: proceeded` with `localSynced: false` → the reviewed version lives in Proof at `docUrl` but the local copy is stale. Offer to pull the Proof doc to `localPath` using the proof skill's Pull workflow. Apply the caller-aware return rule above; if the pull was declined, include a one-line note that `<localPath>` is stale vs. Proof so the next handoff (or final exit narration) doesn't read the old content silently. Placement: above the Phase 6 menu when the caller-aware rule returns to it, in the handoff preamble to `yunxing-brainstorm` for §6.3, or alongside the final save/exit narration for §6.2 elsewhere / §6.4.
-- `status: done_for_now` → the doc on disk may be stale if the user edited in Proof before leaving. Offer to pull the Proof doc to `localPath` so the local ideation artifact stays in sync, then apply the caller-aware return rule above. `done_for_now` means the user stopped the HITL loop — it does not mean they ended the whole ideation session unless the caller-aware rule exits (§6.2 elsewhere mode or §6.4). If the pull was declined, include the stale-local note at the placement described in the previous bullet.
+- `status: proceeded` with `localSynced: true` → the reviewed temp file is current. Sync it back to the `yunxing:idea` issue body so the issue reflects the review, then apply the caller-aware return rule above for the invoking branch.
+- `status: proceeded` with `localSynced: false` → the reviewed version lives in Proof at `docUrl` but the temp copy is stale. Offer to pull the Proof doc to a temp file using the proof skill's Pull workflow, then sync it back to the issue body. Apply the caller-aware return rule above; if the pull was declined, include a one-line note that the `yunxing:idea` issue is stale vs. Proof so the next handoff (or final exit narration) doesn't read the old content silently. Placement: above the Phase 6 menu when the caller-aware rule returns to it, in the handoff preamble to `yunxing-brainstorm` for §6.3, or alongside the final save/exit narration for §6.2 elsewhere / §6.4.
+- `status: done_for_now` → the issue body may be stale if the user edited in Proof before leaving. Offer to pull the Proof doc to a temp file and sync it back to the `yunxing:idea` issue body so the durable record stays in sync, then apply the caller-aware return rule above. `done_for_now` means the user stopped the HITL loop — it does not mean they ended the whole ideation session unless the caller-aware rule exits (§6.2 elsewhere mode or §6.4). If the pull was declined, include the stale-issue note at the placement described in the previous bullet.
 - `status: aborted` → fall back to the Phase 6 menu without changes, regardless of caller. No durable record was written, so §6.3 must not proceed with the brainstorm handoff and §6.4 must not end — the menu lets the user retry or pick another path.
 
 ## Phase 6: Refine or Hand Off
@@ -165,9 +178,9 @@ Ask what should happen next using the platform's blocking question tool: `AskUse
 Offer these four options (labels are self-contained with the distinguishing word front-loaded so options stay distinct when truncated):
 
 1. **Refine the ideation in conversation (or stop here — no save)** — add ideas, re-evaluate, or deepen analysis. No file or network side effects; ending the conversation at any point after this pick is a valid no-save exit.
-2. **Open and iterate in Proof** — save the ideation to Proof and enter the proof skill's HITL review loop: iterate via comments in the Proof editor; reviewed edits sync back to `docs/ideation/` in repo mode.
+2. **Open and iterate in Proof** — save the ideation to Proof and enter the proof skill's HITL review loop: iterate via comments in the Proof editor; reviewed edits sync back to the `yunxing:idea` issue in repo mode.
 3. **Brainstorm a selected idea** — load `yunxing-brainstorm` with the chosen idea as the seed. The orchestrator first writes a durable record using the mode default in Phase 5.
-4. **Save and end** — persist the ideation using the mode default (file in repo mode, Proof in elsewhere mode), then end.
+4. **Save and end** — persist the ideation using the mode default (`yunxing:idea` issue in repo mode, Proof in elsewhere mode), then end.
 
 No-save exit is supported without a dedicated menu option. Pick option 1 and stop the conversation, or use the question tool's free-text escape to say so directly — persistence is opt-in and the terminal review loop is already a complete ideation cycle.
 
@@ -187,17 +200,17 @@ Ending after refinement — or without any refinement at all — is a valid no-s
 
 ### 6.2 Open and Iterate in Proof
 
-Invoke the Proof HITL review path via §5.2 with §6.2 as the caller. In repo mode, ensure the local file exists first (run §5.1) so the HITL sync-back has a target; in elsewhere mode, §5.2 renders to a temp file as usual. Honor Phase 5's "ensure a record exists first" contract either way.
+Invoke the Proof HITL review path via §5.2 with §6.2 as the caller. In repo mode, ensure the `yunxing:idea` issue exists first (run §5.1) so the HITL sync-back has a target; in elsewhere mode, §5.2 renders to a temp file as usual. Honor Phase 5's "ensure a record exists first" contract either way.
 
-Apply §5.2's caller-aware return rule for the §6.2 branch — behavior is mode-aware. In repo mode, return to the Phase 6 menu on every status so the user can pick a follow-up (brainstorm toward a plan, save-and-end, or keep refining) now that the Proof review is reflected in the local file. In elsewhere mode, exit cleanly on a successful Proof return since Proof iteration is often the terminal act — the artifact lives at `docUrl` and is the canonical record; only the `aborted` status returns to the menu.
+Apply §5.2's caller-aware return rule for the §6.2 branch — behavior is mode-aware. In repo mode, return to the Phase 6 menu on every status so the user can pick a follow-up (brainstorm toward a plan, save-and-end, or keep refining) now that the Proof review is reflected in the `yunxing:idea` issue. In elsewhere mode, exit cleanly on a successful Proof return since Proof iteration is often the terminal act — the artifact lives at `docUrl` and is the canonical record; only the `aborted` status returns to the menu.
 
 If the Proof handoff fails, the §6.5 Proof Failure Ladder governs recovery.
 
 ### 6.3 Brainstorm a Selected Idea
 
-- Write or update the durable record per the mode default in Phase 5 (file in repo mode, Proof in elsewhere mode). When this routes through §5.2 Proof Save, apply §5.2's caller-aware return rule: continue into the next bullet on a successful Proof return instead of bouncing back to the Phase 6 menu. If Proof returned `aborted` (no durable record written), go back to the Phase 6 menu and do **not** proceed with the brainstorm handoff.
+- Write or update the durable record per the mode default in Phase 5 (`yunxing:idea` issue in repo mode, Proof in elsewhere mode). When this routes through §5.2 Proof Save, apply §5.2's caller-aware return rule: continue into the next bullet on a successful Proof return instead of bouncing back to the Phase 6 menu. If Proof returned `aborted` (no durable record written), go back to the Phase 6 menu and do **not** proceed with the brainstorm handoff.
 - Mark the chosen idea as `Explored` in the saved record
-- Load the `yunxing-brainstorm` skill with the chosen idea as the seed
+- Load the `yunxing-brainstorm` skill with the chosen idea as the seed. Pass the `yunxing:idea` issue reference (`#<N>` or its URL) so brainstorm can link the resulting `yunxing:req` issue back to the originating idea — hand off the issue number/URL, not a file path.
 
 **Repo mode only:** do **not** skip brainstorming and go straight to `yunxing-plan` from ideation output — `yunxing-plan` wants brainstorm-grounded requirements. In elsewhere modes, ideation (or ideation + Proof iteration) is a legitimate terminal state; brainstorming is optional deeper development of one idea, not a required next rung on an implementation ladder that does not exist in these modes.
 
@@ -205,16 +218,14 @@ If the Proof handoff fails, the §6.5 Proof Failure Ladder governs recovery.
 
 Persist via the mode default (5.1 in repo mode, 5.2 in elsewhere mode), then end. If the user instead asked to use the non-default destination, honor that explicit request.
 
-When the path lands in a Proof save (5.2), apply §5.2's caller-aware return rule for the §6.4 branch: on a successful Proof return, exit cleanly — narrate the save, surface the `docUrl` (and any stale-local note if the pull was declined), and stop. Do **not** loop back to the Phase 6 menu; the user already chose to end. Only a `status: aborted` from Proof returns to the menu so the user can retry or pick another path (file save, custom path, or keep refining). The §6.5 Proof Failure Ladder still governs persistent Proof failures and ends at the Phase 6 menu — that failure-recovery path is distinct from the successful-save exit described here.
+When the path lands in a Proof save (5.2), apply §5.2's caller-aware return rule for the §6.4 branch: on a successful Proof return, exit cleanly — narrate the save, surface the `docUrl` (and any stale-issue note if the pull was declined), and stop. Do **not** loop back to the Phase 6 menu; the user already chose to end. Only a `status: aborted` from Proof returns to the menu so the user can retry or pick another path (issue save, or keep refining). The §6.5 Proof Failure Ladder still governs persistent Proof failures and ends at the Phase 6 menu — that failure-recovery path is distinct from the successful-save exit described here.
 
-When the path lands in a file save (5.1):
+When the path lands in an issue save (5.1):
 
-- offer to commit only the ideation doc
-- do not create a branch
-- do not push
-- if the user declines, leave the file uncommitted
+- create or update the `yunxing:idea` issue per §5.1
+- surface the resulting issue number/URL
 
-After the file save (and optional commit), end the session — do not return to the Phase 6 menu.
+After the issue save, end the session — do not return to the Phase 6 menu.
 
 ### 6.5 Proof Failure Ladder
 
@@ -229,10 +240,9 @@ Distinguish create-failure from ops-failure by inspecting whether the proof skil
 
 **Failure narration.** Narrate the single retry to the terminal so the pause does not look like a hang ("Retrying Proof... attempt 2/2"). On persistent failure, narrate that retry exhausted before showing the fallback menu.
 
-**Fallback menu after persistent failure.** Use the platform's blocking question tool. Present these options (omit option (a) if no repo exists at CWD):
+**Fallback menu after persistent failure.** Use the platform's blocking question tool. Present these options (omit option (a) if the GH preflight did not pass — no repo / no gh):
 
-- "Save to `docs/ideation/` instead" (repo-mode default destination, available when CWD is inside a git repo)
-- "Save to a custom path the user provides" (validate writable; create parent dirs)
+- "Create the `yunxing:idea` issue instead" (repo-mode default destination, available when the GH preflight passed)
 - "Skip save and keep the ideation in conversation" (no persistence)
 
 If proof returned a partial `docUrl` before failing, surface that URL alongside the fallback options so the user can recover or share the partial record.

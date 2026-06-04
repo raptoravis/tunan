@@ -1,10 +1,12 @@
-# Compounding Engineering Plugin
+# Compounding Engineering
 
 AI-powered development tools that get smarter with every use. Make each unit of engineering work easier than the last.
 
 ## Getting Started
 
 After installing, run `/yunxing-setup` in any project. It diagnoses your environment, installs missing tools and MCP servers, and bootstraps project config in one interactive flow.
+
+**Artifacts are GitHub issues, not local files.** Durable per-item artifacts — requirements, plans, solutions, ideas, and reports — are stored as GitHub issues distinguished by label (`yunxing:req`, `yunxing:plan`, `yunxing:solution`, `yunxing:idea`, `yunxing:pulse`), never under `docs/`. This requires `gh` to be installed and authenticated (`gh auth status`); `/yunxing-setup` verifies both. Skills create their labels on demand.
 
 **Windows:** the skills run on Windows as well as macOS/Linux. Bundled helper scripts ship in both bash (`.sh`) and PowerShell (`.ps1`) form — the PowerShell variants are Windows PowerShell 5.1-compatible (no extra install) and are used automatically on Windows.
 
@@ -13,7 +15,7 @@ After installing, run `/yunxing-setup` in any project. It diagnoses your environ
 | Component   | Count |
 | ----------- | ----- |
 | Agents      | 50+   |
-| Skills      | 38+   |
+| Skills      | 39+   |
 | MCP Servers | 5     |
 
 ## Skills
@@ -27,16 +29,17 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | Skill                                                              | Description                                                                                                                                                                                                                                                                             |
 | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`/yunxing-strategy`](../../docs/skills/yunxing-strategy.md)                 | Create or maintain `STRATEGY.md` — the product's target problem, approach, persona, key metrics, and tracks. Re-runnable to update. Read as grounding by `/yunxing-ideate`, `/yunxing-brainstorm`, and `/yunxing-plan` when present                                                                    |
-| [`/yunxing-ideate`](../../docs/skills/yunxing-ideate.md)                     | Optional big-picture ideation: generate and critically evaluate grounded ideas, then route the strongest one into brainstorming                                                                                                                                                         |
-| [`/yunxing-brainstorm`](../../docs/skills/yunxing-brainstorm.md)             | Interactive Q&A to think through a feature or problem and write a right-sized requirements doc before planning. Pass `output:html` to write the doc as a single self-contained HTML file instead of markdown (exclusive — md OR html, never both)                                       |
-| [`/yunxing-plan`](../../docs/skills/yunxing-plan.md)                         | Create structured plans for any multi-step task -- software features, research workflows, events, study plans -- with automatic confidence checking. Pass `output:html` to write the plan as a single self-contained HTML file instead of markdown (exclusive — md OR html, never both) |
+| [`/yunxing-ideate`](../../docs/skills/yunxing-ideate.md)                     | Optional big-picture ideation: generate and critically evaluate grounded ideas, then route the strongest one into brainstorming. Stores the ideation record as a GitHub issue labeled `yunxing:idea`                                                                                     |
+| [`/yunxing-newreq`](../../docs/skills/yunxing-newreq.md)                     | Capture a requirement described in conversation (text plus screenshots/videos) into a GitHub issue labeled `yunxing:req` — the source of truth that `/yunxing-brainstorm` and `/yunxing-plan` read and write back to                                                                     |
+| [`/yunxing-brainstorm`](../../docs/skills/yunxing-brainstorm.md)             | Interactive Q&A to think through a feature or problem; writes a right-sized requirements doc into a GitHub issue labeled `yunxing:req` (the source of truth) before planning. Pass a `yunxing:req` issue ref to resume or expand one captured by `/yunxing-newreq`                        |
+| [`/yunxing-plan`](../../docs/skills/yunxing-plan.md)                         | Create structured plans for any multi-step task -- software features, research workflows, events, study plans -- with automatic confidence checking. Writes the plan into a GitHub issue labeled `yunxing:plan`, linked to its `yunxing:req` issue, and reads requirements from that issue |
 | [`/yunxing-code-review`](../../docs/skills/yunxing-code-review.md)           | Structured code review with tiered persona agents, confidence gating, and dedup pipeline                                                                                                                                                                                                |
 | [`/yunxing-work`](../../docs/skills/yunxing-work.md)                         | Execute work items systematically                                                                                                                                                                                                                                                       |
 | [`/yunxing-debug`](../../docs/skills/yunxing-debug.md)                       | Systematically find root causes and fix bugs -- traces causal chains, forms testable hypotheses, and implements test-first fixes                                                                                                                                                        |
 | [`/yunxing-compound`](../../docs/skills/yunxing-compound.md)                 | Document solved problems to compound team knowledge                                                                                                                                                                                                                                     |
 | [`/yunxing-compound-refresh`](../../docs/skills/yunxing-compound-refresh.md) | Refresh stale or drifting learnings and decide whether to keep, update, replace, or archive them                                                                                                                                                                                        |
 | [`/yunxing-optimize`](../../docs/skills/yunxing-optimize.md)                 | Run iterative optimization loops with parallel experiments, measurement gates, and LLM-as-judge quality scoring                                                                                                                                                                         |
-| [`/yunxing-product-pulse`](../../docs/skills/yunxing-product-pulse.md)       | Generate a single-page, time-windowed report on usage, performance, errors, and followups. Saves reports to `docs/pulse-reports/` as a browseable timeline of what users experienced                                                                                                    |
+| [`/yunxing-product-pulse`](../../docs/skills/yunxing-product-pulse.md)       | Generate a single-page, time-windowed report on usage, performance, errors, and followups. Stores each report as a GitHub issue labeled `yunxing:pulse`; the labeled issue list is the browseable timeline of what users experienced                                                                                                    |
 
 ### Research & Context
 

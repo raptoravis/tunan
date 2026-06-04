@@ -16,6 +16,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import zipfile
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
@@ -58,7 +59,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        help="Directory for extracted artifacts. Defaults to docs/brainstorms/riffrec-feedback/<source-stem> when available.",
+        help="Directory for transient extracted media/scaffolds. Defaults to a temp dir; callers should pass an explicit temp dir. Durable analysis/requirements output is stored as a GitHub issue, not under this directory.",
     )
     parser.add_argument("--topic", help="Kebab-case topic for requirements-kickoff frontmatter")
     parser.add_argument(
@@ -102,11 +103,10 @@ def safe_extract(zip_path: Path, dest: Path) -> None:
 
 
 def default_output_dir(zip_path: Path) -> Path:
-    cwd = Path.cwd()
+    # Transient media/scaffolds only; durable output goes to a GitHub issue, never docs/.
+    # Callers should pass an explicit temp --output-dir; this default lands in the OS temp dir.
     stem = slugify(zip_path.stem)
-    if (cwd / "docs" / "brainstorms").is_dir():
-        return cwd / "docs" / "brainstorms" / "riffrec-feedback" / stem
-    return cwd / "riffrec-feedback" / stem
+    return Path(tempfile.gettempdir()) / "riffrec-feedback" / stem
 
 
 def classify_source(source_path: Path) -> str:

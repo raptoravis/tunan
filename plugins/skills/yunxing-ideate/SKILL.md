@@ -14,7 +14,7 @@ argument-hint: "[feature, focus area, or constraint]"
 - `yunxing-brainstorm` answers: "What exactly should one chosen idea mean?"
 - `yunxing-plan` answers: "How should it be built?"
 
-This workflow produces a ranked ideation artifact in `docs/ideation/`. It does **not** produce requirements, plans, or code.
+This workflow produces a ranked ideation artifact as a **`yunxing:idea` GitHub issue** — the durable ideation record lives in a GitHub issue (markdown body), never in a local file under `docs/`. It does **not** produce requirements, plans, or code.
 
 ## Interaction Method
 
@@ -49,26 +49,70 @@ If no argument is provided, proceed with open-ended ideation.
 
 #### 0.1 Check for Recent Ideation Work
 
-Look in `docs/ideation/` for ideation documents created within the last 30 days.
+The durable ideation record is a **`yunxing:idea` GitHub issue**, never a local file. Run the GH preflight (see below) before any issue read/write, then look for a recent matching `yunxing:idea` issue to resume.
 
-Treat a prior ideation doc as relevant when:
+**GH preflight — run before any issue read/write. Abort with the guidance shown if any check fails; NEVER fall back to a local file.**
+
+1. `gh` installed. If not: tell the user to install it from `https://cli.github.com` or run `/yunxing-setup`.
+
+```bash
+gh --version
+```
+
+2. `gh auth status` exits 0. If not: tell the user to run `gh auth login` (in Claude Code they can type `! gh auth login` so the output lands in the session), then re-run.
+
+```bash
+gh auth status
+```
+
+3. The repo resolves. If not: a GitHub repository is required — abort and explain.
+
+```bash
+gh repo view --json nameWithOwner
+```
+
+**Ensure the `yunxing:idea` label exists** (needed when Phase 5 creates the issue):
+
+```bash
+gh label list --search "yunxing:idea"
+```
+
+If it is absent, create it:
+
+```bash
+gh label create "yunxing:idea" --color 1f883d --description "yunxing idea"
+```
+
+**Resume check.** If `$ARGUMENTS` contains an issue ref (a `#<N>` token or a full GitHub issue URL), bind that issue and read its body as the resume source:
+
+```bash
+gh issue view <N> --json title,body,url,labels
+```
+
+Otherwise, search for recent open `yunxing:idea` issues matching the requested focus:
+
+```bash
+gh issue list --label "yunxing:idea" --search "<terms>" --state open --json number,title,url,updatedAt
+```
+
+Treat a prior `yunxing:idea` issue as relevant when:
 
 - the topic matches the requested focus
 - the path or subsystem overlaps the requested focus
-- the request is open-ended and there is an obvious recent open ideation doc
-- the issue-grounded status matches: do not offer to resume a non-issue ideation when the current argument indicates issue-tracker intent, or vice versa — treat these as distinct topics
+- the request is open-ended and there is an obvious recent open idea issue
+- the issue-grounded status matches: do not offer to resume a non-issue-tracker ideation when the current argument indicates issue-tracker intent, or vice versa — treat these as distinct topics
 
-If a relevant doc exists, ask whether to:
+If a relevant issue exists, ask whether to:
 
 1. continue from it
 2. start fresh
 
 If continuing:
 
-- read the document
+- read the issue body (`gh issue view <N> --json title,body,url,labels`)
 - summarize what has already been explored
 - preserve previous idea statuses
-- update the existing file instead of creating a duplicate
+- update that same issue at Phase 5 instead of creating a duplicate
 
 #### 0.2 Subject-Identification Gate
 
@@ -156,7 +200,7 @@ Do not prescribe correction phrases ("say X to switch"). State the inferred mode
 
 **Active confirmation on mode ambiguity.** Only fire when mode classification is genuinely ambiguous _after_ 0.2 settled the subject — e.g., "our docs" could mean repo docs (repo-grounded) or public marketing docs (elsewhere-software). Most subjects settled in 0.2 classify cleanly here. When ambiguous, ask one confirmation question via the blocking tool with two self-contained labels naming the two candidate interpretations in plain language (e.g., "Treat as repo docs in this codebase" vs "Treat as public marketing docs") — never leak internal mode names. Otherwise the one-sentence inferred-mode statement is sufficient; do not ask.
 
-**Routing rule (non-software mode).** When Decision 2 = non-software, still run Phase 1 Elsewhere-mode grounding (user-context synthesis + web-research by default; skip phrases honored). Learnings-researcher is skipped by default in this mode — the CWD's `docs/solutions/` rarely transfers to naming, narrative, personal, or non-digital business topics; see Phase 1 for the full rationale. Then load `references/universal-ideation.md` and follow it in place of Phase 2's software frame dispatch and the Phase 6 menu narrative. This load is non-optional — the file contains the domain-agnostic generation frames, critique rubric, and wrap-up menu that replace Phase 2 and the post-ideation menu for this mode, and none of those details live in this main body. Improvising from memory produces the wrong facilitation for non-software topics. Do not run the repo-specific codebase scan at any point. The §6.5 Proof Failure Ladder in `references/post-ideation-workflow.md` still applies — load and follow it whenever a Proof save (the elsewhere-mode default for Save and end) fails, so the local-save fallback path stays reachable in non-software elsewhere runs.
+**Routing rule (non-software mode).** When Decision 2 = non-software, still run Phase 1 Elsewhere-mode grounding (user-context synthesis + web-research by default; skip phrases honored). Learnings-researcher is skipped by default in this mode — the repo's `yunxing:solution` issues rarely transfer to naming, narrative, personal, or non-digital business topics; see Phase 1 for the full rationale. Then load `references/universal-ideation.md` and follow it in place of Phase 2's software frame dispatch and the Phase 6 menu narrative. This load is non-optional — the file contains the domain-agnostic generation frames, critique rubric, and wrap-up menu that replace Phase 2 and the post-ideation menu for this mode, and none of those details live in this main body. Improvising from memory produces the wrong facilitation for non-software topics. Do not run the repo-specific codebase scan at any point. The §6.5 Proof Failure Ladder in `references/post-ideation-workflow.md` still applies — load and follow it whenever a Proof save (the elsewhere-mode default for Save and end) fails, so the local-save fallback path stays reachable in non-software elsewhere runs.
 
 #### 0.4 Context-Substance Gate (Elsewhere Modes Only)
 
@@ -215,7 +259,7 @@ The line is informational; users do not need to acknowledge it.
 
 ### Phase 1: Mode-Aware Grounding
 
-Before generating ideas, gather grounding. The dispatch set depends on the mode chosen in Phase 0.3. Web research runs in all modes (skip phrases honored). Learnings runs in repo mode and elsewhere-software, and is **skipped by default in elsewhere-non-software** — the CWD repo's `docs/solutions/` almost always contains engineering patterns that do not transfer to naming, narrative, personal, or non-digital business topics.
+Before generating ideas, gather grounding. The dispatch set depends on the mode chosen in Phase 0.3. Web research runs in all modes (skip phrases honored). Learnings runs in repo mode and elsewhere-software, and is **skipped by default in elsewhere-non-software** — the repo's `yunxing:solution` issues almost always contain engineering patterns that do not transfer to naming, narrative, personal, or non-digital business topics.
 
 **Surprise-me grounding depth.** When Phase 0.2 routed to surprise-me mode, Phase 1 must produce richer material than specified mode — Phase 2 sub-agents will discover their own subjects from what Phase 1 returns, so texture matters:
 
@@ -276,7 +320,7 @@ Run grounding agents in parallel in the **foreground** (do not background — re
 
 1. **User-context synthesis** — dispatch a general-purpose sub-agent (cheapest capable model) to read the user-supplied context from Phase 0.4 intake plus any rich-prompt material, and return a structured grounding summary that mirrors the codebase-context shape (project shape → topic shape; notable patterns → stated constraints; pain points → user-named pain points; leverage points → opportunity hooks the context implies). This keeps Phase 2 sub-agents agnostic to grounding source.
 
-2. **Learnings search** _(elsewhere-software only; skipped by default in elsewhere-non-software)_ — dispatch `yunxing-learnings-researcher` with the topic summary in case relevant institutional knowledge exists (skill-design patterns, prior solutions in similar shape). Skip for elsewhere-non-software: the CWD's `docs/solutions/` is unlikely to be topically relevant for non-digital topics, and running it risks polluting generation with unrelated engineering patterns.
+2. **Learnings search** _(elsewhere-software only; skipped by default in elsewhere-non-software)_ — dispatch `yunxing-learnings-researcher` with the topic summary in case relevant institutional knowledge exists (skill-design patterns, prior solutions in similar shape). Skip for elsewhere-non-software: the repo's `yunxing:solution` issues are unlikely to be topically relevant for non-digital topics, and running it risks polluting generation with unrelated engineering patterns.
 
 3. **Web research** — same as repo mode (see subsection below).
 
@@ -297,7 +341,7 @@ Consolidate all dispatched results into a short grounding summary using these se
 - **Codebase context** _(repo mode)_ — project shape, notable patterns, pain points, leverage points (project-defining files: AGENTS.md/CLAUDE.md/README.md/STRATEGY.md) OR **Topic context** _(elsewhere mode)_ — topic shape, stated constraints, user-named pain points, opportunity hooks
 - **User-named references** _(repo mode, when the focus hint named root-level `_.md` files)\* — full content from files the user explicitly named in their prompt or focus. Phase 2 treats these as constraint
 - **Additional context** _(repo mode, when other root-level markdown was discovered but not named)_ — one-line gists per file. Phase 2 treats these as background, not direction
-- **Past learnings** — relevant institutional knowledge from `docs/solutions/`
+- **Past learnings** — relevant institutional knowledge from `yunxing:solution` issues
 - **Issue intelligence** _(when present, repo mode only)_ — theme summaries with titles, descriptions, issue counts, and trend directions
 - **External context** _(when web research ran)_ — prior art, adjacent solutions, market signals, cross-domain analogies. Note "(reused from earlier dispatch)" when V15 reuse fired
 - **Slack context** _(when present)_ — organizational context

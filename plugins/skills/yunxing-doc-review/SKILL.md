@@ -1,12 +1,57 @@
 ---
 name: yunxing-doc-review
-description: Review requirements or plan documents using parallel persona agents that surface role-specific issues. Use when a requirements document or plan document exists and the user wants to improve it.
-argument-hint: "[mode:headless] [path/to/document.md]"
+description: "Review requirements or plan documents using parallel persona agents that surface role-specific issues. Use when a yunxing artifact issue (yunxing:req / yunxing:plan / yunxing:solution / yunxing:idea / yunxing:pulse) or a local markdown document exists and the user wants to improve it."
+argument-hint: "[mode:headless] [#<N> | <issue-url> | path/to/document.md]"
 ---
 
 # Document Review
 
 Review requirements or plan documents through multi-persona analysis. Dispatches specialized reviewer agents in parallel, auto-applies `safe_auto` fixes, and routes remaining findings through a four-option interaction (per-finding walk-through, auto-resolve with best judgment, Append-to-Open-Questions, Report-only) for user decision.
+
+The primary input is a **yunxing artifact issue** — durable requirements/plan artifacts are stored as GitHub issues distinguished by label (`yunxing:req`, `yunxing:plan`, `yunxing:solution`, `yunxing:idea`, `yunxing:pulse`), not as local files under `docs/`. Reviewing an arbitrary local markdown file (a doc that is not a yunxing artifact) is also supported. In both cases the review reads markdown, runs the persona analysis, and applies agreed findings back to the **source** — the issue body for an artifact, the file on disk for a local doc.
+
+## Source resolution
+
+A single concept threads through the whole skill: the **working file** — a local markdown path that all edit-tool mechanics (safe_auto apply, the Apply-set batch edit, Open-Questions appends) operate on. How the working file maps to the source depends on the argument:
+
+- **Issue ref** — an argument of the form `#<N>`, a bare integer `<N>`, or a GitHub issue URL. Run GH PREFLIGHT (below), read the issue body via `gh issue view`, and write the body markdown to a transient working file in the OS temp dir (never under `docs/`). This is the **primary path** for yunxing artifacts. After review edits land on the working file, push it BACK to the issue body via `gh issue edit <N> --body-file <working-file>` (the SYNC-BACK step in Phase 4/walkthrough).
+- **Local path** — an argument that is a filesystem path to a markdown file that is not a yunxing artifact. The working file IS that path; edits write in place, with no SYNC-BACK step.
+
+### GH PREFLIGHT (issue source only)
+
+Before any issue read or write, verify the GitHub CLI is usable. Run each check as a single simple command (no chaining, no error suppression) and abort with guidance if any fails — never fall back to writing a local `docs/` file:
+
+```bash
+gh --version
+gh auth status
+gh repo view --json nameWithOwner
+```
+
+If `gh` is not installed, `gh auth status` is non-zero, or the repo does not resolve, stop and tell the user how to fix it (install `gh`, run `gh auth login`, or run from inside a GitHub-backed repo). Do not silently degrade to a local file — the artifact lives in the issue, and a local copy would diverge.
+
+### Read the issue into a working file
+
+```bash
+gh issue view <N> --json title,body,url,labels
+```
+
+Capture `title` (the Proof/review display title and a hint for classification), `body` (the markdown), `url` (echo it in the final report), and `labels` (the `yunxing:*` label is a classification hint — see Phase 1). Write `body` to a transient working file under the OS temp dir (`${TMPDIR:-/tmp}` on macOS/Linux, `$env:TEMP` on Windows) — for example `${TMPDIR:-/tmp}/yunxing-doc-review-<N>.md`. All subsequent phases treat that path as `{document_path}` / the working file.
+
+### Write results back to the issue (SYNC-BACK)
+
+After the Phase 4 safe_auto pass and the end-of-walk-through Apply batch have edited the working file, overwrite the issue body from it:
+
+```bash
+gh issue edit <N> --body-file <working-file>
+```
+
+Optionally, post review notes (FYI observations, residual concerns, the verdict) that are not document edits as a comment instead of folding them into the body:
+
+```bash
+gh issue comment <N> --body-file <notes-file>
+```
+
+The Open-Questions deferral mechanic also operates on the working file; the same `gh issue edit` push-back carries those appended entries to the issue body. See `references/synthesis-and-presentation.md` and `references/walkthrough.md` for exactly when SYNC-BACK fires.
 
 ## Interactive mode rules
 
@@ -17,7 +62,12 @@ Review requirements or plan documents through multi-persona analysis. Dispatches
 
 ## Phase 0: Detect Mode
 
-Check the skill arguments for `mode:headless`. Arguments may contain a document path, `mode:headless`, or both. Tokens starting with `mode:` are flags, not file paths — strip them from the arguments and use the remaining token (if any) as the document path for Phase 1.
+Check the skill arguments for `mode:headless`. Arguments may contain a source (issue ref or document path), `mode:headless`, or both. Tokens starting with `mode:` are flags, not sources — strip them from the arguments and use the remaining token (if any) as the source for Phase 1.
+
+Classify the remaining source token:
+
+- Matches `#<N>`, a bare integer, or a GitHub issue URL → **issue source**. Run GH PREFLIGHT and read the issue into a working file per "Source resolution" above, then proceed to Phase 1 with the working file as `{document_path}`.
+- Is a filesystem path to a markdown file → **local source**. The working file is that path; no SYNC-BACK at the end.
 
 If `mode:headless` is present, set **headless mode** for the rest of the workflow.
 
@@ -32,22 +82,34 @@ The caller receives findings with their original classifications intact and deci
 Callers invoke headless mode by including `mode:headless` in the skill arguments, e.g.:
 
 ```
-Skill("yunxing-doc-review", "mode:headless docs/plans/my-plan.md")
+Skill("yunxing-doc-review", "mode:headless #142")
+Skill("yunxing-doc-review", "mode:headless /abs/path/to/local-doc.md")
 ```
+
+In headless mode the safe_auto pass still edits the working file. When the source is an issue, the headless run still pushes the edited working file back via `gh issue edit <N> --body-file <working-file>` after the safe_auto pass — silent fixes are durable regardless of interaction model. Non-safe_auto findings are returned as structured text for the caller (no SYNC-BACK is needed for findings the caller hasn't decided on yet).
 
 If `mode:headless` is not present, the skill runs in its default interactive mode with the routing question, walk-through, and bulk-preview behaviors documented in `references/walkthrough.md` and `references/bulk-preview.md`.
 
 ## Phase 1: Get and Analyze Document
 
-**If a document path is provided:** Read it, then proceed.
+**If an issue source was resolved in Phase 0:** the working file already holds the issue body markdown — read it, then proceed.
 
-**If no document is specified (interactive mode):** Ask which document to review, or find the most recent in `docs/brainstorms/` or `docs/plans/` using a file-search/glob tool (e.g., Glob in Claude Code).
+**If a local document path is provided:** Read it, then proceed.
 
-**If no document is specified (headless mode):** Output "Review failed: headless mode requires a document path. Re-invoke with: Skill(\"yunxing-doc-review\", \"mode:headless <path>\")" without dispatching agents.
+**If no source is specified (interactive mode):** Ask which yunxing artifact issue (by `#<N>` or URL) or local markdown file to review. To suggest recent artifacts, list candidate issues by label:
+
+```bash
+gh issue list --label yunxing:req --state open --limit 10
+gh issue list --label yunxing:plan --state open --limit 10
+```
+
+(Use one `gh issue list` per label; `yunxing:solution`, `yunxing:idea`, and `yunxing:pulse` are also valid artifact labels.)
+
+**If no source is specified (headless mode):** Output "Review failed: headless mode requires an issue ref or document path. Re-invoke with: Skill(\"yunxing-doc-review\", \"mode:headless #<N>\") or Skill(\"yunxing-doc-review\", \"mode:headless <path>\")" without dispatching agents.
 
 ### Classify Document Type
 
-Classify the document by reading its **content shape**, not its file path. Path is a tie-breaker hint, not the primary signal — a brainstorm-style doc placed under `docs/plans/` should still classify as `requirements`, and a plan-shaped doc under `docs/brainstorms/` should still classify as `plan`. The reviewers below operate differently depending on this classification, so misclassifying a plan-shaped doc as a requirements doc (or vice versa) produces noisy or under-scrutinized findings.
+Classify the document by reading its **content shape**, not its source location. The issue label (for an issue source) or file path (for a local source) is a tie-breaker hint, not the primary signal — a `yunxing:plan`-labeled issue whose body is brainstorm-shaped should still classify as `requirements`, and a plan-shaped doc should classify as `plan` regardless of where it came from. The reviewers below operate differently depending on this classification, so misclassifying a plan-shaped doc as a requirements doc (or vice versa) produces noisy or under-scrutinized findings.
 
 Use these signals to decide:
 
@@ -59,14 +121,14 @@ Use these signals to decide:
 - No implementation units, no per-unit file lists, no test scenarios attached to units
 
 **`plan` signals (how-to-build documents):**
-- Frontmatter fields like `type: feat|fix|refactor`, `origin: docs/brainstorms/...`
+- Frontmatter fields like `type: feat|fix|refactor`, or an `origin:` pointing at an upstream requirements artifact (an issue ref `#<N>` for a `yunxing:req` artifact)
 - Section headings such as `Implementation Units`, `Output Structure`, `Key Technical Decisions`, `Risks & Dependencies`, `System-Wide Impact`
 - Numbered identifiers in the form `U1`, `U2` — implementation unit IDs
 - Per-unit fields named `Goal`, `Files`, `Approach`, `Test scenarios`, `Verification`
 - Repo-relative file paths to create/modify/test
 - Prose framing focused on technical decisions, sequencing, and implementer-facing detail
 
-**Tie-breaker rule.** When the content signals are mixed or sparse, fall back to path: `docs/brainstorms/` → `requirements`, `docs/plans/` → `plan`. When neither path location applies, treat the dominant content shape as authoritative; if shape is genuinely ambiguous, default to `requirements` (the more conservative classification — it activates fewer plan-specific feasibility checks).
+**Tie-breaker rule.** When the content signals are mixed or sparse, fall back to the source hint: a `yunxing:req` label (or a local path under a brainstorm/requirements location) → `requirements`; a `yunxing:plan` label (or a local plan location) → `plan`. `yunxing:solution`, `yunxing:idea`, and `yunxing:pulse` artifacts have no clean default — classify them by content shape. When no hint applies, treat the dominant content shape as authoritative; if shape is genuinely ambiguous, default to `requirements` (the more conservative classification — it activates fewer plan-specific feasibility checks).
 
 Pass the classification result to each persona via the `{document_type}` slot in the subagent template. Personas read this and adapt their analysis accordingly.
 
@@ -206,7 +268,7 @@ Cross-session persistence is out of scope. A new invocation of yunxing-doc-revie
 
 ## Phases 3-5: Synthesis, Presentation, and Next Action
 
-After all dispatched agents return, read `references/synthesis-and-presentation.md` for the synthesis pipeline (validate, anchor-based gate, dedup, cross-persona agreement promotion, resolve contradictions, auto-promotion, route by three tiers with FYI subsection), `safe_auto` fix application, headless-envelope output, and the handoff to the routing question.
+After all dispatched agents return, read `references/synthesis-and-presentation.md` for the synthesis pipeline (validate, anchor-based gate, dedup, cross-persona agreement promotion, resolve contradictions, auto-promotion, route by three tiers with FYI subsection), `safe_auto` fix application, the SYNC-BACK step that pushes the edited working file to the issue body when the source is an issue, headless-envelope output, and the handoff to the routing question.
 
 For the four-option routing question and per-finding walk-through (interactive mode), read `references/walkthrough.md`. For the bulk-action preview used by best-judgment routing, Append-to-Open-Questions, and walk-through `Auto-resolve with best judgment on the rest`, read `references/bulk-preview.md`. Do not load these files before agent dispatch completes.
 

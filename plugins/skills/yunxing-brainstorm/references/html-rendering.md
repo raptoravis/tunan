@@ -1,5 +1,12 @@
 # HTML Rendering
 
+> **DEPRECATED / UNUSED.** `yunxing-brainstorm` no longer writes local HTML
+> artifacts. The durable requirement is a `yunxing:req` GitHub issue whose
+> body is markdown (see `references/markdown-rendering.md` and
+> `references/brainstorm-sections.md`). There is no `output:html` mode and no
+> `.html` file on disk. This file is retained only for historical reference
+> and is not loaded by any phase. Do not follow it for new work.
+
 This is a format-rendering reference — it describes how to render any
 artifact in HTML, independent of which skill is producing it.
 

@@ -22,11 +22,11 @@ Only when the caller reached this file **without** already running review (no re
 Invoke the skill explicitly — do not treat a casual "review my changes" prompt as a substitute unless the harness routed it to `yunxing-code-review`.
 
 ```
-yunxing-code-review mode:agent plan:<plan-path> base:<merge-base-or-ref>
+yunxing-code-review mode:agent plan:<plan-issue-ref> base:<merge-base-or-ref>
 ```
 
 - `mode:agent` — JSON output (`review.json` + primary JSON response) for programmatic parsing; same review pipeline as default.
-- `plan:` — when Phase 1 used a plan file (requirements completeness).
+- `plan:` — the `yunxing:plan` issue ref (`#N`/URL) when Phase 1 used a plan (requirements completeness).
 - `base:` — when the diff base is already resolved on the current checkout; omit when reviewing a PR number/URL or standalone current branch.
 - Do **not** pass deprecated `mode:autofix`.
 

@@ -2,7 +2,7 @@
 name: yunxing-work-beta
 description: "[BETA] Execute work with external delegate support. Same as yunxing-work but includes experimental Codex delegation mode for token-conserving code implementation."
 disable-model-invocation: true
-argument-hint: "[Plan doc path or description of work. Blank to auto use latest plan doc] [delegate:codex]"
+argument-hint: "[yunxing:plan issue ref (#N or URL) or description of work. Blank to auto-pick the latest yunxing:plan issue] [delegate:codex]"
 ---
 
 # Work Execution Command
@@ -11,7 +11,9 @@ Execute work efficiently while maintaining quality and finishing features.
 
 ## Introduction
 
-This command takes a work document (plan or specification) or a bare prompt describing the work, and executes it systematically. The focus is on **shipping complete features** by understanding requirements quickly, following existing patterns, and maintaining quality throughout.
+This command takes a work source — a `yunxing:plan` GitHub issue (a plan/specification stored as an issue body) or a bare prompt describing the work — and executes it systematically. The focus is on **shipping complete features** by understanding requirements quickly, following existing patterns, and maintaining quality throughout.
+
+Durable per-item artifacts are GitHub issues distinguished by label, not local files under `docs/`. The plan that drives execution is a `yunxing:plan` issue; on shipping, the hand-off to `yunxing-compound` produces a `yunxing:solution` issue. Pass and link issues by NUMBER/URL and `#<N>` references — never read or write a plan/solution as a local `docs/` file.
 
 **Beta rollout note:** Invoke `yunxing-work-beta` manually when you want to trial Codex delegation. During the beta period, planning and workflow handoffs remain pointed at stable `yunxing-work` to avoid dual-path orchestration complexity.
 
@@ -21,7 +23,7 @@ This command takes a work document (plan or specification) or a bare prompt desc
 
 ## Argument Parsing
 
-Parse `$ARGUMENTS` for the following optional tokens. Strip each recognized token before interpreting the remainder as the plan file path or bare prompt.
+Parse `$ARGUMENTS` for the following optional tokens. Strip each recognized token before interpreting the remainder as the plan issue ref (`#N`/URL) or bare prompt.
 
 | Token            | Example          | Effect                                            |
 | ---------------- | ---------------- | ------------------------------------------------- |
@@ -78,9 +80,21 @@ Store the resolved state for downstream consumption:
 
 Determine how to proceed based on what was provided in `<input_document>`.
 
-**Plan document** (input is a file path to an existing plan or specification) → skip to Phase 1.
+**Plan issue** (input is a `yunxing:plan` issue ref — `#N`, a number, or an issue URL) → run the GH preflight below, then skip to Phase 1.
 
-**Bare prompt** (input is a description of work, not a file path):
+**Bare prompt** (input is a description of work, not an issue ref):
+
+> **GH preflight (required before reading or writing any issue).** The plan lives in a GitHub issue; there is no local-file fallback. Run these checks in order; if any fails, abort and tell the user to fix the gh setup (install `gh`, run `gh auth login`, or set the repo) — do not fall back to a local file:
+>
+> ```bash
+> gh --version
+> ```
+> ```bash
+> gh auth status
+> ```
+> ```bash
+> gh repo view --json nameWithOwner
+> ```
 
 1. **Scan the work area**
    - Identify files likely to change based on the prompt
@@ -100,7 +114,8 @@ Determine how to proceed based on what was provided in `<input_document>`.
 ### Phase 1: Quick Start
 
 1. **Read Plan and Clarify** _(skip if arriving from Phase 0 with a bare prompt)_
-   - Read the work document completely
+   - Read the plan issue completely. Run the GH preflight (see Phase 0) first, then read the issue body with `gh issue view <N> --json title,body,url,labels`. The plan body is markdown and carries the same section names and IDs as before. Confirm the issue carries the `yunxing:plan` label before treating it as the work source.
+   - When auto-detecting the latest plan (blank invocation), list open `yunxing:plan` issues with `gh issue list --label "yunxing:plan" --state open --json number,title,url,updatedAt` and pick the most recent.
    - Treat the plan as a decision artifact, not an execution script
    - If the plan includes sections such as `Implementation Units`, `Work Breakdown`, `Requirements` (or legacy `Requirements Trace`), `Files`, `Test Scenarios`, or `Verification`, use those as the primary source material for execution
    - Check for `Execution note` on each implementation unit — these carry the plan's execution posture signal for that unit (for example, test-first or characterization-first). Note them when creating tasks.
@@ -111,7 +126,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    - If anything is unclear or ambiguous, ask clarifying questions now
    - If clarifying questions were needed above, get user approval on the resolved answers. If no clarifications were needed, proceed without a separate approval step — plan scope is the plan's authority, not something to renegotiate
    - **Do not skip this** - better to ask questions now than build the wrong thing
-   - **Do not edit the plan body during execution.** The plan is a decision artifact; progress lives in git commits and the task tracker. The only plan mutation during yunxing-work is the final `status: active → completed` flip at shipping (see `references/shipping-workflow.md` Phase 4 Step 2). Legacy plans may contain `- [ ]` / `- [x]` marks on unit headings — ignore them as state; per-unit completion is determined during execution by reading the current file state.
+   - **Do not rewrite the plan issue body during execution.** The plan is a decision artifact; progress lives in git commits and the task tracker. As work progresses, status or notes may be posted back to the plan issue with `gh issue comment <N>` (not by overwriting the body). The only body change during yunxing-work is the final status flip at shipping (see `references/shipping-workflow.md` Phase 4 Step 2). Plan bodies may contain `- [ ]` / `- [x]` marks on unit headings — ignore them as state; per-unit completion is determined during execution by reading the current code/test state.
 
 2. **Setup Environment**
 
@@ -186,7 +201,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
 
 4. **Choose Execution Strategy**
 
-   **Delegation routing gate:** If `delegation_active` is true AND the input is a plan file (not a bare prompt), read `references/codex-delegation-workflow.md` and follow its Pre-Delegation Checks and Delegation Decision flow. If all checks pass and delegation proceeds, force **serial execution** and proceed directly to Phase 2 using the workflow's batched execution loop. If any check disables delegation, fall through to the standard strategy table below. If delegation is active but the input is a bare prompt (no plan file), set `delegation_active` to false with a brief note: "Codex delegation requires a plan file -- using standard mode." and continue with the standard strategy selection below.
+   **Delegation routing gate:** If `delegation_active` is true AND the input is a plan issue (not a bare prompt), read `references/codex-delegation-workflow.md` and follow its Pre-Delegation Checks and Delegation Decision flow. If all checks pass and delegation proceeds, force **serial execution** and proceed directly to Phase 2 using the workflow's batched execution loop. If any check disables delegation, fall through to the standard strategy table below. If delegation is active but the input is a bare prompt (no plan issue), set `delegation_active` to false with a brief note: "Codex delegation requires a plan issue -- using standard mode." and continue with the standard strategy selection below.
 
    After creating the task list, decide how to execute based on the plan's size and dependency structure:
 
@@ -209,7 +224,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    - **Other platforms** without built-in worktree isolation (e.g., Codex `spawn_agent`, Pi `subagent`): subagents share the orchestrator's directory.
 
    **Subagent dispatch** uses your available subagent or task spawning mechanism. For each unit, give the subagent:
-   - The full plan file path (for overall context)
+   - The plan issue ref (`#<N>`/URL) and the relevant plan body content (for overall context)
    - The specific unit's Goal, Files, Approach, Execution note, Patterns, Test scenarios, and Verification
    - Any resolved deferred questions relevant to that unit
    - Instruction to check whether the unit's test scenarios cover all applicable categories (happy paths, edge cases, error paths, integration) and supplement gaps before writing tests
@@ -225,7 +240,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    1. Review the subagent's diff — verify changes match the unit's scope and `Files:` list
    2. Run the relevant test suite to confirm the tree is healthy
    3. If tests fail, diagnose and fix before proceeding — do not dispatch dependent units on a broken tree
-   4. Update the task list (do not edit the plan body — progress is carried by the commit)
+   4. Update the task list (do not edit the plan issue body — progress is carried by the commit)
    5. Dispatch the next unit
 
    **After all parallel subagents in a batch complete (worktree-isolated mode):**
@@ -245,7 +260,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    2. Cross-check for discovered file collisions: compare the actual files modified by all subagents in the batch (not just their declared `Files:` lists). Subagents may create or modify files not anticipated during planning — this is expected, since plans describe _what_ not _how_. A collision only matters when 2+ subagents in the same batch modified the same file. In a shared working directory, only the last writer's version survives — the other unit's changes to that file are lost. If a collision is detected: commit all non-colliding files from all units first, then re-run the affected units serially for the shared file so each builds on the other's committed work
    3. For each completed unit, in dependency order: review the diff, run the relevant test suite, stage only that unit's files, and commit with a conventional message derived from the unit's Goal
    4. If tests fail after committing a unit's changes, diagnose and fix before committing the next unit
-   5. Update the task list (do not edit the plan body — progress is carried by the commits just made)
+   5. Update the task list (do not edit the plan issue body — progress is carried by the commits just made)
    6. Dispatch the next batch of independent units, or the next dependent unit
 
 ### Phase 2: Execute

@@ -57,10 +57,16 @@ This file contains the shipping workflow (Phase 3-4). It is loaded when all Phas
    Options (four or fewer, self-contained labels):
    - `Apply/fix now` — load `references/review-findings-followup.md`, dispatch batched fix subagents for remaining eligible findings, run tests, commit if needed; optionally re-run `yunxing-code-review` only after the diff changed materially.
    - `File tickets via project tracker` — load `references/tracker-defer.md` in Interactive mode; the agent files tickets in the project's detected tracker (or `gh` fallback, or leaves them in the report if no sink exists) and proceeds to Final Validation.
-   - `Accept and proceed` — record the residual findings verbatim in a durable "Known Residuals" sink before shipping. If a PR will be created or updated in Phase 4, include them in the PR description's "Known Residuals" section (the agent owns this when calling `yunxing-commit-push-pr`). If the user later chooses the no-PR `yunxing-commit` path, create `docs/residual-review-findings/<branch-or-head-sha>.md`, include the accepted findings and source review-run context, stage it with the implementation commit, and mention the file path in the final summary. The user has acknowledged the risk, but the findings must not live only in the transient session.
+   - `Accept and proceed` — record the residual findings verbatim in a durable "Known Residuals" sink before shipping. The durable sink is always a GitHub artifact, never a local `docs/` file. If a PR will be created or updated in Phase 4, include them in the PR description's "Known Residuals" section (the agent owns this when calling `yunxing-commit-push-pr`). If the user later chooses the no-PR `yunxing-commit` path, run the GH preflight (`gh` installed; `gh auth status` exits 0; `gh repo view --json nameWithOwner` resolves — abort and report the gh setup problem rather than writing a local file if any check fails), ensure the `yunxing:review` label exists (`gh label list --search "yunxing:review"`, then if absent `gh label create "yunxing:review" --color 1f883d --description "yunxing review"`), write the accepted findings and source review-run context to an OS temp file (`${TMPDIR:-/tmp}` / `$env:TEMP`, never `docs/`), and create the issue titled `[review] <branch-or-head-sha>`:
+
+     ```bash
+     gh issue create --title "[review] <branch-or-head-sha>" --label "yunxing:review" --body-file <tmpfile>
+     ```
+
+     When a related `yunxing:plan` issue is known, reference it with `#<plan-N>` in the issue body and also post the findings as a comment on that plan issue (`gh issue comment <plan-N> --body-file <tmpfile>`). Mention the resulting `yunxing:review` issue number/URL in the final summary. The user has acknowledged the risk, but the findings must not live only in the transient session.
    - `Stop — do not ship` — abort the shipping workflow. The user will handle findings manually before re-invoking.
 
-   Skip this gate entirely when the review reported `Actionable findings: none.` (and followup applied everything mechanical) or when only Tier 1 was used. Do not proceed past this gate on an `Accept and proceed` decision until the agent has recorded whether the durable sink is `PR Known Residuals` or `docs/residual-review-findings/<branch-or-head-sha>.md`.
+   Skip this gate entirely when the review reported `Actionable findings: none.` (and followup applied everything mechanical) or when only Tier 1 was used. Do not proceed past this gate on an `Accept and proceed` decision until the agent has recorded whether the durable sink is `PR Known Residuals` (when a PR exists) or a `yunxing:review` issue (when no PR). Never a local `docs/` file.
 
 5. **Final Validation**
    - All tasks marked completed
@@ -90,23 +96,25 @@ This file contains the shipping workflow (Phase 3-4). It is loaded when all Phas
 
    Note whether the completed work has observable behavior (UI rendering, CLI output, API/library behavior with a runnable example, generated artifacts, or workflow output). The `yunxing-commit-push-pr` skill will ask whether to capture evidence only when evidence is possible.
 
-2. **Update Plan Status**
+2. **Update Plan Issue Status**
 
-   Update the plan's `status` field from `active` to `completed`. The
-   mechanic depends on the plan's format:
-   - **Markdown plan (`.md`).** YAML frontmatter at the top of the file
-     carries the status. Edit the YAML directly:
-     ```
-     status: active  ->  status: completed
-     ```
-   - **HTML plan (`.html`).** Status lives as visible text in the rendered
-     header (typically `<span class="status">active</span>` or similar).
-     Edit the visible element's text content directly. There is no hidden
-     JSON-frontmatter copy to keep in sync — HTML metadata is a single
-     source of truth in visible text per the html-rendering invariants.
+   Mark the source `yunxing:plan` issue complete. The plan is a GitHub
+   issue, not a local file — run the GH preflight (gh installed,
+   `gh auth status` exits 0, `gh repo view --json nameWithOwner` resolves)
+   before touching it; if any check fails, abort and report the gh setup
+   problem rather than writing a local file.
 
-   If no status field exists in either format, skip this step — some
-   plans omit frontmatter entirely.
+   Post a completion note and (when the project closes plan issues on ship)
+   close the issue:
+
+   ```bash
+   gh issue comment <plan-N> --body "Implementation complete; shipped. status: completed"
+   ```
+
+   If the plan body carries a leading `status:` marker, edit the body to
+   flip `status: active` to `status: completed` via `gh issue edit <plan-N> --body-file <tmpfile>`.
+   If no status marker exists, the completion comment is sufficient — skip
+   the body edit.
 
 3. **Commit and Create Pull Request**
 
@@ -127,6 +135,21 @@ This file contains the shipping workflow (Phase 3-4). It is loaded when all Phas
    - Link to PR (if one was created)
    - Note any follow-up work needed
    - Suggest next steps if applicable
+
+5. **Hand Off to Compound**
+
+   On a successful ship, hand off to the `yunxing-compound` skill to capture
+   the solved problem. Compound produces a `yunxing:solution` GitHub issue
+   (not a local `docs/solutions` file). Pass it the plan issue ref so the
+   solution body links back to the plan (and, through the plan, to the
+   originating `yunxing:req`) via `#<N>` references:
+
+   - Provide `yunxing-compound` the source plan issue ref (`#<plan-N>`/URL),
+     the PR link, and a short summary of what was built.
+   - `yunxing-compound` runs its own GH preflight and creates the
+     `yunxing:solution` issue, referencing the plan/req issue with `#<N>` in
+     the body.
+   - Record the resulting solution issue number/URL in the final summary.
 
 ## Quality Checklist
 

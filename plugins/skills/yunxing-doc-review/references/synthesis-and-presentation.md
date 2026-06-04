@@ -244,12 +244,20 @@ Run this pass on the merged set across all personas. Record the count dropped as
 
 ### Apply safe_auto fixes
 
-Apply only `safe_auto` findings **at confidence anchor `100`** to the document in a single pass. This matches the 3.7 routing table: anchor `100` + `safe_auto` silent-applies; anchor `75` + `safe_auto` was demoted to `gated_auto` in 3.7 and enters the walk-through instead; anchor `50` + any `autofix_class` routes to FYI and must never auto-apply.
+Apply only `safe_auto` findings **at confidence anchor `100`** to the working file in a single pass. The working file is the issue body markdown fetched to the OS temp dir (issue source) or the local markdown file (local source) — see "Source resolution" in `SKILL.md`. This matches the 3.7 routing table: anchor `100` + `safe_auto` silent-applies; anchor `75` + `safe_auto` was demoted to `gated_auto` in 3.7 and enters the walk-through instead; anchor `50` + any `autofix_class` routes to FYI and must never auto-apply.
 
-- Edit the document inline using the platform's edit tool
+- Edit the working file inline using the platform's edit tool
 - Track what was changed for the "Applied fixes" section in the rendered output (`safe_auto` is the internal enum; the rendered section header reads "Applied fixes")
 - Do not ask for approval — these have one clear correct fix AND evidence directly confirms (anchor `100`)
 - Do NOT silent-apply any `safe_auto` finding at anchor `75` or `50`. If a finding reaches this step with `autofix_class: safe_auto` and anchor below `100`, the 3.7 routing rule was not applied correctly; re-run 3.7 for that finding before continuing.
+
+**SYNC-BACK after safe_auto (issue source only).** When the source is a yunxing artifact issue, after the safe_auto edits land on the working file push them to the issue body:
+
+```bash
+gh issue edit <N> --body-file <working-file>
+```
+
+This is the same mechanism the end-of-walk-through Apply batch and Open-Questions appends use (see `references/walkthrough.md`); when both run in the same session, one push-back after the final edit pass is sufficient — there is no need to push after every individual edit. For a local source there is no push-back: the edits already wrote in place.
 
 List every applied fix in the output summary so the user can see what changed. Use enough detail to convey the substance of each fix (section, what was changed, reviewer attribution). This is especially important for fixes that add content or touch document meaning — the user should not have to diff the document to understand what the review did.
 
@@ -353,13 +361,15 @@ This rule prevents two failure modes: (1) regressions where a fix didn't actuall
 
 ### Protected Artifacts
 
-During synthesis, discard any finding that recommends deleting or removing files in:
+During synthesis, discard any finding that recommends deleting or removing the durable yunxing artifacts these issues represent — issues labeled:
 
-- `docs/brainstorms/`
-- `docs/plans/`
-- `docs/solutions/`
+- `yunxing:req`
+- `yunxing:plan`
+- `yunxing:solution`
+- `yunxing:idea`
+- `yunxing:pulse`
 
-These are pipeline artifacts and must not be flagged for removal.
+These are pipeline artifacts and must not be flagged for removal. (The same applies to any equivalent local artifact doc passed as a local source.)
 
 ## Phase 5: Next Action — Terminal Question
 

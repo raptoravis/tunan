@@ -1,8 +1,8 @@
 # Brainstorm Sections
 
-This reference describes what makes a great brainstorm requirements document.
-It does NOT prescribe how the doc looks on the page — rendering is handled by
-the format-specific references (`markdown-rendering.md`, `html-rendering.md`).
+This reference describes what makes a great brainstorm requirement — the
+content of the `yunxing:req` GitHub issue body. It does NOT prescribe how the
+issue body looks on the page — that is handled by `markdown-rendering.md`.
 
 ## The outcome
 
@@ -26,8 +26,13 @@ Skip document creation when **both** hold:
 - The user only needs brief alignment — no exploration produced novel scope,
   framing, or decisions worth preserving in IDed shape.
 - Any durable decisions made during the dialogue can flow naturally to
-  downstream artifacts (`yunxing-plan`, the commit message, `docs/solutions/`)
-  without a brainstorm doc as an intermediary.
+  downstream artifacts (`yunxing-plan`, the commit message, a
+  `yunxing:solution` learnings issue) without a `yunxing:req` issue as an
+  intermediary.
+
+  (When a req issue was already bound — e.g., from `yunxing-newreq` — it
+  already exists, so update it in place even for slim outcomes rather than
+  deciding whether to "create" one.)
 
 The trigger for creating a doc is when the dialogue surfaced enough
 structural decisions, scope boundaries, or acceptance criteria that
@@ -36,10 +41,10 @@ durable, IDed form — not just as conversational artifacts.
 
 **Stress test:** a brainstorm about a tiny bug fix where the user asks "fix
 this with a null check or with upstream validation?" and the agent confirms
-"upstream validation, here's why" doesn't need a brainstorm doc. The
-decision flows to `yunxing-plan` (or directly to commit message, or to
-`docs/solutions/` if it's a pattern worth carrying) without a brainstorm
-artifact in the middle.
+"upstream validation, here's why" doesn't need a `yunxing:req` issue. The
+decision flows to `yunxing-plan` (or directly to commit message, or to a
+`yunxing:solution` learnings issue if it's a pattern worth carrying) without
+a `yunxing:req` issue in the middle.
 
 Conversely, a brainstorm about a multi-actor feature with contested scope
 and several behavioral conditions probably does need a doc — the planning
@@ -178,38 +183,32 @@ about the same thing, with continuous R-IDs across groups.)
 
 ## Brainstorm metadata fields
 
-Every brainstorm carries a small set of stable metadata fields that
-downstream tooling depends on. The contract is format-independent: in
-markdown these fields appear as YAML frontmatter at the top of the file; in
-HTML they appear as visible header text (typically a `<dl>` of `<dt>`/`<dd>`
-pairs or a stats strip). Field names and semantics are the same across both
-formats so consumers can locate them without knowing which format produced
-the brainstorm.
+Every requirement carries a small set of stable metadata fields. They render
+as a fenced ```` ```yaml ```` block at the very top of the `yunxing:req`
+issue body (GitHub issues have no `---` frontmatter delimiters). Field names
+and semantics are stable so consumers can locate them in the body.
 
 ### Required
 
 - **`date`** — creation date in ISO 8601 (`YYYY-MM-DD`), ASCII digits only.
-  Used in the filename (`docs/brainstorms/YYYY-MM-DD-<topic>-requirements.<md|html>`).
-- **`topic`** — kebab-case slug identifying the brainstorm subject (e.g.,
-  `surface-scope-earlier`, `demo-reel-local-save`). Used in the filename
-  alongside `date` and as the resume-detection key when `yunxing-brainstorm`'s
-  Phase 0.1 scans `docs/brainstorms/` for an existing artifact to continue.
+- **`topic`** — kebab-case slug identifying the requirement subject (e.g.,
+  `surface-scope-earlier`, `demo-reel-local-save`). Also used as the
+  human-readable part of the issue title (`[req] <topic>`).
 
 ### Status flip does not apply to brainstorm
 
-Unlike plans, brainstorm artifacts have no `status` field — there is no
-`active → completed` lifecycle. A brainstorm is a one-time output that
-downstream consumers (`yunxing-plan`, `yunxing-doc-review`) reference via the plan's
-`origin:` field. The `<span class="status">` HTML hook described in
-`html-rendering.md` is a plan-side mechanic and does not render on
-brainstorm artifacts.
+The `yunxing:req` issue body has no `status` field — there is no
+`active → completed` body lifecycle. A requirement is a one-time artifact
+that downstream consumers (`yunxing-plan`, `yunxing-doc-review`) reference by
+its issue `#<N>`. (GitHub's own open/closed state is the issue lifecycle, not
+a body field.)
 
 ### Field-name stability
 
-Field names are stable across brainstorm revisions — never rename a field
-or repurpose its semantics. Agents composing new brainstorms MUST use these
+Field names are stable across requirement revisions — never rename a field
+or repurpose its semantics. Agents composing new requirements MUST use these
 exact names; adding new fields is fine, but renaming `topic` to `subject`
-or `date` to `created` breaks filename construction and resume detection.
+or `date` to `created` breaks downstream expectations.
 
 ## ID and content rules
 
@@ -250,14 +249,11 @@ to different purposes:
 
 ## Rendering
 
-The format-specific references describe how to render these sections in each
-output format:
+`references/markdown-rendering.md` describes how to render these sections as
+the `yunxing:req` issue body markdown. (`references/html-rendering.md` is
+deprecated/unused — the plugin no longer writes local HTML artifacts.)
 
-- **Markdown rendering:** `references/markdown-rendering.md`
-- **HTML rendering:** `references/html-rendering.md`
-
-This reference (`brainstorm-sections.md`) is about WHAT the brainstorm
-contains; rendering references are about HOW each format presents it. The
-brainstorm is written in one format — markdown OR HTML, never both — based
-on the resolved output mode. The section catalog is the same regardless of
-format.
+This reference (`brainstorm-sections.md`) is about WHAT the requirement
+contains; `markdown-rendering.md` is about HOW it renders as the issue body.
+The requirement is stored as the markdown body of a `yunxing:req` GitHub
+issue.

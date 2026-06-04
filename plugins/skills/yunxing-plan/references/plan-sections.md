@@ -1,8 +1,9 @@
 # Plan Sections
 
 This reference describes what makes a great implementation plan. It does NOT
-prescribe how the plan looks on the page — rendering is handled by the
-format-specific references (`markdown-rendering.md`, `html-rendering.md`).
+prescribe how the plan looks on the page — rendering of the plan issue body is
+handled by `markdown-rendering.md`. The plan is stored as a `yunxing:plan`
+GitHub issue whose body is markdown; there is no local plan file.
 
 ## The outcome
 
@@ -65,9 +66,10 @@ vs. genuine skip cases:
 - *"Bump dependency X to v2.3.1"* — mechanical, skip the plan (unless the
   bump introduces breaking changes that warrant unit-by-unit migration).
 
-When skipping the plan doc, the work proceeds directly to `yunxing-work` or to
+When skipping the plan issue, the work proceeds directly to `yunxing-work` or to
 implementation, and any decisions made along the way land in the commit
-message or `docs/solutions/` if they're worth carrying forward.
+message or a `yunxing:solution` learning issue if they're worth carrying
+forward.
 
 ## Hard floor
 
@@ -160,12 +162,9 @@ The agent also picks per artifact:
 ## Plan metadata fields
 
 Every plan carries a small set of stable metadata fields that downstream
-tooling depends on. The contract is format-independent: in markdown these
-fields appear as YAML frontmatter at the top of the file; in HTML they
-appear as visible header text (typically a `<dl>` of `<dt>`/`<dd>` pairs or
-a stats strip). Field names and semantics are the same across both formats
-so consumers can locate them without knowing which format produced the
-plan.
+tooling depends on. These fields appear as a fenced ```yaml block at the very
+top of the plan issue body. Field names and semantics are stable so consumers
+can locate them by name.
 
 ### Required
 
@@ -175,10 +174,8 @@ plan.
   `fix`, `refactor`, `chore`, `docs`, `perf`, `test`, etc.). Carries the
   intent the eventual commit message should reflect.
 - **`status`** — `active` on creation; `yunxing-work` flips to `completed` on
-  ship. `yunxing-plan`'s Phase 0.1 resume fast path keys on `active`. In HTML,
-  status MUST render as `<span class="status">{value}</span>` so the flip
-  mechanic can locate and rewrite it by selector (see
-  `references/html-rendering.md`).
+  ship (rewriting the issue body's frontmatter). `yunxing-plan`'s Phase 0.1
+  resume fast path keys on `active`.
 - **`date`** — creation date in ISO 8601 (`YYYY-MM-DD`), ASCII digits only.
 
 ### Optional but well-known
@@ -186,11 +183,11 @@ plan.
 These fields are not required, but when set they have fixed names and
 semantics so downstream tooling can rely on them:
 
-- **`origin`** — repo-relative path to an upstream brainstorm requirements
-  doc (e.g., `docs/brainstorms/2026-05-12-pagination-requirements.md`).
-  Set when planning from an upstream brainstorm; carried for traceability
-  and re-resolved when `yunxing-plan` re-deepens. The HITL Proof flow uses
-  `origin` to trace back to the source brainstorm.
+- **`origin`** — the upstream `yunxing:req` requirement issue ref (e.g.,
+  `#142`) the plan was built from. Set when planning from a requirement issue;
+  carried for traceability and re-resolved when `yunxing-plan` re-deepens.
+  This mirrors the human-readable `Requirement: #<reqN>` line near the top of
+  the body — both point at the same source requirement.
 - **`deepened`** — ISO 8601 date marking the first time the confidence
   check substantively strengthened the plan. Presence affects Phase 0.1
   resume fast-path logic (see `references/deepening-workflow.md`).
@@ -227,14 +224,7 @@ These apply regardless of rendering format.
 
 ## Rendering
 
-The format-specific references describe how to render these sections in each
-output format:
-
-- **Markdown rendering:** `references/markdown-rendering.md`
-- **HTML rendering:** `references/html-rendering.md`
-
-This reference (`plan-sections.md`) is about WHAT the plan contains;
-rendering references are about HOW each format presents it. The plan is
-written in one format — markdown OR HTML, never both — based on the
-resolved output mode. The section catalog is the same regardless of
-format.
+`references/markdown-rendering.md` describes how to render these sections in
+the plan issue body. This reference (`plan-sections.md`) is about WHAT the
+plan contains; the rendering reference is about HOW the markdown body presents
+it. The plan body is always markdown (a `yunxing:plan` GitHub issue).

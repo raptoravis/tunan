@@ -5,7 +5,7 @@ These instructions apply when working in this repo, which ships the
 agents under `agents/`, and the plugin manifests under `.claude-plugin/` and
 `.codex-plugin/`.
 
-# Compounding Engineering Plugin Development
+# Compounding Engineering Development
 
 ## Runtime vs Authoring Context
 

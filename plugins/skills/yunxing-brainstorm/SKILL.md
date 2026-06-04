@@ -1,20 +1,22 @@
 ---
 name: yunxing-brainstorm
-description: 'Explore requirements and approaches through collaborative dialogue, then write a right-sized requirements document. Use when the user says "let''s brainstorm", "what should we build", or "help me think through X", presents a vague or ambitious feature request, or seems unsure about scope or direction -- even without explicitly asking to brainstorm.'
-argument-hint: "[feature idea or problem to explore] [output:html]"
+description: 'Explore requirements and approaches through collaborative dialogue, then capture a right-sized requirement as a GitHub issue labeled yunxing:req. Use when the user says "let''s brainstorm", "what should we build", or "help me think through X", presents a vague or ambitious feature request, or seems unsure about scope or direction -- even without explicitly asking to brainstorm. Accepts an existing req issue ref to resume and update.'
+argument-hint: "[feature idea or problem to explore, or a req issue ref #N / URL]"
 ---
 
 # Brainstorm a Feature or Improvement
 
-**Note: The current year is 2026.** Use this when dating requirements documents.
+**Note: The current year is 2026.** Use this when dating the requirement issue body.
 
 Brainstorming helps answer **WHAT** to build through collaborative dialogue. It precedes `/yunxing-plan`, which answers **HOW** to build it.
 
-The durable output of this workflow is a **requirements document**. In other workflows this might be called a lightweight PRD or feature brief. In compound engineering, keep the workflow name `brainstorm`, but make the written artifact strong enough that planning does not need to invent product behavior, scope boundaries, or success criteria.
+The durable output of this workflow is a **`yunxing:req` GitHub issue** — a single issue whose markdown body holds the finished requirement. In other workflows this might be called a lightweight PRD or feature brief. In compound engineering, keep the workflow name `brainstorm`, but make the written artifact strong enough that planning does not need to invent product behavior, scope boundaries, or success criteria. Requirements live in GitHub issues, never in local files under `docs/`.
+
+`yunxing-newreq` already creates standalone `yunxing:req` issues. When this skill is invoked with a req issue produced by `yunxing-newreq` (or any earlier `yunxing-brainstorm` run), it **updates that same issue** rather than creating a duplicate.
 
 This skill does not implement code. It explores, clarifies, and documents decisions for later planning or execution.
 
-**IMPORTANT: All file references in generated documents must use repo-relative paths (e.g., `src/models/user.rb`), never absolute paths. Absolute paths break portability across machines, worktrees, and teammates.**
+**IMPORTANT: All file references inside the issue body must use repo-relative paths (e.g., `src/models/user.rb`), never absolute paths. Absolute paths break portability across machines, worktrees, and teammates.**
 
 ## Core Principles
 
@@ -42,53 +44,87 @@ These rules apply to every brainstorm, including the universal (non-software) fl
 ## Output Guidance
 
 - **Keep outputs concise** - Prefer short sections, brief bullets, and only enough detail to support the next decision.
-- **Use repo-relative paths** - When referencing files, use paths relative to the repo root (e.g., `src/models/user.rb`), never absolute paths. Absolute paths make documents non-portable across machines and teammates.
+- **Use repo-relative paths** - When referencing files in the issue body, use paths relative to the repo root (e.g., `src/models/user.rb`), never absolute paths. Absolute paths make the requirement non-portable across machines and teammates.
 
 ## Feature Description
 
 <feature_description> #$ARGUMENTS </feature_description>
 
-**If the feature description above is empty, ask the user:** "What would you like to explore? Please describe the feature, problem, or improvement you're thinking about."
+`$ARGUMENTS` may be either a free-text feature description OR a reference to an existing `yunxing:req` issue (a `#<N>` token or a full GitHub issue URL). When it is an issue ref, Phase 0.0 binds that issue and reads its body as the feature description / resume source; otherwise the text is the feature description.
 
-Do not proceed until you have a feature description from the user.
+**If the feature description above is empty (no text and no issue ref), ask the user:** "What would you like to explore? Please describe the feature, problem, or improvement you're thinking about, or pass an existing `yunxing:req` issue (`#<N>` or its URL) to continue."
+
+Do not proceed until you have a feature description or a bound issue.
 
 ## Execution Flow
 
 ### Phase 0: Resume, Assess, and Route
 
-#### 0.0 Resolve Output Mode
+#### 0.0 Resolve the Requirement Issue
 
-Determine `OUTPUT_FORMAT` before any other phase fires. Output mode is **exclusive** — the requirements doc is written as either markdown (`.md`) OR HTML (`.html`), never both. Precedence: CLI arg > config > default (`md`), with a hard pipeline-mode override.
+The durable requirement is a **`yunxing:req` GitHub issue** (markdown body), never a local file. Run the GH preflight, then resolve whether this run binds an existing issue or will create one at Phase 3.
 
-**Read config (pre-resolved at skill load):**
-!`cat "$(git rev-parse --show-toplevel 2>/dev/null)/.yunxing/config.local.yaml" 2>/dev/null || echo '__NO_CONFIG__'`
+**GH preflight — run before any issue read/write. Abort with the guidance shown if any check fails; NEVER fall back to a local file.**
 
-Resolution steps:
+1. `gh` installed. If not: tell the user to install it from `https://cli.github.com` or run `/yunxing-setup`.
 
-1. **CLI arg.** Scan `$ARGUMENTS` for a token starting with the literal prefix `output:`. If found, strip it from arguments before treating the remainder as the feature description, and match its value case-insensitively against `md` and `html`.
-   - `output:` alone (no value) → no-op, fall through to step 2.
-   - `output:<unknown>` (e.g., `output:pdf`) → drop the token, fall through to step 2, and remember to emit a one-line note above the post-generation menu after final resolution: `Ignored unknown output: value '<value>' — using <resolved_format> instead.` where `<resolved_format>` is the value `OUTPUT_FORMAT` actually resolved to after steps 2-4. Do not hardcode `md` in the note — that misleads users when config has set HTML.
-2. **Config.** If step 1 did not resolve and the pre-resolved YAML above has an **active (non-commented)** `brainstorm_output:` key whose value matches `md` or `html` (case-insensitive), use it. Missing, invalid, or commented values fall through silently. Critical: lines starting with `#` are YAML comments and must be ignored — the shipped config template includes commented examples like `# brainstorm_output: html` to document the option, and matching those as active settings would silently force HTML mode on every run without the user having opted in.
-3. **Default.** Otherwise `OUTPUT_FORMAT=md`.
-4. **Pipeline override.** When invoked from LFG or any `disable-model-invocation` context, force `OUTPUT_FORMAT=md` regardless of steps 1-3. Downstream consumers (`yunxing-plan`, `yunxing-work`) parse markdown reliably; HTML in pipeline runs is unnecessary friction.
+```bash
+gh --version
+```
 
-**Token-parsing convention:** only literal-prefix flag tokens (`output:`, `mode:`, `delegate:` where applicable) are consumed and stripped. Other `<word>:<word>` tokens — including conventional commit prefixes like `feat:`, `fix:`, `chore:` that may appear inside a feature description — pass through verbatim.
+2. `gh auth status` exits 0. If not: tell the user to run `gh auth login` (in Claude Code they can type `! gh auth login` so the output lands in the session), then re-run.
 
-**Load the format-rendering reference based on the resolved value.** Section content is the same in either format; presentation differs. Both rendering references are paired with `references/brainstorm-sections.md`, which describes what the brainstorm contains regardless of format.
+```bash
+gh auth status
+```
 
-- When `OUTPUT_FORMAT=md`, read `references/markdown-rendering.md` for format principles.
-- When `OUTPUT_FORMAT=html`, read `references/html-rendering.md` for format principles.
+3. The repo resolves. If not: a GitHub repository is required — abort and explain.
 
-The `output:` preference does NOT auto-propagate to `yunxing-plan` on handoff — yunxing-plan re-resolves its own `plan_output` config independently. Asymmetric output (`requirements.html` + `plan.md`) is acceptable; users who want HTML for both set both keys in `.yunxing/config.local.yaml`.
+```bash
+gh repo view --json nameWithOwner
+```
+
+**Ensure the `yunxing:req` label exists** (needed when Phase 3 creates the issue):
+
+```bash
+gh label list --search "yunxing:req"
+```
+
+If it is absent, create it:
+
+```bash
+gh label create "yunxing:req" --color 1f883d --description "yunxing requirements"
+```
+
+**Resolve the issue binding:**
+
+- **`$ARGUMENTS` contains an issue ref** (a `#<N>` token or a full GitHub issue URL): bind that issue as `REQ_ISSUE`. Read its body and use it as the feature description / resume source (Phase 0.1). This is the path taken when `yunxing-brainstorm` is invoked on a req issue produced by `yunxing-newreq` — the same issue is updated in place at Phase 3, not duplicated.
+
+```bash
+gh issue view <N> --json title,body,url,labels
+```
+
+- **No issue ref**: leave `REQ_ISSUE` unbound for now. Before Phase 3 creates a new issue, check for an existing matching open req issue to update instead of duplicating (Phase 0.1 / Phase 3).
+
+The requirement body is markdown-in-issue only — there is no local-file or HTML output mode and no `output:` argument. The section content is defined by `references/brainstorm-sections.md`; `references/markdown-rendering.md` describes how those sections render as the issue body markdown.
+
+**Token-parsing convention:** an issue ref (`#<N>` or issue URL) is consumed as the binding and not treated as part of the feature description. Other `<word>:<word>` tokens — including conventional commit prefixes like `feat:`, `fix:`, `chore:` that may appear inside a feature description — pass through verbatim as description text.
+
+The handoff to `yunxing-plan` passes the req issue ref (`#<N>` or URL), not a file path — see `references/handoff.md`.
 
 #### 0.1 Resume Existing Work When Appropriate
 
-If the user references an existing brainstorm topic or document, or there is an obvious recent matching `*-requirements.{md,html}` file in `docs/brainstorms/`:
+Resume from a `yunxing:req` issue — never from a local file.
 
-- Read the document
-- Confirm with the user before resuming: "Found an existing requirements doc for [topic]. Should I continue from this, or start fresh?"
-- If resuming, summarize the current state briefly, continue from its existing decisions and outstanding questions, and update the existing document instead of creating a duplicate
-- **Resume preserves the existing artifact's format, except pipeline mode.** Write back in whatever format the existing artifact uses — markdown if the existing file is `.md`, HTML if it is `.html`. Explicit `output:` arguments on this run override (e.g., resuming an `.html` doc with `output:md` switches the artifact to markdown). Pipeline mode (LFG, any `disable-model-invocation` context) always wins per Phase 0.0: even when resuming an existing `.html` brainstorm, pipeline runs force `OUTPUT_FORMAT=md` so downstream automation receives the markdown shape it expects. The resume rewrites the markdown file at the parallel path and the original `.html` is left in place untouched.
+- **A `REQ_ISSUE` was bound in Phase 0.0** (issue ref passed): its body is already the resume source. Read it (`gh issue view <N> --json title,body,url,labels`), summarize the current state briefly, and continue from its existing decisions and outstanding questions. If the issue was created by `yunxing-newreq` and holds only the captured requirement (no finished brainstorm sections yet), treat its body as the feature description and proceed through the dialogue phases normally — Phase 3 will overwrite the body with the finished requirement.
+- **No `REQ_ISSUE`, but the user references an existing brainstorm topic:** locate a candidate issue by topic before starting fresh:
+
+```bash
+gh issue list --label "yunxing:req" --search "<terms>" --json number,title,url
+```
+
+  Confirm with the user before resuming: "Found an existing `yunxing:req` issue #<N> for [topic]. Should I continue from this, or start a new one?" If resuming, bind it as `REQ_ISSUE`, read its body, and update that issue at Phase 3 instead of creating a duplicate.
+- **Nothing matches:** continue fresh; Phase 3 creates a new issue.
 
 #### 0.1b Classify Task Domain
 
@@ -258,7 +294,7 @@ If relevant, call out whether the choice is:
 
 **STOP. Before composing the synthesis, read `references/synthesis-summary.md`.** The two-stage shape (internal three-bucket draft → chat-time scoping synthesis), the Path A / Path B gate, the four scoping synthesis sections with their keep tests, the tier-aware bullet budget with re-cut rule, anti-pattern guidance, soft-cut behavior, self-redirect support, and internal-draft routing into doc body sections all live there. Composing a synthesis without these rules loaded reliably produces malformed output — pasting the full internal three-bucket draft verbatim into chat, implementation-detail leakage into the scoping synthesis, the proposal-pitch anti-pattern. **Each scoping synthesis bullet must pass the affirmability test (can the user evaluate this without reading code?) AND the detail test (1–2 lines max, conversational not documentary); over-share and over-detail are the failure modes to avoid.** This is not optional supplementary reading; it is the source of truth for how the phase behaves.
 
-Surface a scoping synthesis to the user before Phase 3 writes the requirements doc — the user's last opportunity to correct scope before the artifact lands. The scoping synthesis is shaped like what two product collaborators would confirm before writing a PRD, not like a comprehensive audit or a one-line preview.
+Surface a scoping synthesis to the user before Phase 3 writes the `yunxing:req` issue — the user's last opportunity to correct scope before the artifact lands. The scoping synthesis is shaped like what two product collaborators would confirm before writing a PRD, not like a comprehensive audit or a one-line preview.
 
 Fires for **all tiers** including Lightweight. Skip Phase 2.5 entirely on the Phase 0.1b non-software (universal-brainstorming) route.
 
@@ -271,26 +307,40 @@ Fires for **all tiers** including Lightweight. Skip Phase 2.5 entirely on the Ph
 
 ### Phase 3: Capture the Requirements
 
-Write or update a requirements document only when the conversation produced durable decisions worth preserving — see `references/brainstorm-sections.md` "Decide whether a doc is warranted at all" for the criteria and the bug-fix stress test. Skip document creation when the user only needs brief alignment and the decisions can flow downstream (yunxing-plan, commit message, docs/solutions/) without a brainstorm artifact in the middle.
+Write the requirement to a `yunxing:req` GitHub issue only when the conversation produced durable decisions worth preserving — see `references/brainstorm-sections.md` "Decide whether a doc is warranted at all" for the criteria and the bug-fix stress test. Skip issue creation when the user only needs brief alignment and the decisions can flow downstream (yunxing-plan, commit message, `yunxing:solution` learnings) without a requirement artifact in the middle. (When a `REQ_ISSUE` is already bound — e.g., a `yunxing-newreq` issue — still update it even for slim outcomes, since the issue already exists.)
 
-When a doc is warranted, compose it using:
+When a requirement is warranted, compose its markdown body using:
 
 - `references/brainstorm-sections.md` — section contract (outcomes, hard floor, include-when-material catalog, agency rules, ID conventions).
-- The format-specific rendering reference loaded at Phase 0.0 (`markdown-rendering.md` OR `html-rendering.md`) — how the resolved format presents the sections.
+- `references/markdown-rendering.md` — how those sections render as the issue body markdown. Put the brainstorm metadata fields (`date`, `topic`) as a fenced ```yaml block at the top of the body.
 
-Write to `docs/brainstorms/YYYY-MM-DD-<topic>-requirements.<md|html>` — extension follows `OUTPUT_FORMAT`. Confirm with the absolute path so the reference is clickable.
+Build the body in an OS temp file (bash `${TMPDIR:-/tmp}`, PowerShell `$env:TEMP` — never under `docs/`), then write the issue:
 
-#### Vocabulary Capture — after the requirements doc (only if CONCEPTS.md already exists)
+- **`REQ_ISSUE` is bound** (issue ref passed, or a match found in Phase 0.1): overwrite that issue's body with the finished requirement. The title becomes `[req] <topic>` (update it only if the existing title is a stale placeholder; preserve a good user-set title).
+
+```bash
+gh issue edit <N> --body-file <body-file>
+```
+
+- **No `REQ_ISSUE`:** create a new issue.
+
+```bash
+gh issue create --title "[req] <topic>" --label "yunxing:req" --body-file <body-file>
+```
+
+Capture the resulting issue number/URL — Phase 4 passes it downstream. Report the issue URL to the user (a `🔗` line) so it is clickable; do not write or confirm any local file path.
+
+#### Vocabulary Capture — after the requirement issue (only if CONCEPTS.md already exists)
 
 **Skip this step entirely if `CONCEPTS.md` does not exist at repo root** — creation is owned by yunxing-compound and yunxing-compound-refresh.
 
-Run this **after** the approaches, the scope synthesis, and the requirements doc — that is where the canonical term often gets chosen or corrected, so capturing during early dialogue (before this point) would miss the final resolved name. If it exists, scan the full dialogue and the requirements doc for **resolved** domain terms — terms where the conversation actively pinned down a precise local meaning, not terms merely mentioned in passing. **Resolved means the definition is settled, not still under discussion.** Provisional terms that may still revise stay in the conversation only.
+Run this **after** the approaches, the scope synthesis, and the requirement issue — that is where the canonical term often gets chosen or corrected, so capturing during early dialogue (before this point) would miss the final resolved name. If it exists, scan the full dialogue and the requirement issue body for **resolved** domain terms — terms where the conversation actively pinned down a precise local meaning, not terms merely mentioned in passing. **Resolved means the definition is settled, not still under discussion.** Provisional terms that may still revise stay in the conversation only.
 
 For each resolved term: if missing, add it; if present but new precision surfaced, refine it; if already consistent, no action.
 
 **Domain entities, named processes, and status concepts with project-specific meaning only.** Not file paths, class names, function signatures, or implementation decisions — `CONCEPTS.md` is a glossary, not a spec or catch-all.
 
-Follow the format set by existing entries. Apply edits silently. (If Phase 3 skipped the doc, still run this against the resolved dialogue.)
+Follow the format set by existing entries. Apply edits silently. (If Phase 3 skipped the issue, still run this against the resolved dialogue.)
 
 ### Phase 4: Handoff
 

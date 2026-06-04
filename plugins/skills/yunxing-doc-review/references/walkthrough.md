@@ -32,7 +32,7 @@ If all remaining findings are FYI-subsection-only (no `gated_auto` or `manual` f
 **Dispatch by selection:**
 
 - **A** — load this walk-through (per-finding loop). Apply decisions accumulate in memory; Open-Questions defers execute inline via `references/open-questions-defer.md`; Skip decisions are recorded as no-action; `Auto-resolve with best judgment on the rest` routes through `references/bulk-preview.md`.
-- **B** — load `references/bulk-preview.md` scoped to every pending `gated_auto` / `manual` finding. On Proceed, execute the plan: Apply → end-of-batch document edit; Open-Questions defers → `references/open-questions-defer.md`; Skip → no-op. On Cancel, return to the routing question.
+- **B** — load `references/bulk-preview.md` scoped to every pending `gated_auto` / `manual` finding. On Proceed, execute the plan: Apply → end-of-batch edit to the working file (then SYNC-BACK to the issue body if the source is an issue — see "End-of-walk-through execution"); Open-Questions defers → `references/open-questions-defer.md`; Skip → no-op. On Cancel, return to the routing question.
 - **C** — load `references/bulk-preview.md` with every pending finding in the Open-Questions bucket (regardless of the agent's natural recommendation). On Proceed, route every finding through `references/open-questions-defer.md`; no document edits apply. On Cancel, return to the routing question.
 - **D** — do not enter any dispatch phase. Emit the completion report and flow to Phase 5 terminal question.
 
@@ -218,7 +218,7 @@ Walk-through state is **in-memory only**. The orchestrator maintains:
 - A decision list (every answered finding with its action and any metadata like `append_location` for Deferred or `reason` for Skipped)
 - The current position in the findings list
 
-Nothing is written to disk per-decision except the in-doc Open Questions appends (which are external side effects — those cannot be rolled back). An interrupted walk-through (user cancels the prompt, session compacts, network dies) discards all in-memory state. Apply decisions have not been dispatched yet (they batch at end-of-walk-through), so they are cleanly lost with no document changes.
+Nothing is written to the working file per-decision except the in-doc Open Questions appends (which mutate the working file — for a local source those are immediately durable; for an issue source they reach the issue body only via the end-of-walk-through SYNC-BACK push). An interrupted walk-through (user cancels the prompt, session compacts, network dies) discards all in-memory state. Apply decisions have not been dispatched yet (they batch at end-of-walk-through), so they are cleanly lost with no Apply edits to the working file. For an issue source, the SYNC-BACK `gh issue edit` fires only after the end-of-walk-through Apply batch — an interruption before that point leaves the issue body untouched, even if Open-Questions entries were appended to the temp working file (the temp file is discarded with the session). For a local source, any Open-Questions appends already written to the file persist.
 
 Cross-session persistence is out of scope. Mirrors `yunxing-code-review`'s walk-through state rules.
 
@@ -228,9 +228,16 @@ Cross-session persistence is out of scope. Mirrors `yunxing-code-review`'s walk-
 
 After the loop terminates — either every finding has been answered, or the user took `Auto-resolve with best judgment on the rest → Proceed` — the walk-through hands off to the execution phase:
 
-1. **Apply set:** in a single pass, the orchestrator applies every accumulated Apply-set finding's `suggested_fix` to the document. Document edits happen inline via the platform's edit tool — yunxing-doc-review has no batch-fixer subagent (per scope boundary); the orchestrator performs the edits directly, since `gated_auto` and `manual` fixes for documents are single-file markdown changes with no cross-file dependencies. **Defensive no-fix check:** before dispatching the edit for each Apply-set entry, verify the merged finding carries a `suggested_fix`. If it does not (the decision-time no-fix guard in "Per-finding routing" should prevent this, but treat it as a defensive fallback), skip the edit, record the finding in the completion report's failure section with reason `Apply skipped — no suggested_fix available`, and continue the batch. Do not fail the entire pass because one Apply-set entry lacks a fix.
-2. **Defer set:** already executed inline during the walk-through via `references/open-questions-defer.md`. Nothing to dispatch here.
+1. **Apply set:** in a single pass, the orchestrator applies every accumulated Apply-set finding's `suggested_fix` to the working file. The working file is the issue body markdown fetched to the OS temp dir (issue source) or the local markdown file (local source) — see "Source resolution" in `SKILL.md`. Edits happen inline via the platform's edit tool — yunxing-doc-review has no batch-fixer subagent (per scope boundary); the orchestrator performs the edits directly, since `gated_auto` and `manual` fixes for documents are single-file markdown changes with no cross-file dependencies. **Defensive no-fix check:** before dispatching the edit for each Apply-set entry, verify the merged finding carries a `suggested_fix`. If it does not (the decision-time no-fix guard in "Per-finding routing" should prevent this, but treat it as a defensive fallback), skip the edit, record the finding in the completion report's failure section with reason `Apply skipped — no suggested_fix available`, and continue the batch. Do not fail the entire pass because one Apply-set entry lacks a fix.
+2. **Defer set:** already executed inline during the walk-through via `references/open-questions-defer.md` (those appends also write to the working file). Nothing to dispatch here.
 3. **Skip:** no-op.
+4. **SYNC-BACK (issue source only):** once the Apply-set batch has finished editing the working file, push it to the issue body so the artifact reflects the review:
+
+   ```bash
+   gh issue edit <N> --body-file <working-file>
+   ```
+
+   This single push carries both the Apply-set edits and any Open-Questions appends made earlier in the session. If a `safe_auto` SYNC-BACK already ran in Phase 4 with no further edits since, this push is still safe (it overwrites with the current working-file content). For a local source there is no push-back — edits already wrote in place. Review notes that are not document edits (FYI observations, residual concerns, the verdict) may instead be posted as a comment: `gh issue comment <N> --body-file <notes-file>`.
 
 After execution completes (or after `Auto-resolve with best judgment on the rest → Cancel` followed by the user working through remaining findings one at a time, or after the loop runs to completion), emit the unified completion report described below.
 
@@ -281,4 +288,4 @@ Verdict: Ready.
 
 ## Execution posture
 
-The walk-through is operationally read-only with respect to the project except for three permitted writes: the in-memory Apply set / decision list (managed by the orchestrator), the in-doc Open Questions appends (external side effects managed by `references/open-questions-defer.md`), and the end-of-walk-through batch document edits (the orchestrator's final Apply pass). Persona agents remain strictly read-only. Unlike `yunxing-code-review`, there is no fixer subagent — the orchestrator owns the document edit directly.
+The walk-through is operationally read-only with respect to the project except for these permitted writes: the in-memory Apply set / decision list (managed by the orchestrator), the in-doc Open Questions appends to the working file (managed by `references/open-questions-defer.md`), the end-of-walk-through batch edits to the working file (the orchestrator's final Apply pass), and — for an issue source — the SYNC-BACK `gh issue edit` that pushes the working file to the issue body. Persona agents remain strictly read-only. Unlike `yunxing-code-review`, there is no fixer subagent — the orchestrator owns the document edit directly.

@@ -17,20 +17,54 @@ Route to the matching reference based on the input. Read only that reference; do
 
 When the input is ambiguous (e.g., a zip arrived without context), inspect the recording length and event count before choosing. If still unclear, ask the user which path applies before running anything heavy.
 
+## Issue storage (GH preflight)
+
+Both the quick and extensive paths store their durable output as a GitHub issue, never a local file under `docs/`. Run the GH preflight before any issue read/write — abort with the guidance shown if any check fails; NEVER fall back to a local file (the analyzer's temp scaffolds are working material, not the durable artifact). The Setup path does not touch issues, so it skips this.
+
+1. `gh` installed. If not: tell the user to install it from `https://cli.github.com` or run `/yunxing-setup`.
+
+```bash
+gh --version
+```
+
+2. `gh auth status` exits 0. If not: tell the user to run `gh auth login` (in Claude Code they can type `! gh auth login` so the output lands in the session), then re-run.
+
+```bash
+gh auth status
+```
+
+3. The repo resolves. If not: a GitHub repository is required — abort and explain.
+
+```bash
+gh repo view --json nameWithOwner
+```
+
+**Ensure the `yunxing:req` label exists** (both paths create issues under this label):
+
+```bash
+gh label list --search "yunxing:req"
+```
+
+If it is absent, create it:
+
+```bash
+gh label create "yunxing:req" --color 1f883d --description "yunxing requirements"
+```
+
 ## Common rules
 
-- Keep raw recordings, audio chunks, zip contents, session dumps, and extracted screenshots local-only by default. Do not commit `raw/` or `frames/` directories unless the user explicitly asks and privacy is acceptable.
-- Text/metadata artifacts (requirements docs, analysis summaries, problem analyses, source manifests) may be committed when they are needed for traceability and contain no sensitive data.
-- Use repo-relative screenshot paths in any committed doc so later agents can open the evidence without absolute local paths.
+- Keep raw recordings, audio chunks, zip contents, session dumps, and extracted screenshots transient and local-only. Extract them to an OS temp dir (`${TMPDIR:-/tmp}` / `$env:TEMP`), never under `docs/`. Do not commit `raw/` or `frames/` directories.
+- Durable text artifacts (requirements, analysis summaries, problem analyses, bug reports) are stored as **GitHub issues** distinguished by label, never as local files under `docs/`. The extensive path's requirements material becomes a `yunxing:req` issue; the quick path's bug report becomes a GitHub issue. Requirements live in GitHub issues, never local files.
+- When referencing screenshots or evidence inside an issue body, note their transient temp-dir paths and the original source location so later agents can re-extract from the source recording — the temp media is not committed and may be cleaned up by the OS.
 
 ## Analyzer entrypoint
 
-All non-setup paths share the same analyzer:
+All non-setup paths share the same analyzer. Run it to a temp output dir (use `python3` on macOS/Linux, `python` or `py -3` on Windows):
 
 ```bash
-python scripts/analyze_riffrec_zip.py /path/to/input
+python scripts/analyze_riffrec_zip.py /path/to/input --output-dir "$(mktemp -d -t riffrec-XXXXXX)"
 ```
 
-Accepted inputs: a Riffrec `.zip`, an `.mp4` / `.mov` / `.webm` video, an `.m4a` / `.mp3` / `.wav` audio file, or a meeting-notes `.md`. Use `--output-dir <dir>` to control where artifacts land. In repos with `docs/brainstorms/`, the default is `docs/brainstorms/riffrec-feedback/`. The quick path overrides the output dir to a temp location so nothing pollutes the repo.
+Accepted inputs: a Riffrec `.zip`, an `.mp4` / `.mov` / `.webm` video, an `.m4a` / `.mp3` / `.wav` audio file, or a meeting-notes `.md`. The analyzer extracts **transient media** (frames, raw, chunk transcripts) plus scaffold markdown. Always point `--output-dir <dir>` at an OS temp dir so nothing pollutes the repo — the durable analysis/requirements output does NOT live in that directory, it goes into a GitHub issue (extensive path → `yunxing:req` issue; quick path → bug-report issue). Treat the analyzer's `.md` scaffolds as working material read from temp and synthesized into the issue body, not as committed artifacts.
 
-The Compound Engineering output format used by the extensive path is documented in `references/yunxing-feedback-format.md`.
+The Compound Engineering output format used by the extensive path is documented in `references/compound-engineering-feedback-format.md`.

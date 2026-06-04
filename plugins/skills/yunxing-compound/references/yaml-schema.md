@@ -1,12 +1,12 @@
 # YAML Frontmatter Schema
 
-`schema.yaml` in this directory is the canonical contract for `docs/solutions/` frontmatter written by `yunxing-compound`.
+A learning is a GitHub issue labeled `yunxing:solution`, titled `[solution] <slug>`. The YAML described here is fenced as a ```yaml block at the top of the issue body. `schema.yaml` in this directory is the canonical contract for that block, written by `yunxing-compound`.
 
 Use this file as the quick reference for:
 - required fields
 - enum values
 - validation expectations
-- category mapping
+- category classification (sub-type slug)
 - track classification (bug vs knowledge)
 
 ## Tracks
@@ -58,25 +58,27 @@ Docs created before the track system may have `symptoms`/`root_cause`/`resolutio
 - Bug-track fields present on a knowledge-track doc are harmless. Do not strip them during refresh unless the doc is being rewritten for other reasons.
 - When creating **new** docs, follow the track rules above.
 
-## Category Mapping
+## Category Classification
 
-- `build_error` -> `docs/solutions/build-errors/`
-- `test_failure` -> `docs/solutions/test-failures/`
-- `runtime_error` -> `docs/solutions/runtime-errors/`
-- `performance_issue` -> `docs/solutions/performance-issues/`
-- `database_issue` -> `docs/solutions/database-issues/`
-- `security_issue` -> `docs/solutions/security-issues/`
-- `ui_bug` -> `docs/solutions/ui-bugs/`
-- `integration_issue` -> `docs/solutions/integration-issues/`
-- `logic_error` -> `docs/solutions/logic-errors/`
-- `developer_experience` -> `docs/solutions/developer-experience/`
-- `workflow_issue` -> `docs/solutions/workflow-issues/`
-- `best_practice` -> `docs/solutions/best-practices/`
-- `documentation_gap` -> `docs/solutions/documentation-gaps/`
-- `architecture_pattern` -> `docs/solutions/architecture-patterns/`
-- `design_pattern` -> `docs/solutions/design-patterns/`
-- `tooling_decision` -> `docs/solutions/tooling-decisions/`
-- `convention` -> `docs/solutions/conventions/`
+Each learning carries a `category` value in its YAML block — a sub-type slug derived from `problem_type`. It is metadata for searching and grouping `yunxing:solution` issues, not a filesystem path. Map `problem_type` to the `category` slug below:
+
+- `build_error` -> `build-errors`
+- `test_failure` -> `test-failures`
+- `runtime_error` -> `runtime-errors`
+- `performance_issue` -> `performance-issues`
+- `database_issue` -> `database-issues`
+- `security_issue` -> `security-issues`
+- `ui_bug` -> `ui-bugs`
+- `integration_issue` -> `integration-issues`
+- `logic_error` -> `logic-errors`
+- `developer_experience` -> `developer-experience`
+- `workflow_issue` -> `workflow-issues`
+- `best_practice` -> `best-practices`
+- `documentation_gap` -> `documentation-gaps`
+- `architecture_pattern` -> `architecture-patterns`
+- `design_pattern` -> `design-patterns`
+- `tooling_decision` -> `tooling-decisions`
+- `convention` -> `conventions`
 
 ## Validation Rules
 

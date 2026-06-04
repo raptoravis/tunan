@@ -1,5 +1,6 @@
-# Documentation schema for learnings written by yunxing-compound
-# Treat this as the canonical frontmatter contract for docs/solutions/.
+# Documentation schema for learnings written by yunxing-compound.
+# A learning is a GitHub issue labeled `yunxing:solution`; this schema is the
+# canonical contract for the YAML block fenced at the top of the issue body.
 #
 # The schema has two tracks based on problem_type:
 #   Bug track  — problem_type is a defect or failure (build_error, test_failure, etc.)

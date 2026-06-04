@@ -2,6 +2,8 @@
 
 Choose the template matching the problem_type track (see `references/schema.yaml`).
 
+A learning is a GitHub issue labeled `yunxing:solution`, titled `[solution] <slug>`. Each template below maps onto an issue body: put the frontmatter YAML inside a fenced ```yaml block at the top of the body (the `--- ... ---` frontmatter delimiters shown in the templates become the opening/closing of that fence), then the markdown sections below it form the rest of the body. The `<slug>` in the title is the sanitized problem slug (no date suffix; the `date:` field is the canonical creation date).
+
 ---
 
 ## Bug Track Template
@@ -14,7 +16,7 @@ Use for: `build_error`, `test_failure`, `runtime_error`, `performance_issue`, `d
 ---
 title: [Clear problem title]
 date: [YYYY-MM-DD]
-category: [docs/solutions subdirectory]
+category: [category slug from references/yaml-schema.md]
 module: [Module or area]
 problem_type: [schema enum]
 component: [schema enum]
@@ -62,7 +64,7 @@ Use for: `best_practice`, `documentation_gap`, `workflow_issue`, `developer_expe
 ---
 title: [Clear, descriptive title]
 date: [YYYY-MM-DD]
-category: [docs/solutions subdirectory]
+category: [category slug from references/yaml-schema.md]
 module: [Module or area]
 problem_type: [schema enum]
 component: [schema enum]

@@ -1,6 +1,6 @@
 ---
 name: yunxing-product-pulse
-description: "Generate a time-windowed pulse report on what users experienced and how the product performed - usage, quality, errors, signals worth investigating. Use when the user says 'run a pulse', 'show me the pulse', 'how are we doing', 'weekly recap', 'launch-day check', or passes a time window like '24h' or '7d'. Configures via .yunxing/config.local.yaml and saves reports to docs/pulse-reports/."
+description: "Generate a time-windowed pulse report on what users experienced and how the product performed - usage, quality, errors, signals worth investigating. Use when the user says 'run a pulse', 'show me the pulse', 'how are we doing', 'weekly recap', 'launch-day check', or passes a time window like '24h' or '7d'. Configures via .yunxing/config.local.yaml and stores each report as a GitHub issue labeled yunxing:pulse (browse past pulses via gh issue list)."
 argument-hint: "[lookback window, e.g. '24h', '7d', '1h'; default 24h]"
 allowed-tools:
   - Read
@@ -13,9 +13,9 @@ allowed-tools:
 
 # Product Pulse
 
-`yunxing-product-pulse` queries the product's data sources for a given time window and produces a compact, single-page report covering usage, performance, errors, and followups. The report is saved to `docs/pulse-reports/` and the key points are surfaced in chat.
+`yunxing-product-pulse` queries the product's data sources for a given time window and produces a compact, single-page report covering usage, performance, errors, and followups. Each report is stored as a GitHub issue labeled `yunxing:pulse` and the key points are surfaced in chat. The list of `yunxing:pulse` issues is the browseable timeline of past pulses.
 
-The skill does not mutate the product, the database, or any external system. Its only writes are pulse settings appended to `.yunxing/config.local.yaml` (the unified CE local config, gitignored, machine-local) and the report file (`docs/pulse-reports/...`). MCP and other data-source tools are invoked read-only; if a tool offers write modes, do not use them.
+The skill does not mutate the product, the database, or any external system. Its only local write is pulse settings appended to `.yunxing/config.local.yaml` (the unified CE local config, gitignored, machine-local); the report itself is written to GitHub as an issue (markdown body, no local file). MCP and other data-source tools are invoked read-only; if a tool offers write modes, do not use them.
 
 ## Interaction Method
 
@@ -41,15 +41,38 @@ Apply a **15-minute trailing buffer** to the window's upper bound. Many analytic
 
 1. **Read it like a founder.** No hardcoded thresholds. Do not label things "bad" or "good" by default - present the numbers and let the reader judge.
 2. **Single page.** Target 30-40 lines of terminal output. If the report is getting long, cut.
-3. **No PII in saved reports.** Do not include user emails, account IDs, or message content in the report written to disk.
+3. **No PII in saved reports.** Do not include user emails, account IDs, or message content in the report issue body.
 4. **Parallel where safe, serial where it matters.** Analytics and tracing queries run in parallel. Database queries run serially to avoid load.
-5. **Memory through saved reports.** Every run writes to `docs/pulse-reports/` so past pulses are browseable as a timeline.
+5. **Memory through saved reports.** Every run creates a `yunxing:pulse` GitHub issue so past pulses are browseable as a timeline via `gh issue list --label yunxing:pulse`.
 6. **Read-only database access only.** If a database is used as a data source, the connection must be read-only. The interview refuses to accept read-write credentials. Database access is optional - many products complete the pulse with analytics and tracing alone.
 7. **Strategy-seeded when available.** If `STRATEGY.md` exists, the interview reads it before asking questions and carries forward the product name and key metrics as seeds. The goal of data-source setup is to wire up whatever connections are needed to actually measure those metrics.
 
 ## Execution Flow
 
 ### Phase 0: Route by Config State
+
+#### 0.0 GitHub preflight
+
+Each pulse report is stored as a GitHub issue, never a local file. Before any run, verify the GitHub prerequisites. Run these one at a time:
+
+```bash
+gh --version
+gh auth status
+gh repo view --json nameWithOwner
+```
+
+- If `gh` is not installed, abort and direct the user to install it from https://cli.github.com or run `/yunxing-setup`. Never fall back to a local file.
+- If `gh auth status` does not exit 0, abort and direct the user to authenticate (`gh auth login`; in Claude Code suggest typing `! gh auth login`).
+- If `gh repo view` does not resolve, abort and explain that a GitHub repo is required to store pulse reports.
+
+Ensure the `yunxing:pulse` label exists before writing (Phase 2.4 also re-checks):
+
+```bash
+gh label list --search "yunxing:pulse"
+gh label create "yunxing:pulse" --color 1f883d --description "yunxing pulse"
+```
+
+Run the create command only if the list shows no `yunxing:pulse` label.
 
 **Config (pre-resolved):**
 !`(top=$(git rev-parse --show-toplevel 2>/dev/null); [ -n "$top" ] && cat "$top/.yunxing/config.local.yaml" 2>/dev/null) || echo '__NO_CONFIG__'`
@@ -155,9 +178,24 @@ Keep the total to 30-40 lines. If a section is thin, leave it thin; do not pad.
 
 #### 2.4 Write the Report
 
-Save to `docs/pulse-reports/YYYY-MM-DD_HH-MM.md` using the local time of the run. Create `docs/pulse-reports/` if it does not exist.
+Store the report as a GitHub issue labeled `yunxing:pulse` — never a local file. The issue body is the filled report-template markdown.
 
-Surface the Headlines and top Followup in chat. Provide the full file path so the user can open the saved report.
+Confirm the `yunxing:pulse` label exists (Phase 0.0 normally created it):
+
+```bash
+gh label list --search "yunxing:pulse"
+gh label create "yunxing:pulse" --color 1f883d --description "yunxing pulse"
+```
+
+Run the create command only if the list shows no `yunxing:pulse` label.
+
+Write the filled template to a temp file, then create the issue. Title is `[pulse] <time window>` using the queried window bounds as dates (e.g., `[pulse] 2026-05-28..2026-06-04`):
+
+```bash
+gh issue create --title "[pulse] 2026-05-28..2026-06-04" --label "yunxing:pulse" --body-file <tmpfile>
+```
+
+Surface the Headlines and top Followup in chat. Provide the issue URL returned by `gh issue create` so the user can open the report. To browse past pulses as a timeline, run `gh issue list --label yunxing:pulse`.
 
 ### Phase 3: Routine Hook
 
@@ -172,10 +210,10 @@ Never schedule automatically. Any scheduling handoff requires explicit confirmat
 
 - Does not report "what shipped." Shipped work lives in the issue tracker and commit history, not here. Pulse is strictly about user experience and system performance.
 - Does not set thresholds or alert the user. The reader interprets.
-- Does not persist PII in saved reports.
+- Does not persist PII in saved reports (pulse issue bodies).
 - Does not mutate the database or any external system. All queries are read-only.
 - Does not replace tracing dashboards or analytics tools. It consolidates a single-page read; deep investigation still uses the native tools.
 
 ## Learn More
 
-The "read like a founder" posture and the single-page constraint are deliberate. Dashboards with 40 metrics produce attention sprawl; one page with the right four sections forces the reader to notice what matters. The saved-reports folder is designed to be a team's working memory, not a data warehouse - past pulses are grepable, diffable, and disposable.
+The "read like a founder" posture and the single-page constraint are deliberate. Dashboards with 40 metrics produce attention sprawl; one page with the right four sections forces the reader to notice what matters. The `yunxing:pulse` issue list is designed to be a team's working memory, not a data warehouse - past pulses are searchable and filterable via `gh issue list --label yunxing:pulse`.

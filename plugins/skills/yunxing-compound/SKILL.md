@@ -1,6 +1,6 @@
 ---
 name: yunxing-compound
-description: Document a recently solved problem to compound your team's knowledge or CONCEPTS.md, the project's shared domain vocabulary.
+description: "Document a recently solved problem as a yunxing:solution GitHub issue to compound your team's knowledge, or update CONCEPTS.md, the project's shared domain vocabulary."
 argument-hint: "[optional: brief context] [mode:headless] "
 ---
 
@@ -10,7 +10,7 @@ Coordinate multiple subagents working in parallel to document a recently solved 
 
 ## Purpose
 
-Captures problem solutions while context is fresh, creating structured documentation in `docs/solutions/` with YAML frontmatter for searchability and future reference. Uses parallel subagents for maximum efficiency.
+Captures problem solutions while context is fresh, creating a structured GitHub issue labeled `yunxing:solution` (titled `[solution] <slug>`) with a fenced ```yaml block at the top of the body for searchability and future reference. Uses parallel subagents for maximum efficiency.
 
 **Why "compound"?** Each documented solution compounds your team's knowledge. The first time you solve a problem takes research. Document it, and the next occurrence takes minutes. Knowledge compounds.
 
@@ -44,14 +44,54 @@ Headless mode is intended for automations and skill-to-skill invocation where no
 
 If the line above resolved to a plain branch name (like `feat/my-branch`), include it in the `yunxing-sessions` invocation payload in Phase 1 so the orchestrator does not waste a turn deriving it. If it still contains a backtick command string or is empty, omit it and let `yunxing-sessions` derive it at runtime.
 
+## Storage: yunxing:solution GitHub issues
+
+Learnings are stored as GitHub issues, never local files. A learning is one issue labeled `yunxing:solution`, titled `[solution] <slug>`, whose body is a fenced ```yaml block (the frontmatter from `references/schema.yaml`) followed by the resolution-template markdown sections. Never write a learning to `docs/solutions/` or any local file.
+
+**GH preflight — run before any issue read or write.** If any check fails, abort and surface the guidance; never fall back to a local file.
+
+1. `gh` is installed. If not, install from https://cli.github.com or run `/yunxing-setup`.
+2. `gh auth status` exits 0. If not, run `gh auth login` (in Claude Code, suggest typing `! gh auth login`).
+3. `gh repo view --json nameWithOwner` resolves. If not, a GitHub repo is required.
+
+**Ensure the label exists** before creating or relabeling:
+
+```bash
+gh label list --search "yunxing:solution"
+```
+
+If absent:
+
+```bash
+gh label create "yunxing:solution" --color 1f883d --description "yunxing solution"
+```
+
+**Create a learning issue** (markdown body only — no HTML files). Write the body to a temp file, then:
+
+```bash
+gh issue create --title "[solution] <slug>" --label "yunxing:solution" --body-file <tmpfile>
+```
+
+The body is the ```yaml block (from the resolution template's frontmatter) followed by the template's markdown sections. Reference the originating req/plan issue by `#<N>` in the body when known.
+
+**Find / resume / update a learning issue:**
+
+```bash
+gh issue list --label "yunxing:solution" --search "<terms>" --json number,title,url
+gh issue view <N> --json title,body,url,labels
+gh issue edit <N> --body-file <tmpfile>
+```
+
+Accept an issue ref `#<N>` or full issue URL as input. Before creating, check for an existing matching open `yunxing:solution` issue and update it instead of duplicating.
+
 ## Support Files
 
 These files are the durable contract for the workflow. Read them on-demand at the step that needs them — do not bulk-load at skill start.
 
-- `references/schema.yaml` — canonical frontmatter fields and enum values (read when validating YAML)
-- `references/yaml-schema.md` — category mapping from problem_type to directory (read when classifying)
+- `references/schema.yaml` — canonical frontmatter fields and enum values for the issue body's ```yaml block (read when validating YAML)
+- `references/yaml-schema.md` — category classification from problem_type (read when classifying)
 - `references/concepts-vocabulary.md` — CONCEPTS.md format and inclusion rules (read in Phase 2.4 when domain terms surface)
-- `assets/resolution-template.md` — section structure for new docs (read when assembling)
+- `assets/resolution-template.md` — issue body structure for new learnings (read when assembling)
 
 When spawning subagents, pass the relevant file contents into the task prompt so they have the contract without needing cross-skill paths.
 
@@ -91,9 +131,9 @@ If the user says yes, invoke `yunxing-sessions` in Phase 1 (see step 4). If no, 
 ### Full Mode
 
 <critical_requirement>
-**The primary deliverable is ONE file - the final documentation.**
+**The primary deliverable is ONE artifact — the final `yunxing:solution` issue.**
 
-Phase 1 subagents return TEXT DATA to the orchestrator. They must NOT use Write, Edit, or create any files. Only the orchestrator writes files. Beyond the Phase 2 solution doc, its other writes are maintenance side effects — not additional deliverables, and creating one when absent is expected, not a violation of this rule:
+Phase 1 subagents return TEXT DATA to the orchestrator. They must NOT use Write, Edit, create files, or create/edit issues. Only the orchestrator creates or edits the issue. Beyond the Phase 2 solution issue, its other writes are local maintenance side effects — not additional deliverables, and creating one when absent is expected, not a violation of this rule:
 - **`CONCEPTS.md`** — create or update in Phase 2.4 (Vocabulary Capture) when a qualifying domain term surfaces.
 - **A project instruction file** (AGENTS.md or CLAUDE.md) — a small edit when the Discoverability Check finds a gap.
 
@@ -139,9 +179,9 @@ Launch research subagents. Each returns text data to the orchestrator.
      - **Bug track**: symptoms, root_cause, resolution_type
      - **Knowledge track**: applies_when (symptoms/root_cause/resolution_type optional)
    - Incorporates auto memory excerpts (if provided by the orchestrator) as supplementary evidence
-   - Reads `references/yaml-schema.md` for category mapping into `docs/solutions/`
-   - Suggests a filename using the pattern `[sanitized-problem-slug].md` — no date suffix, even if existing files in the target directory have one; the `date:` frontmatter field is the canonical creation date
-   - Returns: YAML frontmatter skeleton (must include `category:` field mapped from problem_type), category directory path, suggested filename, and which track applies
+   - Reads `references/yaml-schema.md` for category classification from problem_type
+   - Suggests an issue title slug using the pattern `[solution] <sanitized-problem-slug>` — no date suffix; the `date:` frontmatter field is the canonical creation date
+   - Returns: YAML frontmatter skeleton (must include `category:` field mapped from problem_type), category slug, suggested title slug, and which track applies
    - Does not invent enum values, categories, or frontmatter fields from memory; reads the schema and mapping files above
    - Does not force bug-track fields onto knowledge-track learnings or vice versa
 
@@ -168,33 +208,28 @@ Launch research subagents. Each returns text data to the orchestrator.
    - **Examples**: Concrete before/after or usage examples showing the practice in action
 
 #### 3. **Related Docs Finder**
-   - Searches `docs/solutions/` for related documentation
-   - Identifies cross-references and links
+   - Searches existing `yunxing:solution` issues for related learnings (`gh issue list --label "yunxing:solution" --search "<terms>"`)
+   - Identifies cross-references and links (by `#<N>` issue references)
    - Finds related GitHub issues
-   - Flags any related learning or pattern docs that may now be stale, contradicted, or overly broad
-   - **Assesses overlap** with the new doc being created across five dimensions: problem statement, root cause, solution approach, referenced files, and prevention rules. Score as:
+   - Flags any related learning issue that may now be stale, contradicted, or overly broad
+   - **Assesses overlap** with the new learning being created across five dimensions: problem statement, root cause, solution approach, referenced files, and prevention rules. Score as:
      - **High**: 4-5 dimensions match — essentially the same problem solved again
      - **Moderate**: 2-3 dimensions match — same area but different angle or solution
      - **Low**: 0-1 dimensions match — related but distinct
-   - Returns: Links, relationships, refresh candidates, and overlap assessment (score + which dimensions matched)
+   - Returns: Links (`#<N>` refs and URLs), relationships, refresh candidates, and overlap assessment (score + which dimensions matched)
 
-   **Search strategy (grep-first filtering for efficiency):**
+   **Search strategy (issue-list filtering for efficiency):**
 
    1. Extract keywords from the problem context: module names, technical terms, error messages, component types
-   2. If the problem category is clear, narrow search to the matching `docs/solutions/<category>/` directory
-   3. Use the native content-search tool (e.g., Grep in Claude Code) to pre-filter candidate files BEFORE reading any content. Run multiple searches in parallel, case-insensitive, targeting frontmatter fields. These are template patterns -- substitute actual keywords:
-      - `title:.*<keyword>`
-      - `tags:.*(<keyword1>|<keyword2>)`
-      - `module:.*<module name>`
-      - `component:.*<component>`
-   4. If search returns >25 candidates, re-run with more specific patterns. If <3, broaden to full content search
-   5. Read only frontmatter (first 30 lines) of candidate files to score relevance
-   6. Fully read only strong/moderate matches
-   7. Return distilled links and relationships, not raw file contents
+   2. List candidate learning issues with `gh issue list --label "yunxing:solution" --search "<keywords>" --state all --json number,title,url --limit 25`. Run a few keyword variants if needed
+   3. If the list returns >25 candidates, re-run with more specific keywords. If <3, broaden the keywords
+   4. Read only the frontmatter ```yaml block of candidate issues (`gh issue view <N> --json body` then inspect the top fence) to score relevance
+   5. Fully read only strong/moderate matches
+   6. Return distilled links (`#<N>` refs / URLs) and relationships, not raw issue bodies
 
-   **GitHub issue search:**
+   **Related non-learning issues:**
 
-   Prefer the `gh` CLI for searching related issues: `gh issue list --search "<keywords>" --state all --limit 5`. If `gh` is not installed, fall back to the GitHub MCP tools (e.g., `unblocked` data_retrieval) if available. If neither is available, skip GitHub issue search and note it was skipped in the output.
+   Also search for other related GitHub issues with `gh issue list --search "<keywords>" --state all --limit 5`. If `gh` is not installed, the GH preflight already aborts the run — there is no local-file fallback.
 
 </parallel_tasks>
 
@@ -235,26 +270,26 @@ The orchestrating agent (main conversation) performs these steps:
 
    | Overlap | Action |
    |---------|--------|
-   | **High** — existing doc covers the same problem, root cause, and solution | **Update the existing doc** with fresher context (new code examples, updated references, additional prevention tips) rather than creating a duplicate. The existing doc's path and structure stay the same. |
-   | **Moderate** — same problem area but different angle, root cause, or solution | **Create the new doc** normally. Flag the overlap for Phase 2.5 to recommend consolidation review. |
-   | **Low or none** | **Create the new doc** normally. |
+   | **High** — existing learning issue covers the same problem, root cause, and solution | **Update the existing issue** with fresher context (new code examples, updated references, additional prevention tips) via `gh issue edit <N> --body-file <tmpfile>` rather than creating a duplicate. The existing issue's number and structure stay the same. |
+   | **Moderate** — same problem area but different angle, root cause, or solution | **Create the new issue** normally. Flag the overlap for Phase 2.5 to recommend consolidation review. |
+   | **Low or none** | **Create the new issue** normally. |
 
-   The reason to update rather than create: two docs describing the same problem and solution will inevitably drift apart. The newer context is fresher and more trustworthy, so fold it into the existing doc rather than creating a second one that immediately needs consolidation.
+   The reason to update rather than create: two learnings describing the same problem and solution will inevitably drift apart. The newer context is fresher and more trustworthy, so fold it into the existing issue rather than creating a second one that immediately needs consolidation.
 
-   When updating an existing doc, preserve its file path and frontmatter structure. Update the solution, code examples, prevention tips, and any stale references. Add a `last_updated: YYYY-MM-DD` field to the frontmatter. Do not change the title unless the problem framing has materially shifted.
+   When updating an existing issue, preserve its number and frontmatter structure. Update the solution, code examples, prevention tips, and any stale references. Add a `last_updated: YYYY-MM-DD` field to the ```yaml block. Do not change the title unless the problem framing has materially shifted.
 
 3. **Incorporate session history findings** (if available). When `yunxing-sessions` returned relevant prior-session context:
    - Fold investigation dead ends and failed approaches into the **What Didn't Work** section (bug track) or **Context** section (knowledge track)
    - Use cross-session patterns to enrich the **Prevention** or **Why This Matters** sections
    - Tag session-sourced content with "(session history)" so its origin is clear to future readers
    - If findings are thin or "no relevant prior sessions," proceed without session context
-4. Assemble complete markdown file from the collected pieces, reading `assets/resolution-template.md` for the section structure of new docs
-5. Validate YAML frontmatter against `references/schema.yaml`, including the YAML-safety quoting rule for array items (see `references/yaml-schema.md` > YAML Safety Rules)
-6. Create directory if needed: `mkdir -p docs/solutions/[category]/`
-7. Write the file: either the updated existing doc or the new `docs/solutions/[category]/[filename].md`
-8. **Run `python3 scripts/validate-frontmatter.py <output-path>`** to catch silent-corruption parser-safety issues that the prose rules miss: malformed `---` delimiter lines, unquoted ` #` in scalar values (silent comment truncation), and unquoted `: ` in scalar values (silent mapping confusion). Exit 0 means the doc is parser-safe; exit 1 means the script's stderr names the offending field(s) and what to fix — quote the value(s), re-write the doc, and re-run until exit 0. Do not declare success while validation fails. The script does not enforce schema rules and does not flag YAML reserved-indicator characters (those produce loud parser errors downstream rather than silent corruption — out of scope). Uses Python 3 stdlib only (no PyYAML or other deps).
+4. Assemble the complete issue body from the collected pieces: a fenced ```yaml block (the frontmatter) at the top, then the markdown sections — reading `assets/resolution-template.md` for the structure of new learnings. Write the body to a temp file.
+5. Validate the YAML block against `references/schema.yaml`, including the YAML-safety quoting rule for array items (see `references/yaml-schema.md` > YAML Safety Rules)
+6. Run the GH preflight (see "Storage: yunxing:solution GitHub issues") and ensure the `yunxing:solution` label exists
+7. Create or update the issue: for a new learning, `gh issue create --title "[solution] <slug>" --label "yunxing:solution" --body-file <tmpfile>`; for a high-overlap update, `gh issue edit <N> --body-file <tmpfile>` on the existing issue
+8. **Run the parser-safety validator on the body file** — `python3 scripts/validate-frontmatter.py <body-file>` (macOS/Linux) or `python scripts/validate-frontmatter.py <body-file>` (Windows). It extracts the top ```yaml block and catches silent-corruption parser-safety issues the prose rules miss: unquoted ` #` in scalar values (silent comment truncation) and unquoted `: ` in scalar values (silent mapping confusion). Exit 0 means parser-safe; exit 1 means stderr names the offending field(s) — quote the value(s), rebuild the body, and re-run until exit 0 **before** creating/editing the issue. Do not declare success while validation fails. The script does not enforce schema rules and does not flag YAML reserved-indicator characters (those produce loud parser errors downstream rather than silent corruption — out of scope). Uses Python 3 stdlib only (no PyYAML or other deps).
 
-When creating a new doc, preserve the section order from `assets/resolution-template.md` unless the user explicitly asks for a different structure.
+When creating a new learning, preserve the section order from `assets/resolution-template.md` unless the user explicitly asks for a different structure.
 
 </sequential_tasks>
 
@@ -280,23 +315,23 @@ If no terms qualified after applying the reference's criteria, record that outco
 
 ### Phase 2.5: Selective Refresh Check
 
-After writing the new learning, decide whether this new solution is evidence that older docs should be refreshed.
+After writing the new learning, decide whether this new solution is evidence that older learning issues should be refreshed.
 
-`yunxing-compound-refresh` is **not** a default follow-up. Use it selectively when the new learning suggests an older learning or pattern doc may now be inaccurate.
+`yunxing-compound-refresh` is **not** a default follow-up. Use it selectively when the new learning suggests an older learning issue may now be inaccurate.
 
 It makes sense to invoke `yunxing-compound-refresh` when one or more of these are true:
 
-1. A related learning or pattern doc recommends an approach that the new fix now contradicts
+1. A related learning issue recommends an approach that the new fix now contradicts
 2. The new fix clearly supersedes an older documented solution
-3. The current work involved a refactor, migration, rename, or dependency upgrade that likely invalidated references in older docs
-4. A pattern doc now looks overly broad, outdated, or no longer supported by the refreshed reality
+3. The current work involved a refactor, migration, rename, or dependency upgrade that likely invalidated references in older learnings
+4. A related learning now looks overly broad, outdated, or no longer supported by the refreshed reality
 5. The Related Docs Finder surfaced high-confidence refresh candidates in the same problem space
-6. The Related Docs Finder reported **moderate overlap** with an existing doc — there may be consolidation opportunities that benefit from a focused review
+6. The Related Docs Finder reported **moderate overlap** with an existing learning issue — there may be consolidation opportunities that benefit from a focused review
 
 It does **not** make sense to invoke `yunxing-compound-refresh` when:
 
-1. No related docs were found
-2. Related docs still appear consistent with the new learning
+1. No related learnings were found
+2. Related learnings still appear consistent with the new learning
 3. The overlap is superficial and does not change prior guidance
 4. Refresh would require a broad historical review with weak evidence
 
@@ -309,10 +344,9 @@ Use these rules:
 
 When invoking or recommending `yunxing-compound-refresh`, be explicit about the argument to pass. Prefer the narrowest useful scope:
 
-- **Specific file** when one learning or pattern doc is the likely stale artifact
-- **Module or component name** when several related docs may need review
-- **Category name** when the drift is concentrated in one solutions area
-- **Pattern filename or pattern topic** when the stale guidance lives in `docs/solutions/patterns/`
+- **Specific learning issue** (`#<N>` or its slug) when one learning is the likely stale artifact
+- **Module or component name** when several related learnings may need review
+- **Category slug** when the drift is concentrated in one solutions area
 
 Examples:
 
@@ -329,39 +363,39 @@ Always capture the new learning first. Refresh is a targeted maintenance follow-
 
 ### Discoverability Check
 
-After the learning is written and the refresh decision is made, check whether the project's instruction files would lead an agent to discover and search `docs/solutions/` before starting work in a documented area. This runs every time — the knowledge store only compounds value when agents can find it.
+After the learning is written and the refresh decision is made, check whether the project's instruction files would lead an agent to discover and search the project's `yunxing:solution` GitHub issues before starting work in a documented area. This runs every time — the knowledge store only compounds value when agents can find it.
 
 1. Identify which root-level instruction files exist (AGENTS.md, CLAUDE.md, or both). Read the file(s) and determine which holds the substantive content — one file may just be a shim that `@`-includes the other (e.g., `CLAUDE.md` containing only `@AGENTS.md`, or vice versa). The substantive file is the assessment and edit target; ignore shims. If neither file exists, skip this check entirely.
 2. Assess whether an agent reading the instruction files would learn three things:
-   - That a searchable knowledge store of documented solutions exists
-   - Enough about its structure to search effectively (category organization, YAML frontmatter fields like `module`, `tags`, `problem_type`)
+   - That a searchable knowledge store of documented solutions exists as GitHub issues labeled `yunxing:solution`
+   - Enough about its structure to search effectively (the label, and the YAML fields like `category`, `module`, `tags`, `problem_type` in each issue body)
    - When to search it (before implementing features, debugging issues, or making decisions in documented areas — learnings may cover bugs, best practices, workflow patterns, or other institutional knowledge)
 
-   This is a semantic assessment, not a string match. The information could be a line in an architecture section, a bullet in a gotchas section, spread across multiple places, or expressed without ever using the exact path `docs/solutions/`. Use judgment — if an agent would reasonably discover and use the knowledge store after reading the file, the check passes.
+   This is a semantic assessment, not a string match. The information could be a line in an architecture section, a bullet in a gotchas section, spread across multiple places, or expressed without ever using the exact label `yunxing:solution`. Use judgment — if an agent would reasonably discover and use the knowledge store after reading the file, the check passes.
 
 3. If the spirit is already met, no action needed — move on.
 4. If not:
-   a. Based on the file's existing structure, tone, and density, identify where a mention fits naturally. Before creating a new section, check whether the information could be a single line in the closest related section — an architecture tree, a directory listing, a documentation section, or a conventions block. A line added to an existing section is almost always better than a new headed section. Only add a new section as a last resort when the file has clear sectioned structure and nothing is even remotely related.
+   a. Based on the file's existing structure, tone, and density, identify where a mention fits naturally. Before creating a new section, check whether the information could be a single line in the closest related section — an architecture overview, a conventions block, or a documentation section. A line added to an existing section is almost always better than a new headed section. Only add a new section as a last resort when the file has clear sectioned structure and nothing is even remotely related.
    b. Draft the smallest addition that communicates the three things. Match the file's existing style and density. The addition should describe the knowledge store itself, not the plugin — an agent without the plugin should still find value in it.
 
-      Keep the tone informational, not imperative. Express timing as description, not instruction — "relevant when implementing or debugging in documented areas" rather than "check before implementing or debugging." Imperative directives like "always search before implementing" cause redundant reads when a workflow already includes a dedicated search step. The goal is awareness: agents learn the folder exists and what's in it, then use their own judgment about when to consult it.
+      Keep the tone informational, not imperative. Express timing as description, not instruction — "relevant when implementing or debugging in documented areas" rather than "check before implementing or debugging." Imperative directives like "always search before implementing" cause redundant reads when a workflow already includes a dedicated search step. The goal is awareness: agents learn the issue store exists and what's in it, then use their own judgment about when to consult it.
 
       Examples of calibration (not templates — adapt to the file):
 
-      When there's an existing directory listing or architecture section — add a line:
+      When there's an existing conventions or architecture section — add a line:
       ```
-      docs/solutions/  # documented solutions to past problems (bugs, best practices, workflow patterns), organized by category with YAML frontmatter (module, tags, problem_type)
+      Solved-problem learnings live as GitHub issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each with a YAML block carrying category, module, tags, problem_type — search with `gh issue list --label "yunxing:solution" --search "<terms>"`.
       ```
 
       When nothing in the file is a natural fit — a small headed section is appropriate:
       ```
       ## Documented Solutions
 
-      `docs/solutions/` — documented solutions to past problems (bugs, best practices, workflow patterns), organized by category with YAML frontmatter (`module`, `tags`, `problem_type`). Relevant when implementing or debugging in documented areas.
+      Solved-problem learnings live as GitHub issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each with a YAML block carrying `category`, `module`, `tags`, `problem_type`. Search with `gh issue list --label "yunxing:solution" --search "<terms>"`. Relevant when implementing or debugging in documented areas.
       ```
-   c. In full interactive mode, explain to the user why this matters — agents working in this repo (including fresh sessions, other tools, or collaborators without the plugin) won't know to check `docs/solutions/` unless the instruction file surfaces it. Show the proposed change and where it would go, then use the platform's blocking question tool to get consent before making the edit: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to presenting the proposal in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. In lightweight mode, output a one-liner note and move on. In headless mode, apply the edit directly without prompting and surface it in the terminal report under "Instruction-file edit"
+   c. In full interactive mode, explain to the user why this matters — agents working in this repo (including fresh sessions, other tools, or collaborators without the plugin) won't know to check the `yunxing:solution` issues unless the instruction file surfaces them. Show the proposed change and where it would go, then use the platform's blocking question tool to get consent before making the edit: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to presenting the proposal in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. In lightweight mode, output a one-liner note and move on. In headless mode, apply the edit directly without prompting and surface it in the terminal report under "Instruction-file edit"
 
-5. **If `CONCEPTS.md` exists at repo root, run a parallel discoverability check for it.** Assess whether the instruction file would lead an agent to discover the project's shared domain vocabulary. Use the same workflow as the `docs/solutions/` check above: same target file, same edit-placement judgment, same consent-then-edit interaction shape per mode. A line in an existing section is almost always better than a new headed section. Example calibration when nothing else fits:
+5. **If `CONCEPTS.md` exists at repo root, run a parallel discoverability check for it.** Assess whether the instruction file would lead an agent to discover the project's shared domain vocabulary. Use the same workflow as the `yunxing:solution` check above: same target file, same edit-placement judgment, same consent-then-edit interaction shape per mode. A line in an existing section is almost always better than a new headed section. Example calibration when nothing else fits:
 
    ```
    CONCEPTS.md  # shared domain vocabulary (entities, named processes, status concepts) — relevant when orienting to the codebase or discussing domain concepts
@@ -400,25 +434,25 @@ Headless mode forces Full and does not enter Lightweight — automations get the
 
 The orchestrator (main conversation) performs ALL of the following in one sequential pass:
 
-1. **Extract from conversation**: Identify the problem and solution from conversation history. Also scan the "user's auto-memory" block injected into your system prompt, if present (Claude Code only) -- use any relevant notes as supplementary context alongside conversation history. Tag any memory-sourced content incorporated into the final doc with "(auto memory [claude])"
-2. **Classify**: Read `references/schema.yaml` and `references/yaml-schema.md`, then determine track (bug vs knowledge), category, and filename
-3. **Write minimal doc**: Create `docs/solutions/[category]/[filename].md` using the appropriate track template from `assets/resolution-template.md`, with:
-   - YAML frontmatter with track-appropriate fields, applying the YAML-safety quoting rule for array items (see `references/yaml-schema.md` > YAML Safety Rules)
+1. **Extract from conversation**: Identify the problem and solution from conversation history. Also scan the "user's auto-memory" block injected into your system prompt, if present (Claude Code only) -- use any relevant notes as supplementary context alongside conversation history. Tag any memory-sourced content incorporated into the final learning with "(auto memory [claude])"
+2. **Classify**: Read `references/schema.yaml` and `references/yaml-schema.md`, then determine track (bug vs knowledge), category, and title slug
+3. **Create the learning issue**: Run the GH preflight (see "Storage: yunxing:solution GitHub issues"), ensure the `yunxing:solution` label exists, build the issue body using the appropriate track template from `assets/resolution-template.md`, then `gh issue create --title "[solution] <slug>" --label "yunxing:solution" --body-file <tmpfile>`. The body has:
+   - A fenced ```yaml block with track-appropriate fields, applying the YAML-safety quoting rule for array items (see `references/yaml-schema.md` > YAML Safety Rules)
    - Bug track: Problem, root cause, solution with key code snippets, one prevention tip
    - Knowledge track: Context, guidance with key examples, one applicability note
-4. **Vocabulary capture (update-only)**: if `CONCEPTS.md` exists at repo root, read `references/concepts-vocabulary.md`, then scan the new doc and the conversation for qualifying terms and add/refine entries silently (same criteria as Phase 2.4). Do **not** bootstrap or seed in lightweight mode — if `CONCEPTS.md` does not exist, defer creation to a Full run, which owns seeding. Record the outcome in the output (e.g., "Vocabulary: 1 entry refined" or "scanned, no qualifying terms"). If you refined `CONCEPTS.md` and a quick read of `AGENTS.md`/`CLAUDE.md` shows it isn't surfaced there, add the discoverability tip to the output below — lightweight **tips**, it does not edit instruction files (a Full run owns that edit).
+4. **Vocabulary capture (update-only)**: if `CONCEPTS.md` exists at repo root, read `references/concepts-vocabulary.md`, then scan the new learning and the conversation for qualifying terms and add/refine entries silently (same criteria as Phase 2.4). Do **not** bootstrap or seed in lightweight mode — if `CONCEPTS.md` does not exist, defer creation to a Full run, which owns seeding. Record the outcome in the output (e.g., "Vocabulary: 1 entry refined" or "scanned, no qualifying terms"). If you refined `CONCEPTS.md` and a quick read of `AGENTS.md`/`CLAUDE.md` shows it isn't surfaced there, add the discoverability tip to the output below — lightweight **tips**, it does not edit instruction files (a Full run owns that edit).
 5. **Skip specialized agent reviews** (Phase 3) to conserve context
 
 **Lightweight output:**
 ```
 ✓ Documentation complete (lightweight mode)
 
-File created:
-- docs/solutions/[category]/[filename].md
+Issue created:
+- #<N> [solution] <slug>  (<url>)
 
 [If discoverability check found instruction files don't surface the knowledge store:]
-Tip: Your AGENTS.md/CLAUDE.md doesn't surface docs/solutions/ to agents —
-a brief mention helps all agents discover these learnings.
+Tip: Your AGENTS.md/CLAUDE.md doesn't surface the yunxing:solution issues to
+agents — a brief mention helps all agents discover these learnings.
 
 [If CONCEPTS.md was refined this run and isn't surfaced in the instruction files:]
 Tip: Your AGENTS.md/CLAUDE.md doesn't surface CONCEPTS.md —
@@ -429,9 +463,9 @@ Note: This was created in lightweight mode. For richer documentation
 re-run /yunxing-compound in a fresh session.
 ```
 
-**No subagents are launched. No parallel tasks. The solution doc is the one deliverable** (Phase 2.4's update-only vocabulary capture may also refine an existing `CONCEPTS.md`).
+**No subagents are launched. No parallel tasks. The solution issue is the one deliverable** (Phase 2.4's update-only vocabulary capture may also refine an existing `CONCEPTS.md`).
 
-In lightweight mode, the overlap check is skipped (no Related Docs Finder subagent). This means lightweight mode may create a doc that overlaps with an existing one. That is acceptable — `yunxing-compound-refresh` will catch it later. Only suggest `yunxing-compound-refresh` if there is an obvious narrow refresh target. Do not broaden into a large refresh sweep from a lightweight session.
+In lightweight mode, the overlap check is skipped (no Related Docs Finder subagent). This means lightweight mode may create an issue that overlaps with an existing one. That is acceptable — `yunxing-compound-refresh` will catch it later. Only suggest `yunxing-compound-refresh` if there is an obvious narrow refresh target. Do not broaden into a large refresh sweep from a lightweight session.
 
 ---
 
@@ -460,41 +494,40 @@ In lightweight mode, the overlap check is skipped (no Related Docs Finder subage
 
 ## What It Creates
 
-**Organized documentation:**
+**One GitHub issue labeled `yunxing:solution`**, titled `[solution] <slug>`, whose body is a fenced ```yaml block followed by the resolution-template markdown sections. Never a local file under `docs/solutions/`.
 
-- File: `docs/solutions/[category]/[filename].md`
-
-**Categories auto-detected from problem:**
+**Category (a `category` slug in the YAML block, auto-detected from problem):**
 
 Bug track:
-- build-errors/
-- test-failures/
-- runtime-errors/
-- performance-issues/
-- database-issues/
-- security-issues/
-- ui-bugs/
-- integration-issues/
-- logic-errors/
+- build-errors
+- test-failures
+- runtime-errors
+- performance-issues
+- database-issues
+- security-issues
+- ui-bugs
+- integration-issues
+- logic-errors
 
 Knowledge track:
-- architecture-patterns/ — architectural or structural patterns (agent/skill/pipeline/workflow shape decisions)
-- design-patterns/ — reusable non-architectural design approaches (content generation, interaction patterns, prompt shapes)
-- tooling-decisions/ — language, library, or tool choices with durable rationale
-- conventions/ — team-agreed way of doing something, captured so it survives turnover
-- workflow-issues/
-- developer-experience/
-- documentation-gaps/
-- best-practices/ — fallback only, use when no narrower knowledge-track value applies
+- architecture-patterns — architectural or structural patterns (agent/skill/pipeline/workflow shape decisions)
+- design-patterns — reusable non-architectural design approaches (content generation, interaction patterns, prompt shapes)
+- tooling-decisions — language, library, or tool choices with durable rationale
+- conventions — team-agreed way of doing something, captured so it survives turnover
+- workflow-issues
+- developer-experience
+- documentation-gaps
+- best-practices — fallback only, use when no narrower knowledge-track value applies
 
 ## Common Mistakes to Avoid
 
 | ❌ Wrong | ✅ Correct |
 |----------|-----------|
-| Subagents write files like `context-analysis.md`, `solution-draft.md` | Subagents return text data; orchestrator writes one final file |
+| Subagents write files or create/edit issues | Subagents return text data; orchestrator creates/edits the one issue |
+| Writing a learning to `docs/solutions/` or any local file | One GitHub issue labeled `yunxing:solution` |
 | Research and assembly run in parallel | Research completes → then assembly runs |
-| Multiple files created during workflow | One solution doc written or updated: `docs/solutions/[category]/[filename].md` (plus optional maintenance writes: a `CONCEPTS.md` create/update from Phase 2.4 and a small instruction-file edit for discoverability) |
-| Creating a new doc when an existing doc covers the same problem | Check overlap assessment; update the existing doc when overlap is high |
+| Multiple artifacts created during workflow | One solution issue created or updated (plus optional local maintenance writes: a `CONCEPTS.md` create/update from Phase 2.4 and a small instruction-file edit for discoverability) |
+| Creating a new issue when an existing issue covers the same problem | Check overlap assessment; update the existing issue when overlap is high |
 
 ## Success Output
 
@@ -505,10 +538,10 @@ Emit a structured terminal report and end the turn. No "What's next?" question, 
 ```
 ✓ Documentation complete (headless mode)
 
-File: docs/solutions/<category>/<filename>.md  (created | updated)
+Issue: #<N> [solution] <slug>  (<url>)  (created | updated)
 Track: <bug | knowledge>
 Category: <category>
-Overlap: <none | low | moderate — see <path> | high — existing doc updated>
+Overlap: <none | low | moderate — see #<N> | high — existing issue updated>
 Instruction-file edit: <none needed | applied to <path> | gap noted, not applied>
 CONCEPTS.md: <scanned, no qualifying terms | created with N entries (M seeded from the learning's area) | updated — N added, N refined>
 Refresh recommendation: <none | scope hint for /yunxing-compound-refresh>
@@ -516,7 +549,7 @@ Refresh recommendation: <none | scope hint for /yunxing-compound-refresh>
 Documentation complete
 ```
 
-When no doc was written (e.g., headless invoked on a session where the problem is not yet solved), emit a structured failure instead and end with `Documentation skipped` so callers can distinguish success from no-op:
+When no issue was written (e.g., headless invoked on a session where the problem is not yet solved), emit a structured failure instead and end with `Documentation skipped` so callers can distinguish success from no-op:
 
 ```
 ✗ Documentation skipped (headless mode)
@@ -535,7 +568,7 @@ Documentation skipped
 Auto memory: 2 relevant entries used as supplementary evidence
 
 Subagent Results:
-  ✓ Context Analyzer: Identified performance_issue in brief_system, category: performance-issues/
+  ✓ Context Analyzer: Identified performance_issue in brief_system, category: performance-issues
   ✓ Solution Extractor: 3 code fixes, prevention strategies
   ✓ Related Docs Finder: 2 related issues
   ✓ Session History: 3 prior sessions on same branch, 2 failed approaches surfaced
@@ -544,34 +577,34 @@ Specialized Agent Reviews (Auto-Triggered):
   ✓ yunxing-performance-oracle: Validated query optimization approach
   ✓ yunxing-code-simplicity-reviewer: Solution is appropriately minimal
 
-Files written:
-- docs/solutions/performance-issues/n-plus-one-brief-generation.md (created)
+Written:
+- Issue #42 [solution] n-plus-one-brief-generation (created) — https://github.com/<owner>/<repo>/issues/42
 - CONCEPTS.md (created with 3 entries: BriefSystem, EmailQueue, Brief Status)
 
-This documentation will be searchable for future reference when similar
+This learning will be searchable for future reference when similar
 issues occur in the Email Processing or Brief System modules.
 
 What's next?
 1. Continue workflow (recommended)
-2. Link related documentation
+2. Link related learnings
 3. Update other references
-4. View documentation
+4. View the issue
 5. Other
 ```
 
 **After displaying the interactive success output above, present the "What's next?" options using the platform's blocking question tool:** `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to numbered options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. Do not continue the workflow or end the turn without the user's selection. (Interactive mode only — headless skips this per the headless block above.)
 
-**Alternate interactive output (when updating an existing doc due to high overlap):** in headless mode, this case is communicated via the `Overlap: high — existing doc updated` line of the headless terminal report above, not as a separate output block.
+**Alternate interactive output (when updating an existing issue due to high overlap):** in headless mode, this case is communicated via the `Overlap: high — existing issue updated` line of the headless terminal report above, not as a separate output block.
 
 ```
-✓ Documentation updated (existing doc refreshed with current context)
+✓ Documentation updated (existing issue refreshed with current context)
 
-Overlap detected: docs/solutions/performance-issues/n-plus-one-queries.md
+Overlap detected: #37 [solution] n-plus-one-queries
   Matched dimensions: problem statement, root cause, solution, referenced files
-  Action: Updated existing doc with fresher code examples and prevention tips
+  Action: Updated existing issue with fresher code examples and prevention tips
 
-File updated:
-- docs/solutions/performance-issues/n-plus-one-queries.md (added last_updated: 2026-03-24)
+Issue updated:
+- #37 [solution] n-plus-one-queries (added last_updated: 2026-03-24)
 ```
 
 ## The Compounding Philosophy
@@ -579,7 +612,7 @@ File updated:
 This creates a compounding knowledge system:
 
 1. First time you solve "N+1 query in brief generation" → Research (30 min)
-2. Document the solution → docs/solutions/performance-issues/n-plus-one-briefs.md (5 min)
+2. Document the solution → a `yunxing:solution` issue (5 min)
 3. Next time similar issue occurs → Quick lookup (2 min)
 4. Knowledge compounds → Team gets smarter
 
@@ -601,7 +634,7 @@ Build → Test → Find Issue → Research → Improve → Document → Validate
 
 ## Output
 
-Writes the final learning directly into `docs/solutions/`.
+Creates (or updates) the final learning as a GitHub issue labeled `yunxing:solution`.
 
 ## Applicable Specialized Agents
 
@@ -626,5 +659,5 @@ Based on problem type, these agents can enhance documentation:
 
 ## Related Commands
 
-- `/research [topic]` - Deep investigation (searches docs/solutions/ for patterns)
+- `/research [topic]` - Deep investigation (searches `yunxing:solution` issues for patterns)
 - `/yunxing-plan` - Planning workflow (references documented solutions)

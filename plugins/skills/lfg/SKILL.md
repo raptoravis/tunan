@@ -8,17 +8,44 @@ CRITICAL: You MUST execute every step below IN ORDER. Do NOT skip any required s
 
 When invoking any skill referenced below, resolve its name against the available-skills list the host platform provides and use that exact entry. Some platforms list skills under a plugin namespace (e.g., `yunxing:yunxing-plan`); others list the bare name. Invoking a short-form guess that isn't in the list will fail — always match a listed entry verbatim before calling the Skill/Task tool.
 
-1. Invoke the `yunxing-plan` skill with `$ARGUMENTS`.
+**Artifact model: the pipeline chains via GitHub issues, not local files.** Each stage's durable artifact is a GitHub issue distinguished by label, and each stage passes the prior issue ref (NUMBER/URL, linked as `#<N>` in bodies) to the next:
 
-   GATE: STOP. If yunxing-plan reported the task is non-software and cannot be processed in pipeline mode, stop the pipeline and inform the user that LFG requires software tasks. Otherwise, verify that the `yunxing-plan` workflow produced a plan file in `docs/plans/`. If no plan file was created, invoke `yunxing-plan` again with `$ARGUMENTS`. Do NOT proceed to step 2 until a written plan exists. **Record the plan file path** — it will be passed to yunxing-code-review in step 3.
+- `yunxing-brainstorm` produces a `yunxing:req` issue
+- `yunxing-plan` consumes the `yunxing:req` issue and produces a `yunxing:plan` issue
+- `yunxing-work` consumes the `yunxing:plan` issue
+- `yunxing-compound` produces a `yunxing:solution` issue (referencing the plan/req issue with `#<N>`)
 
-2. Invoke the `yunxing-work` skill.
+There is no local-file fallback for these artifacts — never read or write a plan/req/solution as a file under `docs/`.
+
+**GH PREFLIGHT (required — run before step 1; the pipeline depends on `gh`).** Run these in order; if any fails, abort the pipeline and tell the user to fix the gh setup (install `gh`, run `gh auth login`, or set the repo). Do NOT fall back to local files:
+
+```bash
+gh --version
+```
+```bash
+gh auth status
+```
+```bash
+gh repo view --json nameWithOwner
+```
+
+1. Invoke the `yunxing-plan` skill with `$ARGUMENTS`. If a prior `yunxing-brainstorm` ran in this pipeline and produced a `yunxing:req` issue, pass that issue ref so the plan consumes it and links back with `#<N>`.
+
+   GATE: STOP. If yunxing-plan reported the task is non-software and cannot be processed in pipeline mode, stop the pipeline and inform the user that LFG requires software tasks. Otherwise, verify that the `yunxing-plan` workflow produced a `yunxing:plan` issue. Confirm with:
+
+   ```bash
+   gh issue list --label "yunxing:plan" --state open --json number,title,url,updatedAt
+   ```
+
+   If no `yunxing:plan` issue was created, invoke `yunxing-plan` again with `$ARGUMENTS`. Do NOT proceed to step 2 until a `yunxing:plan` issue exists. **Record the plan issue ref (`#<N>`/URL)** — it is passed to yunxing-work in step 2 and to yunxing-code-review in step 3.
+
+2. Invoke the `yunxing-work` skill with the `yunxing:plan` issue ref from step 1 as its work source.
 
    GATE: STOP. Verify that implementation work was performed - files were created or modified beyond the plan. Do NOT proceed to step 3 if no code changes were made.
 
-3. Invoke the `yunxing-code-review` skill with `mode:agent plan:<plan-path-from-step-1>`.
+3. Invoke the `yunxing-code-review` skill with `mode:agent plan:<plan-issue-ref-from-step-1>`.
 
-   Pass the plan file path from step 1 so yunxing-code-review can verify requirements completeness. Read the **Actionable Findings** summary the skill emits.
+   Pass the plan issue ref from step 1 so yunxing-code-review can verify requirements completeness. Read the **Actionable Findings** summary the skill emits.
 
 4. **Apply and persist review fixes** (REQUIRED after step 3, before residual handoff)
 
@@ -45,9 +72,33 @@ When invoking any skill referenced below, resolve its name against the available
       gh pr edit PR_NUMBER --body-file BODY_FILE
       ```
 
-   6. If no open PR exists, create a tracked fallback file at `docs/residual-review-findings/<branch-or-head-sha>.md` containing the composed section and the source PR-review run context. Stage only that file, commit it with `docs(review): record residual review findings`, and push the current branch. If an upstream exists, run `git push`. If no upstream exists, resolve a writable remote dynamically: prefer `origin` when present, otherwise use `git remote` and choose the first configured remote. Then run `git push --set-upstream <remote> HEAD`. This is the durable no-PR sink. Do not output DONE until either the existing PR body has been updated or this fallback file commit has been pushed. If both paths fail, stop and report the failed commands; do not silently proceed.
+   6. If no open PR exists, record the residuals as a `yunxing:review` GitHub issue — never a local `docs/` file. Run the GH preflight first (`gh` installed; `gh auth status` exits 0; `gh repo view --json nameWithOwner` resolves); if any check fails, stop and report the gh setup problem. Ensure the label exists:
 
-   Never block DONE on tracker filing failures once residuals have been durably recorded. A `no_sink` outcome is success only when the findings are present in the PR body or in the pushed fallback file.
+      ```bash
+      gh label list --search "yunxing:review"
+      ```
+
+      If absent, create it:
+
+      ```bash
+      gh label create "yunxing:review" --color 1f883d --description "yunxing review"
+      ```
+
+      Write the composed `## Residual Review Findings` section plus the source PR-review run context to an OS temp file (`${TMPDIR:-/tmp}` / `$env:TEMP`, never `docs/`), then create the issue titled `[review] <branch-or-head-sha>`:
+
+      ```bash
+      gh issue create --title "[review] <branch-or-head-sha>" --label "yunxing:review" --body-file BODY_FILE
+      ```
+
+      When the `yunxing:plan` issue ref from step 1 is known, reference it with `#<plan-N>` in the issue body and also post the findings as a comment on that plan issue:
+
+      ```bash
+      gh issue comment PLAN_NUMBER --body-file BODY_FILE
+      ```
+
+      This is the durable no-PR sink. Do not output DONE until either the existing PR body has been updated or this `yunxing:review` issue has been created. If both paths fail, stop and report the failed commands; do not silently proceed.
+
+   Never block DONE on tracker filing failures once residuals have been durably recorded. A `no_sink` outcome is success only when the findings are present in the PR body or in the created `yunxing:review` issue.
 
 6. Invoke the `yunxing-test-browser` skill with `mode:pipeline`.
 
@@ -104,6 +155,10 @@ When invoking any skill referenced below, resolve its name against the available
 
    - Do NOT continue looping. The autopilot contract is "make residuals durable, then exit." Proceed to step 9.
 
-9. Output `<promise>DONE</promise>` when complete
+9. Invoke the `yunxing-compound` skill to capture the solved problem.
 
-Start with step 1 now. Remember: plan FIRST, then work. Never skip the plan.
+   Pass it the `yunxing:plan` issue ref from step 1, the PR URL, and a short summary of what was built. `yunxing-compound` runs its own GH preflight and produces a `yunxing:solution` GitHub issue (not a local `docs/solutions` file), referencing the plan/req issue with `#<N>` in the body. **Record the resulting solution issue ref** for the final summary. If `yunxing-compound` is unavailable on the harness, note that compounding was skipped — do not write a local solution file.
+
+10. Output `<promise>DONE</promise>` when complete. Include the issue-ref chain in the summary: the `yunxing:plan` issue, the PR, and the `yunxing:solution` issue.
+
+Start with step 1 now. Remember: GH preflight and plan FIRST, then work. Never skip the plan.

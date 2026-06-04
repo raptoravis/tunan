@@ -1,5 +1,13 @@
 # HTML Rendering
 
+> **DEPRECATED / UNUSED for yunxing-plan.** Plans are now stored as
+> `yunxing:plan` GitHub issues whose bodies are markdown. `yunxing-plan` no
+> longer offers an HTML output mode and never loads this file — see
+> `references/markdown-rendering.md` for the plan issue body rendering rules.
+> This file is retained only because the HTML rendering principles below may
+> still be referenced by other artifact types; nothing in the yunxing-plan
+> workflow reads it.
+
 This is a format-rendering reference — it describes how to render any
 artifact in HTML, independent of which skill is producing it.
 

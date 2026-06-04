@@ -47,4 +47,4 @@ When analyzing, consider:
 
 Your insights should help developers understand not just what the code does, but why it evolved to its current state, informing better decisions for future changes.
 
-Note that files in `docs/plans/` and `docs/solutions/` are yunxing pipeline artifacts created by `/yunxing-plan`. They are intentional, permanent living documents — do not recommend their removal or characterize them as unnecessary.
+Note that yunxing pipeline artifacts (requirements, plans, solutions) live as GitHub issues labeled `yunxing:req`/`yunxing:plan`/`yunxing:solution`, not as files in the tree. Do not recommend removing them or characterize them as unnecessary.

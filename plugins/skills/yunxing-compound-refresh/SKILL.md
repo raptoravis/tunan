@@ -1,12 +1,39 @@
 ---
 name: yunxing-compound-refresh
-description: Refresh stale learning and pattern docs under docs/solutions/ by reviewing them against the current codebase, then updating, consolidating, or deleting drifted ones. Use when the user asks to "refresh my learnings", "audit docs/solutions/", "clean up stale learnings", or "consolidate overlapping docs", or when yunxing-compound flags an older doc as superseded. Do not trigger for general refactor, debugging, or code-review work unless the user has explicitly pointed at docs/solutions/.
+description: "Refresh stale learning issues labeled yunxing:solution by reviewing them against the current codebase, then updating, consolidating, or closing drifted ones. Use when the user asks to refresh my learnings, audit yunxing:solution issues, clean up stale learnings, or consolidate overlapping learnings, or when yunxing-compound flags an older learning as superseded. Do not trigger for general refactor, debugging, or code-review work unless the user has explicitly pointed at the yunxing:solution issues."
 argument-hint: "[optional: scope hint — directory, filename, module, or keyword] [mode:headless] "
 ---
 
 # Compound Refresh
 
-Maintain the quality of `docs/solutions/` over time. This workflow reviews existing learnings against the current codebase, then refreshes any derived pattern docs that depend on them.
+Maintain the quality of the project's `yunxing:solution` learning issues over time. This workflow reviews existing learning issues against the current codebase, then refreshes any related learnings that depend on them.
+
+## Storage: yunxing:solution GitHub issues
+
+Learnings are GitHub issues, never local files. Each learning is one issue labeled `yunxing:solution`, titled `[solution] <slug>`, whose body is a fenced ```yaml block (the frontmatter from `references/schema.yaml`) followed by markdown sections. This skill reads, edits, and closes those issues — it never reads or writes `docs/solutions/` or any local learning file.
+
+**GH preflight — run before any issue read or write.** If any check fails, abort and surface the guidance; never fall back to a local file.
+
+1. `gh` is installed. If not, install from https://cli.github.com or run `/yunxing-setup`.
+2. `gh auth status` exits 0. If not, run `gh auth login` (in Claude Code, suggest typing `! gh auth login`).
+3. `gh repo view --json nameWithOwner` resolves. If not, a GitHub repo is required.
+
+**Core gh operations:**
+
+```bash
+gh issue list --label "yunxing:solution" --state open --json number,title,url,labels
+gh issue view <N> --json title,body,url,labels
+gh issue edit <N> --body-file <tmpfile>
+gh issue close <N> --comment "<reason>"
+```
+
+**Action → gh mapping:**
+
+- **Keep** — no write (optionally `gh issue edit` only if already editing for another reason).
+- **Update** — `gh issue edit <N> --body-file <tmpfile>` with the corrected body.
+- **Consolidate** — merge unique content into the canonical issue (`gh issue edit`), then close the subsumed issue (`gh issue close <N> --comment "consolidated into #<canonical>"`).
+- **Replace** — write the successor body and overwrite the issue body via `gh issue edit <N> --body-file <tmpfile>` (same issue number, fresh content). When evidence is insufficient, mark stale instead (set `status: stale`, `stale_reason`, `stale_date` in the YAML block via `gh issue edit`).
+- **Delete** — there is no hard delete; "delete/archive" = `gh issue close <N> --comment "<reason>"`. Git/issue history preserves the body. A reopen (`gh issue reopen <N>`) recovers it if needed.
 
 ## Mode Detection
 
@@ -15,22 +42,22 @@ Check if `$ARGUMENTS` contains `mode:headless`. If present, strip it from argume
 | Mode | When | Behavior |
 |------|------|----------|
 | **Interactive** (default) | User is present and can answer questions | Ask for decisions on ambiguous cases, confirm actions |
-| **Headless** | `mode:headless` in arguments | No user interaction. Apply all unambiguous actions (Keep, Update, Consolidate, auto-Delete, Replace with sufficient evidence). Mark ambiguous cases as stale. Generate a summary report at the end. |
+| **Headless** | `mode:headless` in arguments | No user interaction. Apply all unambiguous actions (Keep, Update, Consolidate, auto-Close, Replace with sufficient evidence). Mark ambiguous cases as stale. Generate a summary report at the end. |
 
 ### Headless mode rules
 
 - **Skip all user questions.** Never pause for input.
-- **Process all docs in scope.** No scope narrowing questions — if no scope hint was provided, process everything.
-- **Attempt all safe actions:** Keep (no-op), Update (fix references), Consolidate (merge and delete subsumed doc), auto-Delete (unambiguous criteria met), Replace (when evidence is sufficient). If a write succeeds, record it as **applied**. If a write fails (e.g., permission denied), record the action as **recommended** in the report and continue — do not stop or ask for permissions.
-- **Mark as stale when uncertain.** If classification is genuinely ambiguous (Update vs Replace vs Consolidate vs Delete) or Replace evidence is insufficient, mark as stale with `status: stale`, `stale_reason`, and `stale_date` in the frontmatter. If even the stale-marking write fails, include it as a recommendation.
+- **Process all learning issues in scope.** No scope narrowing questions — if no scope hint was provided, process everything.
+- **Attempt all safe actions:** Keep (no-op), Update (fix references via `gh issue edit`), Consolidate (merge then close the subsumed issue), auto-Close (unambiguous Delete criteria met → `gh issue close`), Replace (when evidence is sufficient → `gh issue edit` the body). If a write succeeds, record it as **applied**. If a write fails (e.g., gh not authed, permission denied), record the action as **recommended** in the report and continue — do not stop or ask for permissions.
+- **Mark as stale when uncertain.** If classification is genuinely ambiguous (Update vs Replace vs Consolidate vs Delete) or Replace evidence is insufficient, mark as stale by setting `status: stale`, `stale_reason`, and `stale_date` in the issue body's YAML block via `gh issue edit`. If even the stale-marking write fails, include it as a recommendation.
 - **Use conservative confidence.** In interactive mode, borderline cases get a user question. In headless mode, borderline cases get marked stale. Err toward stale-marking over incorrect action.
 - **Always generate a report.** The report is the primary deliverable. It has two sections: **Applied** (actions that were successfully written) and **Recommended** (actions that could not be written, with full rationale so a human can apply them or run the skill interactively). The report structure is the same regardless of what permissions were granted — the only difference is which section each action lands in.
 
 ## CONCEPTS.md bootstrap requests
 
-If invoked specifically to create or bootstrap `CONCEPTS.md` (e.g., "create a CONCEPTS.md", "build the concept map", "set up shared vocabulary"), the intent is ambiguous between two jobs — building the vocabulary file and running a docs/solutions refresh — so disambiguate before proceeding. Use the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to numbered options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. Two options:
+If invoked specifically to create or bootstrap `CONCEPTS.md` (e.g., "create a CONCEPTS.md", "build the concept map", "set up shared vocabulary"), the intent is ambiguous between two jobs — building the vocabulary file and running a refresh of the `yunxing:solution` issues — so disambiguate before proceeding. Use the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to numbered options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. Two options:
 
-1. **Create CONCEPTS.md (build the concept map)** — seed the repo-wide concept map and commit it; skip only the docs/solutions classification phases (Phases 0–4). Read `references/concepts-vocabulary.md` and follow its **Seed goal** and **Scope of a seed** (repo-wide) rules: seed the project's core domain nouns from the declared domain model (schema, core types, primary models, top-level domain docs), each meeting the qualifying bar, the codebase setting the count. Write the preamble (see Phase 4.5), cluster per the organization rules, and run the Discoverability Check so `AGENTS.md`/`CLAUDE.md` surface the new file. Then **enter Phase 5 (Commit Changes)** to commit/PR the new `CONCEPTS.md` and any instruction-file edit through the same durable-write flow the refresh uses — do not leave the bootstrap uncommitted.
+1. **Create CONCEPTS.md (build the concept map)** — seed the repo-wide concept map and commit it; skip only the learning-issue classification phases (Phases 0–4). Read `references/concepts-vocabulary.md` and follow its **Seed goal** and **Scope of a seed** (repo-wide) rules: seed the project's core domain nouns from the declared domain model (schema, core types, primary models, top-level domain docs), each meeting the qualifying bar, the codebase setting the count. Write the preamble (see Phase 4.5), cluster per the organization rules, and run the Discoverability Check so `AGENTS.md`/`CLAUDE.md` surface the new file. Then **enter Phase 5 (Commit Changes)** to commit/PR the new `CONCEPTS.md` and any instruction-file edit through the same durable-write flow the refresh uses — do not leave the bootstrap uncommitted. (`CONCEPTS.md` remains a local file; only the learnings moved to issues.)
 2. **Run a refresh cycle** — proceed with the normal refresh flow below; `CONCEPTS.md` is seeded (if absent) and reconciled as part of Phase 4.5.
 
 **Alignment protocol.** When asking the sponsor to choose between options, follow the yunxing-align protocol: offer at least 3 ranked options with the single best one pre-selected as the default — place it first and append `(Recommended)` to its label — so the sponsor lands on the optimal choice by accepting the default. Load the `yunxing-align` skill for the full protocol. Never hand an open-ended choice back to the sponsor.
@@ -73,11 +100,11 @@ For each candidate artifact, classify it into one of five outcomes:
 
 | Outcome | Meaning | Default action |
 |---------|---------|----------------|
-| **Keep** | Still accurate and still useful | No file edit by default; report that it was reviewed and remains trustworthy |
-| **Update** | Core solution is still correct, but references drifted | Apply evidence-backed in-place edits |
-| **Consolidate** | Two or more docs overlap heavily but are both correct | Merge unique content into the canonical doc, delete the subsumed doc |
-| **Replace** | The old artifact is now misleading, but there is a known better replacement | Create a trustworthy successor, then delete the old artifact |
-| **Delete** | No longer useful, applicable, or distinct | Delete the file — git history preserves it if anyone needs to recover it later |
+| **Keep** | Still accurate and still useful | No edit by default; report that it was reviewed and remains trustworthy |
+| **Update** | Core solution is still correct, but references drifted | Apply evidence-backed edits to the issue body (`gh issue edit`) |
+| **Consolidate** | Two or more issues overlap heavily but are both correct | Merge unique content into the canonical issue, close the subsumed issue |
+| **Replace** | The old learning is now misleading, but there is a known better replacement | Overwrite the issue body with a trustworthy successor (`gh issue edit`) |
+| **Delete** | No longer useful, applicable, or distinct | Close the issue (`gh issue close`) — issue history preserves it; reopen recovers it |
 
 ## Core Rules
 
@@ -91,35 +118,34 @@ For each candidate artifact, classify it into one of five outcomes:
    - the current conversation contains a recently solved, verified replacement fix, or
    - the user has provided enough concrete replacement context to document the successor honestly, or
    - the codebase investigation found the current approach and can document it as the successor, or
-   - newer docs, pattern docs, PRs, or issues provide strong successor evidence.
-8. **Delete when the code is gone, and only after checking for inbound links.** If the referenced code, controller, or workflow no longer exists in the codebase and no successor can be found, delete the file — don't default to Keep just because the general advice is still "sound." When in doubt between Keep and Delete, ask the user (in interactive mode) or mark as stale (in headless mode). Inbound links inform classification, not cleanup: cleanup is always mechanical, but **decorative** citations (principle stated inline) allow Delete, while **substantive** citations (citing doc relies on the cited doc) signal Replace. The auto-delete case is missing code, no matching successor, and citations absent or decorative.
-9. **Evaluate document-set design, not just accuracy.** In addition to checking whether each doc is accurate, evaluate whether it is still the right unit of knowledge. If two or more docs overlap heavily, determine whether they should remain separate, be cross-scoped more clearly, or be consolidated into one canonical document. Redundant docs are dangerous because they drift silently — two docs saying the same thing will eventually say different things.
-10. **Delete, don't archive.** There is no `_archived/` directory. When a doc is no longer useful, delete it. Git history preserves every deleted file — that is the archive. A dedicated archive directory creates problems: archived docs accumulate, pollute search results, and nobody reads them. If someone needs a deleted doc, `git log --diff-filter=D -- docs/solutions/` will find it.
+   - newer learning issues, PRs, or other issues provide strong successor evidence.
+8. **Delete (close) when the code is gone, and only after checking for inbound links.** If the referenced code, controller, or workflow no longer exists in the codebase and no successor can be found, close the issue — don't default to Keep just because the general advice is still "sound." When in doubt between Keep and Delete, ask the user (in interactive mode) or mark as stale (in headless mode). Inbound links inform classification, not cleanup: cleanup is always mechanical, but **decorative** citations (principle stated inline) allow Delete, while **substantive** citations (citing learning relies on the cited learning) signal Replace. The auto-close case is missing code, no matching successor, and citations absent or decorative.
+9. **Evaluate document-set design, not just accuracy.** In addition to checking whether each learning is accurate, evaluate whether it is still the right unit of knowledge. If two or more learnings overlap heavily, determine whether they should remain separate, be cross-scoped more clearly, or be consolidated into one canonical learning. Redundant learnings are dangerous because they drift silently — two issues saying the same thing will eventually say different things.
+10. **Close, don't archive.** When a learning is no longer useful, close its issue with a comment naming the reason. The closed issue is the archive — reopen recovers it. Do not invent an "archived" label or a local archive directory; closed-issue history already preserves everything. Find recently closed learnings with `gh issue list --label "yunxing:solution" --state closed`.
 
 ## Scope Selection
 
-Start by discovering learnings and pattern docs under `docs/solutions/`.
+Start by discovering open learning issues after running the GH preflight:
 
-Exclude:
+```bash
+gh issue list --label "yunxing:solution" --state open --json number,title,url,labels --limit 200
+```
 
-- `README.md`
-- `docs/solutions/_archived/` (legacy — if this directory exists, flag it for cleanup in the report)
-
-Find all `.md` files under `docs/solutions/`, excluding `README.md` files and anything under `_archived/`. If an `_archived/` directory exists, note it in the report as a legacy artifact that should be cleaned up (files either restored or deleted).
+**Legacy `docs/solutions/` directory:** if a `docs/solutions/` directory exists in the repo, it is a pre-migration artifact — note it in the report as legacy content that should be migrated into `yunxing:solution` issues (or deleted once migrated). Do not treat its files as candidates for this workflow; this skill operates only on issues.
 
 If `$ARGUMENTS` is provided, use it to narrow scope before proceeding. Try these matching strategies in order, stopping at the first that produces results:
 
-1. **Directory match** — check if the argument matches a subdirectory name under `docs/solutions/` (e.g., `performance-issues`, `database-issues`)
-2. **Frontmatter match** — search `module`, `component`, or `tags` fields in learning frontmatter for the argument
-3. **Filename match** — match against filenames (partial matches are fine)
-4. **Content search** — search file contents for the argument as a keyword (useful for feature names or feature areas)
+1. **Issue ref** — if the argument is `#<N>` or a full issue URL, target that issue directly
+2. **Category match** — check if the argument matches a `category` slug (e.g., `performance-issues`, `database-issues`) in the YAML blocks; also try it as a label search term: `gh issue list --label "yunxing:solution" --search "<arg>"`
+3. **Frontmatter / body match** — search `module`, `component`, or `tags` in issue bodies, or the title slug, for the argument: `gh issue list --label "yunxing:solution" --search "<arg>"`
+4. **Content search** — broaden the `--search` keyword (useful for feature names or feature areas)
 
-If no matches are found, report that and ask the user to clarify. In headless mode, when a scope hint was provided but matched nothing, report the miss in the summary and exit without widening to all docs — do not silently fall back to processing everything. (The "process everything" rule from Headless mode rules applies only when **no** scope hint was provided.)
+If no matches are found, report that and ask the user to clarify. In headless mode, when a scope hint was provided but matched nothing, report the miss in the summary and exit without widening to all issues — do not silently fall back to processing everything. (The "process everything" rule from Headless mode rules applies only when **no** scope hint was provided.)
 
-If no candidate docs are found, report:
+If no candidate learning issues are found, report:
 
 ```text
-No candidate docs found in docs/solutions/.
+No candidate yunxing:solution issues found.
 Run `yunxing-compound` after solving problems to start building your knowledge base.
 ```
 
@@ -135,16 +161,16 @@ Before asking the user to classify anything:
 
 | Scope | When to use it | Interaction style |
 |-------|----------------|-------------------|
-| **Focused** | 1-2 likely files or user named a specific doc | Investigate directly, then present a recommendation |
-| **Batch** | Up to ~8 mostly independent docs | Investigate first, then present grouped recommendations |
-| **Broad** | 9+ docs, ambiguous, or repo-wide stale-doc sweep | Triage first, then investigate in batches |
+| **Focused** | 1-2 likely issues or user named a specific learning | Investigate directly, then present a recommendation |
+| **Batch** | Up to ~8 mostly independent learning issues | Investigate first, then present grouped recommendations |
+| **Broad** | 9+ issues, ambiguous, or repo-wide stale-learning sweep | Triage first, then investigate in batches |
 
 ### Broad Scope Triage
 
-When scope is broad (9+ candidate docs), do a lightweight triage before deep investigation:
+When scope is broad (9+ candidate issues), do a lightweight triage before deep investigation:
 
-1. **Inventory** — read frontmatter of all candidate docs, group by module/component/category
-2. **Impact clustering** — identify areas with the densest clusters of learnings + pattern docs. A cluster of 5 learnings and 2 patterns covering the same module is higher-impact than 5 isolated single-doc areas, because staleness in one doc is likely to affect the others.
+1. **Inventory** — read the YAML block of all candidate issues (`gh issue view <N> --json body`), group by module/component/category
+2. **Impact clustering** — identify areas with the densest clusters of learnings. A cluster of 7 learnings covering the same module is higher-impact than 7 isolated single-issue areas, because staleness in one is likely to affect the others.
 3. **Spot-check drift** — for each cluster, check whether the primary referenced files still exist. Missing references in a high-impact cluster = strongest signal for where to start.
 4. **Recommend a starting area** — present the highest-impact cluster with a brief rationale and ask the user to confirm or redirect. In headless mode, skip the question and process all clusters in impact order.
 
@@ -153,9 +179,8 @@ Example:
 ```text
 Found 24 learnings across 5 areas.
 
-The auth module has 5 learnings and 2 pattern docs that cross-reference
-each other — and 3 of those reference files that no longer exist.
-I'd start there.
+The auth module has 7 learnings that cross-reference each other (by #N) —
+and 3 of those reference files that no longer exist. I'd start there.
 
 1. Start with auth (recommended)
 2. Pick a different area
@@ -166,16 +191,16 @@ Do not ask action-selection questions yet. First gather evidence.
 
 ## Phase 1: Investigate Candidate Learnings
 
-For each learning in scope, read it, cross-reference its claims against the current codebase, and form a recommendation.
+For each learning issue in scope, read its body (`gh issue view <N> --json title,body,url,labels`), cross-reference its claims against the current codebase, and form a recommendation.
 
 A learning has several dimensions that can independently go stale. Surface-level checks catch the obvious drift, but staleness often hides deeper:
 
 - **References** — do the file paths, class names, and modules it mentions still exist or have they moved?
 - **Recommended solution** — does the fix still match how the code actually works today? A renamed file with a completely different implementation pattern is not just a path update.
 - **Code examples** — if the learning includes code snippets, do they still reflect the current implementation?
-- **Related docs** — are cross-referenced learnings and patterns still present and consistent?
+- **Related learnings** — are cross-referenced learning issues (`#N`) still open and consistent?
 - **Auto memory** (Claude Code only) — does the injected auto-memory block in your system prompt contain entries in the same problem domain? Scan that block directly. If the block is absent, skip this dimension. A memory note describing a different approach than what the learning recommends is a supplementary drift signal.
-- **Overlap** — while investigating, note when another doc in scope covers the same problem domain, references the same files, or recommends a similar solution. For each overlap, record: the two file paths, which dimensions overlap (problem, solution, root cause, files, prevention), and which doc appears broader or more current. These signals feed Phase 1.75 (Document-Set Analysis).
+- **Overlap** — while investigating, note when another issue in scope covers the same problem domain, references the same files, or recommends a similar solution. For each overlap, record: the two issue numbers, which dimensions overlap (problem, solution, root cause, files, prevention), and which issue appears broader or more current. These signals feed Phase 1.75 (Document-Set Analysis).
 - **Vocabulary** — note domain terms the learning cites (entities, named processes, status concepts with project-specific meaning). For each term: does it appear in `CONCEPTS.md`? If yes, does the definition still match how the code uses the term? If no, flag the term for Phase 4.5 to add or bootstrap. Do not edit `CONCEPTS.md` during investigation — just collect the signal centrally.
 
 Match investigation depth to the learning's specificity — a learning referencing exact file paths and code snippets needs more verification than one describing a general principle.
@@ -185,7 +210,7 @@ Match investigation depth to the learning's specificity — a learning referenci
 The critical distinction is whether the drift is **cosmetic** (references moved but the solution is the same) or **substantive** (the solution itself changed):
 
 - **Update territory** — file paths moved, classes renamed, links broke, metadata drifted, but the core recommended approach is still how the code works. `yunxing-compound-refresh` fixes these directly.
-- **Replace territory** — the recommended solution conflicts with current code, the architectural approach changed, or the pattern is no longer the preferred way. This means a new learning needs to be written. A replacement subagent writes the successor following `yunxing-compound`'s document format (frontmatter, problem, root cause, solution, prevention), using the investigation evidence already gathered. The orchestrator does not rewrite learnings inline — it delegates to a subagent for context isolation.
+- **Replace territory** — the recommended solution conflicts with current code, the architectural approach changed, or the pattern is no longer the preferred way. This means a new learning body needs to be written. A replacement subagent writes the successor following `yunxing-compound`'s issue-body format (the ```yaml block, problem, root cause, solution, prevention), using the investigation evidence already gathered. The orchestrator then overwrites the same issue's body via `gh issue edit`. The orchestrator does not rewrite learnings inline — it delegates body authoring to a subagent for context isolation.
 
 **The boundary:** if you find yourself rewriting the solution section or changing what the learning recommends, stop — that is Replace, not Update.
 
@@ -202,15 +227,15 @@ Three guidelines that are easy to get wrong:
 
 1. **Contradiction = strong Replace signal.** If the learning's recommendation conflicts with current code patterns or a recently verified fix, that is not a minor drift — the learning is actively misleading. Classify as Replace.
 2. **Age alone is not a stale signal.** A 2-year-old learning that still matches current code is fine. Only use age as a prompt to inspect more carefully.
-3. **Check for successors before deleting.** Before recommending Replace or Delete, look for newer learnings, pattern docs, PRs, or issues covering the same problem space. If successor evidence exists, prefer Replace over Delete so readers are directed to the newer guidance.
+3. **Check for successors before deleting.** Before recommending Replace or Delete, look for newer learning issues, PRs, or other issues covering the same problem space. If successor evidence exists, prefer Replace over Delete so readers are directed to the newer guidance.
 
-## Phase 1.5: Investigate Pattern Docs
+## Phase 1.5: Investigate Pattern-Style Learnings
 
-After reviewing the underlying learning docs, investigate any relevant pattern docs under `docs/solutions/patterns/`.
+After reviewing the incident-level learning issues, investigate any pattern-style learnings in scope — those whose `category` is `architecture-patterns` or `design-patterns` (or that otherwise generalize a rule across several incidents).
 
-Pattern docs are high-leverage — a stale pattern is more dangerous than a stale individual learning because future work may treat it as broadly applicable guidance. Evaluate whether the generalized rule still holds given the refreshed state of the learnings it depends on.
+Pattern-style learnings are high-leverage — a stale pattern is more dangerous than a stale individual learning because future work may treat it as broadly applicable guidance. Evaluate whether the generalized rule still holds given the refreshed state of the learnings it depends on.
 
-A pattern doc with no clear supporting learnings is a stale signal — investigate carefully before keeping it unchanged.
+A pattern-style learning with no clear supporting incident learnings is a stale signal — investigate carefully before keeping it unchanged.
 
 ## Phase 1.75: Document-Set Analysis
 
@@ -236,7 +261,7 @@ Detect "older narrow precursor, newer canonical doc" patterns:
 - An older doc describes a specific incident that a newer doc generalizes into a pattern
 - Two docs recommend the same fix but the newer one has better context, examples, or scope
 
-When a newer doc clearly subsumes an older one, the older doc is a consolidation candidate — its unique content (if any) should be merged into the newer doc, and the older doc should be deleted.
+When a newer learning clearly subsumes an older one, the older issue is a consolidation candidate — its unique content (if any) should be merged into the newer issue's body, and the older issue should be closed.
 
 ### Canonical Doc Identification
 
@@ -246,10 +271,10 @@ For each topic cluster (docs sharing a problem domain), identify which doc is th
 - The one a maintainer should find first when searching for this topic
 - The one that other docs should point to, not duplicate
 
-All other docs in the cluster are either:
+All other learnings in the cluster are either:
 - **Distinct** — they cover a meaningfully different sub-problem and have independent retrieval value. Keep them separate.
-- **Subsumed** — their unique content fits as a section in the canonical doc. Consolidate.
-- **Redundant** — they add nothing the canonical doc doesn't already say. Delete.
+- **Subsumed** — their unique content fits as a section in the canonical issue. Consolidate.
+- **Redundant** — they add nothing the canonical issue doesn't already say. Delete (close).
 
 ### Retrieval-Value Test
 
@@ -290,10 +315,10 @@ Use subagents for context isolation when investigating multiple artifacts — no
 
 There are two subagent roles:
 
-1. **Investigation subagents** — read-only. They must not edit files, create successors, or delete anything. Each returns: file path, evidence, recommended action, confidence, and open questions. These can run in parallel when artifacts are independent.
-2. **Replacement subagents** — write a single new learning to replace a stale one. These run **one at a time, sequentially** (each replacement subagent may need to read significant code, and running multiple in parallel risks context exhaustion). The orchestrator handles all deletions and metadata updates after each replacement completes.
+1. **Investigation subagents** — read-only. They must not edit files, edit issues, create successors, or close anything. Each returns: issue number, evidence, recommended action, confidence, and open questions. The orchestrator passes each subagent the issue body it already fetched (subagents do not call `gh`). These can run in parallel when artifacts are independent.
+2. **Replacement subagents** — write a single new learning body to replace a stale one. These run **one at a time, sequentially** (each replacement subagent may need to read significant code, and running multiple in parallel risks context exhaustion). They return body text only; the orchestrator applies it via `gh issue edit` and handles all closes/metadata updates after each replacement completes.
 
-The orchestrator merges investigation results, detects contradictions, coordinates replacement subagents, and performs all deletions/metadata edits centrally. In interactive mode, it asks the user questions on ambiguous cases. In headless mode, it marks ambiguous cases as stale instead. If two artifacts overlap or discuss the same root issue, investigate them together rather than parallelizing.
+The orchestrator merges investigation results, detects contradictions, coordinates replacement subagents, and performs all `gh` issue edits/closes centrally (subagents never call `gh`). In interactive mode, it asks the user questions on ambiguous cases. In headless mode, it marks ambiguous cases as stale instead. If two artifacts overlap or discuss the same root issue, investigate them together rather than parallelizing.
 
 ## Phase 2: Classify the Right Maintenance Action
 
@@ -301,31 +326,31 @@ After gathering evidence, assign one recommended action.
 
 ### Keep
 
-The learning is still accurate and useful. Do not edit the file — report that it was reviewed and remains trustworthy. Only add `last_refreshed` if you are already making a meaningful update for another reason.
+The learning is still accurate and useful. Do not edit the issue — report that it was reviewed and remains trustworthy. Only add `last_refreshed` to the YAML block if you are already making a meaningful update for another reason.
 
 ### Update
 
-The core solution is still valid but references have drifted (paths, class names, links, code snippets, metadata). Apply the fixes directly.
+The core solution is still valid but references have drifted (paths, class names, links, code snippets, metadata). Apply the fixes directly via `gh issue edit`.
 
 ### Consolidate
 
-Choose **Consolidate** when Phase 1.75 identified docs that overlap heavily but are both materially correct. This is different from Update (which fixes drift in a single doc) and Replace (which rewrites misleading guidance). Consolidate handles the "both right, one subsumes the other" case.
+Choose **Consolidate** when Phase 1.75 identified learning issues that overlap heavily but are both materially correct. This is different from Update (which fixes drift in a single issue) and Replace (which rewrites misleading guidance). Consolidate handles the "both right, one subsumes the other" case.
 
 **When to consolidate:**
 
-- Two docs describe the same problem and recommend the same (or compatible) solution
-- One doc is a narrow precursor and a newer doc covers the same ground more broadly
-- The unique content from the subsumed doc can fit as a section or addendum in the canonical doc
+- Two issues describe the same problem and recommend the same (or compatible) solution
+- One issue is a narrow precursor and a newer issue covers the same ground more broadly
+- The unique content from the subsumed issue can fit as a section or addendum in the canonical issue
 - Keeping both creates drift risk without meaningful retrieval benefit
 
 **When NOT to consolidate** (apply the Retrieval-Value Test from Phase 1.75):
 
-- The docs cover genuinely different sub-problems that someone would search for independently
-- Merging would create an unwieldy doc that harms navigation more than drift risk harms accuracy
+- The issues cover genuinely different sub-problems that someone would search for independently
+- Merging would create an unwieldy issue that harms navigation more than drift risk harms accuracy
 
-**Consolidate vs Delete:** If the subsumed doc has unique content worth preserving (edge cases, alternative approaches, extra prevention rules), use Consolidate to merge that content first. If the subsumed doc adds nothing the canonical doc doesn't already say, skip straight to Delete.
+**Consolidate vs Delete:** If the subsumed issue has unique content worth preserving (edge cases, alternative approaches, extra prevention rules), use Consolidate to merge that content first. If the subsumed issue adds nothing the canonical issue doesn't already say, skip straight to Delete.
 
-The Consolidate action is: merge unique content from the subsumed doc into the canonical doc, then delete the subsumed doc. Not archive — delete. Git history preserves it.
+The Consolidate action is: merge unique content from the subsumed issue into the canonical issue's body (`gh issue edit`), then close the subsumed issue (`gh issue close <N> --comment "consolidated into #<canonical>"`). Not archive — close. Issue history preserves it.
 
 ### Replace
 
@@ -339,7 +364,7 @@ By the time you identify a Replace candidate, Phase 1 investigation has already 
 
 - **Sufficient evidence** — you understand both what the old learning recommended AND what the current approach is. The investigation found the current code patterns, the new file locations, the changed architecture. → Proceed to write the replacement (see Phase 4 Replace Flow).
 - **Insufficient evidence** — the drift is so fundamental that you cannot confidently document the current approach. The entire subsystem was replaced, or the new architecture is too complex to understand from a file scan alone. → Mark as stale in place:
-   - Add `status: stale`, `stale_reason: [what you found]`, `stale_date: YYYY-MM-DD` to the frontmatter
+   - Set `status: stale`, `stale_reason: [what you found]`, `stale_date: YYYY-MM-DD` in the issue body's YAML block via `gh issue edit`
    - Report what evidence you found and what is missing
    - Recommend the user run `yunxing-compound` after their next encounter with that area, when they have fresh problem-solving context
 
@@ -349,10 +374,10 @@ Choose **Delete** when:
 
 - The code or workflow no longer exists and the problem domain is gone
 - The learning is obsolete and has no modern replacement worth documenting
-- The learning is fully redundant with another doc (use Consolidate if there is unique content to merge first)
+- The learning is fully redundant with another issue (use Consolidate if there is unique content to merge first)
 - There is no meaningful successor evidence suggesting it should be replaced instead
 
-Action: delete the file. No archival directory, no metadata — just delete it. Git history preserves every deleted file if recovery is ever needed.
+Action: close the issue (`gh issue close <N> --comment "<reason>"`). No archival label, no archive directory — just close it. Issue history preserves the body, and `gh issue reopen <N>` recovers it if needed.
 
 ### Before deleting: check if the problem domain is still active
 
@@ -365,41 +390,40 @@ Do not search mechanically for keywords from the old learning. Instead, understa
 
 ### Before deleting: check for inbound links
 
-A doc that other files cite is load-bearing in a way the doc itself does not announce. Before classifying as Delete, search the repo's markdown content (other docs, plans, instruction files, READMEs) for citations of the file — not source code, where citations are rare and only appear in comments. The filename slug is usually unique enough that one query covers all citation sites.
+A learning that other artifacts cite is load-bearing in a way the learning itself does not announce. Before classifying as Delete, search for citations of the issue:
 
-Search efficiently:
+- Other learning issues referencing it by `#<N>`: `gh issue list --label "yunxing:solution" --search "#<N>"` (also try the title slug as a search term).
+- The repo's markdown content (plans, instruction files, READMEs) referencing the issue number or title slug — use the platform's native content-search tool (e.g., Grep in Claude Code). Read context lines around each match (e.g., Grep's `-B`/`-A`), not whole files.
 
-- Prefer the platform's native content-search tool (e.g., Grep in Claude Code) over shell. Drop to shell when materially better for the case.
-- Search the filename slug (without `.md`); narrow to the full path only if matches are noisy.
-- Read context lines around each match (e.g., Grep's `-B`/`-A`), not whole files.
+Skip source code, where citations are rare and only appear in comments.
 
 **Inbound links inform the classification, not the cleanup.** Removing a citation is always mechanical (drop the parenthetical, the bare entry, or the deferring clause). The judgment is upstream: given these citations, is Delete still right, or is Replace closer to right?
 
 Classify each citation by what it does in its citing context:
 
-- **Decorative** — principle stated inline, citation is a "see also" pointer or bare attribution. Delete is fine; clean up citations in the same commit.
-- **Substantive** — citing doc relies on the cited doc to provide content not stated inline (e.g., "see X for details on Y" with no inline Y). Signal Replace — write a successor at the same path, or **Keep with narrowed scope** if the doc's actual content is broader than its title implies.
+- **Decorative** — principle stated inline, citation is a "see also" pointer or bare attribution. Delete (close) is fine; clean up citations in the same pass.
+- **Substantive** — citing artifact relies on the cited learning to provide content not stated inline (e.g., "see #N for details on Y" with no inline Y). Signal Replace — overwrite the same issue's body with a successor, or **Keep with narrowed scope** if the learning's actual content is broader than its title implies.
 - **Mixed or unclear** — stale-mark.
 
-In headless mode, Delete + decorative cleanup is fine. Any substantive citation, or any genuine ambiguity, downgrades to stale-marking — writing a Replace successor is judgment-heavy and should not happen unattended.
+In headless mode, Delete (close) + decorative cleanup is fine. Any substantive citation, or any genuine ambiguity, downgrades to stale-marking — writing a Replace successor is judgment-heavy and should not happen unattended.
 
-**Auto-delete only when all three hold:**
+**Auto-close only when all three hold:**
 
-- The implementation is gone (or fully superseded by a clearly better successor, or the doc is plainly redundant).
+- The implementation is gone (or fully superseded by a clearly better successor, or the learning is plainly redundant).
 - The problem domain is gone — the app no longer deals with what the learning addresses.
 - Inbound links are absent or unambiguously decorative.
 
-If any condition fails, classify as Replace, Update, Consolidate, or stale-mark per the rules above. Do not delete a learning whose problem domain is still active or whose principles are cited substantively — fill the gap with a replacement instead.
+If any condition fails, classify as Replace, Update, Consolidate, or stale-mark per the rules above. Do not close a learning whose problem domain is still active or whose principles are cited substantively — fill the gap with a replacement instead.
 
 ## Pattern Guidance
 
-Apply the same five outcomes (Keep, Update, Consolidate, Replace, Delete) to pattern docs, but evaluate them as **derived guidance** rather than incident-level learnings. Key differences:
+Apply the same five outcomes (Keep, Update, Consolidate, Replace, Delete) to pattern-style learnings, but evaluate them as **derived guidance** rather than incident-level learnings. Key differences:
 
 - **Keep**: the underlying learnings still support the generalized rule and examples remain representative
 - **Update**: the rule holds but examples, links, scope, or supporting references drifted
-- **Consolidate**: two pattern docs generalize the same set of learnings or cover the same design concern — merge into one canonical pattern
+- **Consolidate**: two pattern-style learnings generalize the same set of incidents or cover the same design concern — merge into one canonical pattern issue
 - **Replace**: the generalized rule is now misleading, or the underlying learnings support a different synthesis. Base the replacement on the refreshed learning set — do not invent new rules from guesswork
-- **Delete**: the pattern is no longer valid, no longer recurring, or fully subsumed by a stronger pattern doc with no unique content remaining
+- **Delete**: the pattern is no longer valid, no longer recurring, or fully subsumed by a stronger pattern-style learning with no unique content remaining
 
 ## Phase 3: Ask for Decisions
 
@@ -416,11 +440,11 @@ Apply the same five outcomes (Keep, Update, Consolidate, Replace, Delete) to pat
 Most Updates and Consolidations should be applied directly without asking. Only ask the user when:
 
 - The right action is genuinely ambiguous (Update vs Replace vs Consolidate vs Delete)
-- You are about to Delete a document **and** the evidence is not unambiguous (see auto-delete criteria in Phase 2). When auto-delete criteria are met, proceed without asking.
-- You are about to Consolidate and the choice of canonical doc is not clear-cut
+- You are about to Delete (close) a learning **and** the evidence is not unambiguous (see auto-close criteria in Phase 2). When auto-close criteria are met, proceed without asking.
+- You are about to Consolidate and the choice of canonical issue is not clear-cut
 - You are about to create a successor via Replace
 
-Do **not** ask questions about whether code changes were intentional, whether the user wants to fix bugs in the code, or other concerns outside doc maintenance. Stay in your lane — doc accuracy.
+Do **not** ask questions about whether code changes were intentional, whether the user wants to fix bugs in the code, or other concerns outside learning maintenance. Stay in your lane — learning accuracy.
 
 #### Question Style
 
@@ -438,7 +462,7 @@ Question rules:
 
 For a single artifact, present:
 
-- file path
+- issue ref (`#<N>` + title)
 - 2-4 bullets of evidence
 - recommended action
 
@@ -464,16 +488,16 @@ For several learnings:
 
 1. Group obvious **Keep** cases together
 2. Group obvious **Update** cases together when the fixes are straightforward
-3. Present **Consolidate** cases together when the canonical doc is clear
+3. Present **Consolidate** cases together when the canonical issue is clear
 4. Present **Replace** cases individually or in very small groups
-5. Present **Delete** cases individually unless they are strong auto-delete candidates
+5. Present **Delete** cases individually unless they are strong auto-close candidates
 
 Ask for confirmation in stages:
 
 1. Confirm grouped Keep/Update recommendations
-2. Then handle Consolidate groups (present the canonical doc and what gets merged)
+2. Then handle Consolidate groups (present the canonical issue and what gets merged)
 3. Then handle Replace one at a time
-4. Then handle Delete one at a time unless the deletion is unambiguous and safe to auto-apply
+4. Then handle Delete one at a time unless the close is unambiguous and safe to auto-apply
 
 #### Broad Scope
 
@@ -490,11 +514,11 @@ Do not front-load the user with a full maintenance queue.
 
 For each candidate, execute the flow that matches its classification from Phase 2 (confirmed in Phase 3). Read `references/per-action-flows.md` and follow the matching section:
 
-- **Keep** — no file edit by default; summarize why the learning remains trustworthy.
-- **Update** — in-place edits when the solution is still substantively correct (path renames, link refreshes, module renames).
-- **Consolidate** — merge overlapping docs into a canonical doc, delete subsumed docs, update cross-references. The orchestrator handles consolidation directly.
-- **Replace** — write a successor learning via subagent (passing the documentation contract files), validate frontmatter, then delete the old. When evidence is insufficient, mark stale instead.
-- **Delete** — final inbound-link check, then remove. Reclassify if late-discovered substantive citations surface.
+- **Keep** — no issue edit by default; summarize why the learning remains trustworthy.
+- **Update** — edit the issue body (`gh issue edit`) when the solution is still substantively correct (path renames, link refreshes, module renames).
+- **Consolidate** — merge overlapping issues into a canonical issue, close subsumed issues, update cross-references. The orchestrator handles consolidation directly.
+- **Replace** — author a successor body via subagent (passing the documentation contract files), validate the YAML block, then overwrite the same issue's body via `gh issue edit`. When evidence is insufficient, mark stale instead.
+- **Delete** — final inbound-link check, then close the issue. Reclassify if late-discovered substantive citations surface.
 
 Only one flow runs per candidate; the reference contains the per-action criteria, examples, and step-by-step instructions.
 
@@ -545,14 +569,14 @@ Marked stale: S
 CONCEPTS.md: <scanned, no qualifying terms | created with N entries (M seeded) | updated — N added, N refined, N reconciled, N scrubbed | repo-wide map created with N entries>
 ```
 
-Then for EVERY file processed, list:
-- The file path
+Then for EVERY learning issue processed, list:
+- The issue ref (`#<N>` + title)
 - The classification (Keep/Update/Consolidate/Replace/Delete/Stale)
 - What evidence was found -- tag any memory-sourced findings with "(auto memory [claude])" to distinguish them from codebase-sourced evidence
 - What action was taken (or recommended)
-- For Consolidate: which doc was canonical, what unique content was merged, what was deleted
+- For Consolidate: which issue was canonical, what unique content was merged, which issue was closed
 
-For **Keep** outcomes, list them under a reviewed-without-edits section so the result is visible without creating git churn.
+For **Keep** outcomes, list them under a reviewed-without-edits section so the result is visible without creating churn.
 
 ### Headless mode report
 
@@ -561,24 +585,24 @@ In headless mode, the report is the sole deliverable — there is no user presen
 Split actions into two sections:
 
 **Applied** (writes that succeeded):
-- For each **Updated** file: the file path, what references were fixed, and why
-- For each **Consolidated** cluster: the canonical doc, what unique content was merged from each subsumed doc, and the subsumed docs that were deleted
-- For each **Replaced** file: what the old learning recommended vs what the current code does, and the path to the new successor
-- For each **Deleted** file: the file path and why it was removed (problem domain gone, fully redundant, etc.)
-- For each **Marked stale** file: the file path, what evidence was found, and why it was ambiguous
+- For each **Updated** issue: the issue ref, what references were fixed, and why
+- For each **Consolidated** cluster: the canonical issue, what unique content was merged from each subsumed issue, and the subsumed issues that were closed
+- For each **Replaced** issue: what the old learning recommended vs what the current code does, and the issue ref whose body was overwritten
+- For each **Deleted** issue: the issue ref and why it was closed (problem domain gone, fully redundant, etc.)
+- For each **Marked stale** issue: the issue ref, what evidence was found, and why it was ambiguous
 
-**Recommended** (actions that could not be written — e.g., permission denied):
+**Recommended** (actions that could not be written — e.g., gh not authed, permission denied):
 - Same detail as above, but framed as recommendations for a human to apply
 - Include enough context that the user can apply the change manually or re-run the skill interactively
 
-If all writes succeed, the Recommended section is empty. If no writes succeed (e.g., read-only invocation), all actions appear under Recommended — the report becomes a maintenance plan.
+If all writes succeed, the Recommended section is empty. If no writes succeed (e.g., gh unavailable), all actions appear under Recommended — the report becomes a maintenance plan.
 
-**Legacy cleanup** (if `docs/solutions/_archived/` exists):
-- List archived files found and recommend disposition: restore (if still relevant), delete (if truly obsolete), or consolidate (if overlapping with active docs)
+**Legacy cleanup** (if a `docs/solutions/` directory exists in the repo):
+- Note it as pre-migration content and recommend migrating each file into a `yunxing:solution` issue (or deleting it once migrated). This skill does not process local files.
 
 ## Phase 5: Commit Changes
 
-After all actions are executed and the report is generated, handle committing the changes. Skip this phase if no files were modified (all Keep, or all writes failed).
+The learning maintenance itself (Update/Consolidate/Replace/Delete) happens on GitHub issues via `gh` and needs no git commit. This phase commits only the **local files** this run may have modified: `CONCEPTS.md` and any instruction-file (`AGENTS.md`/`CLAUDE.md`) discoverability edit. Skip this phase if no local files were modified (e.g., only issue edits occurred, all Keep, or all writes failed).
 
 ### Detect git context
 
@@ -623,54 +647,54 @@ First, run `git branch --show-current` to determine the current branch. Then pre
 ### Commit message
 
 Write a descriptive commit message that:
-- Summarizes what was refreshed (e.g., "update 3 stale learnings, consolidate 2 overlapping docs, delete 1 obsolete doc")
+- Summarizes the local changes committed (e.g., "add 2 CONCEPTS.md entries; surface yunxing:solution issues in AGENTS.md") and references the issue maintenance done this run (e.g., "refreshed 6 yunxing:solution issues")
 - Follows the repo's existing commit conventions (check recent git log for style)
-- Is succinct — the details are in the changed files themselves
+- Is succinct — the issue-side details live in the report and the issues themselves
 
 ## Relationship to yunxing-compound
 
-- `yunxing-compound` captures a newly solved, verified problem
-- `yunxing-compound-refresh` maintains older learnings as the codebase evolves — both their individual accuracy and their collective design as a document set
+- `yunxing-compound` captures a newly solved, verified problem as a `yunxing:solution` issue
+- `yunxing-compound-refresh` maintains older learning issues as the codebase evolves — both their individual accuracy and their collective design as a knowledge set
 
 Use **Replace** only when the refresh process has enough real evidence to write a trustworthy successor. When evidence is insufficient, mark as stale and recommend `yunxing-compound` for when the user next encounters that problem area.
 
-Use **Consolidate** proactively when the document set has grown organically and redundancy has crept in. Every `yunxing-compound` invocation adds a new doc — over time, multiple docs may cover the same problem from slightly different angles. Periodic consolidation keeps the document set lean and authoritative.
+Use **Consolidate** proactively when the learning set has grown organically and redundancy has crept in. Every `yunxing-compound` invocation adds a new issue — over time, multiple issues may cover the same problem from slightly different angles. Periodic consolidation keeps the learning set lean and authoritative.
 
 ## Discoverability Check
 
-After the refresh report is generated, check whether the project's instruction files would lead an agent to discover and search `docs/solutions/` before starting work in a documented area. This runs every time — the knowledge store only compounds value when agents can find it. If this check produces edits, they are committed as part of (or immediately after) the Phase 5 commit flow — see step 5 below.
+After the refresh report is generated, check whether the project's instruction files would lead an agent to discover and search the project's `yunxing:solution` GitHub issues before starting work in a documented area. This runs every time — the knowledge store only compounds value when agents can find it. If this check produces edits, they are committed as part of (or immediately after) the Phase 5 commit flow — see step 6 below.
 
 1. Identify which root-level instruction files exist (AGENTS.md, CLAUDE.md, or both). Read the file(s) and determine which holds the substantive content — one file may just be a shim that `@`-includes the other (e.g., `CLAUDE.md` containing only `@AGENTS.md`, or vice versa). The substantive file is the assessment and edit target; ignore shims. If neither file exists, skip this check entirely.
 2. Assess whether an agent reading the instruction files would learn three things:
-   - That a searchable knowledge store of documented solutions exists
-   - Enough about its structure to search effectively (category organization, YAML frontmatter fields like `module`, `tags`, `problem_type`)
+   - That a searchable knowledge store of documented solutions exists as GitHub issues labeled `yunxing:solution`
+   - Enough about its structure to search effectively (the label, and the YAML fields like `category`, `module`, `tags`, `problem_type` in each issue body)
    - When to search it (before implementing features, debugging issues, or making decisions in documented areas — learnings may cover bugs, best practices, workflow patterns, or other institutional knowledge)
 
-   This is a semantic assessment, not a string match. The information could be a line in an architecture section, a bullet in a gotchas section, spread across multiple places, or expressed without ever using the exact path `docs/solutions/`. Use judgment — if an agent would reasonably discover and use the knowledge store after reading the file, the check passes.
+   This is a semantic assessment, not a string match. The information could be a line in an architecture section, a bullet in a gotchas section, spread across multiple places, or expressed without ever using the exact label `yunxing:solution`. Use judgment — if an agent would reasonably discover and use the knowledge store after reading the file, the check passes.
 
 3. If the spirit is already met, no action needed.
 4. If not:
-   a. Based on the file's existing structure, tone, and density, identify where a mention fits naturally. Before creating a new section, check whether the information could be a single line in the closest related section — an architecture tree, a directory listing, a documentation section, or a conventions block. A line added to an existing section is almost always better than a new headed section. Only add a new section as a last resort when the file has clear sectioned structure and nothing is even remotely related.
+   a. Based on the file's existing structure, tone, and density, identify where a mention fits naturally. Before creating a new section, check whether the information could be a single line in the closest related section — an architecture overview, a conventions block, or a documentation section. A line added to an existing section is almost always better than a new headed section. Only add a new section as a last resort when the file has clear sectioned structure and nothing is even remotely related.
    b. Draft the smallest addition that communicates the three things. Match the file's existing style and density. The addition should describe the knowledge store itself, not the plugin.
 
-      Keep the tone informational, not imperative. Express timing as description, not instruction — "relevant when implementing or debugging in documented areas" rather than "check before implementing or debugging." Imperative directives like "always search before implementing" cause redundant reads when a workflow already includes a dedicated search step. The goal is awareness: agents learn the folder exists and what's in it, then use their own judgment about when to consult it.
+      Keep the tone informational, not imperative. Express timing as description, not instruction — "relevant when implementing or debugging in documented areas" rather than "check before implementing or debugging." Imperative directives like "always search before implementing" cause redundant reads when a workflow already includes a dedicated search step. The goal is awareness: agents learn the issue store exists and what's in it, then use their own judgment about when to consult it.
 
       Examples of calibration (not templates — adapt to the file):
 
-      When there's an existing directory listing or architecture section — add a line:
+      When there's an existing conventions or architecture section — add a line:
       ```
-      docs/solutions/  # documented solutions to past problems (bugs, best practices, workflow patterns), organized by category with YAML frontmatter (module, tags, problem_type)
+      Solved-problem learnings live as GitHub issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each with a YAML block carrying category, module, tags, problem_type — search with `gh issue list --label "yunxing:solution" --search "<terms>"`.
       ```
 
       When nothing in the file is a natural fit — a small headed section is appropriate:
       ```
       ## Documented Solutions
 
-      `docs/solutions/` — documented solutions to past problems (bugs, best practices, workflow patterns), organized by category with YAML frontmatter (`module`, `tags`, `problem_type`). Relevant when implementing or debugging in documented areas.
+      Solved-problem learnings live as GitHub issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each with a YAML block carrying `category`, `module`, `tags`, `problem_type`. Search with `gh issue list --label "yunxing:solution" --search "<terms>"`. Relevant when implementing or debugging in documented areas.
       ```
-   c. In interactive mode, explain to the user why this matters — agents working in this repo (including fresh sessions, other tools, or collaborators without the plugin) won't know to check `docs/solutions/` unless the instruction file surfaces it. Show the proposed change and where it would go, then use the platform's blocking question tool to get consent before making the edit: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to presenting the proposal in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. In headless mode, include it as a "Discoverability recommendation" line in the report — do not attempt to edit instruction files (headless scope is doc maintenance, not project config).
+   c. In interactive mode, explain to the user why this matters — agents working in this repo (including fresh sessions, other tools, or collaborators without the plugin) won't know to check the `yunxing:solution` issues unless the instruction file surfaces them. Show the proposed change and where it would go, then use the platform's blocking question tool to get consent before making the edit: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to presenting the proposal in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. In headless mode, include it as a "Discoverability recommendation" line in the report — do not attempt to edit instruction files (headless scope is learning maintenance, not project config).
 
-5. **If `CONCEPTS.md` exists at repo root, run a parallel discoverability check for it.** Use the same workflow as the `docs/solutions/` check above: same target file, same edit-placement judgment, same consent-then-edit interaction shape per mode. Example calibration when a directory listing is present:
+5. **If `CONCEPTS.md` exists at repo root, run a parallel discoverability check for it.** Use the same workflow as the `yunxing:solution` check above: same target file, same edit-placement judgment, same consent-then-edit interaction shape per mode. Example calibration when a conventions block is present:
 
    ```
    CONCEPTS.md  # shared domain vocabulary — read when orienting to the codebase or before discussing domain concepts
@@ -678,4 +702,4 @@ After the refresh report is generated, check whether the project's instruction f
 
    **Skip this step entirely if `CONCEPTS.md` does not exist** — never nag for an artifact the project has not adopted. When skipped, this step produces no output and no edit.
 
-6. **Amend or create a follow-up commit when the check produces edits.** If step 4 or step 5 resulted in an edit to an instruction file and Phase 5 already committed the refresh changes, stage the newly edited file and either amend the existing commit (if still on the same branch and no push has occurred) or create a small follow-up commit (e.g., `docs: add docs/solutions/ discoverability to AGENTS.md`, or `docs: add CONCEPTS.md discoverability to AGENTS.md`, or a combined message when both edits landed). If Phase 5 already pushed the branch to a remote (e.g., the branch+PR path), push the follow-up commit as well so the open PR includes the discoverability change. This keeps the working tree clean and the remote in sync at the end of the run. If the user chose "Don't commit" in Phase 5, leave the instruction-file edits unstaged alongside the other uncommitted refresh changes — no separate commit logic needed.
+6. **Amend or create a follow-up commit when the check produces edits.** If step 4 or step 5 resulted in an edit to an instruction file and Phase 5 already committed the local changes, stage the newly edited file and either amend the existing commit (if still on the same branch and no push has occurred) or create a small follow-up commit (e.g., `docs: surface yunxing:solution issues in AGENTS.md`, or `docs: add CONCEPTS.md discoverability to AGENTS.md`, or a combined message when both edits landed). If Phase 5 already pushed the branch to a remote (e.g., the branch+PR path), push the follow-up commit as well so the open PR includes the discoverability change. This keeps the working tree clean and the remote in sync at the end of the run. If the user chose "Don't commit" in Phase 5, leave the instruction-file edits unstaged alongside the other uncommitted local changes — no separate commit logic needed.
