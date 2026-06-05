@@ -17,6 +17,7 @@ Learnings live on GitHub, never local files. Each learning is a **comment** on a
 1. `gh` is installed. If not, install from https://cli.github.com or run `/yunxing:setup`.
 2. `gh auth status` exits 0. If not, run `gh auth login` (in Claude Code, suggest typing `! gh auth login`).
 3. `gh repo view --json nameWithOwner` resolves. If not, a GitHub repo is required.
+4. **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
 
 **Core gh operations** (the feature issue `#N` carries the label; its solution lives in a comment):
 

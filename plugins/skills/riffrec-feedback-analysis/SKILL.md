@@ -39,6 +39,8 @@ gh auth status
 gh repo view --json nameWithOwner
 ```
 
+4. **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
+
 **Ensure the `yunxing:req` label exists** (both paths create issues under this label):
 
 ```bash

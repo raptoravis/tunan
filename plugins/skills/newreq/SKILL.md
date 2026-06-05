@@ -40,6 +40,7 @@ The requirement is stored in a GitHub issue, so a working, authenticated `gh` is
 1. `gh` is installed. If not, tell the user to install it (`https://cli.github.com`) or run `/yunxing:setup`.
 2. `gh auth status` succeeds. If it exits non-zero, tell the user to run `gh auth login` (in Claude Code they can type `! gh auth login` so the output lands in the session), then re-run this skill.
 3. Resolve the target repo with `gh repo view --json nameWithOwner`. If there is no repo, abort and explain that this skill needs a GitHub repository.
+4. **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
 
 Then ensure the `yunxing:req` label exists in the repo:
 

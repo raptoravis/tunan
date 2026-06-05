@@ -19,6 +19,7 @@ Plans are GitHub issues. Before reading or writing any issue, run this preflight
 1. `gh` installed (else: install from https://cli.github.com or run `/yunxing:setup`).
 2. `gh auth status` exits 0 (else: run `gh auth login`; in Claude Code suggest typing `! gh auth login`).
 3. `gh repo view --json nameWithOwner` resolves (else: a GitHub repo is required to store plans).
+4. **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
 
 Ensure the `yunxing:plan` label exists before adding it to a feature issue:
 

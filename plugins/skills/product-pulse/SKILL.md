@@ -64,6 +64,7 @@ gh repo view --json nameWithOwner
 - If `gh` is not installed, abort and direct the user to install it from https://cli.github.com or run `/yunxing:setup`. Never fall back to a local file.
 - If `gh auth status` does not exit 0, abort and direct the user to authenticate (`gh auth login`; in Claude Code suggest typing `! gh auth login`).
 - If `gh repo view` does not resolve, abort and explain that a GitHub repo is required to store pulse reports.
+- **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run (pulse already treats a missing config as a first run below).
 
 Ensure the `yunxing:pulse` label exists before writing (Phase 2.4 also re-checks):
 

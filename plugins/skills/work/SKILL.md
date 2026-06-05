@@ -43,6 +43,8 @@ Determine how to proceed based on what was provided in `<input_document>`.
 > ```bash
 > gh repo view --json nameWithOwner
 > ```
+>
+> **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
 
 1. **Scan the work area**
 

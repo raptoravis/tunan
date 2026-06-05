@@ -29,6 +29,8 @@ gh auth status
 gh repo view --json nameWithOwner
 ```
 
+**Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the pipeline.
+
 1. Invoke the `plan` skill with `$ARGUMENTS`. If a prior `brainstorm` ran in this pipeline and produced a feature issue, pass that issue ref so the plan consumes it and writes its plan comment onto the same `#<N>`. When no upstream feature issue exists, `plan` creates the feature issue itself (requirement stub body) before writing the plan comment.
 
    GATE: STOP. If plan reported the task is non-software and cannot be processed in pipeline mode, stop the pipeline and inform the user that LFG requires software tasks. Otherwise, **record the feature issue ref (`#<N>`/URL)** that `plan` reports, then verify the plan landed as a comment on it — confirm both the marker comment and the label are present:
