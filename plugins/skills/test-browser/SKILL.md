@@ -238,7 +238,7 @@ Pause for human input when testing touches flows that require external interacti
 | SMS | "Verify you received the SMS code" |
 | External APIs | "Confirm the [service] integration is working" |
 
-Ask the user (using the platform's question tool, or present numbered options and wait):
+Ask the user using the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to numbered options in chat only when no blocking tool exists in the harness or the call errors — not because a schema load is required. Never silently skip the question:
 
 ```
 Human Verification Needed
@@ -260,7 +260,7 @@ When a test fails:
    - Screenshot the error state: `agent-browser screenshot error.png`
    - Note the exact reproduction steps
 
-2. **Ask the user how to proceed:**
+2. **Ask the user how to proceed**, using the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi. Fall back to a numbered list in chat only when no blocking tool exists or the call errors — never silently skip:
 
    ```
    Test Failed: [route]

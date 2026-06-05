@@ -33,6 +33,10 @@ After determining mode, read the matching reference and follow it. Each referenc
 - **Full Mode** → `references/full-mode.md` (9 steps: fetch, triage, plan, parallel implement, validate, commit/push, reply/resolve, verify, summary)
 - **Targeted Mode** → `references/targeted-mode.md` (2 steps: extract thread context from URL, fix/reply/resolve via the same validate/commit/push/reply pipeline)
 
+## Interaction Method
+
+Any point where the flow asks the user to choose among options or make a call that's genuinely theirs (e.g., a `needs-human` item, or pending decisions from a prior round) must fire the platform's blocking question tool, never an ad-hoc chat menu: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi. Fall back to a numbered list in chat only when no blocking tool exists in the harness or the call errors — never silently skip the question.
+
 ## Scripts
 
 - [scripts/get-pr-comments](scripts/get-pr-comments) -- GraphQL query for unresolved review threads

@@ -673,7 +673,7 @@ Key improvements:
 The optimization branch (`optimize/<spec-name>`) is preserved with all commits from kept experiments.
 The experiment log and strategy digest remain in local `.context/...` scratch space for resume and audit on this machine only; they do not travel with the branch because `.context/` is gitignored.
 
-Present post-completion options via the platform question tool:
+Present post-completion options. These five are distinct destinations — none can be cut or merged — so this is the legitimate 5+ option-overflow case: render them as a numbered list in chat (not the blocking question tool, which caps at 4) and add a hint that free-form input is accepted, e.g. "Pick a number or describe what you want." Wait for the user's reply; never silently pick or skip.
 
 1. **Run `/yunxing:code-review`** on the cumulative diff (baseline to final). Load the `code-review` skill on the optimization branch (interactive or `mode:agent`). To land eligible fixes before the next option, apply the mechanical-apply bar below.
 

@@ -134,7 +134,7 @@ When a test fails:
    - Capture console logs
    - Note reproduction steps
 
-2. **Ask the user how to proceed:**
+2. **Ask the user how to proceed**, using the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi. Fall back to a numbered list in chat only when no blocking tool exists or the call errors — never silently skip:
 
    ```
    Test Failed: [screen/feature]
