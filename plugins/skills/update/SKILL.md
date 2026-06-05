@@ -18,7 +18,7 @@ Verify the installed yunxing plugin version matches the upstream
 `plugin.json` on `main`, and recommend the update command if it doesn't.
 Claude Code only.
 
-The upstream version comes from `plugins/yunxing/.claude-plugin/plugin.json`
+The upstream version comes from `plugins/.claude-plugin/plugin.json`
 on `main` rather than the latest GitHub release tag, because the marketplace
 installs plugin contents from `main` HEAD. Comparing against release tags
 false-positives whenever `main` is ahead of the last tag (the normal state

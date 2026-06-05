@@ -32,7 +32,7 @@ import urllib.request
 from datetime import datetime, timezone
 
 OWNER = "raptoravis"
-REPO = "yunxing-plugin"
+REPO = "yunxing"
 TAG_PREFIX = "yunxing-v"
 DEFAULT_API_BASE = "https://api.github.com"
 GH_TIMEOUT_SECS = 10

@@ -1,4 +1,4 @@
-# Print the upstream `version` field from plugins/yunxing/.claude-plugin/plugin.json
+# Print the upstream `version` field from plugins/.claude-plugin/plugin.json
 # on main, or the literal sentinel `__CE_UPDATE_VERSION_FAILED__` if the lookup fails.
 #
 # PowerShell 5.1-compatible port of upstream-version.sh. stdout contract is
@@ -10,7 +10,7 @@
 
 $ErrorActionPreference = 'SilentlyContinue'
 
-$version = gh api repos/raptoravis/yunxing-plugin/contents/plugins/yunxing/.claude-plugin/plugin.json --jq '.content | @base64d | fromjson | .version' 2>$null
+$version = gh api repos/raptoravis/yunxing/contents/plugins/.claude-plugin/plugin.json --jq '.content | @base64d | fromjson | .version' 2>$null
 
 if (-not [string]::IsNullOrWhiteSpace($version)) {
   Write-Output ($version | Select-Object -First 1)

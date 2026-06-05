@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Print the upstream `version` field from plugins/yunxing/.claude-plugin/plugin.json
+# Print the upstream `version` field from plugins/.claude-plugin/plugin.json
 # on main, or the literal sentinel `__CE_UPDATE_VERSION_FAILED__` if the lookup fails.
 #
 # Compared to release tags, this reads the current main HEAD because the marketplace
@@ -8,7 +8,7 @@
 
 set -u
 
-version=$(gh api repos/raptoravis/yunxing-plugin/contents/plugins/yunxing/.claude-plugin/plugin.json --jq '.content | @base64d | fromjson | .version' 2>/dev/null)
+version=$(gh api repos/raptoravis/yunxing/contents/plugins/.claude-plugin/plugin.json --jq '.content | @base64d | fromjson | .version' 2>/dev/null)
 
 if [ -n "$version" ]; then
   echo "$version"
