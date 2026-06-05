@@ -15,7 +15,7 @@ AI-powered development tools that get smarter with every use. Make each unit of 
 | Component   | Count |
 | ----------- | ----- |
 | Agents      | 50+   |
-| Skills      | 39+   |
+| Skills      | 40+   |
 | MCP Servers | 5     |
 
 ## Skills
@@ -60,6 +60,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | `cp`                                                              | Commit + push the current changes; auto-drafts the message and follows the global git-commit-push discipline. On a protected base (`main` / `master` / `dev` / `test`) it asks before pushing unless `--am` is passed                                                                |
 | `cpm`                                                             | Same as `cp` but with `--am` defaulted on — pushes directly to a protected base without the confirmation prompt (a thin delegate to `cp`; pass `--no-am` to restore the prompt)                                                                                                       |
 | [`worktree`](../../docs/skills/worktree.md)                       | Manage Git worktrees for parallel development                                                                                                             |
+| `merge-pr-verify-close`                                          | Merge a reviewed, CI-green PR, verify the merged base branch, then close the feature issue only when verification passes (never force-merges or bypasses branch protection). Invoke explicitly after human PR review — `lfg` does not call it                                              |
 
 ### Workflow Utilities
 
@@ -109,7 +110,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | Skill             | Description                                                                                                                                                                                                       |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dogfood-beta` | Diff-scoped browser QA of the active branch: builds an exhaustive test matrix of every change, drives the app with agent-browser, then auto-fixes issues, adds regression tests, and commits each fix until green |
-| `/lfg`            | Full autonomous engineering workflow                                                                                                                                                                              |
+| `/lfg`            | Full autonomous engineering pipeline end-to-end: plan, work, code review, test, commit, push, open PR, watch CI, and fix CI failures until green — stops at an open PR for human review (does not auto-merge or close the issue)                                                                                                                                                 |
 
 ## MCP Servers
 
