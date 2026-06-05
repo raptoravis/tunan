@@ -69,7 +69,7 @@ If everything is installed (tools, skills, and any MCP servers), no repo-local c
 
     Tools:  🟢 agent-browser  🟢 gh  🟢 jq  🟢 vhs  🟢 silicon  🟢 ffmpeg  🟢 ast-grep
     Skills: 🟢 ast-grep
-    MCP:    🟢 context7  🟢 sequential-thinking  🟢 playwright  🟢 serena  🟢 chrome-devtools
+    MCP:    🟢 context7  🟢 sequential-thinking  🟢 playwright  🟢 chrome-devtools
     Config: ✅
 
     Run /yunxing:setup anytime to re-check.
@@ -116,7 +116,7 @@ If the local config already exists, check whether it is safely gitignored. If no
 
 Present the missing tools, skills, and MCP servers using a multiSelect question. Use the install commands and URLs from the script's diagnostic output. Group items under `Tools:`, `Skills:`, and `MCP Servers:` so the user can see which runtime each item targets; omit a group whose items are all installed.
 
-Pre-select all missing tools and skills. For MCP servers, pre-select the `recommended` ones (context7, sequential-thinking) but leave the `optional` ones (playwright, serena, chrome-devtools) **unchecked** by default — they pull heavyweight dependencies (browser binaries, a Python `uvx` toolchain, a Chrome install) that many users will not want, so let the user opt in deliberately.
+Pre-select all missing tools and skills. For MCP servers, pre-select the `recommended` ones (context7, sequential-thinking) but leave the `optional` ones (playwright, chrome-devtools) **unchecked** by default — they pull heavyweight dependencies (browser binaries, a Chrome install) that many users will not want, so let the user opt in deliberately.
 
 ```
 The following items are missing. Select which to install:
@@ -138,7 +138,6 @@ MCP Servers:
   [x] context7 - Up-to-date library/API documentation lookup
   [x] sequential-thinking - Structured multi-step reasoning
   [ ] playwright - Browser automation (downloads browser binaries)
-  [ ] serena - Codebase session memory (requires uvx / Python)
   [ ] chrome-devtools - Performance and DevTools inspection (requires Chrome)
 ```
 

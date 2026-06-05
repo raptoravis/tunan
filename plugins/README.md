@@ -120,12 +120,11 @@ The plugin ships a bundled [`.mcp.json`](.mcp.json). Two lightweight, no-API-key
 | `context7`            | ✅          | Up-to-date library / API documentation lookup    |
 | `sequential-thinking` | ✅          | Structured multi-step reasoning                  |
 
-Three heavier servers are **opt-in** — they pull large dependencies (browser binaries, a Python `uvx` toolchain, a Chrome install), so `/yunxing:setup` offers them but leaves them unchecked by default:
+Two heavier servers are **opt-in** — they pull large dependencies (browser binaries, a Chrome install), so `/yunxing:setup` offers them but leaves them unchecked by default:
 
 | Server            | Installs via                          | Purpose                                  |
 | ----------------- | ------------------------------------- | ---------------------------------------- |
 | `playwright`      | `claude mcp add playwright …`         | Cross-browser automation                 |
-| `serena`          | `claude mcp add serena …`             | Codebase session memory (needs `uvx`)    |
 | `chrome-devtools` | `claude mcp add chrome-devtools …`    | Performance / DevTools inspection        |
 
 Run `/yunxing:setup` to check which MCP servers are registered (via `claude mcp list`) and install any missing ones interactively. MCP detection and `claude mcp add` install are Claude Code-specific; on other harnesses the MCP section is skipped.
