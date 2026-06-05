@@ -23,7 +23,15 @@ Register this repository as a plugin marketplace, then install the plugin:
 /plugin install yunxing@yunxing
 ```
 
-Reload when prompted. After installing, run `/yunxing-setup` in any project — it diagnoses your environment, installs missing tools and MCP servers, and bootstraps project config in one interactive flow.
+Reload when prompted.
+
+> **⚠️ Required next step — run setup.** Installing the plugin only registers the skills; it does **not** configure your environment. Once the plugin is installed and reloaded, run this in any project:
+>
+> ```text
+> /yunxing:setup
+> ```
+>
+> It diagnoses your environment, installs missing CLI tools and MCP servers, verifies `gh` is installed **and** authenticated (the workflow stores its artifacts in GitHub issues), and bootstraps project config — all in one interactive flow. Skipping setup is the most common cause of skills failing on first use. Re-run `/yunxing:setup` anytime to re-check.
 
 ### Codex
 
@@ -35,6 +43,8 @@ codex
 ```
 
 Inside Codex, run `/plugins`, select the **yunxing** marketplace, choose the **yunxing** plugin, and install. Restart Codex afterward. (Codex installs the skill set natively; the review/research/workflow agents that some skills spawn are a Claude Code feature.)
+
+> **⚠️ Required next step — run setup.** After restarting, run `/yunxing:setup` in any project to diagnose your environment, install missing tools, verify `gh` auth, and bootstrap project config. Don't skip it — it's what makes the skills work on first use.
 
 ### Local development (from a checkout)
 
@@ -54,15 +64,15 @@ The plugin ships a bundled [`.mcp.json`](plugins/.mcp.json). Two lightweight, no
 - `context7` — up-to-date library / API documentation lookup
 - `sequential-thinking` — structured multi-step reasoning
 
-Three heavier servers are **opt-in** (they pull large dependencies — browser binaries, a Python `uvx` toolchain, a Chrome install): `playwright`, `serena`, and `chrome-devtools`. Run `/yunxing-setup` to check which MCP servers are registered and install any missing ones interactively. See the [MCP reference](plugins/README.md#mcp-servers) for details.
+Three heavier servers are **opt-in** (they pull large dependencies — browser binaries, a Python `uvx` toolchain, a Chrome install): `playwright`, `serena`, and `chrome-devtools`. Run `/yunxing:setup` to check which MCP servers are registered and install any missing ones interactively. See the [MCP reference](plugins/README.md#mcp-servers) for details.
 
 ## Getting started
 
-After install, run `/yunxing-setup` to verify your environment, then try:
+After install, run `/yunxing:setup` first to verify your environment (see the **⚠️ Required next step** note above), then try:
 
-- `/yunxing-brainstorm` — explore requirements and approaches before planning
-- `/yunxing-plan` — create an implementation plan
-- `/yunxing-code-review` — run a comprehensive multi-agent review
+- `/yunxing:brainstorm` — explore requirements and approaches before planning
+- `/yunxing:plan` — create an implementation plan
+- `/yunxing:code-review` — run a comprehensive multi-agent review
 - `/lfg` — full autonomous engineering workflow
 
 ## License

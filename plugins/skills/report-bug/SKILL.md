@@ -117,7 +117,7 @@ Use the GitHub CLI to create the issue:
 
 ```bash
 gh issue create \
-  --repo EveryInc/yunxing-plugin \
+  --repo raptoravis/yunxing-plugin \
   --title "[yunxing] Bug: [Brief description]" \
   --body "[Formatted bug report from Step 3]" \
   --label "bug,yunxing"
@@ -127,7 +127,7 @@ gh issue create \
 
 ```bash
 gh issue create \
-  --repo EveryInc/yunxing-plugin \
+  --repo raptoravis/yunxing-plugin \
   --title "[yunxing] Bug: [Brief description]" \
   --body "[Formatted bug report]"
 ```
@@ -145,7 +145,7 @@ After the issue is created:
 ```
 Bug report submitted successfully!
 
-Issue: https://github.com/EveryInc/yunxing-plugin/issues/[NUMBER]
+Issue: https://github.com/raptoravis/yunxing-plugin/issues/[NUMBER]
 Title: [yunxing] Bug: [description]
 
 Thank you for helping improve the yunxing plugin!

@@ -31,7 +31,7 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 
-OWNER = "EveryInc"
+OWNER = "raptoravis"
 REPO = "yunxing-plugin"
 TAG_PREFIX = "yunxing-v"
 DEFAULT_API_BASE = "https://api.github.com"
