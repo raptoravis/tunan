@@ -57,6 +57,8 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | [`clean-gone-branches`](../../docs/skills/clean-gone-branches.md) | Clean up local branches whose remote tracking branch is gone                                                                                              |
 | [`commit`](../../docs/skills/commit.md)                           | Create a git commit with a value-communicating message                                                                                                    |
 | [`commit-push-pr`](../../docs/skills/commit-push-pr.md)           | Commit, push, and open a PR with an adaptive description; also update an existing PR description, or generate a description on its own without committing |
+| `cp`                                                              | Commit + push the current changes; auto-drafts the message and follows the global git-commit-push discipline. On a protected base (`main` / `master` / `dev` / `test`) it asks before pushing unless `--am` is passed                                                                |
+| `cpm`                                                             | Same as `cp` but with `--am` defaulted on — pushes directly to a protected base without the confirmation prompt (a thin delegate to `cp`; pass `--no-am` to restore the prompt)                                                                                                       |
 | [`worktree`](../../docs/skills/worktree.md)                       | Manage Git worktrees for parallel development                                                                                                             |
 
 ### Workflow Utilities
