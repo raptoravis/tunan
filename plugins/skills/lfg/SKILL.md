@@ -1,6 +1,6 @@
 ---
 name: lfg
-description: Run the full autonomous engineering pipeline end-to-end (plan, work, code review, test, commit, push, open PR, watch CI, fix CI failures until green, merge the PR, and close the feature issue). Use only when the user explicitly requests hands-off execution of a software task and provides a feature description; do not auto-route casual conversation here.
+description: Run the full autonomous engineering pipeline end-to-end (plan, work, code review, test, commit, push, open PR, watch CI, fix CI failures until green). Use only when the user explicitly requests hands-off execution of a software task and provides a feature description; do not auto-route casual conversation here.
 argument-hint: "[feature description]"
 ---
 
@@ -114,8 +114,6 @@ gh repo view --json nameWithOwner
 
    This commits any remaining changes, pushes the branch, and opens a pull request. If step 5 already opened a PR (check with `gh pr view --json number,url,state 2>/dev/null`), skip PR creation but still commit and push any uncommitted changes.
 
-   Pass the feature issue ref `#<N>` from step 1 and require the PR body to contain a `Closes #<N>` line, so the squash-merge in step 10 closes the feature issue automatically. After the PR exists, verify the line is present (`gh pr view <PR> --json body`); if it is missing, add it by appending `Closes #<N>` to the body and running `gh pr edit <PR> --body-file BODY_FILE`.
-
 8. **CI watch and autofix loop** (only when an open PR exists for the current branch)
 
    Detect the PR; if none exists or `gh` is unavailable, skip this step entirely and proceed to step 9.
@@ -169,38 +167,6 @@ gh repo view --json nameWithOwner
 
    Pass it the **feature issue ref `#<N>`** from step 1, the PR URL, and a short summary of what was built. `compound` runs its own GH preflight and writes the solution as a **comment** on that same feature issue (first line `<!-- yunxing:solution -->`, label `yunxing:solution` added) — not a separate issue or a local file. If `compound` is unavailable on the harness, note that compounding was skipped — do not write a local solution file.
 
-10. **Merge the PR and close the feature issue** (only when an open PR exists AND CI is green or absent)
-
-    GATE: merge only when CI is passing. If step 8 exited its loop because CI passed, or there is no CI configured / no `gh`, proceed. If step 8 hit its 3-attempt GATE with CI still red, SKIP this entire step — do NOT merge and do NOT close the issue. Leave the PR open carrying its `## CI Failures Unresolved` section for a human to finish, and go to step 11.
-
-    Re-confirm green immediately before merging:
-
-    ```bash
-    gh pr checks PR_NUMBER
-    ```
-
-    If any check is failing or pending, treat it as the red-CI case above: skip to step 11 without merging or closing.
-
-    Squash-merge and delete the branch:
-
-    ```bash
-    gh pr merge PR_NUMBER --squash --delete-branch
-    ```
-
-    The PR body carries `Closes #<N>` (added in step 7), so GitHub closes the feature issue as completed on merge. Verify, and back-stop if the auto-close did not fire:
-
-    ```bash
-    gh issue view <N> --json state,stateReason
-    ```
-
-    If `state` is not `CLOSED`, close it explicitly:
-
-    ```bash
-    gh issue close <N> --reason completed
-    ```
-
-    If `gh pr merge` fails — branch protection requiring a human review or status checks, required approvals, or a merge conflict — do NOT force it. Leave the PR open, record that the merge was blocked and why (one line), and proceed to step 11 WITHOUT closing the issue. The autopilot contract is "make residuals durable, then exit," not "bypass protection."
-
-11. Output `<promise>DONE</promise>` when complete. Include the chain in the summary: the **feature issue `#<N>`** (carrying its req body plus `yunxing:plan` and `yunxing:solution` comments) and the PR URL — a single issue handle, not three separate issue numbers. State the terminal status explicitly: PR **merged** and issue **closed as completed**, or — when the step 10 gate blocked it — PR **left open** with the reason (CI red after 3 fixes, or merge blocked by branch protection) and the issue still **open**.
+10. Output `<promise>DONE</promise>` when complete. Include the chain in the summary: the **feature issue `#<N>`** (carrying its req body plus `yunxing:plan` and `yunxing:solution` comments) and the PR URL — a single issue handle, not three separate issue numbers.
 
 Start with step 1 now. Remember: GH preflight and plan FIRST, then work. Never skip the plan.
