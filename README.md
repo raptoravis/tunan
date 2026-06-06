@@ -70,8 +70,10 @@ Two heavier servers are **opt-in** (they pull large dependencies — browser bin
 
 After install, run `/yunxing:setup` first to verify your environment (see the **⚠️ Required next step** note above), then try:
 
+- `/yunxing:newreq` —  create a 'raw' req in the github issue
 - `/yunxing:brainstorm` — explore requirements and approaches before planning
 - `/yunxing:plan` — create an implementation plan
+- `/yunxing:work` — implement the plan
 - `/yunxing:code-review` — run a comprehensive multi-agent review
 - `/lfg` — full autonomous engineering workflow
 
