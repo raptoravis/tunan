@@ -79,6 +79,9 @@ Determine how to proceed based on what was provided in `<input_document>`.
      ```
 
      The plan comment body is markdown and carries the same section names and IDs as before; section-finding works the same way (substring match on section names). Confirm the feature issue carries the `yunxing:plan` label before treating it as the work source.
+
+     **Non-code execution check.** After reading the plan comment, scan its body for the marker `execution: knowledge-work`. If found, this plan is for a **non-code deliverable** (a document, synthesis, or research artifact) — read `references/non-code-execution.md` and follow that carve-out instead of the rest of this workflow. The normal code lifecycle (branch setup, Test Discovery, commits, CI) does not apply.
+
    - When auto-detecting the latest plan (blank invocation), list open feature issues carrying the `yunxing:plan` label and pick the most recent:
 
      ```bash

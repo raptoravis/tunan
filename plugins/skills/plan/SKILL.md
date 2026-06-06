@@ -128,6 +128,19 @@ If the plan body already carries a `deepened: YYYY-MM-DD` frontmatter field and 
 
 **Resume overwrites the plan comment in place.** When resuming an existing plan, the resume run PATCHes the same plan comment by id (find the comment id, then `gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>`) so the feature issue number is stable downstream. It does not create a new comment or a new issue.
 
+#### 0.1a Recognize Approach-Altitude Requests
+
+Some requests are better answered one level up: produce a grounded **approach-plan** — a plan for *how the deliverable will be made* — and hold there for a user checkpoint, rather than zero-shotting the deliverable. This runs **after** Phase 0.1's resume and deepen fast paths (so "deepen the plan" and resume short-circuit first) and **before** Phase 0.1b's domain split (so the capability is domain-general — it applies to software and knowledge-work alike).
+
+Recognize an approach-altitude request when **both** of the following hold:
+
+- **Explicit signal:** The user's words carry approach-language — "plan for a plan", "how would we approach this", "what's the approach before we plan", "approach-altitude", or a paraphrase that clearly asks to plan *how* to produce a deliverable rather than to produce it.
+- **Non-trivial deliverable:** The request implies a deliverable complex enough that its *how* is worth confirming (a document, a synthesis, a multi-source research write-up, a software implementation plan). A simple one-liner request does not qualify.
+
+When the explicit signal is absent but both (a) the deliverable is clearly non-trivial and (b) the approach has genuine forks worth surfacing, the skill MAY proactively offer approach altitude — but this is an offer, not an automatic trigger. Ask the user before entering the flow.
+
+On entry (explicit request, or accepted proactive offer), read `references/approach-altitude.md` and follow it. Otherwise continue to Phase 0.1b unchanged.
+
 #### 0.1b Classify Task Domain
 
 If the task asks to build, modify, refactor, deploy, or architect software (code, schemas, infrastructure), continue to Phase 0.2.
