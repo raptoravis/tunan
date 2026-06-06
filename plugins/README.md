@@ -91,6 +91,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | Skill                                                        | Description                                                                                                                                 |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`doc-review`](../../docs/skills/doc-review.md)        | Review documents using parallel persona agents for role-specific feedback                                                                   |
+| `verify`                                                    | Run a project's test/lint/build checks (and optionally delegate dynamic observation to `test-browser`) and emit the same schema-versioned `mode:agent` contract as `code-review`; used as `lfg`'s local green gate. Invoke as `yunxing:verify`                |
 | [`/yunxing:simplify-code`](../../docs/skills/simplify-code.md) | Simplify recent code changes for reuse, quality, and efficiency — parallel reviewers find issues, fixes applied, behavior verified by tests |
 
 ### Content & Collaboration
