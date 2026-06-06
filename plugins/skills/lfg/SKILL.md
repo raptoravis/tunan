@@ -49,11 +49,19 @@ gh repo view --json nameWithOwner
 
 2. Invoke the `work` skill with the **feature issue ref `#<N>`** from step 1 as its work source. `work` reads the plan comment (`<!-- yunxing:plan -->`) on that issue.
 
-   GATE: STOP. Verify that implementation work was performed - files were created or modified beyond the plan. Do NOT proceed to step 3 if no code changes were made.
+   GATE: STOP. Verify that implementation work was performed - files were created or modified beyond the plan. Do NOT proceed to step 2a if no code changes were made.
+
+2a. **Local green gate** — invoke the `yunxing:verify` skill with `mode:agent` (always the fully-qualified name, never a bare `verify`). Read the contract's `status` and `verdict_code`:
+
+   - `not_ready` or `status: failed` → local checks are red; route into the same autopilot fix loop the pipeline uses for failures (do not prompt the user), then re-run `yunxing:verify`. **Bound the loop:** after a small number of consecutive `not_ready` results with no progress, stop the autopilot, surface the failing checks in the PR body, and proceed — CI (the remote authoritative gate) is the backstop. Never spin indefinitely on a persistently red local environment.
+   - `ready` → proceed to step 3.
+   - `status: degraded` (ambiguous command detection / partial run) or `status: skipped` (no detectable checks) → do not loop and do not treat as authoritative green; proceed to step 3, noting in the PR body that local verification was degraded/skipped and CI remains the authoritative gate.
+
+   **Division of labor (do not duplicate):** `yunxing:verify` is the pre-push **local static green** signal (test/lint/build). Its optional `observe` check delegates to the same `test-browser` skill used later in this pipeline — do not run app/browser observation twice. The CI watch later in this pipeline remains the **remote authoritative** gate. **Anti-false-green:** verify's detected commands should align with the project's CI command set; a `degraded` or partial verify must not be treated as `ready`, so the autopilot loop is never taught to trust a local signal that does not predict the real CI gate.
 
 3. Invoke the `code-review` skill with `mode:agent plan:<feature-issue-ref-from-step-1>`.
 
-   Pass the feature issue ref `#<N>` from step 1 so code-review reads its plan comment and can verify requirements completeness. Read the **Actionable Findings** summary the skill emits.
+   Pass the feature issue ref `#<N>` from step 1 so code-review reads its plan comment and can verify requirements completeness. Read the **Actionable Findings** summary the skill emits, and its machine-readable `verdict_code` / `summary` fields (the shared `mode:agent` output contract that `code-review` and `verify` both emit) rather than string-matching the human `verdict` prose.
 
 4. **Apply and persist review fixes** (REQUIRED after step 3, before residual handoff)
 

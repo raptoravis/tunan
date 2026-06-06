@@ -37,7 +37,7 @@ Parse `$ARGUMENTS` for optional tokens. Strip each recognized token before inter
 
 Deprecated `mode:autofix` is **not** a conflict — ignore the token and proceed with the normal flow (see below).
 
-Emit a one-line failure reason. In `mode:agent`, return JSON: `{"status":"failed","reason":"..."}`.
+Emit a one-line failure reason. In `mode:agent`, return JSON: `{"schema_version":1,"status":"failed","reason":"..."}`.
 
 ## Operating principles
 
@@ -171,7 +171,7 @@ Apply skip rules in order:
 - `state` is `CLOSED` or `MERGED` -> stop with reason `PR is closed/merged; not reviewing.`
 - **Trivial-PR judgment**: spawn a lightweight sub-agent (use `model: haiku` in Claude Code; gpt-5.4-nano or equivalent in Codex) with the PR title, body, and changed file paths. The agent's task: "Is this an automated or trivial PR that does not warrant a code review? Consider: dependency lock-file or manifest-only bumps, automated release commits, chore version increments with no substantive code changes. When in doubt, answer no — false negatives (skipped reviews that should have run) are more costly than false positives (unnecessary reviews)." If the judgment returns yes: stop with reason `PR appears to be a trivial automated PR; not reviewing. Run without a PR argument to review the current branch, or pass base:<ref> if review is intended.`
 
-When any skip rule fires, stop without dispatching reviewers. **Default mode:** emit the reason as plain text. **`mode:agent`:** emit JSON only — `{"status":"skipped","reason":"<same message>"}` — so programmatic callers can parse the outcome. **Standalone**, **`base:`**, and **branch-remote** paths are unaffected. **Draft PRs are reviewed normally.**
+When any skip rule fires, stop without dispatching reviewers. **Default mode:** emit the reason as plain text. **`mode:agent`:** emit JSON only — `{"schema_version":1,"status":"skipped","reason":"<same message>"}` — so programmatic callers can parse the outcome. **Standalone**, **`base:`**, and **branch-remote** paths are unaffected. **Draft PRs are reviewed normally.**
 
 If no skip rule fires, fetch PR metadata **without checkout**:
 
@@ -549,14 +549,23 @@ Do not include time estimates.
 
 Emit **one raw JSON object** as the primary response — a single bare JSON value, **no markdown code fence**. A leading ` ```json ` fence makes the response start with backticks and breaks naive `JSON.parse` consumers, so never wrap it. Also write `review.json` under `${TMPDIR:-/tmp}/yunxing/yunxing:code-review/<run-id>/` with the same payload.
 
+The envelope (`schema_version`, `status`, `verdict_code`, `summary`) is the shared, versioned contract — its authoritative definition, the `verdict_code` derivation rule, and the versioning policy live in `references/output-contract.md`. `schema_version` versions the **structure** only; values are agent-judgment and not guaranteed reproducible run-to-run.
+
 `mode:agent` does not apply fixes — the caller does — so there is no `applied_fixes` field; the handoff is `actionable_findings`. Applied work surfaces only in the default-mode markdown Applied section (Stage 5c/6).
 
 Minimum shape:
 
 ```json
 {
+  "schema_version": 1,
   "status": "complete",
   "verdict": "Ready to merge | Ready with fixes | Not ready",
+  "verdict_code": "ready | ready_with_fixes | not_ready",
+  "summary": {
+    "total": 0,
+    "actionable": 0,
+    "by_severity": { "P0": 0, "P1": 0, "P2": 0, "P3": 0 }
+  },
   "scope": {
     "base": "<merge-base sha, pr:NNN marker, or base: ref>",
     "branch": "<current branch name>",
@@ -586,7 +595,9 @@ Each object in `findings` uses the merged finding fields: `#`, `title`, `severit
 
 `actionable_findings` lists the `gated_auto` / `manual` + `downstream-resolver` subset with the same fields plus stable `#`.
 
-On failure before review completes, set `"status": "failed"` and `"reason": "<one sentence>"`. When all reviewers fail, use `"status": "degraded"` with a reason. When a PR skip rule fires (closed/merged/trivial), use `"status": "skipped"` with the skip reason. Do not emit markdown tables when `mode:agent` is active.
+`verdict_code` is derived deterministically from `summary` (P0>0 or any P1 actionable → `not_ready`; else `actionable`>0 → `ready_with_fixes`; else `ready`) and is the machine-readable counterpart of the human `verdict` — see the derivation rule and mapping table in `references/output-contract.md`. `summary.total` / `summary.actionable` must match the lengths of `findings` / `actionable_findings`.
+
+On failure before review completes, set `"status": "failed"` and `"reason": "<one sentence>"`. When all reviewers fail, use `"status": "degraded"` with a reason. When a PR skip rule fires (closed/merged/trivial), use `"status": "skipped"` with the skip reason. Every status object — including the `failed` / `degraded` / `skipped` short forms — carries `"schema_version": 1`. Do not emit markdown tables when `mode:agent` is active.
 
 ## Quality Gates
 
