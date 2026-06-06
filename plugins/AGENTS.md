@@ -50,6 +50,12 @@ Agents are grouped topically in `README.md` (Review, Document Review, Research, 
 > `/command-name` slash commands now live under `skills/command-name/SKILL.md`
 > and work identically in Claude Code. Other targets may convert or map these references differently.
 
+## Documented Solutions & Vocabulary
+
+Solved-problem learnings live as `yunxing:solution` comments on feature issues labeled `yunxing:solution` (bugs, best practices, workflow/architecture patterns); each comment's YAML block carries `category`, `module`, `tags`, `problem_type`. Find them with `gh issue list --label "yunxing:solution" --search "<terms>"`, then read the issue's `<!-- yunxing:solution -->` comment. Relevant when implementing or debugging in documented areas.
+
+`CONCEPTS.md` (repo root) holds the shared domain vocabulary (skill contracts, the autonomous pipeline) — relevant when orienting or discussing domain concepts.
+
 ## Debugging Plugin Bugs
 
 Developers of this plugin also use it via their marketplace install (`~/.claude/plugins/`). When a developer reports a bug they experienced while using a skill or agent, the installed version may be older than the repo. Glob for the component name under `~/.claude/plugins/` and diff the installed content against the repo version.
