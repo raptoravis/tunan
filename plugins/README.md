@@ -61,6 +61,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | `cpm`                                                             | Same as `cp` but with `--am` defaulted on — pushes directly to a protected base without the confirmation prompt (a thin delegate to `cp`; pass `--no-am` to restore the prompt)                                                                                                       |
 | [`worktree`](../../docs/skills/worktree.md)                       | Manage Git worktrees for parallel development                                                                                                             |
 | `merge-pr-verify-close`                                          | Merge a reviewed, CI-green PR, verify the merged base branch, then close the feature issue only when verification passes (never force-merges or bypasses branch protection). Invoke explicitly after human PR review — `lfg` does not call it                                              |
+| `closeissue`                                                    | Close a specified issue, or the feature issue for the req/plan currently being worked on — resolves the target by explicit number, current branch's PR body, branch name, or a req/plan search, and confirms before closing (never reopens, deletes, or force-closes)                     |
 
 ### Workflow Utilities
 
