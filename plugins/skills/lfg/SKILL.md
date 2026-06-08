@@ -1,7 +1,7 @@
 ---
 name: lfg
 description: Run the full autonomous engineering pipeline end-to-end (plan, work, code review, test, commit, push, open PR, watch CI, fix CI failures until green). Use only when the user explicitly requests hands-off execution of a software task and provides a feature description; do not auto-route casual conversation here.
-argument-hint: "[feature description]"
+argument-hint: "[feature description | #N to resume] [--hotfix | --tweak]"
 ---
 
 CRITICAL: You MUST execute every step below IN ORDER. Do NOT skip any required step. Do NOT jump ahead to coding or implementation. The plan phase (step 1) MUST be completed and verified BEFORE any work begins. Violating this order produces bad output.
@@ -31,27 +31,49 @@ gh repo view --json nameWithOwner
 
 **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the pipeline.
 
+**RESUME (run before step 1 when `$ARGUMENTS` references an existing feature issue — a bare `#N` / issue URL / "resume #N" — rather than a fresh feature description).** Do not re-run the whole pipeline from step 1 on an interrupted feature. Load the `resume` skill with that issue ref: it reads the issue's labels, marker comments, and any open PR to detect the phase (`plan` / `work` / `review-ci` / `done`) and reports which step to resume at. Then continue this pipeline from that step — skip any stage whose evidence already exists (a `<!-- yunxing:plan -->` comment means step 1 is done; an open PR referencing the issue means steps 1–2 are done, resume at step 3; a `<!-- yunxing:solution -->` comment means the feature is already complete — report and stop). When `$ARGUMENTS` is a new description, ignore this block and start at step 1.
+
+**FAST PATHS (`--hotfix` / `--tweak` in `$ARGUMENTS`, also reachable as the named entry skills `/yunxing:hotfix` and `/yunxing:tweak` which delegate here).** Both keep the one-feature-one-issue chain intact — the plan comment must still land so `work` has a plan to read — but cut ceremony, mirroring comet's hotfix/tweak presets. `--hotfix` (bug fix): tell `plan` to produce a minimal plan (no brainstorm, no deepening pass), then run steps 2–10 normally. `--tweak` (small change): minimal plan as above, and in step 3 run `code-review` at its lightest (skip the heavy conditional personas; keep the always-on correctness pass). Neither flag skips the local green gate (step 2a), CI watch (step 8), or `compound` (step 9) — evidence gates are never waived for speed. With no flag, run the full pipeline.
+
 1. Invoke the `plan` skill with `$ARGUMENTS`. If a prior `brainstorm` ran in this pipeline and produced a feature issue, pass that issue ref so the plan consumes it and writes its plan comment onto the same `#<N>`. When no upstream feature issue exists, `plan` creates the feature issue itself (requirement stub body) before writing the plan comment.
 
-   GATE: STOP. If plan reported the task is non-software and cannot be processed in pipeline mode, stop the pipeline and inform the user that LFG requires software tasks. Otherwise, **record the feature issue ref (`#<N>`/URL)** that `plan` reports, then verify the plan landed as a comment on it — confirm both the marker comment and the label are present:
+   GATE: STOP. If plan reported the task is non-software and cannot be processed in pipeline mode, stop the pipeline and inform the user that LFG requires software tasks. Otherwise, **record the feature issue ref (`#<N>`/URL)** that `plan` reports, then run the script gate to verify the plan comment actually landed — the gate, not the agent's recollection, decides whether step 1 is complete (pick the variant for the current OS):
 
    ```bash
-   gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .id'
+   bash scripts/gate.sh plan-exists <N>
    ```
 
-   A non-empty id confirms the plan comment landed. To double-check the label accumulated, read the feature issue's labels:
-
-   ```bash
-   gh issue view <N> --json labels
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/gate.ps1 plan-exists <N>
    ```
 
-   If the feature issue carries no `<!-- yunxing:plan -->` comment (the first command returns empty), invoke `plan` again with `$ARGUMENTS`. Do NOT proceed to step 2 until the plan comment exists on the feature issue. The feature issue ref `#<N>` is the single handle passed to work in step 2, to code-review in step 3, and to compound in step 9 — there is no separate plan number.
+   Branch on the exit code, not the prose: `0` = plan comment present, proceed to step 2; `1` = no `<!-- yunxing:plan -->` comment, invoke `plan` again with `$ARGUMENTS` and re-gate; `2` = gh/infra problem, stop and report it (do not loop). Do NOT proceed to step 2 while the gate returns `1`. The feature issue ref `#<N>` is the single handle passed to work in step 2, to code-review in step 3, and to compound in step 9 — there is no separate plan number.
 
 2. Invoke the `work` skill with the **feature issue ref `#<N>`** from step 1 as its work source. `work` reads the plan comment (`<!-- yunxing:plan -->`) on that issue.
 
-   GATE: STOP. Verify that implementation work was performed - files were created or modified beyond the plan. Do NOT proceed to step 2a if no code changes were made.
+   GATE: STOP. Verify that implementation work was actually performed via the script gate — it confirms the working tree is dirty or HEAD diverged from the base branch, so a "done" claim with no code change is caught (pick the variant for the current OS):
 
-2a. **Local green gate** — invoke the `yunxing:verify` skill with `mode:agent` (always the fully-qualified name, never a bare `verify`). Read the contract's `status` and `verdict_code`:
+   ```bash
+   bash scripts/gate.sh work-done
+   ```
+
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/gate.ps1 work-done
+   ```
+
+   Exit `0` = code changes present, proceed to step 2a; exit `1` = no changes detected, `work` did not run — re-invoke it before continuing. Do NOT proceed to step 2a while the gate returns `1`.
+
+2a. **Local green gate** — invoke the `yunxing:verify` skill with `mode:agent` (always the fully-qualified name, never a bare `verify`). To turn the contract into a transition decision deterministically, write the raw JSON contract to an OS temp file and pass it through the script gate rather than eyeballing the fields (pick the variant for the current OS):
+
+   ```bash
+   bash scripts/gate.sh verify-green "$CONTRACT_FILE"
+   ```
+
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/gate.ps1 verify-green $CONTRACT_FILE
+   ```
+
+   Map the exit code: `0` (`verdict_code: ready`) → proceed to step 3; `1` (`not_ready`/`failed`) → run the autopilot fix loop below, then re-verify and re-gate; `3` (`status: degraded`/`skipped`) → proceed to step 3 but do not treat as authoritative green — note in the PR body that local verification was degraded/skipped and CI remains the gate; `2` (no parseable contract / jq missing) → treat as a degraded local signal, note it, and proceed. The detailed per-status handling below still applies; the gate is the mechanical front door, the prose is the recovery detail. Read the contract's `status` and `verdict_code`:
 
    - `not_ready` or `status: failed` → local checks are red; route into the same autopilot fix loop the pipeline uses for failures (do not prompt the user), then re-run `yunxing:verify`. **Bound the loop:** after a small number of consecutive `not_ready` results with no progress, stop the autopilot, surface the failing checks in the PR body, and proceed — CI (the remote authoritative gate) is the backstop. Never spin indefinitely on a persistently red local environment.
    - `ready` → proceed to step 3.
@@ -174,6 +196,18 @@ gh repo view --json nameWithOwner
 9. Invoke the `compound` skill to capture the solved problem.
 
    Pass it the **feature issue ref `#<N>`** from step 1, the PR URL, and a short summary of what was built. `compound` runs its own GH preflight and writes the solution as a **comment** on that same feature issue (first line `<!-- yunxing:solution -->`, label `yunxing:solution` added) — not a separate issue or a local file. If `compound` is unavailable on the harness, note that compounding was skipped — do not write a local solution file.
+
+   When `compound` ran (was available), confirm the solution comment actually landed with the script gate before declaring DONE (pick the variant for the current OS):
+
+   ```bash
+   bash scripts/gate.sh solution-exists <N>
+   ```
+
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/gate.ps1 solution-exists <N>
+   ```
+
+   Exit `0` confirms the `<!-- yunxing:solution -->` comment is present — proceed to step 10. Exit `1` means compound silently failed to post — re-invoke `compound` once, then re-gate. If `compound` was unavailable on the harness, skip this gate and note the skip in the summary; an infra exit (`2`) is non-blocking here.
 
 10. Output `<promise>DONE</promise>` when complete. Include the chain in the summary: the **feature issue `#<N>`** (carrying its req body plus `yunxing:plan` and `yunxing:solution` comments) and the PR URL — a single issue handle, not three separate issue numbers.
 
