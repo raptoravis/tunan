@@ -26,7 +26,7 @@ Parse `$ARGUMENTS` for optional tokens. Strip each recognized token before inter
 | `mode:headless`     | `mode:headless`                                   | **Deprecated alias** for `mode:agent`                                                                                                                                                             |
 | `mode:report-only`  | `mode:report-only`                                | **Deprecated — ignored.** Former no-artifacts mode; default behavior is review-only without checkout                                                                                              |
 | `base:<sha-or-ref>` | `base:abc1234` or `base:origin/main`              | Diff base on the **current checkout** (explicit; skips auto base detection)                                                                                                                       |
-| `plan:#<N>`         | `plan:#812` or a feature issue URL                | Feature issue (number or URL) carrying a plan comment, for requirements verification (explicit); the plan is the `<!-- yunxing:plan -->` marker comment on that issue                                                                                       |
+| `plan:#<N>`         | `plan:#812` or a feature issue URL                | Feature issue (number or URL) carrying a plan comment, for requirements verification (explicit); the plan is the `<!-- tunan:plan -->` marker comment on that issue                                                                                       |
 
 **Mode alias:** `mode:headless` normalizes to `mode:agent`. `mode:agent` + `mode:headless` is not a conflict.
 
@@ -53,7 +53,7 @@ Same pipeline for default and `mode:agent`:
 | Invocation       | Deliverable                                                                                                 |
 | ---------------- | ----------------------------------------------------------------------------------------------------------- |
 | **Default**      | Markdown report (pipe-delimited finding tables) + Actionable Findings summary                               |
-| **`mode:agent`** | One JSON object (see ### JSON output format below) + the same `${TMPDIR:-/tmp}/.../yunxing:code-review/<run-id>/` artifacts |
+| **`mode:agent`** | One JSON object (see ### JSON output format below) + the same `${TMPDIR:-/tmp}/.../tunan:code-review/<run-id>/` artifacts |
 
 `mode:agent` is **report-only**: it skips the Stage 5c apply (the caller applies) and serializes findings as JSON instead of markdown. It does not change reviewer selection, merge logic, or scope rules — the JSON is the deterministic contract for programmatic and cross-harness callers (Codex, Gemini, etc.). The default markdown is the human view; keep it ASCII-safe (pipe tables, `->` not middot `·`, no box-drawing) so it degrades gracefully across terminals.
 
@@ -103,21 +103,21 @@ Routing rules:
 
 14 reviewer personas in layered conditionals, plus CE agents. Quick roster with one-line triggers below; the persona catalog included at the bottom has the full per-persona selection criteria and spawn gates.
 
-**Always-on (every review):** `yunxing:correctness-reviewer`, `yunxing:testing-reviewer`, `yunxing:maintainability-reviewer`, `yunxing:project-standards-reviewer`, plus CE agents `yunxing:agent-native-reviewer` and `yunxing:learnings-researcher`.
+**Always-on (every review):** `tunan:correctness-reviewer`, `tunan:testing-reviewer`, `tunan:maintainability-reviewer`, `tunan:project-standards-reviewer`, plus CE agents `tunan:agent-native-reviewer` and `tunan:learnings-researcher`.
 
 **Cross-cutting conditional (per diff):**
 
-- `yunxing:security-reviewer` — auth, public endpoints, user input, permissions
-- `yunxing:performance-reviewer` — DB queries, data transforms, caching, async
-- `yunxing:api-contract-reviewer` — routes, serializers, type signatures, versioning
-- `yunxing:data-migration-reviewer` — migration files / schema dumps / backfills (see spawn gate in Stage 3)
-- `yunxing:reliability-reviewer` — error handling, retries, timeouts, background jobs
-- `yunxing:adversarial-reviewer` — >=50 changed code lines, or auth / payments / data mutations / external APIs
-- `yunxing:previous-comments-reviewer` — PR with existing review comments (PR-only, comment-gated)
+- `tunan:security-reviewer` — auth, public endpoints, user input, permissions
+- `tunan:performance-reviewer` — DB queries, data transforms, caching, async
+- `tunan:api-contract-reviewer` — routes, serializers, type signatures, versioning
+- `tunan:data-migration-reviewer` — migration files / schema dumps / backfills (see spawn gate in Stage 3)
+- `tunan:reliability-reviewer` — error handling, retries, timeouts, background jobs
+- `tunan:adversarial-reviewer` — >=50 changed code lines, or auth / payments / data mutations / external APIs
+- `tunan:previous-comments-reviewer` — PR with existing review comments (PR-only, comment-gated)
 
-**Stack-specific conditional (per diff):** `yunxing:julik-frontend-races-reviewer` (Stimulus/Turbo, DOM events, async UI) and `yunxing:swift-ios-reviewer` (Swift/SwiftUI/UIKit, entitlements, Core Data, `.pbxproj`).
+**Stack-specific conditional (per diff):** `tunan:julik-frontend-races-reviewer` (Stimulus/Turbo, DOM events, async UI) and `tunan:swift-ios-reviewer` (Swift/SwiftUI/UIKit, entitlements, Core Data, `.pbxproj`).
 
-**CE conditional (migration-specific):** `yunxing:deployment-verification-agent` — deployment checklist + rollback when the migration gate applies and the change is risky.
+**CE conditional (migration-specific):** `tunan:deployment-verification-agent` — deployment checklist + rollback when the migration gate applies and the change is risky.
 
 ## Review Scope
 
@@ -125,11 +125,11 @@ Every review spawns all 4 always-on personas plus the 2 CE always-on agents, the
 
 ## Protected Artifacts
 
-yunxing pipeline artifacts are durable GitHub issues distinguished by label, not local files. They must never be flagged for closing, deletion, or any "stop creating these" cleanup by any reviewer:
+tunan pipeline artifacts are durable GitHub issues distinguished by label, not local files. They must never be flagged for closing, deletion, or any "stop creating these" cleanup by any reviewer:
 
-- `yunxing:req` feature issues -- requirements created by brainstorm / newreq (the issue body)
-- `<!-- yunxing:plan -->` plan comments on the feature issue -- plans created by plan (decision artifacts; execution progress is derived from git, not stored in plan comments). The feature issue carries the `yunxing:plan` label
-- `<!-- yunxing:solution -->` solution comments on the feature issue -- solution/learning documents created during the pipeline. The feature issue carries the `yunxing:solution` label
+- `tunan:req` feature issues -- requirements created by brainstorm / newreq (the issue body)
+- `<!-- tunan:plan -->` plan comments on the feature issue -- plans created by plan (decision artifacts; execution progress is derived from git, not stored in plan comments). The feature issue carries the `tunan:plan` label
+- `<!-- tunan:solution -->` solution comments on the feature issue -- solution/learning documents created during the pipeline. The feature issue carries the `tunan:solution` label
 
 If a reviewer flags any of these issues or their pipeline comments (or the `gh issue`/`gh api ... comments` calls that create or update them) for closing, deletion, or removal, discard that finding during synthesis. These artifacts are not local files — a finding that recommends deleting or gitignoring a local path for these artifacts is moot and should also be discarded.
 
@@ -199,7 +199,7 @@ When **`pr-remote`**, before Stage 4:
 
 1. Best-effort fetch PR head without checkout: `git fetch --no-tags origin <headRefName>:refs/review/pr-<number>-head` (substitute PR number from metadata).
 2. When fetch succeeds, set `PR_HEAD_REF=refs/review/pr-<number>-head` for reviewers and validators. When fetch fails, omit `PR_HEAD_REF` and note in Coverage — reviewers must rely on diff hunks only.
-3. Best-effort fetch the PR base without checkout: `git fetch --no-tags origin <baseRefName>`. When it succeeds, resolve a concrete ref with `git rev-parse FETCH_HEAD` and set `PR_BASE_REF` to that SHA — a **real git base ref** reviewers and validators use for file-level git diffs (e.g. `yunxing:data-migration-reviewer` runs `git diff <PR_BASE_REF> -- db/schema.rb`/`structure.sql`). The `pr:<number-or-url>` logical marker in `BASE:` stays the scope marker; `PR_BASE_REF` is the diffable base. When the fetch fails, omit `PR_BASE_REF` and note in Coverage — schema-drift and other git-diff checks fall back to diff hunks only and must **not** assume `main`.
+3. Best-effort fetch the PR base without checkout: `git fetch --no-tags origin <baseRefName>`. When it succeeds, resolve a concrete ref with `git rev-parse FETCH_HEAD` and set `PR_BASE_REF` to that SHA — a **real git base ref** reviewers and validators use for file-level git diffs (e.g. `tunan:data-migration-reviewer` runs `git diff <PR_BASE_REF> -- db/schema.rb`/`structure.sql`). The `pr:<number-or-url>` logical marker in `BASE:` stays the scope marker; `PR_BASE_REF` is the diffable base. When the fetch fails, omit `PR_BASE_REF` and note in Coverage — schema-drift and other git-diff checks fall back to diff hunks only and must **not** assume `main`.
 4. Include `<pr-scope-mode>pr-remote</pr-scope-mode>` and, when set, `<pr-head-ref>...</pr-head-ref>` and `<pr-base-ref>...</pr-base-ref>` in the Stage 4 review context bundle.
 
 Reviewers and Stage 5b validators in **`pr-remote`** mode must **not** Read/Grep workspace paths for files in `FILES:`. Inspect via `git show <PR_HEAD_REF>:<path>` when `PR_HEAD_REF` is set, otherwise use only the provided diff hunks. **`local-aligned`** uses normal workspace inspection.
@@ -270,9 +270,9 @@ Pass this to every reviewer in their spawn prompt. Intent shapes _how hard each 
 
 Locate the plan document so Stage 6 can verify requirements completeness. Check these sources in priority order — stop at the first hit:
 
-1. **`plan:` argument.** If the caller passed a feature issue ref (`#<N>` or URL), read it with `gh issue view <N> --json title,body,url,labels` to confirm it exists and carries the `yunxing:plan` label (the plan itself is the marker comment, read in the final paragraph below).
-2. **PR body.** If PR metadata was fetched in Stage 1, scan the body for feature issue references (`#<N>` or issue URLs). For a candidate, confirm with `gh issue view <N> --json title,body,url,labels` that it exists and is labeled `yunxing:plan`. If exactly one such issue is referenced, use it as `plan_source: explicit`. If multiple feature issues appear, treat as ambiguous — demote to `plan_source: inferred` for the one whose title most clearly relates to the PR title/intent, or skip if none clearly relate. Always verify the issue exists and is labeled before using it — stale or copied issue links in PR descriptions are common.
-3. **Auto-discover.** Extract 2-3 keywords from the branch name (e.g., `feat/onboarding-skill` -> `onboarding`, `skill`). Discover the feature issue carrying a plan comment with `gh issue list --label "yunxing:plan" --search "<keywords>" --json number,title,url`. If exactly one match, use it. If multiple matches or the match looks ambiguous (e.g., generic keywords like `review`, `fix`, `update` that could hit many plans), **skip auto-discovery** — a wrong plan is worse than no plan. If zero matches, skip.
+1. **`plan:` argument.** If the caller passed a feature issue ref (`#<N>` or URL), read it with `gh issue view <N> --json title,body,url,labels` to confirm it exists and carries the `tunan:plan` label (the plan itself is the marker comment, read in the final paragraph below).
+2. **PR body.** If PR metadata was fetched in Stage 1, scan the body for feature issue references (`#<N>` or issue URLs). For a candidate, confirm with `gh issue view <N> --json title,body,url,labels` that it exists and is labeled `tunan:plan`. If exactly one such issue is referenced, use it as `plan_source: explicit`. If multiple feature issues appear, treat as ambiguous — demote to `plan_source: inferred` for the one whose title most clearly relates to the PR title/intent, or skip if none clearly relate. Always verify the issue exists and is labeled before using it — stale or copied issue links in PR descriptions are common.
+3. **Auto-discover.** Extract 2-3 keywords from the branch name (e.g., `feat/onboarding-skill` -> `onboarding`, `skill`). Discover the feature issue carrying a plan comment with `gh issue list --label "tunan:plan" --search "<keywords>" --json number,title,url`. If exactly one match, use it. If multiple matches or the match looks ambiguous (e.g., generic keywords like `review`, `fix`, `update` that could hit many plans), **skip auto-discovery** — a wrong plan is worse than no plan. If zero matches, skip.
 
 **Confidence tagging:** Record how the plan was found:
 
@@ -281,7 +281,7 @@ Locate the plan document so Stage 6 can verify requirements completeness. Check 
 - Multiple/ambiguous PR body matches -> `plan_source: inferred` (lower confidence)
 - Auto-discover with single unambiguous match -> `plan_source: inferred` (lower confidence)
 
-If a feature issue is found, read its plan comment — the `<!-- yunxing:plan -->` marker comment (`gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .body'`) — and locate the **Requirements** section — `## Requirements` in current plans, `## Requirements Trace` in legacy ones — and the R-IDs (R1, R2, etc.) listed there, plus **Implementation Units** (current numeric subsections such as `### U1.`, `### U2.`, or `### Unit 1:` under `## Implementation Units`; legacy bullet or checkbox unit entries under that section also count). Store the extracted requirements list and `plan_source` for Stage 6. Do not block the review if no plan is found — requirements verification is additive, not required.
+If a feature issue is found, read its plan comment — the `<!-- tunan:plan -->` marker comment (`gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:plan -->")) | .body'`) — and locate the **Requirements** section — `## Requirements` in current plans, `## Requirements Trace` in legacy ones — and the R-IDs (R1, R2, etc.) listed there, plus **Implementation Units** (current numeric subsections such as `### U1.`, `### U2.`, or `### Unit 1:` under `## Implementation Units`; legacy bullet or checkbox unit entries under that section also count). Store the extracted requirements list and `plan_source` for Stage 6. Do not block the review if no plan is found — requirements verification is additive, not required.
 
 ### Stage 3: Select reviewers
 
@@ -298,9 +298,9 @@ Skip it for standalone branch reviews with no associated PR, and skip it for PRs
 
 Stack-specific personas are additive when runtime behavior warrants them. A Hotwire UI change may warrant `julik-frontend-races`; a TypeScript API diff may warrant `api-contract` and `reliability`.
 
-**`data-migration` spawn gate.** Select `yunxing:data-migration-reviewer` only when the diff includes at least one migration or schema artifact: `db/migrate/*`, `db/schema.rb`, `db/structure.sql`, Alembic/Flyway/Liquibase migration paths, or explicit backfill/data-transform scripts (rake tasks, one-off data migration classes). **Do not spawn** for model-only changes, query-only refactors, serializers/controllers that reference columns without a migration or schema dump in the diff, or migration tests alone.
+**`data-migration` spawn gate.** Select `tunan:data-migration-reviewer` only when the diff includes at least one migration or schema artifact: `db/migrate/*`, `db/schema.rb`, `db/structure.sql`, Alembic/Flyway/Liquibase migration paths, or explicit backfill/data-transform scripts (rake tasks, one-off data migration classes). **Do not spawn** for model-only changes, query-only refactors, serializers/controllers that reference columns without a migration or schema dump in the diff, or migration tests alone.
 
-For `yunxing:deployment-verification-agent`, use the same migration-artifact gate when the change is risky (destructive DDL, backfills, NOT NULL without default, column renames/drops).
+For `tunan:deployment-verification-agent`, use the same migration-artifact gate when the change is risky (destructive DDL, backfills, NOT NULL without default, column renames/drops).
 
 Announce the team before spawning:
 
@@ -310,12 +310,12 @@ Review team:
 - testing (always)
 - maintainability (always)
 - project-standards (always)
-- yunxing:agent-native-reviewer (always)
-- yunxing:learnings-researcher (always)
+- tunan:agent-native-reviewer (always)
+- tunan:learnings-researcher (always)
 - security -- new endpoint in routes.rb accepts user-provided redirect URL
 - julik-frontend-races -- Stimulus controller with async DOM updates
 - data-migration -- adds migration 20260303_add_index_to_orders
-- yunxing:deployment-verification-agent -- destructive migration with backfill
+- tunan:deployment-verification-agent -- destructive migration with backfill
 ```
 
 This is progress reporting, not a blocking confirmation.
@@ -325,7 +325,7 @@ This is progress reporting, not a blocking confirmation.
 Before spawning sub-agents, find the file paths (not contents) of all relevant standards files for the `project-standards` persona. Use the native file-search/glob tool to locate:
 
 1. Use the native file-search tool (e.g., Glob in Claude Code) to find all `**/CLAUDE.md` and `**/AGENTS.md` in the repo.
-2. Filter to those whose directory is an ancestor of at least one changed file. A standards file governs all files below it (e.g., `plugins/yunxing/AGENTS.md` applies to everything under `plugins/yunxing/`).
+2. Filter to those whose directory is an ancestor of at least one changed file. A standards file governs all files below it (e.g., `plugins/tunan/AGENTS.md` applies to everything under `plugins/tunan/`).
 
 Pass the resulting path list to the `project-standards` persona inside a `<standards-paths>` block in its review context (see Stage 4). The persona reads the files itself, targeting only the sections relevant to the changed file types. This keeps the orchestrator's work cheap (path discovery only) and avoids bloating the subagent prompt with content the reviewer may not fully need.
 
@@ -333,7 +333,7 @@ Pass the resulting path list to the `project-standards` persona inside a `<stand
 
 #### Model tiering
 
-Three reviewers inherit the session model with no override: `yunxing:correctness-reviewer`, `yunxing:security-reviewer`, and `yunxing:adversarial-reviewer`. These perform the highest-stakes analysis — logic bugs, security vulnerabilities, adversarial failure scenarios — and should run at whatever capability level the user has configured. If the user is on Opus, these get Opus.
+Three reviewers inherit the session model with no override: `tunan:correctness-reviewer`, `tunan:security-reviewer`, and `tunan:adversarial-reviewer`. These perform the highest-stakes analysis — logic bugs, security vulnerabilities, adversarial failure scenarios — and should run at whatever capability level the user has configured. If the user is on Opus, these get Opus.
 
 All other persona sub-agents and CE agents use the platform's mid-tier model to reduce cost and latency. See the Spawning subsection below for the exact dispatch-time override.
 
@@ -345,10 +345,10 @@ Generate a unique run identifier before dispatching any agents. This ID scopes a
 
 ```bash
 RUN_ID=$(date +%Y%m%d-%H%M%S)-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')
-mkdir -p "${TMPDIR:-/tmp}/yunxing/yunxing:code-review/$RUN_ID"
+mkdir -p "${TMPDIR:-/tmp}/tunan/tunan:code-review/$RUN_ID"
 ```
 
-Pass `{run_id}` to every persona sub-agent so they can write their full analysis to `${TMPDIR:-/tmp}/yunxing/yunxing:code-review/{run_id}/{reviewer_name}.json`.
+Pass `{run_id}` to every persona sub-agent so they can write their full analysis to `${TMPDIR:-/tmp}/tunan/tunan:code-review/{run_id}/{reviewer_name}.json`.
 
 **Large shared context — pass paths, not contents.** The diff and file list go to every reviewer and validator. When inlining them into each subagent prompt would be wasteful (many files / a big diff), write them once into the run dir (e.g. `full.diff`, `files.txt`) and pass those **paths** in the diff / changed-files slots instead of inline content — the subagent and validator templates instruct the child to Read a staged path. Inline a small diff directly.
 
@@ -356,7 +356,7 @@ Pass `{run_id}` to every persona sub-agent so they can write their full analysis
 
 Omit the `mode` parameter when dispatching sub-agents so the user's configured permission settings apply. Do not pass `mode: "auto"`.
 
-**Model override at dispatch time.** Pass the platform's mid-tier model on every dispatch except `yunxing:correctness-reviewer`, `yunxing:security-reviewer`, and `yunxing:adversarial-reviewer`, which inherit the session model (per the Model tiering subsection above). In Claude Code, add `model: "sonnet"` to the `Agent` tool call. In Codex, pass the equivalent mid-tier on `spawn_agent` (e.g., `gpt-5.4-mini` as of April 2026). In Pi, pass the equivalent on `subagent` via the `pi-subagents` extension. On platforms where the dispatch primitive has no model-override parameter or the available model names are unknown, omit the override — a working review on the parent model beats a broken dispatch on an unrecognized name. Check this on every Agent / `spawn_agent` / `subagent` call in the parallel dispatch; omitting it on Opus sessions silently 3-4x's the cost of a review.
+**Model override at dispatch time.** Pass the platform's mid-tier model on every dispatch except `tunan:correctness-reviewer`, `tunan:security-reviewer`, and `tunan:adversarial-reviewer`, which inherit the session model (per the Model tiering subsection above). In Claude Code, add `model: "sonnet"` to the `Agent` tool call. In Codex, pass the equivalent mid-tier on `spawn_agent` (e.g., `gpt-5.4-mini` as of April 2026). In Pi, pass the equivalent on `subagent` via the `pi-subagents` extension. On platforms where the dispatch primitive has no model-override parameter or the available model names are unknown, omit the override — a working review on the parent model beats a broken dispatch on an unrecognized name. Check this on every Agent / `spawn_agent` / `subagent` call in the parallel dispatch; omitting it on Opus sessions silently 3-4x's the cost of a review.
 
 **Bounded parallel dispatch.** Respect the current harness's active-subagent limit. Queue selected reviewers, dispatch only as many as the harness accepts, and fill freed slots as reviewers complete. Treat active-agent/thread/concurrency-limit spawn errors as backpressure, not reviewer failure: leave the reviewer queued and retry after a slot frees. Record a reviewer as failed only after a successful dispatch times out/fails, or when dispatch fails for a non-capacity reason.
 
@@ -371,11 +371,11 @@ Spawn each selected persona reviewer using the subagent template included below.
 7. **For `project-standards` only:** the standards file path list from Stage 3b, wrapped in a `<standards-paths>` block appended to the review context
 8. **For `data-migration` only:** the resolved review base ref from Stage 1 (`BASE:` marker), wrapped in `<review-base>` inside the review context so schema drift checks never assume `main`
 
-Persona sub-agents are **read-only** with respect to the project: they review and return structured JSON. They do not edit project files or propose refactors. The one permitted write is saving their full analysis to the run-artifact path specified in the output contract (under `${TMPDIR:-/tmp}/yunxing/yunxing:code-review/<run-id>/`).
+Persona sub-agents are **read-only** with respect to the project: they review and return structured JSON. They do not edit project files or propose refactors. The one permitted write is saving their full analysis to the run-artifact path specified in the output contract (under `${TMPDIR:-/tmp}/tunan/tunan:code-review/<run-id>/`).
 
 Read-only here means **non-mutating**, not "no shell access." Reviewer sub-agents may use non-mutating inspection commands when needed to gather evidence or verify scope, including read-oriented `git` / `gh` usage such as `git diff`, `git show`, `git blame`, `git log`, and `gh pr view`. In **`pr-remote`** or **`branch-remote`** scope (see Stage 1), inspect changed files via `git show <remote-head-ref>:<path>` or diff hunks — do not Read/Grep workspace paths for files in scope. They must not edit project files, change branches, commit, push, create PRs, or otherwise mutate the checkout or repository state.
 
-Each persona sub-agent writes full JSON (all schema fields) to `${TMPDIR:-/tmp}/yunxing/yunxing:code-review/{run_id}/{reviewer_name}.json` and returns compact JSON with merge-tier fields only:
+Each persona sub-agent writes full JSON (all schema fields) to `${TMPDIR:-/tmp}/tunan/tunan:code-review/{run_id}/{reviewer_name}.json` and returns compact JSON with merge-tier fields only:
 
 ```json
 {
@@ -401,9 +401,9 @@ Each persona sub-agent writes full JSON (all schema fields) to `${TMPDIR:-/tmp}/
 
 The artifact file **must** carry the detail-tier fields (`why_it_matters`, `evidence`); the compact _return_ omits them, but writing the compact shape to the artifact (a common reviewer slip) silently strips the detail Coverage and the keyed detail lines depend on. However review context is delivered — inlined, or staged to disk for a large diff — each reviewer still receives the full subagent-template output contract; staging context never licenses a thinner one. `suggested_fix` is optional in both tiers -- included in compact returns when present so callers can apply fixes after review. If the file write fails, the compact return still provides everything the merge needs.
 
-**CE always-on agents** (yunxing:agent-native-reviewer, yunxing:learnings-researcher) are dispatched as standard Agent calls through the same bounded parallel scheduler as the persona agents. Give them the same review context bundle the personas receive: entry mode, any PR metadata gathered in Stage 1, intent summary, review base branch name when known, `BASE:` marker, file list, diff, and `UNTRACKED:` scope notes. Do not invoke them with a generic "review this" prompt. Their output is unstructured and synthesized separately in Stage 6.
+**CE always-on agents** (tunan:agent-native-reviewer, tunan:learnings-researcher) are dispatched as standard Agent calls through the same bounded parallel scheduler as the persona agents. Give them the same review context bundle the personas receive: entry mode, any PR metadata gathered in Stage 1, intent summary, review base branch name when known, `BASE:` marker, file list, diff, and `UNTRACKED:` scope notes. Do not invoke them with a generic "review this" prompt. Their output is unstructured and synthesized separately in Stage 6.
 
-**CE conditional agents** (`yunxing:deployment-verification-agent` only) are dispatched as standard Agent calls through the same bounded parallel scheduler when the migration-artifact gate applies. Pass the same review context bundle plus the applicability reason (for example, which migration files triggered the agent). Their output is unstructured and must be preserved for Stage 6 synthesis just like the CE always-on agents. Schema drift is handled by the `data-migration` persona as structured findings — not here.
+**CE conditional agents** (`tunan:deployment-verification-agent` only) are dispatched as standard Agent calls through the same bounded parallel scheduler when the migration-artifact gate applies. Pass the same review context bundle plus the applicability reason (for example, which migration files triggered the agent). Their output is unstructured and must be preserved for Stage 6 synthesis just like the CE always-on agents. Schema drift is handled by the `data-migration` persona as structured findings — not here.
 
 ### Stage 5: Merge findings
 
@@ -459,7 +459,7 @@ Independent verification gate. Spawn one validator sub-agent per surviving findi
 2. **Apply dispatch budget cap.** If the selected set exceeds 15 findings, validate the highest-severity 15 (P0 first, then P1, then P2, then P3, breaking ties by anchor descending), dropping only from the P2/P3 tail. **Never drop a P0 or P1 from validation** — if P0/P1 findings alone exceed 15, raise the cap to include all of them. Record the over-budget count (the dropped P2/P3 tail) for the Coverage section.
 3. **Spawn validators with bounded parallelism.** One sub-agent per finding, dispatched independently using the validator template and the same bounded scheduler from Stage 4. Each validator receives:
    - The finding's title, severity, file, line, suggested_fix, original reviewer name, and confidence anchor
-   - `why_it_matters` when available — loaded from the per-agent artifact file at `${TMPDIR:-/tmp}/yunxing/yunxing:code-review/{run_id}/{reviewer_name}.json`; omit when the file is absent or the artifact write failed. The validator proceeds without it, using the diff and cited code directly.
+   - `why_it_matters` when available — loaded from the per-agent artifact file at `${TMPDIR:-/tmp}/tunan/tunan:code-review/{run_id}/{reviewer_name}.json`; omit when the file is absent or the artifact write failed. The validator proceeds without it, using the diff and cited code directly.
    - The full diff
    - The scope mode and remote head ref, mirroring the Stage 4 reviewer bundle: inject `<pr-scope-mode>local-aligned | pr-remote | branch-remote</pr-scope-mode>` and, when set, `<pr-head-ref>...</pr-head-ref>` or `<branch-head-ref>...</branch-head-ref>`. The validator template defaults to local-aligned workspace inspection when these are absent, so omitting them in `pr-remote`/`branch-remote` makes validators verify findings against the stale working tree — dropping valid findings or confirming false ones on the wrong tree.
    - Inspection access scoped by mode: in `local-aligned`, Read/Grep/git blame the cited code, callers, guards, framework defaults, and history; in `pr-remote`/`branch-remote`, inspect via `git show <remote-head-ref>:<path>` or the provided diff hunks only — do not Read/Grep workspace paths for files in scope.
@@ -535,9 +535,9 @@ Per-severity tables are **5 columns** — `Route` is not shown here (it appears 
      Omit this section entirely when no plan was found — do not mention the absence of a plan.
 5. **Actionable Findings.** Include when the actionable queue is non-empty — findings the caller should address (`gated_auto` / `manual` with `downstream-resolver`), plus anything Stage 5c chose not to apply. In default mode, findings already applied appear in the Applied section, not here.
 6. **Pre-existing.** Separate section, does not count toward verdict.
-7. **Learnings & Past Solutions.** Surface yunxing:learnings-researcher results: the researcher searches `yunxing:solution`-labeled feature issues (reading each one's solution comment), so if a past solution is relevant, flag it as "Known Pattern" with its `#<N>` issue link.
-8. **Agent-Native Gaps.** Surface yunxing:agent-native-reviewer results. Omit section if no gaps found.
-9. **Deployment Notes.** If yunxing:deployment-verification-agent ran, surface the key Go/No-Go items: blocking pre-deploy checks, the most important verification queries, rollback caveats, and monitoring focus areas. Keep the checklist actionable rather than dropping it into Coverage. Schema drift appears in the findings tables as `data-migration` P1 rows — do not add a separate Schema Drift section.
+7. **Learnings & Past Solutions.** Surface tunan:learnings-researcher results: the researcher searches `tunan:solution`-labeled feature issues (reading each one's solution comment), so if a past solution is relevant, flag it as "Known Pattern" with its `#<N>` issue link.
+8. **Agent-Native Gaps.** Surface tunan:agent-native-reviewer results. Omit section if no gaps found.
+9. **Deployment Notes.** If tunan:deployment-verification-agent ran, surface the key Go/No-Go items: blocking pre-deploy checks, the most important verification queries, rollback caveats, and monitoring focus areas. Keep the checklist actionable rather than dropping it into Coverage. Schema drift appears in the findings tables as `data-migration` P1 rows — do not add a separate Schema Drift section.
 10. **Coverage.** Applied count (when Stage 5c ran), suppressed count by anchor (e.g., "N findings suppressed at anchor 50, M at anchor 25"), mode-aware demotion count, validator drop count and reasons (when Stage 5b ran), any P0/P1 with degraded validation (kept on validator infra failure), validator over-budget drops (when the 15-cap fired), residual risks, testing gaps, failed/timed-out reviewers, and inferred-intent uncertainty when applicable.
 11. **Verdict.** Ready to merge / Ready with fixes / Not ready. Fix order if applicable. When an `explicit` plan has unaddressed requirements or implementation units, the verdict must reflect it — a PR that's code-clean but missing planned requirements is "Not ready" unless the omission is intentional. When an `inferred` plan has unaddressed requirements or implementation units, note it in the verdict reasoning but do not block on it alone.
 
@@ -547,7 +547,7 @@ Do not include time estimates.
 
 ### JSON output format (`mode:agent` only)
 
-Emit **one raw JSON object** as the primary response — a single bare JSON value, **no markdown code fence**. A leading ` ```json ` fence makes the response start with backticks and breaks naive `JSON.parse` consumers, so never wrap it. Also write `review.json` under `${TMPDIR:-/tmp}/yunxing/yunxing:code-review/<run-id>/` with the same payload.
+Emit **one raw JSON object** as the primary response — a single bare JSON value, **no markdown code fence**. A leading ` ```json ` fence makes the response start with backticks and breaks naive `JSON.parse` consumers, so never wrap it. Also write `review.json` under `${TMPDIR:-/tmp}/tunan/tunan:code-review/<run-id>/` with the same payload.
 
 The envelope (`schema_version`, `status`, `verdict_code`, `summary`) is the shared, versioned contract — its authoritative definition, the `verdict_code` derivation rule, and the versioning policy live in `references/output-contract.md`. `schema_version` versions the **structure** only; values are agent-judgment and not guaranteed reproducible run-to-run.
 
@@ -586,7 +586,7 @@ Minimum shape:
   "residual_risks": [],
   "testing_gaps": [],
   "coverage": {},
-  "artifact_path": "${TMPDIR:-/tmp}/yunxing/yunxing:code-review/<run-id>/",
+  "artifact_path": "${TMPDIR:-/tmp}/tunan/tunan:code-review/<run-id>/",
   "run_id": "<run-id>"
 }
 ```
@@ -607,12 +607,12 @@ Before delivering the review, verify:
 2. **No false positives from skimming.** For each finding, verify the surrounding code was actually read. Check that the "bug" isn't handled elsewhere in the same function, that the "unused import" isn't used in a type annotation, that the "missing null check" isn't guarded by the caller.
 3. **Severity is calibrated.** A style nit is never P0. A SQL injection is never P3. Re-check every severity assignment.
 4. **Line numbers are accurate.** Verify each cited line number against the file content. A finding pointing to the wrong line is worse than no finding.
-5. **Protected artifacts are respected.** Discard any findings that recommend closing, deleting, or otherwise removing the `yunxing:req` feature issues or their `<!-- yunxing:plan -->` / `<!-- yunxing:solution -->` pipeline comments (or the `gh issue`/`gh api ... comments` calls that maintain them). A finding that recommends deleting or gitignoring a local path for these artifacts is moot — those artifacts are GitHub issues and comments now — and should also be discarded.
+5. **Protected artifacts are respected.** Discard any findings that recommend closing, deleting, or otherwise removing the `tunan:req` feature issues or their `<!-- tunan:plan -->` / `<!-- tunan:solution -->` pipeline comments (or the `gh issue`/`gh api ... comments` calls that maintain them). A finding that recommends deleting or gitignoring a local path for these artifacts is moot — those artifacts are GitHub issues and comments now — and should also be discarded.
 6. **Findings don't duplicate linter output.** Don't flag things the project's linter/formatter would catch (missing semicolons, wrong indentation). Focus on semantic issues.
 
 ## Language-Aware Conditionals
 
-Stack-specific reviewers fire only when the diff touches runtime behavior they specialize in (async UI races, iOS/Swift lifecycle) — never mechanically from file extensions alone; the trigger is meaningful changed behavior in that stack's runtime domain. Structural quality (complexity deletion, 1k-line regressions, type-boundary leaks) lives in the always-on `yunxing:maintainability-reviewer`; do not spawn extra reviewers for language conventions, philosophy, or "strict bar" passes.
+Stack-specific reviewers fire only when the diff touches runtime behavior they specialize in (async UI races, iOS/Swift lifecycle) — never mechanically from file extensions alone; the trigger is meaningful changed behavior in that stack's runtime domain. Structural quality (complexity deletion, 1k-line regressions, type-boundary leaks) lives in the always-on `tunan:maintainability-reviewer`; do not spawn extra reviewers for language conventions, philosophy, or "strict bar" passes.
 
 ## After Review
 
@@ -623,7 +623,7 @@ After Stage 6, stop. Never push, open PRs, or file tickets from this skill. In d
 After Stage 6 **in default mode**, emit a compact **Actionable Findings** summary for callers:
 
 - List each actionable finding (`gated_auto` or `manual` with `downstream-resolver`) with stable `#`, severity, file:line, title, `autofix_class`, whether `suggested_fix` is present, and `confidence`.
-- Include the run-artifact path when one was written: `${TMPDIR:-/tmp}/yunxing/yunxing:code-review/<run-id>/`
+- Include the run-artifact path when one was written: `${TMPDIR:-/tmp}/tunan/tunan:code-review/<run-id>/`
 - When the actionable queue is empty, state `Actionable findings: none.` explicitly.
 
 In `mode:agent` do **not** emit this markdown summary — the actionable findings are carried solely by the `actionable_findings` field of the JSON object. Emit nothing after the JSON object, so the response stays a single parseable JSON value.
@@ -641,7 +641,7 @@ Do not offer push/PR/create-branch next steps from this skill.
 
 #### Run artifacts
 
-Always write run artifacts under `${TMPDIR:-/tmp}/yunxing/yunxing:code-review/<run-id>/`:
+Always write run artifacts under `${TMPDIR:-/tmp}/tunan/tunan:code-review/<run-id>/`:
 
 - synthesized findings
 - actionable findings list

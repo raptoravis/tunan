@@ -42,9 +42,9 @@ This suite is narrowly scoped to the terminology-preservation question. It does 
 
 This suite is run via the `skill-creator` framework, not manually. The framework spawns subagents in parallel to invoke sessions, captures findings to a workspace, grades them, aggregates, and opens a viewer.
 
-**Workspace location:** `${TMPDIR:-/tmp}/yunxing/yunxing:sessions/evals/iteration-<N>/` (per repo AGENTS.md scratch conventions — `/tmp` for cross-invocation reusable scratch, accessible for grep/inspection).
+**Workspace location:** `${TMPDIR:-/tmp}/tunan/tunan:sessions/evals/iteration-<N>/` (per repo AGENTS.md scratch conventions — `/tmp` for cross-invocation reusable scratch, accessible for grep/inspection).
 
-**One subagent dispatch per eval × per run.** Each dispatched subagent receives the eval prompt, invokes `/yunxing:sessions <prompt>`, captures the findings text verbatim, and writes to `<workspace>/iteration-<N>/eval-<ID>-<name>/run-<R>/findings.txt`.
+**One subagent dispatch per eval × per run.** Each dispatched subagent receives the eval prompt, invokes `/tunan:sessions <prompt>`, captures the findings text verbatim, and writes to `<workspace>/iteration-<N>/eval-<ID>-<name>/run-<R>/findings.txt`.
 
 With the default `runs_per_eval: 3` and 4 evals, that's 12 with-skill subagent dispatches per run pass.
 
@@ -57,7 +57,7 @@ With the default `runs_per_eval: 3` and 4 evals, that's 12 with-skill subagent d
 ## Ground truth caveats
 
 - The eval suite assumes the user's session history contains the sessions that produced PRs #813 and #822. If those sessions were on a different machine or are no longer in session storage, eval 1 and 2 will fail for a reason that's NOT a sessions defect.
-- Before running, confirm the relevant sessions are reachable. Quick sanity check: `/yunxing:sessions "what did I do on 2026-05-10?"` — if sessions returns content from around that date, history is present.
+- Before running, confirm the relevant sessions are reachable. Quick sanity check: `/tunan:sessions "what did I do on 2026-05-10?"` — if sessions returns content from around that date, history is present.
 - If history is missing, treat eval results as inconclusive rather than as evidence against the assumption.
 
 ## Interpreting outcomes
@@ -65,7 +65,7 @@ With the default `runs_per_eval: 3` and 4 evals, that's 12 with-skill subagent d
 | Outcome                                      | Interpretation                                                         | Action                                                                                                                                                                  |
 | -------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | All 4 evals pass with low variance           | Assumption holds. compound Phase 2.4 wiring works as advertised.    | Ship PR #838.                                                                                                                                                           |
-| Eval 1 or 2 fails Stage 1                    | Synthesis loss is severe — distinctive coined terms are being dropped. | Investigate yunxing:session-historian's synthesis prompt; consider tightening it to preserve verbatim terminology. Revise PR #838's claims accordingly.                      |
+| Eval 1 or 2 fails Stage 1                    | Synthesis loss is severe — distinctive coined terms are being dropped. | Investigate tunan:session-historian's synthesis prompt; consider tightening it to preserve verbatim terminology. Revise PR #838's claims accordingly.                      |
 | Eval 1 or 2 passes Stage 1 but fails Stage 2 | Terms survive but rationale is lost.                                   | Phase 2.4 will see terms but may not write good entries. Consider whether the wiring still delivers value, or whether the historian needs to preserve more context.     |
 | Eval 3 fails while 1 and 2 pass              | Indexing gap — terms only retrievable when queried by name.            | The Phase 2.4 wiring is decorative for the broad-topic use case. Reconsider whether to ship the session-search scan input, or change how Phase 2.4 queries sessions. |
 | High variance                                | Mechanism works but unreliably.                                        | Multiple invocations within compound's flow would help, or accept it as a best-effort enhancement rather than load-bearing.                                          |

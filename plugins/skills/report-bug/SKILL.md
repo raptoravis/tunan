@@ -1,13 +1,13 @@
 ---
 name: report-bug
-description: Report a bug in the yunxing plugin
+description: Report a bug in the tunan plugin
 argument-hint: "[optional: brief description of the bug]"
 disable-model-invocation: true
 ---
 
 # Report a Compound Engineering Plugin Bug
 
-Report bugs encountered while using the yunxing plugin. This skill gathers structured information and creates a GitHub issue for the maintainer.
+Report bugs encountered while using the tunan plugin. This skill gathers structured information and creates a GitHub issue for the maintainer.
 
 ## Step 1: Gather Bug Information
 
@@ -108,7 +108,7 @@ Create a well-structured bug report with:
 
 ---
 
-_Reported via `/yunxing:report-bug` skill_
+_Reported via `/tunan:report-bug` skill_
 ```
 
 ## Step 4: Create GitHub Issue
@@ -117,18 +117,18 @@ Use the GitHub CLI to create the issue:
 
 ```bash
 gh issue create \
-  --repo raptoravis/yunxing \
-  --title "[yunxing] Bug: [Brief description]" \
+  --repo raptoravis/tunan \
+  --title "[tunan] Bug: [Brief description]" \
   --body "[Formatted bug report from Step 3]" \
-  --label "bug,yunxing"
+  --label "bug,tunan"
 ```
 
 **Note:** If labels don't exist, create without labels:
 
 ```bash
 gh issue create \
-  --repo raptoravis/yunxing \
-  --title "[yunxing] Bug: [Brief description]" \
+  --repo raptoravis/tunan \
+  --title "[tunan] Bug: [Brief description]" \
   --body "[Formatted bug report]"
 ```
 
@@ -145,10 +145,10 @@ After the issue is created:
 ```
 Bug report submitted successfully!
 
-Issue: https://github.com/raptoravis/yunxing/issues/[NUMBER]
-Title: [yunxing] Bug: [description]
+Issue: https://github.com/raptoravis/tunan/issues/[NUMBER]
+Title: [tunan] Bug: [description]
 
-Thank you for helping improve the yunxing plugin!
+Thank you for helping improve the tunan plugin!
 The maintainer will review your report and respond as soon as possible.
 ```
 

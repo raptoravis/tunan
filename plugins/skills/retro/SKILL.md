@@ -1,6 +1,6 @@
 ---
 name: retro
-description: "Generate a time-windowed engineering retrospective on what actually shipped and how fast the team moved — merged PRs, shipped features, commit/PR cadence, shipping streaks, per-author breakdown, in-flight and stuck work, and learnings captured in the window. Use when the user says 'run a retro', 'weekly retro', 'what did we ship', 'how did this week go', 'sprint review', or passes a window like '7d'/'30d'. Zero-config: reads git history and GitHub issues/PRs only. Stores each report as a GitHub issue labeled yunxing:retro (browse past retros via gh issue list)."
+description: "Generate a time-windowed engineering retrospective on what actually shipped and how fast the team moved — merged PRs, shipped features, commit/PR cadence, shipping streaks, per-author breakdown, in-flight and stuck work, and learnings captured in the window. Use when the user says 'run a retro', 'weekly retro', 'what did we ship', 'how did this week go', 'sprint review', or passes a window like '7d'/'30d'. Zero-config: reads git history and GitHub issues/PRs only. Stores each report as a GitHub issue labeled tunan:retro (browse past retros via gh issue list)."
 argument-hint: "[lookback window, e.g. '7d', '30d', '14d'; default 7d]"
 allowed-tools:
   - Read
@@ -13,13 +13,13 @@ allowed-tools:
 
 # Engineering Retro
 
-> 运行环境入口约定：本仓库的 `.claude/skills` 以 Claude Code 为源，示例默认写 `/yunxing:*`。若同一 skill 在 Codex 中运行，所有面向 sponsor 的可复制入口在输出前改写为 `$yunxing:*`；Claude Code 中保持 `/yunxing:*`。
+> 运行环境入口约定：本仓库的 `.claude/skills` 以 Claude Code 为源，示例默认写 `/tunan:*`。若同一 skill 在 Codex 中运行，所有面向 sponsor 的可复制入口在输出前改写为 `$tunan:*`；Claude Code 中保持 `/tunan:*`。
 
-`retro` reads git history and GitHub issues/PRs for a given time window and produces a compact, single-page engineering retrospective: what shipped, how fast the team moved, what is still in flight, and what was learned. Each report is stored as a GitHub issue labeled `yunxing:retro`, and the headlines are surfaced in chat. The list of `yunxing:retro` issues is the browseable timeline of past retros.
+`retro` reads git history and GitHub issues/PRs for a given time window and produces a compact, single-page engineering retrospective: what shipped, how fast the team moved, what is still in flight, and what was learned. Each report is stored as a GitHub issue labeled `tunan:retro`, and the headlines are surfaced in chat. The list of `tunan:retro` issues is the browseable timeline of past retros.
 
 This is the engineering-cadence complement of `product-pulse`. **`product-pulse` reports user experience and system performance and deliberately does *not* report "what shipped." `retro` is exactly that missing half** — shipped work and the cadence behind it — read straight from `git` and `gh`. Run pulse to see how users fared; run retro to see how the team moved. They never overlap.
 
-The skill is **read-only and zero-config.** It never mutates the repo, the database, or any external system — it only reads `git log`/`git shortlog` locally and queries GitHub through `gh` read commands, then writes one report issue. There is no interview and no `.yunxing/config.local.yaml` dependency; the only inputs are the repo's own history and the lookback window.
+The skill is **read-only and zero-config.** It never mutates the repo, the database, or any external system — it only reads `git log`/`git shortlog` locally and queries GitHub through `gh` read commands, then writes one report issue. There is no interview and no `.tunan/config.local.yaml` dependency; the only inputs are the repo's own history and the lookback window.
 
 ## Interaction Method
 
@@ -42,11 +42,11 @@ Resolve the window to concrete UTC date bounds **once**, up front, and reuse the
 
 1. **Read it like a tech lead.** No hardcoded "good/bad" thresholds. Present the counts, cadence, and cycle times; let the reader judge.
 2. **Single page.** Target 30–45 lines of report. If a section is thin, leave it thin; do not pad.
-3. **Shipped means landed.** Count a PR as shipped only when it is merged (not just opened) within the window. Count a feature as shipped when its `yunxing:req` issue closed in the window or its PR merged in the window.
+3. **Shipped means landed.** Count a PR as shipped only when it is merged (not just opened) within the window. Count a feature as shipped when its `tunan:req` issue closed in the window or its PR merged in the window.
 4. **Cadence over volume.** Raw commit/LOC counts are AI-inflated and misleading. Lead with merged-PR count, shipping streak, and PR cycle time (open→merge), and treat commit counts as secondary color only.
-5. **Memory through saved reports.** Every run creates a `yunxing:retro` GitHub issue so past retros are browseable as a timeline via `gh issue list --label yunxing:retro`.
+5. **Memory through saved reports.** Every run creates a `tunan:retro` GitHub issue so past retros are browseable as a timeline via `gh issue list --label tunan:retro`.
 6. **No PII beyond git identity.** Per-author breakdown uses the author names/handles already public in git and GitHub. Do not add emails or any other personal data to the report body.
-7. **Compounding loop.** Surface the `yunxing:solution` learnings captured in the window so the retro reinforces the compound-knowledge loop, not just the shipping numbers.
+7. **Compounding loop.** Surface the `tunan:solution` learnings captured in the window so the retro reinforces the compound-knowledge loop, not just the shipping numbers.
 
 ## Execution Flow
 
@@ -60,19 +60,19 @@ gh auth status
 gh repo view --json nameWithOwner
 ```
 
-- If `gh` is not installed, abort and direct the user to install it from https://cli.github.com or run `/yunxing:setup`. Never fall back to a local file.
+- If `gh` is not installed, abort and direct the user to install it from https://cli.github.com or run `/tunan:setup`. Never fall back to a local file.
 - If `gh auth status` does not exit 0, abort and direct the user to authenticate (`gh auth login`; in Claude Code suggest typing `! gh auth login`).
 - If `gh repo view` does not resolve, abort and explain that a GitHub repo is required to store retro reports.
-- **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. retro needs no config, so this never aborts the run.
+- **Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. retro needs no config, so this never aborts the run.
 
-Ensure the `yunxing:retro` label exists before writing (Phase 2.4 re-checks):
+Ensure the `tunan:retro` label exists before writing (Phase 2.4 re-checks):
 
 ```bash
-gh label list --search "yunxing:retro"
-gh label create "yunxing:retro" --color 8957e5 --description "yunxing engineering retro"
+gh label list --search "tunan:retro"
+gh label create "tunan:retro" --color 8957e5 --description "tunan engineering retro"
 ```
 
-Run the create command only if the list shows no `yunxing:retro` label.
+Run the create command only if the list shows no `tunan:retro` label.
 
 ### Phase 1: Gather (read-only)
 
@@ -99,24 +99,24 @@ gh pr list --state merged --search "merged:>=2026-06-01" --limit 100 \
 
 Compute **PR cycle time** per PR as `mergedAt − createdAt`; report the median and the slowest one. Group merged PRs by author for the per-author breakdown.
 
-**Features & learnings (yunxing artifacts):**
+**Features & learnings (tunan artifacts):**
 
 ```bash
-gh issue list --label yunxing:req --state closed --search "closed:>=2026-06-01" --limit 100 --json number,title,closedAt,labels
-gh issue list --label yunxing:solution --state all --limit 100 --json number,title,updatedAt,labels
+gh issue list --label tunan:req --state closed --search "closed:>=2026-06-01" --limit 100 --json number,title,closedAt,labels
+gh issue list --label tunan:solution --state all --limit 100 --json number,title,updatedAt,labels
 ```
 
-- Closed `yunxing:req` issues in the window = features that fully landed (req → plan → solution → closed).
-- For `yunxing:solution`, keep only those whose solution comment landed in the window. If precise timing is unavailable from the list, note the count of solution-labeled features touched and link them; do not fabricate timestamps.
+- Closed `tunan:req` issues in the window = features that fully landed (req → plan → solution → closed).
+- For `tunan:solution`, keep only those whose solution comment landed in the window. If precise timing is unavailable from the list, note the count of solution-labeled features touched and link them; do not fabricate timestamps.
 
 **In-flight & stuck:**
 
 ```bash
 gh pr list --state open --limit 100 --json number,title,author,createdAt,isDraft
-gh issue list --label yunxing:req --state open --limit 100 --json number,title,createdAt,labels
+gh issue list --label tunan:req --state open --limit 100 --json number,title,createdAt,labels
 ```
 
-Flag as **stuck** any open PR or open `yunxing:req` issue older than 14 days (report the age; do not editorialize beyond "stuck").
+Flag as **stuck** any open PR or open `tunan:req` issue older than 14 days (report the age; do not editorialize beyond "stuck").
 
 If any single query errors or returns nothing, render that section as `no data` and continue — a partial retro is still useful. Never block the whole report on one failed query.
 
@@ -149,33 +149,33 @@ Fill the template below from the Phase 1 results. Six sections, in order; keep t
 - ⚠ Stuck (>14d): #<n> <title> (<age>), ...   ← omit the line if none
 
 ## Learnings
-- #<issue> <title> — <one-line takeaway from the yunxing:solution comment>
-- ... (yunxing:solution learnings captured in the window; "none this window" if empty)
+- #<issue> <title> — <one-line takeaway from the tunan:solution comment>
+- ... (tunan:solution learnings captured in the window; "none this window" if empty)
 
 ## Reflections
 - <1–5 process observations: bottlenecks, cycle-time outliers, review gaps, momentum>
 ```
 
-Discipline: numbers first, narration second. If `yunxing:req`/`yunxing:solution` labels are absent (a repo not using the yunxing flow), drop the "Features closed" line and the Learnings section to the PR/commit data and note that yunxing artifacts were not found — the cadence read still stands.
+Discipline: numbers first, narration second. If `tunan:req`/`tunan:solution` labels are absent (a repo not using the tunan flow), drop the "Features closed" line and the Learnings section to the PR/commit data and note that tunan artifacts were not found — the cadence read still stands.
 
 #### 2.2 Write the report
 
 Confirm the label exists (Phase 0 normally created it):
 
 ```bash
-gh label list --search "yunxing:retro"
-gh label create "yunxing:retro" --color 8957e5 --description "yunxing engineering retro"
+gh label list --search "tunan:retro"
+gh label create "tunan:retro" --color 8957e5 --description "tunan engineering retro"
 ```
 
-Run the create command only if the list shows no `yunxing:retro` label.
+Run the create command only if the list shows no `tunan:retro` label.
 
 Write the filled template to a temp file, then create the issue. Title is `[retro] <START>..<END>` using the resolved window bounds:
 
 ```bash
-gh issue create --title "[retro] 2026-06-01..2026-06-08" --label "yunxing:retro" --body-file <tmpfile>
+gh issue create --title "[retro] 2026-06-01..2026-06-08" --label "tunan:retro" --body-file <tmpfile>
 ```
 
-Surface the **Headlines** and the top **Reflection** in chat, plus the issue URL returned by `gh issue create`. To browse past retros as a timeline, run `gh issue list --label yunxing:retro`.
+Surface the **Headlines** and the top **Reflection** in chat, plus the issue URL returned by `gh issue create`. To browse past retros as a timeline, run `gh issue list --label tunan:retro`.
 
 ### Phase 3: Routine hook
 
@@ -196,4 +196,4 @@ Never schedule automatically. Any scheduling handoff requires explicit confirmat
 
 ## Learn More
 
-The single-page constraint and "cadence over volume" posture are deliberate. A retro that lists every commit produces attention sprawl and rewards LOC churn; one page that leads with merged-PR cadence, shipping streak, and cycle time forces the reader to see flow, not noise. The `yunxing:retro` issue list is the team's working memory of how it has been shipping over time — searchable and filterable via `gh issue list --label yunxing:retro`, and a natural input to `strategy` and `product-pulse` reviews. Pairing the cadence read with the window's `yunxing:solution` learnings keeps the retro tied to the compound-knowledge loop rather than becoming a pure metrics dashboard.
+The single-page constraint and "cadence over volume" posture are deliberate. A retro that lists every commit produces attention sprawl and rewards LOC churn; one page that leads with merged-PR cadence, shipping streak, and cycle time forces the reader to see flow, not noise. The `tunan:retro` issue list is the team's working memory of how it has been shipping over time — searchable and filterable via `gh issue list --label tunan:retro`, and a natural input to `strategy` and `product-pulse` reviews. Pairing the cadence read with the window's `tunan:solution` learnings keeps the retro tied to the compound-knowledge loop rather than becoming a pure metrics dashboard.

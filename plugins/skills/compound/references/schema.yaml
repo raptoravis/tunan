@@ -1,8 +1,8 @@
 # Documentation schema for learnings written by compound.
-# A learning is a `yunxing:solution` comment on its feature issue — first line is
-# the marker `<!-- yunxing:solution -->`, then the YAML block this schema governs,
+# A learning is a `tunan:solution` comment on its feature issue — first line is
+# the marker `<!-- tunan:solution -->`, then the YAML block this schema governs,
 # then the resolution-template markdown sections. The feature issue is also labeled
-# `yunxing:solution` for cross-feature discovery. This schema is the canonical
+# `tunan:solution` for cross-feature discovery. This schema is the canonical
 # contract for the fenced YAML block that follows the marker line.
 #
 # The schema has two tracks based on problem_type:

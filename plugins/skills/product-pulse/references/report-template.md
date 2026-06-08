@@ -55,7 +55,7 @@ The block below is the literal content to write. Replace every `{{placeholder}}`
 - {{3-5 items max; trim if thin}}
 
 ---
-_Source windows: analytics [{{start}} -> {{end}}], tracing [{{start}} -> {{end}}], payments [{{start}} -> {{end}}]. Trailing buffer: 15m. Stored as GitHub issue labeled `yunxing:pulse`._
+_Source windows: analytics [{{start}} -> {{end}}], tracing [{{start}} -> {{end}}], payments [{{start}} -> {{end}}]. Trailing buffer: 15m. Stored as GitHub issue labeled `tunan:pulse`._
 ~~~
 
 ## Variations
@@ -85,6 +85,6 @@ After creating the pulse issue, post back:
 - The Headlines section verbatim
 - The top Followup, if action looks urgent
 - The issue URL returned by `gh issue create` so the user can open the full report
-- A reminder that `gh issue list --label yunxing:pulse` browses past pulses
+- A reminder that `gh issue list --label tunan:pulse` browses past pulses
 
 Do not paste the full report into chat - the issue is the artifact.

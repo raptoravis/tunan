@@ -56,7 +56,7 @@ Process all three feedback types. Review threads are the primary type; PR commen
 
 ### Dispatch
 
-**For review threads** (`review_threads`): Spawn a `yunxing:pr-comment-resolver` agent for each new thread.
+**For review threads** (`review_threads`): Spawn a `tunan:pr-comment-resolver` agent for each new thread.
 
 Each agent receives:
 - The thread ID
@@ -66,7 +66,7 @@ Each agent receives:
 - The feedback type (`review_thread`)
 - The `isOutdated` flag from the thread node (tells the agent the reported line may have drifted)
 
-**For PR comments and review bodies** (`pr_comments`, `review_bodies`): These lack file/line context. Spawn a `yunxing:pr-comment-resolver` agent for each actionable item. The agent receives the comment ID, body text, PR number, and feedback type (`pr_comment` or `review_body`). The agent must identify the relevant files from the comment text and the PR diff.
+**For PR comments and review bodies** (`pr_comments`, `review_bodies`): These lack file/line context. Spawn a `tunan:pr-comment-resolver` agent for each actionable item. The agent receives the comment ID, body text, PR number, and feedback type (`pr_comment` or `review_body`). The agent must identify the relevant files from the comment text and the PR diff.
 
 ### Agent return format
 

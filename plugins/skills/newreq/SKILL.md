@@ -1,6 +1,6 @@
 ---
 name: newreq
-description: "Capture a requirement described in the current conversation (text plus any screenshots or videos) into a single GitHub issue that becomes the source of truth for that requirement. Creates the issue with a `yunxing:req` label, a one-line summary, the sponsor's original words, and asset placeholders to drag in. Downstream skills like brainstorm read the issue as input and write the finished requirements back to it. Use when the user says capture this, save this as a requirement, log a req, or wants a conversation turned into a tracked GitHub issue before brainstorming or planning."
+description: "Capture a requirement described in the current conversation (text plus any screenshots or videos) into a single GitHub issue that becomes the source of truth for that requirement. Creates the issue with a `tunan:req` label, a one-line summary, the sponsor's original words, and asset placeholders to drag in. Downstream skills like brainstorm read the issue as input and write the finished requirements back to it. Use when the user says capture this, save this as a requirement, log a req, or wants a conversation turned into a tracked GitHub issue before brainstorming or planning."
 argument-hint: "[slug] [--align] [--kind=feature|bug|chore] [--priority=P0|P1|P2] [--dry-run]"
 ---
 
@@ -15,12 +15,12 @@ This skill only **creates the issue**. It does not expand the requirement into a
 ## Invocation
 
 ```
-/yunxing:newreq                         # default: extract from the current conversation, fast path
-/yunxing:newreq <slug>                  # explicit kebab-case slug for the title
-/yunxing:newreq --kind=feature|bug|chore  # explicit kind; default auto-detected, else feature
-/yunxing:newreq --priority=P0|P1|P2     # explicit priority; default P2
-/yunxing:newreq --align                 # ask at every soft decision via align
-/yunxing:newreq --dry-run               # print the title + body + asset list, create nothing
+/tunan:newreq                         # default: extract from the current conversation, fast path
+/tunan:newreq <slug>                  # explicit kebab-case slug for the title
+/tunan:newreq --kind=feature|bug|chore  # explicit kind; default auto-detected, else feature
+/tunan:newreq --priority=P0|P1|P2     # explicit priority; default P2
+/tunan:newreq --align                 # ask at every soft decision via align
+/tunan:newreq --dry-run               # print the title + body + asset list, create nothing
 ```
 
 Do not accept destructive flags. This skill never edits local files and never commits.
@@ -37,21 +37,21 @@ Do not accept destructive flags. This skill never edits local files and never co
 
 The requirement is stored in a GitHub issue, so a working, authenticated `gh` is mandatory. Run these checks and **abort with a clear message** if any fails — never fall back to a local file:
 
-1. `gh` is installed. If not, tell the user to install it (`https://cli.github.com`) or run `/yunxing:setup`.
+1. `gh` is installed. If not, tell the user to install it (`https://cli.github.com`) or run `/tunan:setup`.
 2. `gh auth status` succeeds. If it exits non-zero, tell the user to run `gh auth login` (in Claude Code they can type `! gh auth login` so the output lands in the session), then re-run this skill.
 3. Resolve the target repo with `gh repo view --json nameWithOwner`. If there is no repo, abort and explain that this skill needs a GitHub repository.
-4. **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
+4. **Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
 
-Then ensure the `yunxing:req` label exists in the repo:
+Then ensure the `tunan:req` label exists in the repo:
 
 ```bash
-gh label list --search "yunxing:req"
+gh label list --search "tunan:req"
 ```
 
 If it is absent, create it:
 
 ```bash
-gh label create "yunxing:req" --color 1f883d --description "yunxing requirement"
+gh label create "tunan:req" --color 1f883d --description "tunan requirement"
 ```
 
 ## Step 2: Extract the requirement from the conversation (do not invent)
@@ -128,14 +128,14 @@ user-content URL GitHub returns:
 Then create the issue (use today's date from the environment context — the current year is 2026):
 
 ```bash
-gh issue create --title "[req] <title>" --label "yunxing:req,kind:<kind>,priority:<priority>" --body-file <body-file>
+gh issue create --title "[req] <title>" --label "tunan:req,kind:<kind>,priority:<priority>" --body-file <body-file>
 ```
 
 Do **not** `git add` or commit — this skill never touches the local working tree.
 
 ## Step 7: Verify
 
-- `gh issue view <number> --json labels` includes `yunxing:req` (and the `kind:` / `priority:` labels).
+- `gh issue view <number> --json labels` includes `tunan:req` (and the `kind:` / `priority:` labels).
 - The body contains the three YAML lines (`kind` / `priority` / `created`).
 - The body contains no literal `[Image #N]` / `[Image: source:` token (grep match = failure; fix and re-edit).
 
@@ -148,7 +148,7 @@ Put the issue URL on its own line at the top with a `🔗` so it is easy to clic
 
 🔗 <issue URL>
 
-   labels: yunxing:req, kind:<kind>, priority:<priority>
+   labels: tunan:req, kind:<kind>, priority:<priority>
    assets to upload: <count>   # omit when zero
 
 Next (if assets were referenced): open the URL, drag the files into the comment

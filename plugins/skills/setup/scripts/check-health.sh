@@ -82,7 +82,7 @@ for entry in "${deps[@]}"; do
   IFS='|' read -r name tier install_cmd url <<< "$entry"
   cli_total=$((cli_total + 1))
   if command -v "$name" >/dev/null 2>&1; then
-    # gh must be installed AND authenticated to be usable. The whole yunxing
+    # gh must be installed AND authenticated to be usable. The whole tunan
     # workflow stores requirements/state in GitHub issues, so an unauthenticated
     # gh is as broken as a missing one -- flag it and count it as not-ok.
     if [ "$name" = "gh" ] && ! gh auth status >/dev/null 2>&1; then
@@ -194,10 +194,10 @@ example_cfg="skip"
 if [ "$in_repo" = "yes" ]; then
   repo_root=$(git rev-parse --show-toplevel 2>/dev/null)
   legacy_cfg="missing"
-  [ -f "$repo_root/yunxing.local.md" ] && legacy_cfg="present"
+  [ -f "$repo_root/tunan.local.md" ] && legacy_cfg="present"
 
-  if [ -e "$repo_root/.yunxing/config.local.yaml" ] || [ -d "$repo_root/.yunxing" ]; then
-    if git check-ignore -q "$repo_root/.yunxing/config.local.yaml" 2>/dev/null; then
+  if [ -e "$repo_root/.tunan/config.local.yaml" ] || [ -d "$repo_root/.tunan" ]; then
+    if git check-ignore -q "$repo_root/.tunan/config.local.yaml" 2>/dev/null; then
       repo_cfg_gitignore="ok"
     else
       repo_cfg_gitignore="missing"
@@ -206,7 +206,7 @@ if [ "$in_repo" = "yes" ]; then
 
   script_dir="$(cd "$(dirname "$0")" && pwd)"
   template="$script_dir/../references/config-template.yaml"
-  example="$repo_root/.yunxing/config.local.example.yaml"
+  example="$repo_root/.tunan/config.local.example.yaml"
   if [ ! -f "$example" ]; then
     example_cfg="missing"
   elif [ -f "$template" ] && ! diff -q "$template" "$example" >/dev/null 2>&1; then
@@ -316,7 +316,7 @@ if [ "$in_repo" = "yes" ]; then
     fi
 
     if [ "$example_cfg" = "missing" ]; then
-      warn "Example config missing (.yunxing/config.local.example.yaml)"
+      warn "Example config missing (.tunan/config.local.example.yaml)"
       issues=$((issues + 1))
     elif [ "$example_cfg" = "outdated" ]; then
       warn "Example config outdated (new settings available)"

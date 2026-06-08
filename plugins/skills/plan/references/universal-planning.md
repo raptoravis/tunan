@@ -8,7 +8,7 @@ The detection stub in SKILL.md routes here for anything that isn't clearly softw
 
 - **Is this actually a software task?** The key distinction is task-type, not topic-domain. A study guide about Rust is non-software (producing educational content). A Rust library refactor is software (modifying code). If this is actually software, return to Phase 0.2 in the main SKILL.md.
 - **Is this a trivial single-fact lookup?** Only a question answerable from one fact with no research, retrieval, or judgment skips planning — answer it directly and stop, in the user's terms. Do not narrate that it "isn't a planning task" or explain the routing; that is process exhaust (see Veil of value below). Examples: "zsh: command not found: brew", "what's the capital of France." A question that needs multiple steps, any retrieval, or synthesis to answer well does **not** qualify: it is an answer-seeking task (see Disposition below), not a quick-help exit. When unsure, do not exit.
-- **Pipeline mode?** If invoked from LFG or any `disable-model-invocation` context: output "This is a non-software task. The LFG pipeline requires work, which only supports software tasks. Use `/yunxing:plan` directly for non-software planning." and stop.
+- **Pipeline mode?** If invoked from LFG or any `disable-model-invocation` context: output "This is a non-software task. The LFG pipeline requires work, which only supports software tasks. Use `/tunan:plan` directly for non-software planning." and stop.
 
 Once past these checks, commit to the task — do not bail because it looks like a "lookup" or "research question." The user invoked the planning tool on purpose. Then choose the disposition below.
 
@@ -57,7 +57,7 @@ The plan-of-attack and the answer are for the caller; the skill's internal machi
 
 Register example, for "how often does he star things — is this a big deal?":
 
-> Wrong: "Quick note first: /yunxing:plan builds implementation plans, so I ignored the template and just answered the question. Here's what the data says..."
+> Wrong: "Quick note first: /tunan:plan builds implementation plans, so I ignored the template and just answered the question. Here's what the data says..."
 
 Leaks the skill's name, narrates an internal routing decision, apologizes for deviating — the caller sees the seams of the tool.
 
@@ -83,7 +83,7 @@ Evaluate two things before planning:
 | **None** | Generic, timeless, or conceptual plan (study curriculum methodology, project management approach, personal goal breakdown) | Skip research. Model knowledge is sufficient. After structuring the plan, offer: "I based this on general knowledge. Want me to search for [specific thing research would improve]?" — e.g., sourced recipes, current product recommendations, expert frameworks. Only if the user accepts. |
 | **Recommended** | Plan references specific locations, venues, dates, prices, schedules, seasonal availability, or current events — anything where stale information would break the plan (closed restaurants, changed prices, cancelled events, wrong seasonal dates). | Research before planning. Decompose into 2-5 focused research questions and dispatch parallel web searches. In Claude Code, use the Agent tool with `model: "haiku"` for each search to reduce cost. Collate findings before structuring the plan. |
 
-When research is recommended, do it — don't just offer. Stale recommendations (closed restaurants, rethemed attractions, outdated prices) are worse than no recommendations. The user invoked `/yunxing:plan` because they want a good plan, not a disclaimer about training data.
+When research is recommended, do it — don't just offer. Stale recommendations (closed restaurants, rethemed attractions, outdated prices) are worse than no recommendations. The user invoked `/tunan:plan` because they want a good plan, not a disclaimer about training data.
 
 **Research decomposition pattern:**
 1. Identify 2-5 independent research questions based on the task. Good questions target facts the model is least confident about: current prices, hours, availability, recent changes, seasonal specifics.
@@ -163,4 +163,4 @@ After structuring the plan, ask the user how they want to receive it using the p
 
 3. **Save to disk AND open in Proof** — Do both: write the markdown file to disk and open the doc in Proof for review.
 
-Do not offer `/yunxing:work` (software-only) or issue creation (not applicable to non-software plans).
+Do not offer `/tunan:work` (software-only) or issue creation (not applicable to non-software plans).

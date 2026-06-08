@@ -1,6 +1,6 @@
 ---
 name: doc-review
-description: "Review requirements or plan documents using parallel persona agents that surface role-specific issues. Use when a yunxing artifact (a yunxing:req feature issue, its plan/solution marker comment, or a yunxing:idea / yunxing:pulse issue) or a local markdown document exists and the user wants to improve it."
+description: "Review requirements or plan documents using parallel persona agents that surface role-specific issues. Use when a tunan artifact (a tunan:req feature issue, its plan/solution marker comment, or a tunan:idea / tunan:pulse issue) or a local markdown document exists and the user wants to improve it."
 argument-hint: "[mode:headless] [#<N> | <issue-url> | path/to/document.md]"
 ---
 
@@ -8,15 +8,15 @@ argument-hint: "[mode:headless] [#<N> | <issue-url> | path/to/document.md]"
 
 Review requirements or plan documents through multi-persona analysis. Dispatches specialized reviewer agents in parallel, auto-applies `safe_auto` fixes, and routes remaining findings through a four-option interaction (per-finding walk-through, auto-resolve with best judgment, Append-to-Open-Questions, Report-only) for user decision.
 
-The primary input is a **yunxing artifact** — durable requirements live in the body of a `yunxing:req` feature issue, while that feature's plan and solution live as marker comments (`<!-- yunxing:plan -->` / `<!-- yunxing:solution -->`) on the same issue, with the issue accruing the matching `yunxing:plan` / `yunxing:solution` label; `yunxing:idea` and `yunxing:pulse` artifacts are their own issues. None are local files. Reviewing an arbitrary local markdown file (a doc that is not a yunxing artifact) is also supported. In both cases the review reads markdown, runs the persona analysis, and applies agreed findings back to the **source** — the issue body or marker comment for an artifact, the file on disk for a local doc.
+The primary input is a **tunan artifact** — durable requirements live in the body of a `tunan:req` feature issue, while that feature's plan and solution live as marker comments (`<!-- tunan:plan -->` / `<!-- tunan:solution -->`) on the same issue, with the issue accruing the matching `tunan:plan` / `tunan:solution` label; `tunan:idea` and `tunan:pulse` artifacts are their own issues. None are local files. Reviewing an arbitrary local markdown file (a doc that is not a tunan artifact) is also supported. In both cases the review reads markdown, runs the persona analysis, and applies agreed findings back to the **source** — the issue body or marker comment for an artifact, the file on disk for a local doc.
 
 ## Source resolution
 
 A single concept threads through the whole skill: the **working file** — a local markdown path that all edit-tool mechanics (safe_auto apply, the Apply-set batch edit, Open-Questions appends) operate on. How the working file maps to the source depends on the argument:
 
-- **Issue ref (body source)** — an argument of the form `#<N>`, a bare integer `<N>`, or a GitHub issue URL whose artifact lives in the **issue body** (`yunxing:req` / `yunxing:idea` / `yunxing:pulse`, or any non-plan/solution issue). Run GH PREFLIGHT (below), read the issue body via `gh issue view`, and write the body markdown to a transient working file in the OS temp dir. This is the **primary path** for body-source yunxing artifacts. After review edits land on the working file, push it BACK to the issue body via `gh issue edit <N> --body-file <working-file>` (the SYNC-BACK step in Phase 4/walkthrough).
-- **Issue ref (comment source — plan / solution)** — when the target is a **plan** or **solution**, the artifact is a marker comment on the feature issue (`<!-- yunxing:plan -->` / `<!-- yunxing:solution -->`), not the issue body (the body is the requirement). The caller (e.g., `plan`'s doc-review step) names which stage. Resolve that comment, write its body to the working file, and SYNC-BACK by PATCHing the **same comment** — not the issue body. See "Comment-source read/sync-back" below.
-- **Local path** — an argument that is a filesystem path to a markdown file that is not a yunxing artifact. The working file IS that path; edits write in place, with no SYNC-BACK step.
+- **Issue ref (body source)** — an argument of the form `#<N>`, a bare integer `<N>`, or a GitHub issue URL whose artifact lives in the **issue body** (`tunan:req` / `tunan:idea` / `tunan:pulse`, or any non-plan/solution issue). Run GH PREFLIGHT (below), read the issue body via `gh issue view`, and write the body markdown to a transient working file in the OS temp dir. This is the **primary path** for body-source tunan artifacts. After review edits land on the working file, push it BACK to the issue body via `gh issue edit <N> --body-file <working-file>` (the SYNC-BACK step in Phase 4/walkthrough).
+- **Issue ref (comment source — plan / solution)** — when the target is a **plan** or **solution**, the artifact is a marker comment on the feature issue (`<!-- tunan:plan -->` / `<!-- tunan:solution -->`), not the issue body (the body is the requirement). The caller (e.g., `plan`'s doc-review step) names which stage. Resolve that comment, write its body to the working file, and SYNC-BACK by PATCHing the **same comment** — not the issue body. See "Comment-source read/sync-back" below.
+- **Local path** — an argument that is a filesystem path to a markdown file that is not a tunan artifact. The working file IS that path; edits write in place, with no SYNC-BACK step.
 
 ### GH PREFLIGHT (issue source only)
 
@@ -36,7 +36,7 @@ If `gh` is not installed, `gh auth status` is non-zero, or the repo does not res
 gh issue view <N> --json title,body,url,labels
 ```
 
-Capture `title` (the Proof/review display title and a hint for classification), `body` (the markdown), `url` (echo it in the final report), and `labels` (the `yunxing:*` label is a classification hint — see Phase 1). Write `body` to a transient working file under the OS temp dir (`${TMPDIR:-/tmp}` on macOS/Linux, `$env:TEMP` on Windows) — for example `${TMPDIR:-/tmp}/yunxing-doc-review-<N>.md`. All subsequent phases treat that path as `{document_path}` / the working file.
+Capture `title` (the Proof/review display title and a hint for classification), `body` (the markdown), `url` (echo it in the final report), and `labels` (the `tunan:*` label is a classification hint — see Phase 1). Write `body` to a transient working file under the OS temp dir (`${TMPDIR:-/tmp}` on macOS/Linux, `$env:TEMP` on Windows) — for example `${TMPDIR:-/tmp}/tunan-doc-review-<N>.md`. All subsequent phases treat that path as `{document_path}` / the working file.
 
 ### Write results back to the issue (SYNC-BACK)
 
@@ -56,15 +56,15 @@ The Open-Questions deferral mechanic also operates on the working file; the same
 
 ### Comment-source read/sync-back (plan / solution)
 
-When reviewing a **plan** or **solution**, the artifact is a marker comment on the feature issue, so read and write that comment — never the issue body. Substitute the right marker (`<!-- yunxing:plan -->` or `<!-- yunxing:solution -->`).
+When reviewing a **plan** or **solution**, the artifact is a marker comment on the feature issue, so read and write that comment — never the issue body. Substitute the right marker (`<!-- tunan:plan -->` or `<!-- tunan:solution -->`).
 
 Read the marker comment into the working file (REST `issues/{N}/comments` returns plain numeric ids; capture the id for SYNC-BACK):
 
 ```bash
-gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .id'
+gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:plan -->")) | .id'
 ```
 ```bash
-gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .body'
+gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:plan -->")) | .body'
 ```
 
 SYNC-BACK overwrites that same comment by id (not the issue body):
@@ -118,20 +118,20 @@ If `mode:headless` is not present, the skill runs in its default interactive mod
 
 **If a local document path is provided:** Read it, then proceed.
 
-**If no source is specified (interactive mode):** Ask which yunxing artifact issue (by `#<N>` or URL) or local markdown file to review. To suggest recent artifacts, list candidate issues by label:
+**If no source is specified (interactive mode):** Ask which tunan artifact issue (by `#<N>` or URL) or local markdown file to review. To suggest recent artifacts, list candidate issues by label:
 
 ```bash
-gh issue list --label yunxing:req --state open --limit 10
-gh issue list --label yunxing:plan --state open --limit 10
+gh issue list --label tunan:req --state open --limit 10
+gh issue list --label tunan:plan --state open --limit 10
 ```
 
-(Use one `gh issue list` per label; `yunxing:solution`, `yunxing:idea`, and `yunxing:pulse` are also valid artifact labels. A `yunxing:plan` / `yunxing:solution` label marks a feature issue whose plan/solution lives in a marker comment, not the body.)
+(Use one `gh issue list` per label; `tunan:solution`, `tunan:idea`, and `tunan:pulse` are also valid artifact labels. A `tunan:plan` / `tunan:solution` label marks a feature issue whose plan/solution lives in a marker comment, not the body.)
 
 **If no source is specified (headless mode):** Output "Review failed: headless mode requires an issue ref or document path. Re-invoke with: Skill(\"doc-review\", \"mode:headless #<N>\") or Skill(\"doc-review\", \"mode:headless <path>\")" without dispatching agents.
 
 ### Classify Document Type
 
-Classify the document by reading its **content shape**, not its source location. The issue label (for an issue source) or file path (for a local source) is a tie-breaker hint, not the primary signal — a `yunxing:plan`-labeled issue whose body is brainstorm-shaped should still classify as `requirements`, and a plan-shaped doc should classify as `plan` regardless of where it came from. The reviewers below operate differently depending on this classification, so misclassifying a plan-shaped doc as a requirements doc (or vice versa) produces noisy or under-scrutinized findings.
+Classify the document by reading its **content shape**, not its source location. The issue label (for an issue source) or file path (for a local source) is a tie-breaker hint, not the primary signal — a `tunan:plan`-labeled issue whose body is brainstorm-shaped should still classify as `requirements`, and a plan-shaped doc should classify as `plan` regardless of where it came from. The reviewers below operate differently depending on this classification, so misclassifying a plan-shaped doc as a requirements doc (or vice versa) produces noisy or under-scrutinized findings.
 
 Use these signals to decide:
 
@@ -143,14 +143,14 @@ Use these signals to decide:
 - No implementation units, no per-unit file lists, no test scenarios attached to units
 
 **`plan` signals (how-to-build documents):**
-- Frontmatter fields like `type: feat|fix|refactor`, or an `origin:` pointing at an upstream requirements artifact (an issue ref `#<N>` for a `yunxing:req` artifact)
+- Frontmatter fields like `type: feat|fix|refactor`, or an `origin:` pointing at an upstream requirements artifact (an issue ref `#<N>` for a `tunan:req` artifact)
 - Section headings such as `Implementation Units`, `Output Structure`, `Key Technical Decisions`, `Risks & Dependencies`, `System-Wide Impact`
 - Numbered identifiers in the form `U1`, `U2` — implementation unit IDs
 - Per-unit fields named `Goal`, `Files`, `Approach`, `Test scenarios`, `Verification`
 - Repo-relative file paths to create/modify/test
 - Prose framing focused on technical decisions, sequencing, and implementer-facing detail
 
-**Tie-breaker rule.** When the content signals are mixed or sparse, fall back to the source hint: a `yunxing:req` label (or a local path under a brainstorm/requirements location) → `requirements`; a `yunxing:plan` label (or a local plan location) → `plan`. `yunxing:solution`, `yunxing:idea`, and `yunxing:pulse` artifacts have no clean default — classify them by content shape. When no hint applies, treat the dominant content shape as authoritative; if shape is genuinely ambiguous, default to `requirements` (the more conservative classification — it activates fewer plan-specific feasibility checks).
+**Tie-breaker rule.** When the content signals are mixed or sparse, fall back to the source hint: a `tunan:req` label (or a local path under a brainstorm/requirements location) → `requirements`; a `tunan:plan` label (or a local plan location) → `plan`. `tunan:solution`, `tunan:idea`, and `tunan:pulse` artifacts have no clean default — classify them by content shape. When no hint applies, treat the dominant content shape as authoritative; if shape is genuinely ambiguous, default to `requirements` (the more conservative classification — it activates fewer plan-specific feasibility checks).
 
 Pass the classification result to each persona via the `{document_type}` slot in the subagent template. Personas read this and adapt their analysis accordingly.
 
@@ -210,24 +210,24 @@ Tell the user which personas will review and why. For conditional personas, incl
 
 ```
 Reviewing with:
-- yunxing:coherence-reviewer (always-on)
-- yunxing:feasibility-reviewer (always-on)
-- yunxing:scope-guardian-reviewer -- plan has 12 requirements across 3 priority levels
-- yunxing:security-lens-reviewer -- plan adds API endpoints with auth flow
+- tunan:coherence-reviewer (always-on)
+- tunan:feasibility-reviewer (always-on)
+- tunan:scope-guardian-reviewer -- plan has 12 requirements across 3 priority levels
+- tunan:security-lens-reviewer -- plan adds API endpoints with auth flow
 ```
 
 ### Build Agent List
 
 Always include:
-- `yunxing:coherence-reviewer`
-- `yunxing:feasibility-reviewer`
+- `tunan:coherence-reviewer`
+- `tunan:feasibility-reviewer`
 
 Add activated conditional personas:
-- `yunxing:product-lens-reviewer`
-- `yunxing:design-lens-reviewer`
-- `yunxing:security-lens-reviewer`
-- `yunxing:scope-guardian-reviewer`
-- `yunxing:adversarial-document-reviewer`
+- `tunan:product-lens-reviewer`
+- `tunan:design-lens-reviewer`
+- `tunan:security-lens-reviewer`
+- `tunan:scope-guardian-reviewer`
+- `tunan:adversarial-document-reviewer`
 
 ### Dispatch
 

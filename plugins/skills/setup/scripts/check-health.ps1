@@ -85,7 +85,7 @@ foreach ($entry in $deps) {
   $p = $entry.Split('|'); $name = $p[0]; $tier = $p[1]; $install = $p[2]; $url = $p[3]
   $cli_total++
   if (Get-Command $name -ErrorAction SilentlyContinue) {
-    # gh must be installed AND authenticated to be usable. The whole yunxing
+    # gh must be installed AND authenticated to be usable. The whole tunan
     # workflow stores requirements/state in GitHub issues, so an unauthenticated
     # gh is as broken as a missing one -- flag it and count it as not-ok.
     if ($name -eq 'gh') {
@@ -187,15 +187,15 @@ $legacy_cfg = 'skip'; $repo_cfg_gitignore = 'skip'; $example_cfg = 'skip'
 if ($in_repo) {
   $repo_root = (git rev-parse --show-toplevel 2>$null | Select-Object -First 1)
   $legacy_cfg = 'missing'
-  if (Test-Path -LiteralPath "$repo_root/yunxing.local.md") { $legacy_cfg = 'present' }
+  if (Test-Path -LiteralPath "$repo_root/tunan.local.md") { $legacy_cfg = 'present' }
 
-  if ((Test-Path -LiteralPath "$repo_root/.yunxing/config.local.yaml") -or (Test-Path -LiteralPath "$repo_root/.yunxing" -PathType Container)) {
-    git check-ignore -q -- "$repo_root/.yunxing/config.local.yaml" 2>$null
+  if ((Test-Path -LiteralPath "$repo_root/.tunan/config.local.yaml") -or (Test-Path -LiteralPath "$repo_root/.tunan" -PathType Container)) {
+    git check-ignore -q -- "$repo_root/.tunan/config.local.yaml" 2>$null
     if ($LASTEXITCODE -eq 0) { $repo_cfg_gitignore = 'ok' } else { $repo_cfg_gitignore = 'missing' }
   }
 
   $template = Join-Path $PSScriptRoot '..\references\config-template.yaml'
-  $example = "$repo_root/.yunxing/config.local.example.yaml"
+  $example = "$repo_root/.tunan/config.local.example.yaml"
   if (-not (Test-Path -LiteralPath $example)) {
     $example_cfg = 'missing'
   } elseif ((Test-Path -LiteralPath $template) -and ((Get-Content -Raw -LiteralPath $template) -ne (Get-Content -Raw -LiteralPath $example))) {
@@ -295,7 +295,7 @@ if ($in_repo) {
     }
 
     if ($example_cfg -eq 'missing') {
-      Add-Warn "Example config missing (.yunxing/config.local.example.yaml)"
+      Add-Warn "Example config missing (.tunan/config.local.example.yaml)"
       $issues++
     } elseif ($example_cfg -eq 'outdated') {
       Add-Warn "Example config outdated (new settings available)"

@@ -9,4 +9,4 @@ todos/
 __pycache__/
 *.pyc
 
-.yunxing/*.local.yaml
+.tunan/*.local.yaml

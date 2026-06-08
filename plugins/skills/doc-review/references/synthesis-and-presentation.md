@@ -251,7 +251,7 @@ Apply only `safe_auto` findings **at confidence anchor `100`** to the working fi
 - Do not ask for approval — these have one clear correct fix AND evidence directly confirms (anchor `100`)
 - Do NOT silent-apply any `safe_auto` finding at anchor `75` or `50`. If a finding reaches this step with `autofix_class: safe_auto` and anchor below `100`, the 3.7 routing rule was not applied correctly; re-run 3.7 for that finding before continuing.
 
-**SYNC-BACK after safe_auto (issue source only).** When the source is a yunxing artifact issue, after the safe_auto edits land on the working file push them to the issue body:
+**SYNC-BACK after safe_auto (issue source only).** When the source is a tunan artifact issue, after the safe_auto edits land on the working file push them to the issue body:
 
 ```bash
 gh issue edit <N> --body-file <working-file>
@@ -361,13 +361,13 @@ This rule prevents two failure modes: (1) regressions where a fix didn't actuall
 
 ### Protected Artifacts
 
-During synthesis, discard any finding that recommends deleting or removing the durable yunxing artifacts these labels mark:
+During synthesis, discard any finding that recommends deleting or removing the durable tunan artifacts these labels mark:
 
-- `yunxing:req` — the feature issue body
-- `yunxing:plan` — the `<!-- yunxing:plan -->` marker comment on the feature issue
-- `yunxing:solution` — the `<!-- yunxing:solution -->` marker comment on the feature issue
-- `yunxing:idea`
-- `yunxing:pulse`
+- `tunan:req` — the feature issue body
+- `tunan:plan` — the `<!-- tunan:plan -->` marker comment on the feature issue
+- `tunan:solution` — the `<!-- tunan:solution -->` marker comment on the feature issue
+- `tunan:idea`
+- `tunan:pulse`
 
 These are pipeline artifacts and must not be flagged for removal. (The same applies to any equivalent local artifact doc passed as a local source.)
 
@@ -403,7 +403,7 @@ The `<next stage>` substitution uses the document type from Phase 1:
 
 **Label adaptation:** when no decisions are queued to apply, the primary option drops the `Apply decisions and` prefix — the label should match what the system is doing. `Apply decisions and proceed` when fixes are queued; `Proceed` when nothing is queued.
 
-**Caller-context handling (implicit):** the terminal question's "Proceed to <next stage>" option is interpreted contextually by the agent from the visible conversation state. When doc-review is invoked from inside another skill's flow (e.g., brainstorm Phase 4 re-review, plan phase 5.3.8), the agent does not fire a nested `/yunxing:plan` or `/yunxing:work` dispatch — it returns control to the caller's flow which continues its own logic. When invoked standalone, "Proceed" dispatches the appropriate next skill. No explicit caller-hint argument is required; if this implicit handling proves unreliable in practice, an explicit `nested:true` flag can be added as a follow-up.
+**Caller-context handling (implicit):** the terminal question's "Proceed to <next stage>" option is interpreted contextually by the agent from the visible conversation state. When doc-review is invoked from inside another skill's flow (e.g., brainstorm Phase 4 re-review, plan phase 5.3.8), the agent does not fire a nested `/tunan:plan` or `/tunan:work` dispatch — it returns control to the caller's flow which continues its own logic. When invoked standalone, "Proceed" dispatches the appropriate next skill. No explicit caller-hint argument is required; if this implicit handling proves unreliable in practice, an explicit `nested:true` flag can be added as a follow-up.
 
 ### Iteration limit
 

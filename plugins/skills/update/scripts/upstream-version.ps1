@@ -10,7 +10,7 @@
 
 $ErrorActionPreference = 'SilentlyContinue'
 
-$version = gh api repos/raptoravis/yunxing/contents/plugins/.claude-plugin/plugin.json --jq '.content | @base64d | fromjson | .version' 2>$null
+$version = gh api repos/raptoravis/tunan/contents/plugins/.claude-plugin/plugin.json --jq '.content | @base64d | fromjson | .version' 2>$null
 
 if (-not [string]::IsNullOrWhiteSpace($version)) {
   Write-Output ($version | Select-Object -First 1)

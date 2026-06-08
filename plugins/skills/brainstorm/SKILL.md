@@ -1,6 +1,6 @@
 ---
 name: brainstorm
-description: 'Explore requirements and approaches through collaborative dialogue, then capture a right-sized requirement as a GitHub issue labeled yunxing:req. Use when the user says "let''s brainstorm", "what should we build", or "help me think through X", presents a vague or ambitious feature request, or seems unsure about scope or direction -- even without explicitly asking to brainstorm. Accepts an existing req issue ref to resume and update.'
+description: 'Explore requirements and approaches through collaborative dialogue, then capture a right-sized requirement as a GitHub issue labeled tunan:req. Use when the user says "let''s brainstorm", "what should we build", or "help me think through X", presents a vague or ambitious feature request, or seems unsure about scope or direction -- even without explicitly asking to brainstorm. Accepts an existing req issue ref to resume and update.'
 argument-hint: "[feature idea or problem to explore, or a req issue ref #N / URL] [--search]"
 ---
 
@@ -8,11 +8,11 @@ argument-hint: "[feature idea or problem to explore, or a req issue ref #N / URL
 
 **Note: The current year is 2026.** Use this when dating the requirement issue body.
 
-Brainstorming helps answer **WHAT** to build through collaborative dialogue. It precedes `/yunxing:plan`, which answers **HOW** to build it.
+Brainstorming helps answer **WHAT** to build through collaborative dialogue. It precedes `/tunan:plan`, which answers **HOW** to build it.
 
-The durable output of this workflow is a **`yunxing:req` GitHub issue** — a single issue whose markdown body holds the finished requirement. In other workflows this might be called a lightweight PRD or feature brief. In compound engineering, keep the workflow name `brainstorm`, but make the written artifact strong enough that planning does not need to invent product behavior, scope boundaries, or success criteria. Requirements live in GitHub issues, never in local files.
+The durable output of this workflow is a **`tunan:req` GitHub issue** — a single issue whose markdown body holds the finished requirement. In other workflows this might be called a lightweight PRD or feature brief. In compound engineering, keep the workflow name `brainstorm`, but make the written artifact strong enough that planning does not need to invent product behavior, scope boundaries, or success criteria. Requirements live in GitHub issues, never in local files.
 
-`newreq` already creates standalone `yunxing:req` issues. When this skill is invoked with a req issue produced by `newreq` (or any earlier `brainstorm` run), it **updates that same issue** rather than creating a duplicate.
+`newreq` already creates standalone `tunan:req` issues. When this skill is invoked with a req issue produced by `newreq` (or any earlier `brainstorm` run), it **updates that same issue** rather than creating a duplicate.
 
 This skill does not implement code. It explores, clarifies, and documents decisions for later planning or execution.
 
@@ -52,9 +52,9 @@ These rules apply to every brainstorm, including the universal (non-software) fl
 
 <feature_description> #$ARGUMENTS </feature_description>
 
-`$ARGUMENTS` may be either a free-text feature description OR a reference to an existing `yunxing:req` issue (a `#<N>` token or a full GitHub issue URL). When it is an issue ref, Phase 0.0 binds that issue and reads its body as the feature description / resume source; otherwise the text is the feature description.
+`$ARGUMENTS` may be either a free-text feature description OR a reference to an existing `tunan:req` issue (a `#<N>` token or a full GitHub issue URL). When it is an issue ref, Phase 0.0 binds that issue and reads its body as the feature description / resume source; otherwise the text is the feature description.
 
-**If the feature description above is empty (no text and no issue ref), ask the user:** "What would you like to explore? Please describe the feature, problem, or improvement you're thinking about, or pass an existing `yunxing:req` issue (`#<N>` or its URL) to continue."
+**If the feature description above is empty (no text and no issue ref), ask the user:** "What would you like to explore? Please describe the feature, problem, or improvement you're thinking about, or pass an existing `tunan:req` issue (`#<N>` or its URL) to continue."
 
 Do not proceed until you have a feature description or a bound issue.
 
@@ -64,11 +64,11 @@ Do not proceed until you have a feature description or a bound issue.
 
 #### 0.0 Resolve the Requirement Issue
 
-The durable requirement is a **`yunxing:req` GitHub issue** (markdown body), never a local file. Run the GH preflight, then resolve whether this run binds an existing issue or will create one at Phase 3.
+The durable requirement is a **`tunan:req` GitHub issue** (markdown body), never a local file. Run the GH preflight, then resolve whether this run binds an existing issue or will create one at Phase 3.
 
 **GH preflight — run before any issue read/write. Abort with the guidance shown if any check fails; NEVER fall back to a local file.**
 
-1. `gh` installed. If not: tell the user to install it from `https://cli.github.com` or run `/yunxing:setup`.
+1. `gh` installed. If not: tell the user to install it from `https://cli.github.com` or run `/tunan:setup`.
 
 ```bash
 gh --version
@@ -86,18 +86,18 @@ gh auth status
 gh repo view --json nameWithOwner
 ```
 
-4. **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
+4. **Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
 
-**Ensure the `yunxing:req` label exists** (needed when Phase 3 creates the issue):
+**Ensure the `tunan:req` label exists** (needed when Phase 3 creates the issue):
 
 ```bash
-gh label list --search "yunxing:req"
+gh label list --search "tunan:req"
 ```
 
 If it is absent, create it:
 
 ```bash
-gh label create "yunxing:req" --color 1f883d --description "yunxing requirements"
+gh label create "tunan:req" --color 1f883d --description "tunan requirements"
 ```
 
 **Resolve the issue binding:**
@@ -118,16 +118,16 @@ The handoff to `plan` passes the req issue ref (`#<N>` or URL), not a file path 
 
 #### 0.1 Resume Existing Work When Appropriate
 
-Resume from a `yunxing:req` issue — never from a local file.
+Resume from a `tunan:req` issue — never from a local file.
 
 - **A `REQ_ISSUE` was bound in Phase 0.0** (issue ref passed): its body is already the resume source. Read it (`gh issue view <N> --json title,body,url,labels`), summarize the current state briefly, and continue from its existing decisions and outstanding questions. If the issue was created by `newreq` and holds only the captured requirement (no finished brainstorm sections yet), treat its body as the feature description and proceed through the dialogue phases normally. Phase 3 then **merges** the finished requirement into the body — it preserves the `newreq`-authored capture (the sponsor's verbatim original words and the asset placeholders), it does not clobber them.
 - **No `REQ_ISSUE`, but the user references an existing brainstorm topic:** locate a candidate issue by topic before starting fresh:
 
 ```bash
-gh issue list --label "yunxing:req" --search "<terms>" --json number,title,url
+gh issue list --label "tunan:req" --search "<terms>" --json number,title,url
 ```
 
-  Confirm with the user before resuming: "Found an existing `yunxing:req` issue #<N> for [topic]. Should I continue from this, or start a new one?" If resuming, bind it as `REQ_ISSUE`, read its body, and update that issue at Phase 3 instead of creating a duplicate.
+  Confirm with the user before resuming: "Found an existing `tunan:req` issue #<N> for [topic]. Should I continue from this, or start a new one?" If resuming, bind it as `REQ_ISSUE`, read its body, and update that issue at Phase 3 instead of creating a duplicate.
 - **Nothing matches:** continue fresh; Phase 3 creates a new issue.
 
 #### 0.1b Classify Task Domain
@@ -196,12 +196,12 @@ If nothing obvious appears after a short scan, say so and continue. Two rules go
 
 **Web search** (opt-in via `--search`; default is **no-search**) — brainstorm stays intentionally shallow and does **not** go to the web by default; its job is to clarify WHAT, leaving landscape and prior-art depth to `plan`. Route by condition:
 
-- **`--search` passed (or the prompt explicitly points outside the repo — competitor/prior-art scan, "from the web", "what should we borrow", a named external tool)**: Dispatch `yunxing:web-researcher` with a focus hint plus a brief summary of the brainstorm topic, in parallel with the rest of Phase 1.1. Do not pass codebase content — it operates externally. Fold findings into constraint awareness and the Phase 2 approaches; keep them at landscape/product-shape granularity, not implementation detail. If web tools are unavailable or the researcher fails, warn and proceed without blocking.
+- **`--search` passed (or the prompt explicitly points outside the repo — competitor/prior-art scan, "from the web", "what should we borrow", a named external tool)**: Dispatch `tunan:web-researcher` with a focus hint plus a brief summary of the brainstorm topic, in parallel with the rest of Phase 1.1. Do not pass codebase content — it operates externally. Fold findings into constraint awareness and the Phase 2 approaches; keep them at landscape/product-shape granularity, not implementation detail. If web tools are unavailable or the researcher fails, warn and proceed without blocking.
 - **No `--search` and no explicit external signal**: Skip web research entirely (default). When the topic plausibly has relevant prior art, note once: "Run with `--search` if you want me to scan the web for prior art and alternatives."
 
 **Slack context** (opt-in, Standard and Deep only) — never auto-dispatch. Route by condition:
 
-- **Tools available + user asked**: Dispatch `yunxing:slack-researcher` with a brief summary of the brainstorm topic alongside Phase 1.1 work. Incorporate findings into constraint and context awareness.
+- **Tools available + user asked**: Dispatch `tunan:slack-researcher` with a brief summary of the brainstorm topic alongside Phase 1.1 work. Incorporate findings into constraint and context awareness.
 - **Tools available + user didn't ask**: Note in output: "Slack tools detected. Ask me to search Slack for organizational context at any point, or include it in your next prompt."
 - **No tools + user asked**: Note in output: "Slack context was requested but no Slack tools are available. Install and authenticate the Slack plugin to enable organizational context search."
 
@@ -303,7 +303,7 @@ If relevant, call out whether the choice is:
 
 **STOP. Before composing the synthesis, read `references/synthesis-summary.md`.** The two-stage shape (internal three-bucket draft → chat-time scoping synthesis), the Path A / Path B gate, the four scoping synthesis sections with their keep tests, the tier-aware bullet budget with re-cut rule, anti-pattern guidance, soft-cut behavior, self-redirect support, and internal-draft routing into doc body sections all live there. Composing a synthesis without these rules loaded reliably produces malformed output — pasting the full internal three-bucket draft verbatim into chat, implementation-detail leakage into the scoping synthesis, the proposal-pitch anti-pattern. **Each scoping synthesis bullet must pass the affirmability test (can the user evaluate this without reading code?) AND the detail test (1–2 lines max, conversational not documentary); over-share and over-detail are the failure modes to avoid.** This is not optional supplementary reading; it is the source of truth for how the phase behaves.
 
-Surface a scoping synthesis to the user before Phase 3 writes the `yunxing:req` issue — the user's last opportunity to correct scope before the artifact lands. The scoping synthesis is shaped like what two product collaborators would confirm before writing a PRD, not like a comprehensive audit or a one-line preview.
+Surface a scoping synthesis to the user before Phase 3 writes the `tunan:req` issue — the user's last opportunity to correct scope before the artifact lands. The scoping synthesis is shaped like what two product collaborators would confirm before writing a PRD, not like a comprehensive audit or a one-line preview.
 
 Fires for **all tiers** including Lightweight. Skip Phase 2.5 entirely on the Phase 0.1b non-software (universal-brainstorming) route.
 
@@ -316,7 +316,7 @@ Fires for **all tiers** including Lightweight. Skip Phase 2.5 entirely on the Ph
 
 ### Phase 3: Capture the Requirements
 
-Write the requirement to a `yunxing:req` GitHub issue only when the conversation produced durable decisions worth preserving — see `references/brainstorm-sections.md` "Decide whether a doc is warranted at all" for the criteria and the bug-fix stress test. Skip issue creation when the user only needs brief alignment and the decisions can flow downstream (plan, commit message, `yunxing:solution` learnings) without a requirement artifact in the middle. (When a `REQ_ISSUE` is already bound — e.g., a `newreq` issue — still update it even for slim outcomes, since the issue already exists.)
+Write the requirement to a `tunan:req` GitHub issue only when the conversation produced durable decisions worth preserving — see `references/brainstorm-sections.md` "Decide whether a doc is warranted at all" for the criteria and the bug-fix stress test. Skip issue creation when the user only needs brief alignment and the decisions can flow downstream (plan, commit message, `tunan:solution` learnings) without a requirement artifact in the middle. (When a `REQ_ISSUE` is already bound — e.g., a `newreq` issue — still update it even for slim outcomes, since the issue already exists.)
 
 When a requirement is warranted, compose its markdown body using:
 
@@ -341,7 +341,7 @@ gh issue edit <N> --body-file <body-file>
 - **No `REQ_ISSUE`:** create a new issue.
 
 ```bash
-gh issue create --title "[req] <topic>" --label "yunxing:req" --body-file <body-file>
+gh issue create --title "[req] <topic>" --label "tunan:req" --body-file <body-file>
 ```
 
 Capture the resulting issue number/URL — Phase 4 passes it downstream. Report the issue URL to the user (a `🔗` line) so it is clickable; do not write or confirm any local file path.

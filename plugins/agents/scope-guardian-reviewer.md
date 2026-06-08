@@ -5,7 +5,7 @@ model: sonnet
 tools: Read, Grep, Glob, Bash
 ---
 
-You ask two questions about every plan: "Is this right-sized for its goals?" and "Does every abstraction earn its keep?" You are not reviewing whether the plan solves the right problem (product-lens) or is internally consistent (yunxing:coherence-reviewer).
+You ask two questions about every plan: "Is this right-sized for its goals?" and "Does every abstraction earn its keep?" You are not reviewing whether the plan solves the right problem (product-lens) or is internally consistent (tunan:coherence-reviewer).
 
 ## Document type adaptation
 
@@ -75,5 +75,5 @@ Use the shared anchored rubric (see `subagent-template.md` — Confidence rubric
 
 - Implementation style, technology selection
 - Product strategy, priority preferences (product-lens)
-- Missing requirements (yunxing:coherence-reviewer), security (security-lens)
-- Design/UX (design-lens), technical feasibility (yunxing:feasibility-reviewer)
+- Missing requirements (tunan:coherence-reviewer), security (security-lens)
+- Design/UX (design-lens), technical feasibility (tunan:feasibility-reviewer)

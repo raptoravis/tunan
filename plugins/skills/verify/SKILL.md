@@ -1,6 +1,6 @@
 ---
 name: verify
-description: "Run a project's test/lint/build checks (and optionally delegate dynamic app observation) and emit a structured, schema-versioned validation contract. Use after code changes to get a machine-readable green/fail signal before pushing, or as a local green gate inside autonomous pipelines like lfg. Always invoke fully-qualified as yunxing:verify to avoid colliding with a host built-in verify."
+description: "Run a project's test/lint/build checks (and optionally delegate dynamic app observation) and emit a structured, schema-versioned validation contract. Use after code changes to get a machine-readable green/fail signal before pushing, or as a local green gate inside autonomous pipelines like lfg. Always invoke fully-qualified as tunan:verify to avoid colliding with a host built-in verify."
 ---
 
 # verify — run checks, emit a machine contract
@@ -11,13 +11,13 @@ the **same envelope** `code-review` emits in `mode:agent`, so `lfg` and other
 callers read either skill the same way. This skill is the dynamic (does-it-run)
 counterpart to `code-review`'s static (is-it-sound) review.
 
-**Always invoke this skill fully-qualified as `yunxing:verify`** — a host may ship
+**Always invoke this skill fully-qualified as `tunan:verify`** — a host may ship
 an unnamespaced `verify`; never call it bare.
 
 ## Invocation
 
 ```
-/yunxing:verify [mode:agent]
+/tunan:verify [mode:agent]
 ```
 
 | Mode | Behavior |
@@ -35,7 +35,7 @@ an unnamespaced `verify`; never call it bare.
 
 Resolve which commands to run, in this precedence:
 
-1. **Config** — the `verify:` block in `.yunxing/config.local.yaml` at the repo
+1. **Config** — the `verify:` block in `.tunan/config.local.yaml` at the repo
    root (read it via the repo-root resolution pattern; see this repo's authoring
    guidance for the gitignored-config read). It may name `test`, `lint`, `build`
    commands explicitly.

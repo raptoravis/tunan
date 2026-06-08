@@ -1,8 +1,8 @@
 # Handoff
 
-This content is loaded when Phase 4 begins — after the `yunxing:req` issue is written (or skipped).
+This content is loaded when Phase 4 begins — after the `tunan:req` issue is written (or skipped).
 
-The durable requirement is a **`yunxing:req` GitHub issue**, not a local file. Everything downstream is keyed off the issue ref — pass the issue NUMBER/URL, never a file path. `REQ_ISSUE` below is the bound issue (number + URL) captured at Phase 3 (created or updated). When no issue was warranted, `REQ_ISSUE` is empty and the doc-dependent options are hidden.
+The durable requirement is a **`tunan:req` GitHub issue**, not a local file. Everything downstream is keyed off the issue ref — pass the issue NUMBER/URL, never a file path. `REQ_ISSUE` below is the bound issue (number + URL) captured at Phase 3 (created or updated). When no issue was warranted, `REQ_ISSUE` is empty and the doc-dependent options are hidden.
 
 ---
 
@@ -63,7 +63,7 @@ Selections may be the literal option label (when the user types the label or a c
 
 **If user selects "Plan implementation with `plan` (Recommended)":**
 
-Immediately load the `plan` skill in the current session. Pass the requirement issue ref (`#<N>` or URL) when one exists; otherwise pass a concise summary of the finalized brainstorm decisions. The req issue **is** the feature issue: `plan` reads its body for the requirement and writes the plan as a **comment** on this same issue (first line `<!-- yunxing:plan -->`), adding the `yunxing:plan` label — it does **not** create a separate plan issue. The feature issue `#<N>` is what flows downstream. Do not print the closing summary first.
+Immediately load the `plan` skill in the current session. Pass the requirement issue ref (`#<N>` or URL) when one exists; otherwise pass a concise summary of the finalized brainstorm decisions. The req issue **is** the feature issue: `plan` reads its body for the requirement and writes the plan as a **comment** on this same issue (first line `<!-- tunan:plan -->`), adding the `tunan:plan` label — it does **not** create a separate plan issue. The feature issue `#<N>` is what flows downstream. Do not print the closing summary first.
 
 **If user selects "Agent review of the requirement with `doc-review`":**
 
@@ -87,7 +87,7 @@ Then load the `proof` skill in HITL-review mode with:
 
 - **source file:** the temp markdown file just exported
 - **doc title:** `Requirements: <topic title>`
-- **identity:** `ai:yunxing` / `Compound Engineering`
+- **identity:** `ai:tunan` / `Compound Engineering`
 - **recommended next step:** `plan` (shown in the proof skill's final terminal output)
 
 Follow `references/hitl-review.md` in the proof skill. It uploads the markdown, prompts the user for review in Proof's web UI, ingests filtered comment threads, applies agreed edits through the current Proof edit APIs, replies/resolves in-thread, and syncs the final markdown back to the temp file atomically on proceed.

@@ -6,14 +6,14 @@ argument-hint: "[feature description | #N to resume] [--hotfix | --tweak]"
 
 CRITICAL: You MUST execute every step below IN ORDER. Do NOT skip any required step. Do NOT jump ahead to coding or implementation. The plan phase (step 1) MUST be completed and verified BEFORE any work begins. Violating this order produces bad output.
 
-When invoking any skill referenced below, resolve its name against the available-skills list the host platform provides and use that exact entry. Some platforms list skills under a plugin namespace (e.g., `yunxing:plan`); others list the bare name. Invoking a short-form guess that isn't in the list will fail — always match a listed entry verbatim before calling the Skill/Task tool.
+When invoking any skill referenced below, resolve its name against the available-skills list the host platform provides and use that exact entry. Some platforms list skills under a plugin namespace (e.g., `tunan:plan`); others list the bare name. Invoking a short-form guess that isn't in the list will fail — always match a listed entry verbatim before calling the Skill/Task tool.
 
-**Artifact model: one feature, one issue — the pipeline chains via comments on that issue, not separate issues or local files.** A feature is a **single GitHub issue** for its whole lifetime. Its NUMBER `#N` — the **feature issue** — is the one handle threaded through every stage. The requirement is the issue **body**; each later stage lands as a **marker comment** on the same issue and adds a label. There are **no** separate `yunxing:plan` or `yunxing:solution` issues:
+**Artifact model: one feature, one issue — the pipeline chains via comments on that issue, not separate issues or local files.** A feature is a **single GitHub issue** for its whole lifetime. Its NUMBER `#N` — the **feature issue** — is the one handle threaded through every stage. The requirement is the issue **body**; each later stage lands as a **marker comment** on the same issue and adds a label. There are **no** separate `tunan:plan` or `tunan:solution` issues:
 
-- `brainstorm` produces the feature issue (body = requirement, label `yunxing:req`)
-- `plan` consumes the feature issue and writes the plan as a **comment** on it (first line `<!-- yunxing:plan -->`, label `yunxing:plan` added)
+- `brainstorm` produces the feature issue (body = requirement, label `tunan:req`)
+- `plan` consumes the feature issue and writes the plan as a **comment** on it (first line `<!-- tunan:plan -->`, label `tunan:plan` added)
 - `work` consumes the same feature issue, reading its plan comment
-- `compound` writes the solution as a **comment** on the same feature issue (first line `<!-- yunxing:solution -->`, label `yunxing:solution` added)
+- `compound` writes the solution as a **comment** on the same feature issue (first line `<!-- tunan:solution -->`, label `tunan:solution` added)
 
 Every stage receives the **same feature issue `#N`** — never a freshly-minted plan or solution number. A stage's "done" is verified by checking the feature issue for its marker comment and label, not by listing a separate issue. There is no local-file fallback for these artifacts — never read or write a plan/req/solution as a local file.
 
@@ -29,11 +29,11 @@ gh auth status
 gh repo view --json nameWithOwner
 ```
 
-**Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the pipeline.
+**Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the pipeline.
 
-**RESUME (run before step 1 when `$ARGUMENTS` references an existing feature issue — a bare `#N` / issue URL / "resume #N" — rather than a fresh feature description).** Do not re-run the whole pipeline from step 1 on an interrupted feature. Load the `resume` skill with that issue ref: it reads the issue's labels, marker comments, and any open PR to detect the phase (`plan` / `work` / `review-ci` / `done`) and reports which step to resume at. Then continue this pipeline from that step — skip any stage whose evidence already exists (a `<!-- yunxing:plan -->` comment means step 1 is done; an open PR referencing the issue means steps 1–2 are done, resume at step 3; a `<!-- yunxing:solution -->` comment means the feature is already complete — report and stop). When `$ARGUMENTS` is a new description, ignore this block and start at step 1.
+**RESUME (run before step 1 when `$ARGUMENTS` references an existing feature issue — a bare `#N` / issue URL / "resume #N" — rather than a fresh feature description).** Do not re-run the whole pipeline from step 1 on an interrupted feature. Load the `resume` skill with that issue ref: it reads the issue's labels, marker comments, and any open PR to detect the phase (`plan` / `work` / `review-ci` / `done`) and reports which step to resume at. Then continue this pipeline from that step — skip any stage whose evidence already exists (a `<!-- tunan:plan -->` comment means step 1 is done; an open PR referencing the issue means steps 1–2 are done, resume at step 3; a `<!-- tunan:solution -->` comment means the feature is already complete — report and stop). When `$ARGUMENTS` is a new description, ignore this block and start at step 1.
 
-**FAST PATHS (`--hotfix` / `--tweak` in `$ARGUMENTS`, also reachable as the named entry skills `/yunxing:hotfix` and `/yunxing:tweak` which delegate here).** Both keep the one-feature-one-issue chain intact — the plan comment must still land so `work` has a plan to read — but cut ceremony, mirroring comet's hotfix/tweak presets. `--hotfix` (bug fix): tell `plan` to produce a minimal plan (no brainstorm, no deepening pass), then run steps 2–10 normally. `--tweak` (small change): minimal plan as above, and in step 3 run `code-review` at its lightest (skip the heavy conditional personas; keep the always-on correctness pass). Neither flag skips the local green gate (step 2a), CI watch (step 8), or `compound` (step 9) — evidence gates are never waived for speed. With no flag, run the full pipeline.
+**FAST PATHS (`--hotfix` / `--tweak` in `$ARGUMENTS`, also reachable as the named entry skills `/tunan:hotfix` and `/tunan:tweak` which delegate here).** Both keep the one-feature-one-issue chain intact — the plan comment must still land so `work` has a plan to read — but cut ceremony, mirroring comet's hotfix/tweak presets. `--hotfix` (bug fix): tell `plan` to produce a minimal plan (no brainstorm, no deepening pass), then run steps 2–10 normally. `--tweak` (small change): minimal plan as above, and in step 3 run `code-review` at its lightest (skip the heavy conditional personas; keep the always-on correctness pass). Neither flag skips the local green gate (step 2a), CI watch (step 8), or `compound` (step 9) — evidence gates are never waived for speed. With no flag, run the full pipeline.
 
 1. Invoke the `plan` skill with `$ARGUMENTS`. If a prior `brainstorm` ran in this pipeline and produced a feature issue, pass that issue ref so the plan consumes it and writes its plan comment onto the same `#<N>`. When no upstream feature issue exists, `plan` creates the feature issue itself (requirement stub body) before writing the plan comment.
 
@@ -47,9 +47,9 @@ gh repo view --json nameWithOwner
    powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/gate.ps1 plan-exists <N>
    ```
 
-   Branch on the exit code, not the prose: `0` = plan comment present, proceed to step 2; `1` = no `<!-- yunxing:plan -->` comment, invoke `plan` again with `$ARGUMENTS` and re-gate; `2` = gh/infra problem, stop and report it (do not loop). Do NOT proceed to step 2 while the gate returns `1`. The feature issue ref `#<N>` is the single handle passed to work in step 2, to code-review in step 3, and to compound in step 9 — there is no separate plan number.
+   Branch on the exit code, not the prose: `0` = plan comment present, proceed to step 2; `1` = no `<!-- tunan:plan -->` comment, invoke `plan` again with `$ARGUMENTS` and re-gate; `2` = gh/infra problem, stop and report it (do not loop). Do NOT proceed to step 2 while the gate returns `1`. The feature issue ref `#<N>` is the single handle passed to work in step 2, to code-review in step 3, and to compound in step 9 — there is no separate plan number.
 
-2. Invoke the `work` skill with the **feature issue ref `#<N>`** from step 1 as its work source. `work` reads the plan comment (`<!-- yunxing:plan -->`) on that issue.
+2. Invoke the `work` skill with the **feature issue ref `#<N>`** from step 1 as its work source. `work` reads the plan comment (`<!-- tunan:plan -->`) on that issue.
 
    GATE: STOP. Verify that implementation work was actually performed via the script gate — it confirms the working tree is dirty or HEAD diverged from the base branch, so a "done" claim with no code change is caught (pick the variant for the current OS):
 
@@ -63,7 +63,7 @@ gh repo view --json nameWithOwner
 
    Exit `0` = code changes present, proceed to step 2a; exit `1` = no changes detected, `work` did not run — re-invoke it before continuing. Do NOT proceed to step 2a while the gate returns `1`.
 
-2a. **Local green gate** — invoke the `yunxing:verify` skill with `mode:agent` (always the fully-qualified name, never a bare `verify`). To turn the contract into a transition decision deterministically, write the raw JSON contract to an OS temp file and pass it through the script gate rather than eyeballing the fields (pick the variant for the current OS):
+2a. **Local green gate** — invoke the `tunan:verify` skill with `mode:agent` (always the fully-qualified name, never a bare `verify`). To turn the contract into a transition decision deterministically, write the raw JSON contract to an OS temp file and pass it through the script gate rather than eyeballing the fields (pick the variant for the current OS):
 
    ```bash
    bash scripts/gate.sh verify-green "$CONTRACT_FILE"
@@ -75,11 +75,11 @@ gh repo view --json nameWithOwner
 
    Map the exit code: `0` (`verdict_code: ready`) → proceed to step 3; `1` (`not_ready`/`failed`) → run the autopilot fix loop below, then re-verify and re-gate; `3` (`status: degraded`/`skipped`) → proceed to step 3 but do not treat as authoritative green — note in the PR body that local verification was degraded/skipped and CI remains the gate; `2` (no parseable contract / jq missing) → treat as a degraded local signal, note it, and proceed. The detailed per-status handling below still applies; the gate is the mechanical front door, the prose is the recovery detail. Read the contract's `status` and `verdict_code`:
 
-   - `not_ready` or `status: failed` → local checks are red; route into the same autopilot fix loop the pipeline uses for failures (do not prompt the user), then re-run `yunxing:verify`. **Bound the loop:** after a small number of consecutive `not_ready` results with no progress, stop the autopilot, surface the failing checks in the PR body, and proceed — CI (the remote authoritative gate) is the backstop. Never spin indefinitely on a persistently red local environment.
+   - `not_ready` or `status: failed` → local checks are red; route into the same autopilot fix loop the pipeline uses for failures (do not prompt the user), then re-run `tunan:verify`. **Bound the loop:** after a small number of consecutive `not_ready` results with no progress, stop the autopilot, surface the failing checks in the PR body, and proceed — CI (the remote authoritative gate) is the backstop. Never spin indefinitely on a persistently red local environment.
    - `ready` → proceed to step 3.
    - `status: degraded` (ambiguous command detection / partial run) or `status: skipped` (no detectable checks) → do not loop and do not treat as authoritative green; proceed to step 3, noting in the PR body that local verification was degraded/skipped and CI remains the authoritative gate.
 
-   **Division of labor (do not duplicate):** `yunxing:verify` is the pre-push **local static green** signal (test/lint/build). Its optional `observe` check delegates to the same `test-browser` skill used later in this pipeline — do not run app/browser observation twice. The CI watch later in this pipeline remains the **remote authoritative** gate. **Anti-false-green:** verify's detected commands should align with the project's CI command set; a `degraded` or partial verify must not be treated as `ready`, so the autopilot loop is never taught to trust a local signal that does not predict the real CI gate.
+   **Division of labor (do not duplicate):** `tunan:verify` is the pre-push **local static green** signal (test/lint/build). Its optional `observe` check delegates to the same `test-browser` skill used later in this pipeline — do not run app/browser observation twice. The CI watch later in this pipeline remains the **remote authoritative** gate. **Anti-false-green:** verify's detected commands should align with the project's CI command set; a `degraded` or partial verify must not be treated as `ready`, so the autopilot loop is never taught to trust a local signal that does not predict the real CI gate.
 
 3. Invoke the `code-review` skill with `mode:agent plan:<feature-issue-ref-from-step-1>`.
 
@@ -110,33 +110,33 @@ gh repo view --json nameWithOwner
       gh pr edit PR_NUMBER --body-file BODY_FILE
       ```
 
-   6. If no open PR exists, record the residuals as a `yunxing:review` GitHub issue — never a local file. Run the GH preflight first (`gh` installed; `gh auth status` exits 0; `gh repo view --json nameWithOwner` resolves); if any check fails, stop and report the gh setup problem. Ensure the label exists:
+   6. If no open PR exists, record the residuals as a `tunan:review` GitHub issue — never a local file. Run the GH preflight first (`gh` installed; `gh auth status` exits 0; `gh repo view --json nameWithOwner` resolves); if any check fails, stop and report the gh setup problem. Ensure the label exists:
 
       ```bash
-      gh label list --search "yunxing:review"
+      gh label list --search "tunan:review"
       ```
 
       If absent, create it:
 
       ```bash
-      gh label create "yunxing:review" --color 1f883d --description "yunxing review"
+      gh label create "tunan:review" --color 1f883d --description "tunan review"
       ```
 
       Write the composed `## Residual Review Findings` section plus the source PR-review run context to an OS temp file (`${TMPDIR:-/tmp}` / `$env:TEMP`), then create the issue titled `[review] <branch-or-head-sha>`:
 
       ```bash
-      gh issue create --title "[review] <branch-or-head-sha>" --label "yunxing:review" --body-file BODY_FILE
+      gh issue create --title "[review] <branch-or-head-sha>" --label "tunan:review" --body-file BODY_FILE
       ```
 
-      When the feature issue ref `#<N>` from step 1 is known, reference it with `#<N>` in the `yunxing:review` issue body and also post the findings as a comment on that feature issue:
+      When the feature issue ref `#<N>` from step 1 is known, reference it with `#<N>` in the `tunan:review` issue body and also post the findings as a comment on that feature issue:
 
       ```bash
       gh issue comment FEATURE_NUMBER --body-file BODY_FILE
       ```
 
-      This is the durable no-PR sink. Do not output DONE until either the existing PR body has been updated or this `yunxing:review` issue has been created. If both paths fail, stop and report the failed commands; do not silently proceed.
+      This is the durable no-PR sink. Do not output DONE until either the existing PR body has been updated or this `tunan:review` issue has been created. If both paths fail, stop and report the failed commands; do not silently proceed.
 
-   Never block DONE on tracker filing failures once residuals have been durably recorded. A `no_sink` outcome is success only when the findings are present in the PR body or in the created `yunxing:review` issue.
+   Never block DONE on tracker filing failures once residuals have been durably recorded. A `no_sink` outcome is success only when the findings are present in the PR body or in the created `tunan:review` issue.
 
 6. Invoke the `test-browser` skill with `mode:pipeline`.
 
@@ -195,7 +195,7 @@ gh repo view --json nameWithOwner
 
 9. Invoke the `compound` skill to capture the solved problem.
 
-   Pass it the **feature issue ref `#<N>`** from step 1, the PR URL, and a short summary of what was built. `compound` runs its own GH preflight and writes the solution as a **comment** on that same feature issue (first line `<!-- yunxing:solution -->`, label `yunxing:solution` added) — not a separate issue or a local file. If `compound` is unavailable on the harness, note that compounding was skipped — do not write a local solution file.
+   Pass it the **feature issue ref `#<N>`** from step 1, the PR URL, and a short summary of what was built. `compound` runs its own GH preflight and writes the solution as a **comment** on that same feature issue (first line `<!-- tunan:solution -->`, label `tunan:solution` added) — not a separate issue or a local file. If `compound` is unavailable on the harness, note that compounding was skipped — do not write a local solution file.
 
    When `compound` ran (was available), confirm the solution comment actually landed with the script gate before declaring DONE (pick the variant for the current OS):
 
@@ -207,8 +207,8 @@ gh repo view --json nameWithOwner
    powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/gate.ps1 solution-exists <N>
    ```
 
-   Exit `0` confirms the `<!-- yunxing:solution -->` comment is present — proceed to step 10. Exit `1` means compound silently failed to post — re-invoke `compound` once, then re-gate. If `compound` was unavailable on the harness, skip this gate and note the skip in the summary; an infra exit (`2`) is non-blocking here.
+   Exit `0` confirms the `<!-- tunan:solution -->` comment is present — proceed to step 10. Exit `1` means compound silently failed to post — re-invoke `compound` once, then re-gate. If `compound` was unavailable on the harness, skip this gate and note the skip in the summary; an infra exit (`2`) is non-blocking here.
 
-10. Output `<promise>DONE</promise>` when complete. Include the chain in the summary: the **feature issue `#<N>`** (carrying its req body plus `yunxing:plan` and `yunxing:solution` comments) and the PR URL — a single issue handle, not three separate issue numbers.
+10. Output `<promise>DONE</promise>` when complete. Include the chain in the summary: the **feature issue `#<N>`** (carrying its req body plus `tunan:plan` and `tunan:solution` comments) and the PR URL — a single issue handle, not three separate issue numbers.
 
 Start with step 1 now. Remember: GH preflight and plan FIRST, then work. Never skip the plan.

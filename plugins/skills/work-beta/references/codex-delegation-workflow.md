@@ -78,14 +78,14 @@ Present the sandbox mode choice: (1) yolo (recommended), (2) full-auto.
 
 On acceptance:
 
-- Resolve the repo root: `git rev-parse --show-toplevel`. Write `work_delegate_consent: true` and `work_delegate_sandbox: <chosen-mode>` to `<repo-root>/.yunxing/config.local.yaml`
-- To write: (1) if file or directory does not exist, create `<repo-root>/.yunxing/` and write the YAML file; (2) if file exists, merge new keys preserving existing keys
+- Resolve the repo root: `git rev-parse --show-toplevel`. Write `work_delegate_consent: true` and `work_delegate_sandbox: <chosen-mode>` to `<repo-root>/.tunan/config.local.yaml`
+- To write: (1) if file or directory does not exist, create `<repo-root>/.tunan/` and write the YAML file; (2) if file exists, merge new keys preserving existing keys
 - Update `consent_granted` and `sandbox_mode` in the resolved state
 
 On decline:
 
 - Ask whether to disable delegation entirely for this project
-- If yes: write `work_delegate: false` to `<repo-root>/.yunxing/config.local.yaml` (using the same repo root resolved above). To write: (1) if file or directory does not exist, create `<repo-root>/.yunxing/` and write the YAML file; (2) if file exists, merge new keys preserving existing keys. Set `delegation_active` to false, proceed in standard mode
+- If yes: write `work_delegate: false` to `<repo-root>/.tunan/config.local.yaml` (using the same repo root resolved above). To write: (1) if file or directory does not exist, create `<repo-root>/.tunan/` and write the YAML file; (2) if file exists, merge new keys preserving existing keys. Set `delegation_active` to false, proceed in standard mode
 - If no: set `delegation_active` to false for this invocation only, proceed in standard mode
 
 **Headless consent:** If running in a headless or non-interactive context, delegation proceeds only if `work_delegate_consent` is already `true` in the config file. If consent is not recorded, set `delegation_active` to false silently.
@@ -139,7 +139,7 @@ Store `effective_effort` as a per-batch derived state value (alongside the sessi
 At the start of delegated execution, create a per-run OS-temp scratch directory via `mktemp -d` and capture its **absolute path** for all downstream use. All scratch files for this invocation live under that directory. Do not use `.context/` — these scratch files are per-run throwaway that get cleaned up when delegated execution ends (see Cleanup below), matching the repo Scratch Space convention for one-shot artifacts. Do not pass unresolved shell-variable strings to non-shell tools (Write, Read); use the absolute path returned by `mktemp -d`.
 
 ```bash
-SCRATCH_DIR="$(mktemp -d -t yunxing-work-codex-XXXXXX)"
+SCRATCH_DIR="$(mktemp -d -t tunan-work-codex-XXXXXX)"
 echo "$SCRATCH_DIR"
 ```
 

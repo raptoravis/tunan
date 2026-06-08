@@ -19,7 +19,7 @@ Proof is a collaborative document editor for humans and agents. It supports two 
 
 Every write to a Proof doc must be attributed. Two fields carry the agent's identity:
 
-- **Machine ID (`by` on every op, `X-Agent-Id` header):** `ai:yunxing` — stable, lowercase-hyphenated, machine-parseable. Appears in marks, events, and the API response.
+- **Machine ID (`by` on every op, `X-Agent-Id` header):** `ai:tunan` — stable, lowercase-hyphenated, machine-parseable. Appears in marks, events, and the API response.
 - **Display name (`name` on `POST /presence`):** `Compound Engineering` — human-readable, shown in Proof's presence chips and comment-author badges.
 
 Set the display name once per doc session by posting to presence with the `X-Agent-Id` header; Proof binds the name to that agent ID for the session. These values are the defaults for any caller of this skill; callers running HITL review (`references/hitl-review.md`) may pass a different `identity` pair if a distinct sub-agent should own the doc. Do not use `ai:compound` or other ad-hoc variants — identity stays uniform unless a caller explicitly overrides it.
@@ -32,13 +32,13 @@ Human-in-the-loop iteration over a markdown source: upload to Proof, let the use
 
 The **source** is one of two shapes:
 
-- **yunxing artifact** (primary for the upstream handoff path) — durable yunxing artifacts are GitHub issues, not local files. A `yunxing:req` requirement is the feature issue **body**; a `yunxing:plan` / `yunxing:solution` artifact is a **marker comment** (`<!-- yunxing:plan -->` / `<!-- yunxing:solution -->`) on that same feature issue; `yunxing:idea` / `yunxing:pulse` are their own issue bodies. Run GH PREFLIGHT, export the **issue body** (req/idea/pulse) or the **marker comment** (plan/solution) to a transient temp markdown file (OS temp dir), run the Proof HITL flow on that temp file, and on proceed/sync write the reviewed markdown BACK to the same location — `gh issue edit <N> --body-file <temp-file>` for a body source, or PATCH the marker comment by id for a plan/solution comment source (see "Sync back").
-- **local markdown file** ("elsewhere" / non-artifact source) — a markdown file the user is working on that is not a yunxing artifact. Upload it, run the flow, and on sync write back to that file. This keeps the direct-user "share this file to proof" path working.
+- **tunan artifact** (primary for the upstream handoff path) — durable tunan artifacts are GitHub issues, not local files. A `tunan:req` requirement is the feature issue **body**; a `tunan:plan` / `tunan:solution` artifact is a **marker comment** (`<!-- tunan:plan -->` / `<!-- tunan:solution -->`) on that same feature issue; `tunan:idea` / `tunan:pulse` are their own issue bodies. Run GH PREFLIGHT, export the **issue body** (req/idea/pulse) or the **marker comment** (plan/solution) to a transient temp markdown file (OS temp dir), run the Proof HITL flow on that temp file, and on proceed/sync write the reviewed markdown BACK to the same location — `gh issue edit <N> --body-file <temp-file>` for a body source, or PATCH the marker comment by id for a plan/solution comment source (see "Sync back").
+- **local markdown file** ("elsewhere" / non-artifact source) — a markdown file the user is working on that is not a tunan artifact. Upload it, run the flow, and on sync write back to that file. This keeps the direct-user "share this file to proof" path working.
 
 Two entry points, identical mechanics:
 
-- **Direct user request** — a bare user phrase naming a source and asking to iterate collaboratively via Proof: "share this to proof so we can iterate", "iterate with proof on this doc", "HITL this with me", "let's get feedback on this in proof", "open this in proof editor so I can review". The source is whichever markdown the user just created, edited, or referenced — a local file, or a yunxing artifact issue named by `#<N>` or URL; if ambiguous, ask which source. This is a first-class entry point — do not require an upstream caller.
-- **Upstream skill handoff** — `brainstorm`, `ideate`, or `plan` finishes a draft (stored as a `yunxing:*` issue body, or — for `plan` — a `<!-- yunxing:plan -->` marker comment on the feature issue) and hands it off for human review before the next phase, passing the **issue ref** and title explicitly. "Source" is the issue ref; "sync back" targets the issue body for req/idea/pulse, or the marker comment for a plan/solution source.
+- **Direct user request** — a bare user phrase naming a source and asking to iterate collaboratively via Proof: "share this to proof so we can iterate", "iterate with proof on this doc", "HITL this with me", "let's get feedback on this in proof", "open this in proof editor so I can review". The source is whichever markdown the user just created, edited, or referenced — a local file, or a tunan artifact issue named by `#<N>` or URL; if ambiguous, ask which source. This is a first-class entry point — do not require an upstream caller.
+- **Upstream skill handoff** — `brainstorm`, `ideate`, or `plan` finishes a draft (stored as a `tunan:*` issue body, or — for `plan` — a `<!-- tunan:plan -->` marker comment on the feature issue) and hands it off for human review before the next phase, passing the **issue ref** and title explicitly. "Source" is the issue ref; "sync back" targets the issue body for req/idea/pulse, or the marker comment for a plan/solution source.
 
 ### GH PREFLIGHT (issue source only)
 
@@ -60,17 +60,17 @@ gh issue view <N> --json title,body,url,labels
 
 Use `title` as the Proof doc title (overridable by an explicit caller title) and echo `url` in the terminal report. The exported markdown depends on the artifact:
 
-- **Body source** (`yunxing:req` / `yunxing:idea` / `yunxing:pulse`, or any non-plan/solution issue) — use `body` as the markdown.
-- **Marker-comment source** (`yunxing:plan` / `yunxing:solution`) — the artifact lives in a marker comment, not the body. Read it and capture its comment id (PATCH target for sync-back):
+- **Body source** (`tunan:req` / `tunan:idea` / `tunan:pulse`, or any non-plan/solution issue) — use `body` as the markdown.
+- **Marker-comment source** (`tunan:plan` / `tunan:solution`) — the artifact lives in a marker comment, not the body. Read it and capture its comment id (PATCH target for sync-back):
 
   ```bash
-  gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .body'
-  gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .id'
+  gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:plan -->")) | .body'
+  gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:plan -->")) | .id'
   ```
 
-  (Swap `<!-- yunxing:plan -->` for `<!-- yunxing:solution -->` for a solution source.)
+  (Swap `<!-- tunan:plan -->` for `<!-- tunan:solution -->` for a solution source.)
 
-Write the exported markdown to a transient temp markdown file under the OS temp dir (`${TMPDIR:-/tmp}` on macOS/Linux, `$env:TEMP` on Windows) — e.g. `${TMPDIR:-/tmp}/yunxing-proof-<N>.md`. That temp file is the HITL "source file" for the rest of the flow.
+Write the exported markdown to a transient temp markdown file under the OS temp dir (`${TMPDIR:-/tmp}` on macOS/Linux, `$env:TEMP` on Windows) — e.g. `${TMPDIR:-/tmp}/tunan-proof-<N>.md`. That temp file is the HITL "source file" for the rest of the flow.
 
 ### Sync back to the issue (issue source)
 
@@ -82,7 +82,7 @@ On end-sync, write the reviewed Proof markdown to the temp file (the existing at
   gh issue edit <N> --body-file <temp-file>
   ```
 
-- **Marker-comment source** (`yunxing:plan` / `yunxing:solution`) — PATCH the marker comment in place by the id captured during export, keeping the marker as the literal first line of the temp file:
+- **Marker-comment source** (`tunan:plan` / `tunan:solution`) — PATCH the marker comment in place by the id captured during export, keeping the marker as the literal first line of the temp file:
 
   ```bash
   gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<temp-file>
@@ -154,7 +154,7 @@ Comment, suggestion, and rewrite operations go to `POST https://www.proofeditor.
 
 - Header: `x-share-token: <token>` or `Authorization: Bearer <token>`
 - Token comes from the URL parameter: `?token=xxx` or the `accessToken` from create response
-- Header: `X-Agent-Id: ai:yunxing` (required for presence; include on ops for consistent attribution)
+- Header: `X-Agent-Id: ai:tunan` (required for presence; include on ops for consistent attribution)
 
 **Wire-format reminder.** `/api/agent/{slug}/ops` uses a top-level `type` field; `/api/agent/{slug}/edit/v2` uses an `operations` array where each entry has `op`. Do not mix — sending `op` to `/ops` returns 422.
 
@@ -191,7 +191,7 @@ Duplicate-mark incidents usually come from retrying a `comment.add` or `suggesti
 {
   "type": "comment.add",
   "quote": "text to comment on",
-  "by": "ai:yunxing",
+  "by": "ai:tunan",
   "text": "Your comment here",
   "baseToken": "<token>"
 }
@@ -203,7 +203,7 @@ Duplicate-mark incidents usually come from retrying a `comment.add` or `suggesti
 {
   "type": "comment.reply",
   "markId": "<id>",
-  "by": "ai:yunxing",
+  "by": "ai:tunan",
   "text": "Reply text",
   "baseToken": "<token>"
 }
@@ -215,7 +215,7 @@ Duplicate-mark incidents usually come from retrying a `comment.add` or `suggesti
 {
   "type": "comment.reply",
   "markId": "<id>",
-  "by": "ai:yunxing",
+  "by": "ai:tunan",
   "text": "Fixed.",
   "resolve": true,
   "baseToken": "<token>"
@@ -226,7 +226,7 @@ Duplicate-mark incidents usually come from retrying a `comment.add` or `suggesti
 
 ```json
 {
-  "by": "ai:yunxing",
+  "by": "ai:tunan",
   "baseToken": "<token>",
   "operations": [
     {
@@ -249,8 +249,8 @@ Batch `/ops` supports `comment.reply`, `comment.resolve`, and `comment.unresolve
 **Resolve / unresolve a comment:**
 
 ```json
-{"type": "comment.resolve", "markId": "<id>", "by": "ai:yunxing", "baseToken": "<token>"}
-{"type": "comment.unresolve", "markId": "<id>", "by": "ai:yunxing", "baseToken": "<token>"}
+{"type": "comment.resolve", "markId": "<id>", "by": "ai:tunan", "baseToken": "<token>"}
+{"type": "comment.unresolve", "markId": "<id>", "by": "ai:tunan", "baseToken": "<token>"}
 ```
 
 **Suggest a replacement (pending — user must accept/reject):**
@@ -260,7 +260,7 @@ Batch `/ops` supports `comment.reply`, `comment.resolve`, and `comment.unresolve
   "type": "suggestion.add",
   "kind": "replace",
   "quote": "original text",
-  "by": "ai:yunxing",
+  "by": "ai:tunan",
   "content": "replacement text",
   "baseToken": "<token>"
 }
@@ -273,7 +273,7 @@ Batch `/ops` supports `comment.reply`, `comment.resolve`, and `comment.unresolve
   "type": "suggestion.add",
   "kind": "replace",
   "quote": "original text",
-  "by": "ai:yunxing",
+  "by": "ai:tunan",
   "content": "replacement text",
   "status": "accepted",
   "baseToken": "<token>"
@@ -285,8 +285,8 @@ Batch `/ops` supports `comment.reply`, `comment.resolve`, and `comment.unresolve
 **Accept or reject an existing suggestion:**
 
 ```json
-{"type": "suggestion.accept", "markId": "<id>", "by": "ai:yunxing", "baseToken": "<token>"}
-{"type": "suggestion.reject", "markId": "<id>", "by": "ai:yunxing", "baseToken": "<token>"}
+{"type": "suggestion.accept", "markId": "<id>", "by": "ai:tunan", "baseToken": "<token>"}
+{"type": "suggestion.reject", "markId": "<id>", "by": "ai:tunan", "baseToken": "<token>"}
 ```
 
 `suggestion.resolve` is not supported — use accept or reject instead.
@@ -297,7 +297,7 @@ Batch `/ops` supports `comment.reply`, `comment.resolve`, and `comment.unresolve
 {
   "type": "rewrite.apply",
   "content": "full new markdown",
-  "by": "ai:yunxing",
+  "by": "ai:tunan",
   "baseToken": "<token>"
 }
 ```
@@ -310,10 +310,10 @@ Prefer `find_replace_in_doc` or block-level `/edit/v2` operations first. `rewrit
 curl -X POST "https://www.proofeditor.ai/api/agent/{slug}/edit/v2" \
   -H "Content-Type: application/json" \
   -H "x-share-token: <token>" \
-  -H "X-Agent-Id: ai:yunxing" \
+  -H "X-Agent-Id: ai:tunan" \
   -H "Idempotency-Key: <uuid>" \
   -d '{
-    "by": "ai:yunxing",
+    "by": "ai:tunan",
     "baseToken": "mt1:<token>",
     "operations": [
       {"op": "replace_block", "ref": "b3", "block": {"markdown": "Updated paragraph."}},
@@ -352,7 +352,7 @@ Requires Proof.app running. Bridge at `http://localhost:9847`.
 
 **Required headers:**
 
-- `X-Agent-Id: ai:yunxing` (identity for presence; keep aligned with `by`)
+- `X-Agent-Id: ai:tunan` (identity for presence; keep aligned with `by`)
 - `Content-Type: application/json`
 - `X-Window-Id: <uuid>` (when multiple docs open)
 
@@ -363,15 +363,15 @@ Requires Proof.app running. Bridge at `http://localhost:9847`.
 | GET    | `/windows`               | List open documents                                                              |
 | GET    | `/state`                 | Read markdown, cursor, word count                                                |
 | GET    | `/marks`                 | List all suggestions and comments                                                |
-| POST   | `/marks/suggest-replace` | `{"quote":"old","by":"ai:yunxing","content":"new"}`                                |
-| POST   | `/marks/suggest-insert`  | `{"quote":"after this","by":"ai:yunxing","content":"insert"}`                      |
-| POST   | `/marks/suggest-delete`  | `{"quote":"delete this","by":"ai:yunxing"}`                                        |
-| POST   | `/marks/comment`         | `{"quote":"text","by":"ai:yunxing","text":"comment"}`                              |
-| POST   | `/marks/reply`           | `{"markId":"<id>","by":"ai:yunxing","text":"reply"}`                               |
-| POST   | `/marks/resolve`         | `{"markId":"<id>","by":"ai:yunxing"}`                                              |
+| POST   | `/marks/suggest-replace` | `{"quote":"old","by":"ai:tunan","content":"new"}`                                |
+| POST   | `/marks/suggest-insert`  | `{"quote":"after this","by":"ai:tunan","content":"insert"}`                      |
+| POST   | `/marks/suggest-delete`  | `{"quote":"delete this","by":"ai:tunan"}`                                        |
+| POST   | `/marks/comment`         | `{"quote":"text","by":"ai:tunan","text":"comment"}`                              |
+| POST   | `/marks/reply`           | `{"markId":"<id>","by":"ai:tunan","text":"reply"}`                               |
+| POST   | `/marks/resolve`         | `{"markId":"<id>","by":"ai:tunan"}`                                              |
 | POST   | `/marks/accept`          | `{"markId":"<id>"}`                                                              |
 | POST   | `/marks/reject`          | `{"markId":"<id>"}`                                                              |
-| POST   | `/rewrite`               | Last-resort whole-doc replacement: `{"content":"full markdown","by":"ai:yunxing"}` |
+| POST   | `/rewrite`               | Last-resort whole-doc replacement: `{"content":"full markdown","by":"ai:tunan"}` |
 | POST   | `/presence`              | `{"status":"reading","summary":"..."}`                                           |
 | GET    | `/events/pending`        | Poll for user actions                                                            |
 
@@ -404,9 +404,9 @@ BASE=$(printf '%s' "$STATE" | jq -r '.mutationBase.token')
 OP_RESP=$(curl -s -X POST "https://www.proofeditor.ai/api/agent/abc123/ops" \
   -H "Content-Type: application/json" \
   -H "x-share-token: xxx" \
-  -H "X-Agent-Id: ai:yunxing" \
+  -H "X-Agent-Id: ai:tunan" \
   -H "Idempotency-Key: $(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')" \
-  -d "$(jq -n --arg base "$BASE" '{type:"comment.add",quote:"text",by:"ai:yunxing",text:"comment",baseToken:$base}')")
+  -d "$(jq -n --arg base "$BASE" '{type:"comment.add",quote:"text",by:"ai:tunan",text:"comment",baseToken:$base}')")
 NEXT_BASE=$(printf '%s' "$OP_RESP" | jq -r '.mutationBase.token // empty')
 [ -n "$NEXT_BASE" ] && BASE="$NEXT_BASE"
 
@@ -414,9 +414,9 @@ NEXT_BASE=$(printf '%s' "$OP_RESP" | jq -r '.mutationBase.token // empty')
 OP_RESP=$(curl -s -X POST "https://www.proofeditor.ai/api/agent/abc123/ops" \
   -H "Content-Type: application/json" \
   -H "x-share-token: xxx" \
-  -H "X-Agent-Id: ai:yunxing" \
+  -H "X-Agent-Id: ai:tunan" \
   -H "Idempotency-Key: $(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')" \
-  -d "$(jq -n --arg base "$BASE" '{type:"suggestion.add",kind:"replace",quote:"old",by:"ai:yunxing",content:"new",baseToken:$base}')")
+  -d "$(jq -n --arg base "$BASE" '{type:"suggestion.add",kind:"replace",quote:"old",by:"ai:tunan",content:"new",baseToken:$base}')")
 NEXT_BASE=$(printf '%s' "$OP_RESP" | jq -r '.mutationBase.token // empty')
 [ -n "$NEXT_BASE" ] && BASE="$NEXT_BASE"
 
@@ -424,9 +424,9 @@ NEXT_BASE=$(printf '%s' "$OP_RESP" | jq -r '.mutationBase.token // empty')
 OP_RESP=$(curl -s -X POST "https://www.proofeditor.ai/api/agent/abc123/ops" \
   -H "Content-Type: application/json" \
   -H "x-share-token: xxx" \
-  -H "X-Agent-Id: ai:yunxing" \
+  -H "X-Agent-Id: ai:tunan" \
   -H "Idempotency-Key: $(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')" \
-  -d "$(jq -n --arg base "$BASE" '{type:"suggestion.add",kind:"replace",quote:"old",by:"ai:yunxing",content:"new",status:"accepted",baseToken:$base}')")
+  -d "$(jq -n --arg base "$BASE" '{type:"suggestion.add",kind:"replace",quote:"old",by:"ai:tunan",content:"new",status:"accepted",baseToken:$base}')")
 NEXT_BASE=$(printf '%s' "$OP_RESP" | jq -r '.mutationBase.token // empty')
 [ -n "$NEXT_BASE" ] && BASE="$NEXT_BASE"
 
@@ -437,9 +437,9 @@ EDIT_BASE=$(printf '%s' "$SNAPSHOT" | jq -r '.mutationBase.token')
 curl -X POST "https://www.proofeditor.ai/api/agent/abc123/edit/v2?return=minimal" \
   -H "Content-Type: application/json" \
   -H "x-share-token: xxx" \
-  -H "X-Agent-Id: ai:yunxing" \
+  -H "X-Agent-Id: ai:tunan" \
   -H "Idempotency-Key: $(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')" \
-  -d "$(jq -n --arg base "$EDIT_BASE" '{by:"ai:yunxing",baseToken:$base,operations:[{op:"find_replace_in_doc",find:"old",replace:"new",occurrence:"all"}]}')"
+  -d "$(jq -n --arg base "$EDIT_BASE" '{by:"ai:tunan",baseToken:$base,operations:[{op:"find_replace_in_doc",find:"old",replace:"new",occurrence:"all"}]}')"
 ```
 
 ## Workflow: Create and Share a New Document
@@ -459,7 +459,7 @@ TOKEN=$(echo "$RESPONSE" | jq -r '.accessToken')
 curl -s -X POST "https://www.proofeditor.ai/api/agent/$SLUG/presence" \
   -H "Content-Type: application/json" \
   -H "x-share-token: $TOKEN" \
-  -H "X-Agent-Id: ai:yunxing" \
+  -H "X-Agent-Id: ai:tunan" \
   -d '{"name":"Compound Engineering","status":"reading","summary":"Uploaded doc"}'
 
 # 4. Share the URL
@@ -471,9 +471,9 @@ BASE=$(curl -s "https://www.proofeditor.ai/api/agent/$SLUG/state" \
 OP_RESP=$(curl -s -X POST "https://www.proofeditor.ai/api/agent/$SLUG/ops" \
   -H "Content-Type: application/json" \
   -H "x-share-token: $TOKEN" \
-  -H "X-Agent-Id: ai:yunxing" \
+  -H "X-Agent-Id: ai:tunan" \
   -H "Idempotency-Key: $(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')" \
-  -d "$(jq -n --arg base "$BASE" '{type:"comment.add",quote:"Content here",by:"ai:yunxing",text:"Added a note",baseToken:$base}')")
+  -d "$(jq -n --arg base "$BASE" '{type:"comment.add",quote:"Content here",by:"ai:tunan",text:"Added a note",baseToken:$base}')")
 NEXT_BASE=$(printf '%s' "$OP_RESP" | jq -r '.mutationBase.token // empty')
 [ -n "$NEXT_BASE" ] && BASE="$NEXT_BASE"
 
@@ -484,16 +484,16 @@ EDIT_BASE=$(printf '%s' "$SNAPSHOT" | jq -r '.mutationBase.token')
 curl -X POST "https://www.proofeditor.ai/api/agent/$SLUG/edit/v2?return=minimal" \
   -H "Content-Type: application/json" \
   -H "x-share-token: $TOKEN" \
-  -H "X-Agent-Id: ai:yunxing" \
+  -H "X-Agent-Id: ai:tunan" \
   -H "Idempotency-Key: $(uuidgen 2>/dev/null || powershell -NoProfile -Command '[guid]::NewGuid().ToString()')" \
-  -d "$(jq -n --arg base "$EDIT_BASE" '{by:"ai:yunxing",baseToken:$base,operations:[{op:"find_replace_in_doc",find:"Content",replace:"Updated content",occurrence:"all"}]}')"
+  -d "$(jq -n --arg base "$EDIT_BASE" '{by:"ai:tunan",baseToken:$base,operations:[{op:"find_replace_in_doc",find:"Content",replace:"Updated content",occurrence:"all"}]}')"
 ```
 
 ## Workflow: Pull a Proof Doc to Local
 
 Sync the current Proof doc state to a local markdown file. Used by:
 
-- HITL review end-sync (`references/hitl-review.md` Phase 5). For a **local source**, this writes the reviewed markdown back to the user's file. For a **yunxing artifact source**, the same atomic write targets the transient temp file, which is then pushed back to its origin — the issue body via `gh issue edit <N> --body-file <temp-file>` for a req/idea/pulse source, or the marker comment via `gh api .../issues/comments/<id> -X PATCH -F body=@<temp-file>` for a plan/solution comment source — the durable artifact is the issue or comment, not a local file.
+- HITL review end-sync (`references/hitl-review.md` Phase 5). For a **local source**, this writes the reviewed markdown back to the user's file. For a **tunan artifact source**, the same atomic write targets the transient temp file, which is then pushed back to its origin — the issue body via `gh issue edit <N> --body-file <temp-file>` for a req/idea/pulse source, or the marker comment via `gh api .../issues/comments/<id> -X PATCH -F body=@<temp-file>` for a plan/solution comment source — the durable artifact is the issue or comment, not a local file.
 - Ad-hoc snapshots of a Proof doc to disk (before closing the tab, archiving, handing off)
 - Refreshing a local working copy against the live Proof version
 
@@ -524,5 +524,5 @@ rm "$STATE_TMP"
 - During active collab use `edit/v2` (direct block changes) or `suggestion.add` (tracked changes); reserve `rewrite.apply` for no-client scenarios since it's blocked by `LIVE_CLIENTS_PRESENT` when anyone is connected
 - Prefer `find_replace_in_doc` and block-level `/edit/v2` edits before considering `rewrite.apply`
 - Don't span table cells in a single replace
-- Always include `by: "ai:yunxing"` on every op and `X-Agent-Id: ai:yunxing` in headers for consistent attribution
+- Always include `by: "ai:tunan"` on every op and `X-Agent-Id: ai:tunan` in headers for consistent attribution
 - Reuse `baseToken` from your most recent `/state` or `/snapshot` read; on `STALE_BASE`, re-read and retry once

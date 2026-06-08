@@ -1,11 +1,11 @@
 {
-  "name": "yunxing",
+  "name": "tunan",
   "interface": {
-    "displayName": "yunxing"
+    "displayName": "tunan"
   },
   "plugins": [
     {
-      "name": "yunxing",
+      "name": "tunan",
       "source": {
         "source": "local",
         "path": "./plugins"

@@ -105,11 +105,11 @@ Use the shared anchored rubric (see `subagent-template.md` — Confidence rubric
 
 ## What you don't flag
 
-- **Internal contradictions** or terminology drift -- yunxing:coherence-reviewer owns these
-- **Technical feasibility** or architecture conflicts -- yunxing:feasibility-reviewer owns these
-- **Scope-goal alignment** or priority dependency issues -- yunxing:scope-guardian-reviewer owns these
-- **UI/UX quality** or user flow completeness -- yunxing:design-lens-reviewer owns these
-- **Security implications** at plan level -- yunxing:security-lens-reviewer owns these
-- **Product framing** or business justification quality -- yunxing:product-lens-reviewer owns these
+- **Internal contradictions** or terminology drift -- tunan:coherence-reviewer owns these
+- **Technical feasibility** or architecture conflicts -- tunan:feasibility-reviewer owns these
+- **Scope-goal alignment** or priority dependency issues -- tunan:scope-guardian-reviewer owns these
+- **UI/UX quality** or user flow completeness -- tunan:design-lens-reviewer owns these
+- **Security implications** at plan level -- tunan:security-lens-reviewer owns these
+- **Product framing** or business justification quality -- tunan:product-lens-reviewer owns these
 
 Your territory is the *epistemological quality* of the document -- whether the premises, assumptions, and decisions are warranted, not whether the document is well-structured or technically feasible.

@@ -47,4 +47,4 @@ When analyzing, consider:
 
 Your insights should help developers understand not just what the code does, but why it evolved to its current state, informing better decisions for future changes.
 
-Note that yunxing pipeline artifacts are GitHub issues, not files in the tree: a feature is one `yunxing:req` issue, and its plan and solution are comments on it (markers `<!-- yunxing:plan -->` / `<!-- yunxing:solution -->`, with the feature issue accruing the matching label). Do not recommend removing them or characterize them as unnecessary.
+Note that tunan pipeline artifacts are GitHub issues, not files in the tree: a feature is one `tunan:req` issue, and its plan and solution are comments on it (markers `<!-- tunan:plan -->` / `<!-- tunan:solution -->`, with the feature issue accruing the matching label). Do not recommend removing them or characterize them as unnecessary.

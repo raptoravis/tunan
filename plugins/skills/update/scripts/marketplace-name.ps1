@@ -1,6 +1,6 @@
 # Print the marketplace-name segment of the skill's own location when it
 # matches the marketplace cache layout
-# `~/.claude/plugins/cache/<marketplace>/yunxing/<version>/skills/update`,
+# `~/.claude/plugins/cache/<marketplace>/tunan/<version>/skills/update`,
 # or the literal sentinel `__CE_UPDATE_NOT_MARKETPLACE__` otherwise.
 #
 # PowerShell 5.1-compatible port of marketplace-name.sh. Derives skill_dir from
@@ -11,7 +11,7 @@
 $skillDir = (Split-Path -Parent $PSScriptRoot) -replace '\\', '/'
 
 # Capture group 1 is the marketplace segment.
-$m = [regex]::Match($skillDir, '.*/plugins/cache/([^/]+)/yunxing/[^/]+/skills/update/?$')
+$m = [regex]::Match($skillDir, '.*/plugins/cache/([^/]+)/tunan/[^/]+/skills/update/?$')
 
 if ($m.Success) {
   Write-Output $m.Groups[1].Value

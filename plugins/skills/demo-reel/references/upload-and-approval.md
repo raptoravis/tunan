@@ -33,7 +33,7 @@ Present the preview URL to the user and ask how to handle the evidence. Use the 
 
 1. **Upload to R2 (public URL)** -- upload to Cloudflare R2 for permanent PR embedding (available when R2 env vars are set)
 2. **Upload to catbox (public URL)** -- promote to catbox permanent hosting for PR embedding
-3. **Save locally** -- save to a stable OS-temp path (${TMPDIR:-/tmp}/yunxing/yunxing:demo-reel/)
+3. **Save locally** -- save to a stable OS-temp path (${TMPDIR:-/tmp}/tunan/tunan:demo-reel/)
 4. **Recapture** -- provide instructions on what to change
 5. **Proceed without evidence** -- set evidence to null and proceed
 

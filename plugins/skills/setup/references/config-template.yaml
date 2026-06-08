@@ -1,5 +1,5 @@
 # Compound Engineering -- local config
-# Copy to .yunxing/config.local.yaml in your project root.
+# Copy to .tunan/config.local.yaml in your project root.
 # All settings are optional. Invalid values fall through to defaults.
 
 # --- Work delegation (Codex) ---
@@ -12,7 +12,7 @@
 # work_delegate_effort: high     # minimal | low | medium | high | xhigh (omit to use ~/.codex/config.toml default)
 
 # --- Product pulse ---
-# Settings written by /yunxing:product-pulse first-run interview. Re-run the skill with
+# Settings written by /tunan:product-pulse first-run interview. Re-run the skill with
 # argument `setup` or `reconfigure` to edit interactively.
 
 # pulse_product_name: "Spiral"                          # used in report titles (no default)
@@ -42,7 +42,7 @@
 # brainstorm_output: html        # md | html (default: md)
 
 # --- promote ---
-# Written automatically when you decline the Spiral setup offer in /yunxing:promote.
+# Written automatically when you decline the Spiral setup offer in /tunan:promote.
 # Suppresses that one-time setup nudge in this project. Remove the key to re-enable.
 
 # ce_promote_spiral_optout: true   # true | (absent) (default: absent -- offer once)

@@ -1,6 +1,6 @@
 # YAML Frontmatter Schema
 
-A learning is a `yunxing:solution` comment on its feature issue: first line is the marker `<!-- yunxing:solution -->`, then the YAML block described here (fenced as a ```yaml block), then the markdown sections. The feature issue is labeled `yunxing:solution` for cross-feature discovery. `schema.yaml` in this directory is the canonical contract for that block, written by `compound`.
+A learning is a `tunan:solution` comment on its feature issue: first line is the marker `<!-- tunan:solution -->`, then the YAML block described here (fenced as a ```yaml block), then the markdown sections. The feature issue is labeled `tunan:solution` for cross-feature discovery. `schema.yaml` in this directory is the canonical contract for that block, written by `compound`.
 
 Use this file as the quick reference for:
 - required fields
@@ -61,7 +61,7 @@ Docs created before the track system may have `symptoms`/`root_cause`/`resolutio
 
 ## Category Classification
 
-Each learning carries a `category` value in its YAML block — a sub-type slug derived from `problem_type`. It is metadata for searching and grouping `yunxing:solution` issues, not a filesystem path. Map `problem_type` to the `category` slug below:
+Each learning carries a `category` value in its YAML block — a sub-type slug derived from `problem_type`. It is metadata for searching and grouping `tunan:solution` issues, not a filesystem path. Map `problem_type` to the `category` slug below:
 
 - `build_error` -> `build-errors`
 - `test_failure` -> `test-failures`

@@ -3,15 +3,15 @@ name: sessions
 description: "Search and ask questions about coding agent session history across Claude Code, Codex, and Cursor. Use when asking what was worked on, what was tried before, how a problem was investigated across sessions, what happened recently, or any question about past agent sessions. Also use when the user references prior sessions, previous attempts, or past investigations — even without saying 'sessions' explicitly."
 ---
 
-# /yunxing:sessions
+# /tunan:sessions
 
 Search session history across Claude Code, Codex, and Cursor and synthesize findings about what was worked on, tried, decided, or learned in prior sessions.
 
 ## Usage
 
 ```
-/yunxing:sessions [question or topic]
-/yunxing:sessions
+/tunan:sessions [question or topic]
+/tunan:sessions
 ```
 
 ## Pre-resolved context
@@ -108,12 +108,12 @@ Apply these filters in order to pick the sessions worth deep-diving:
 Create a per-run throwaway scratch directory:
 
 ```bash
-SCRATCH=$(mktemp -d -t yunxing-sessions-XXXXXX)
+SCRATCH=$(mktemp -d -t tunan-sessions-XXXXXX)
 ```
 
 On Windows PowerShell (no `mktemp`):
 ```powershell
-$SCRATCH = Join-Path $env:TEMP ("yunxing-sessions-" + [guid]::NewGuid().ToString('N').Substring(0,8)); New-Item -ItemType Directory -Path $SCRATCH | Out-Null
+$SCRATCH = Join-Path $env:TEMP ("tunan-sessions-" + [guid]::NewGuid().ToString('N').Substring(0,8)); New-Item -ItemType Directory -Path $SCRATCH | Out-Null
 ```
 
 Capture the absolute path; thread it into Step 5 and Step 6. The OS handles cleanup on session end; an explicit cleanup of `$SCRATCH` at the end of Step 7 (`rm -rf` / `Remove-Item -Recurse -Force`) is harmless and makes intent explicit.
@@ -146,7 +146,7 @@ Use selectively — only when understanding what went wrong adds value. Cursor a
 
 ### Step 6 — Dispatch synthesis subagent
 
-Dispatch the `yunxing:session-historian` subagent via the platform's subagent primitive (`Agent` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi via the `pi-subagents` extension). Omit the `mode` parameter so the user's configured permission settings apply. Run on the mid-tier model (e.g., `model: "sonnet"` in Claude Code) — the synthesizer doesn't need frontier reasoning.
+Dispatch the `tunan:session-historian` subagent via the platform's subagent primitive (`Agent` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi via the `pi-subagents` extension). Omit the `mode` parameter so the user's configured permission settings apply. Run on the mid-tier model (e.g., `model: "sonnet"` in Claude Code) — the synthesizer doesn't need frontier reasoning.
 
 The dispatch prompt is the agent's input contract. Pass these fields:
 
@@ -209,7 +209,7 @@ The OS handles cleanup eventually regardless; the explicit cleanup is for reader
 
 ## Output
 
-When the caller (typically a user typing `/yunxing:sessions`, or another skill invoking sessions via the platform's skill-invocation primitive) does not specify an output format, include a brief header noting what was searched:
+When the caller (typically a user typing `/tunan:sessions`, or another skill invoking sessions via the platform's skill-invocation primitive) does not specify an output format, include a brief header noting what was searched:
 
 ```
 **Sessions searched**: [count] ([N] Claude Code, [N] Codex, [N] Cursor) | [date range]

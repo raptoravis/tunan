@@ -1,6 +1,6 @@
 ---
 name: product-pulse
-description: "Generate a time-windowed pulse report on what users experienced and how the product performed - usage, quality, errors, signals worth investigating. Use when the user says 'run a pulse', 'show me the pulse', 'how are we doing', 'weekly recap', 'launch-day check', or passes a time window like '24h' or '7d'. Configures via .yunxing/config.local.yaml and stores each report as a GitHub issue labeled yunxing:pulse (browse past pulses via gh issue list)."
+description: "Generate a time-windowed pulse report on what users experienced and how the product performed - usage, quality, errors, signals worth investigating. Use when the user says 'run a pulse', 'show me the pulse', 'how are we doing', 'weekly recap', 'launch-day check', or passes a time window like '24h' or '7d'. Configures via .tunan/config.local.yaml and stores each report as a GitHub issue labeled tunan:pulse (browse past pulses via gh issue list)."
 argument-hint: "[lookback window, e.g. '24h', '7d', '1h'; default 24h]"
 allowed-tools:
   - Read
@@ -13,9 +13,9 @@ allowed-tools:
 
 # Product Pulse
 
-`product-pulse` queries the product's data sources for a given time window and produces a compact, single-page report covering usage, performance, errors, and followups. Each report is stored as a GitHub issue labeled `yunxing:pulse` and the key points are surfaced in chat. The list of `yunxing:pulse` issues is the browseable timeline of past pulses.
+`product-pulse` queries the product's data sources for a given time window and produces a compact, single-page report covering usage, performance, errors, and followups. Each report is stored as a GitHub issue labeled `tunan:pulse` and the key points are surfaced in chat. The list of `tunan:pulse` issues is the browseable timeline of past pulses.
 
-The skill does not mutate the product, the database, or any external system. Its only local write is pulse settings appended to `.yunxing/config.local.yaml` (the unified CE local config, gitignored, machine-local); the report itself is written to GitHub as an issue (markdown body, no local file). MCP and other data-source tools are invoked read-only; if a tool offers write modes, do not use them.
+The skill does not mutate the product, the database, or any external system. Its only local write is pulse settings appended to `.tunan/config.local.yaml` (the unified CE local config, gitignored, machine-local); the report itself is written to GitHub as an issue (markdown body, no local file). MCP and other data-source tools are invoked read-only; if a tool offers write modes, do not use them.
 
 ## Interaction Method
 
@@ -43,7 +43,7 @@ Apply a **15-minute trailing buffer** to the window's upper bound. Many analytic
 2. **Single page.** Target 30-40 lines of terminal output. If the report is getting long, cut.
 3. **No PII in saved reports.** Do not include user emails, account IDs, or message content in the report issue body.
 4. **Parallel where safe, serial where it matters.** Analytics and tracing queries run in parallel. Database queries run serially to avoid load.
-5. **Memory through saved reports.** Every run creates a `yunxing:pulse` GitHub issue so past pulses are browseable as a timeline via `gh issue list --label yunxing:pulse`.
+5. **Memory through saved reports.** Every run creates a `tunan:pulse` GitHub issue so past pulses are browseable as a timeline via `gh issue list --label tunan:pulse`.
 6. **Read-only database access only.** If a database is used as a data source, the connection must be read-only. The interview refuses to accept read-write credentials. Database access is optional - many products complete the pulse with analytics and tracing alone.
 7. **Strategy-seeded when available.** If `STRATEGY.md` exists, the interview reads it before asking questions and carries forward the product name and key metrics as seeds. The goal of data-source setup is to wire up whatever connections are needed to actually measure those metrics.
 
@@ -61,26 +61,26 @@ gh auth status
 gh repo view --json nameWithOwner
 ```
 
-- If `gh` is not installed, abort and direct the user to install it from https://cli.github.com or run `/yunxing:setup`. Never fall back to a local file.
+- If `gh` is not installed, abort and direct the user to install it from https://cli.github.com or run `/tunan:setup`. Never fall back to a local file.
 - If `gh auth status` does not exit 0, abort and direct the user to authenticate (`gh auth login`; in Claude Code suggest typing `! gh auth login`).
 - If `gh repo view` does not resolve, abort and explain that a GitHub repo is required to store pulse reports.
-- **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run (pulse already treats a missing config as a first run below).
+- **Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run (pulse already treats a missing config as a first run below).
 
-Ensure the `yunxing:pulse` label exists before writing (Phase 2.4 also re-checks):
+Ensure the `tunan:pulse` label exists before writing (Phase 2.4 also re-checks):
 
 ```bash
-gh label list --search "yunxing:pulse"
-gh label create "yunxing:pulse" --color 1f883d --description "yunxing pulse"
+gh label list --search "tunan:pulse"
+gh label create "tunan:pulse" --color 1f883d --description "tunan pulse"
 ```
 
-Run the create command only if the list shows no `yunxing:pulse` label.
+Run the create command only if the list shows no `tunan:pulse` label.
 
 **Config (pre-resolved):**
-!`(top=$(git rev-parse --show-toplevel 2>/dev/null); [ -n "$top" ] && cat "$top/.yunxing/config.local.yaml" 2>/dev/null) || echo '__NO_CONFIG__'`
+!`(top=$(git rev-parse --show-toplevel 2>/dev/null); [ -n "$top" ] && cat "$top/.tunan/config.local.yaml" 2>/dev/null) || echo '__NO_CONFIG__'`
 
 If the block above contains YAML key-value pairs, extract values for the `pulse_*` keys listed under "Config keys" below.
 If it shows `__NO_CONFIG__`, the file does not exist — treat this as a first run.
-If it shows an unresolved command string, read `.yunxing/config.local.yaml` from the repo root using the native file-read tool (e.g., Read in Claude Code, read_file in Codex). If the file does not exist, treat as first run.
+If it shows an unresolved command string, read `.tunan/config.local.yaml` from the repo root using the native file-read tool (e.g., Read in Claude Code, read_file in Codex). If the file does not exist, treat as first run.
 
 **Config keys:**
 
@@ -138,13 +138,13 @@ Apply the pushback rules in `references/interview.md` for each section. Treat ev
 
 If the user offers read-write database access, refuse and offer the alternatives documented in `references/interview.md` section 6.
 
-Write the captured config to `<repo-root>/.yunxing/config.local.yaml` as flat `pulse_*` keys, using the schema in `references/interview.md` under "Config file shape". Resolve the repo root with `git rev-parse --show-toplevel`. To write: (1) if the file or directory does not exist, create `.yunxing/` and write the YAML file; (2) if the file exists, merge new keys into the existing YAML, preserving any non-pulse keys (e.g., `work_delegate_*`) untouched. If `.yunxing/config.local.yaml` is not already covered by the repo's `.gitignore`, offer to add the entry before writing. Show the resulting pulse block to the user in chat and offer one round of edits.
+Write the captured config to `<repo-root>/.tunan/config.local.yaml` as flat `pulse_*` keys, using the schema in `references/interview.md` under "Config file shape". Resolve the repo root with `git rev-parse --show-toplevel`. To write: (1) if the file or directory does not exist, create `.tunan/` and write the YAML file; (2) if the file exists, merge new keys into the existing YAML, preserving any non-pulse keys (e.g., `work_delegate_*`) untouched. If `.tunan/config.local.yaml` is not already covered by the repo's `.gitignore`, offer to add the entry before writing. Show the resulting pulse block to the user in chat and offer one round of edits.
 
 After the config is written, run the **scheduling recommendation** from `references/interview.md` section 9: offer to set up a recurring run so the user gets the pulse on a cadence instead of having to remember to run it. Accept yes/no/later. If yes, hand off to whichever scheduling primitive the current harness exposes — the in-plugin `schedule` skill if it is installed, otherwise note that scheduling is platform-specific (cron, GitHub Actions, the host's own automation) and emit a brief hint covering what would need to run. Do not schedule inline. Then proceed to Phase 2.
 
 ### Phase 2: Run the Pulse
 
-If Phase 1 ran (first run, or `setup`/`reconfigure` argument), re-read `.yunxing/config.local.yaml` from the repo root using the native file-read tool to pick up any edits accepted during the Phase 1 review step. Otherwise, use the `pulse_*` values already extracted in Phase 0. Apply hard defaults for any unset settings (see Phase 0 "Config keys").
+If Phase 1 ran (first run, or `setup`/`reconfigure` argument), re-read `.tunan/config.local.yaml` from the repo root using the native file-read tool to pick up any edits accepted during the Phase 1 review step. Otherwise, use the `pulse_*` values already extracted in Phase 0. Apply hard defaults for any unset settings (see Phase 0 "Config keys").
 
 #### 2.1 Dispatch Queries
 
@@ -179,24 +179,24 @@ Keep the total to 30-40 lines. If a section is thin, leave it thin; do not pad.
 
 #### 2.4 Write the Report
 
-Store the report as a GitHub issue labeled `yunxing:pulse` — never a local file. The issue body is the filled report-template markdown.
+Store the report as a GitHub issue labeled `tunan:pulse` — never a local file. The issue body is the filled report-template markdown.
 
-Confirm the `yunxing:pulse` label exists (Phase 0.0 normally created it):
+Confirm the `tunan:pulse` label exists (Phase 0.0 normally created it):
 
 ```bash
-gh label list --search "yunxing:pulse"
-gh label create "yunxing:pulse" --color 1f883d --description "yunxing pulse"
+gh label list --search "tunan:pulse"
+gh label create "tunan:pulse" --color 1f883d --description "tunan pulse"
 ```
 
-Run the create command only if the list shows no `yunxing:pulse` label.
+Run the create command only if the list shows no `tunan:pulse` label.
 
 Write the filled template to a temp file, then create the issue. Title is `[pulse] <time window>` using the queried window bounds as dates (e.g., `[pulse] 2026-05-28..2026-06-04`):
 
 ```bash
-gh issue create --title "[pulse] 2026-05-28..2026-06-04" --label "yunxing:pulse" --body-file <tmpfile>
+gh issue create --title "[pulse] 2026-05-28..2026-06-04" --label "tunan:pulse" --body-file <tmpfile>
 ```
 
-Surface the Headlines and top Followup in chat. Provide the issue URL returned by `gh issue create` so the user can open the report. To browse past pulses as a timeline, run `gh issue list --label yunxing:pulse`.
+Surface the Headlines and top Followup in chat. Provide the issue URL returned by `gh issue create` so the user can open the report. To browse past pulses as a timeline, run `gh issue list --label tunan:pulse`.
 
 ### Phase 3: Routine Hook
 
@@ -217,4 +217,4 @@ Never schedule automatically. Any scheduling handoff requires explicit confirmat
 
 ## Learn More
 
-The "read like a founder" posture and the single-page constraint are deliberate. Dashboards with 40 metrics produce attention sprawl; one page with the right four sections forces the reader to notice what matters. The `yunxing:pulse` issue list is designed to be a team's working memory, not a data warehouse - past pulses are searchable and filterable via `gh issue list --label yunxing:pulse`.
+The "read like a founder" posture and the single-page constraint are deliberate. Dashboards with 40 metrics produce attention sprawl; one page with the right four sections forces the reader to notice what matters. The `tunan:pulse` issue list is designed to be a team's working memory, not a data warehouse - past pulses are searchable and filterable via `gh issue list --label tunan:pulse`.

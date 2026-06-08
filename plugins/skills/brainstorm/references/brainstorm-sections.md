@@ -1,7 +1,7 @@
 # Brainstorm Sections
 
 This reference describes what makes a great brainstorm requirement — the
-content of the `yunxing:req` GitHub issue body. It does NOT prescribe how the
+content of the `tunan:req` GitHub issue body. It does NOT prescribe how the
 issue body looks on the page — that is handled by `markdown-rendering.md`.
 
 ## The outcome
@@ -27,7 +27,7 @@ Skip document creation when **both** hold:
   framing, or decisions worth preserving in IDed shape.
 - Any durable decisions made during the dialogue can flow naturally to
   downstream artifacts (`plan`, the commit message, a
-  `yunxing:solution` learning comment) without a `yunxing:req` issue as an
+  `tunan:solution` learning comment) without a `tunan:req` issue as an
   intermediary.
 
   (When a req issue was already bound — e.g., from `newreq` — it
@@ -41,10 +41,10 @@ durable, IDed form — not just as conversational artifacts.
 
 **Stress test:** a brainstorm about a tiny bug fix where the user asks "fix
 this with a null check or with upstream validation?" and the agent confirms
-"upstream validation, here's why" doesn't need a `yunxing:req` issue. The
+"upstream validation, here's why" doesn't need a `tunan:req` issue. The
 decision flows to `plan` (or directly to commit message, or to a
-`yunxing:solution` learning comment if it's a pattern worth carrying) without
-a `yunxing:req` issue in the middle.
+`tunan:solution` learning comment if it's a pattern worth carrying) without
+a `tunan:req` issue in the middle.
 
 Conversely, a brainstorm about a multi-actor feature with contested scope
 and several behavioral conditions probably does need a doc — the planning
@@ -202,7 +202,7 @@ about the same thing, with continuous R-IDs across groups.)
 ## Brainstorm metadata fields
 
 Every requirement carries a small set of stable metadata fields. They render
-as a fenced ```` ```yaml ```` block at the very top of the `yunxing:req`
+as a fenced ```` ```yaml ```` block at the very top of the `tunan:req`
 issue body (GitHub issues have no `---` frontmatter delimiters). Field names
 and semantics are stable so consumers can locate them in the body.
 
@@ -215,7 +215,7 @@ and semantics are stable so consumers can locate them in the body.
 
 ### Status flip does not apply to brainstorm
 
-The `yunxing:req` issue body has no `status` field — there is no
+The `tunan:req` issue body has no `status` field — there is no
 `active → completed` body lifecycle. A requirement is a one-time artifact
 that downstream consumers (`plan`, `doc-review`) reference by
 its issue `#<N>`. (GitHub's own open/closed state is the issue lifecycle, not
@@ -268,9 +268,9 @@ to different purposes:
 ## Rendering
 
 `references/markdown-rendering.md` describes how to render these sections as
-the `yunxing:req` issue body markdown.
+the `tunan:req` issue body markdown.
 
 This reference (`brainstorm-sections.md`) is about WHAT the requirement
 contains; `markdown-rendering.md` is about HOW it renders as the issue body.
-The requirement is stored as the markdown body of a `yunxing:req` GitHub
+The requirement is stored as the markdown body of a `tunan:req` GitHub
 issue.

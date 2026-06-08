@@ -1,26 +1,26 @@
 ---
 name: compound
-description: "Document a recently solved problem as a yunxing:solution comment on its feature issue to compound your team's knowledge, or update CONCEPTS.md, the project's shared domain vocabulary."
+description: "Document a recently solved problem as a tunan:solution comment on its feature issue to compound your team's knowledge, or update CONCEPTS.md, the project's shared domain vocabulary."
 argument-hint: "[optional: brief context] [mode:headless] "
 ---
 
-# /yunxing:compound
+# /tunan:compound
 
 Coordinate multiple subagents working in parallel to document a recently solved problem.
 
 ## Purpose
 
-Captures problem solutions while context is fresh, writing a structured **solution comment** on the **feature issue** the solved problem belongs to — first line `<!-- yunxing:solution -->`, then a fenced ```yaml block for searchability and future reference. The feature issue is also labeled `yunxing:solution` so the comment is discoverable by label across features. Uses parallel subagents for maximum efficiency.
+Captures problem solutions while context is fresh, writing a structured **solution comment** on the **feature issue** the solved problem belongs to — first line `<!-- tunan:solution -->`, then a fenced ```yaml block for searchability and future reference. The feature issue is also labeled `tunan:solution` so the comment is discoverable by label across features. Uses parallel subagents for maximum efficiency.
 
 **Why "compound"?** Each documented solution compounds your team's knowledge. The first time you solve a problem takes research. Document it, and the next occurrence takes minutes. Knowledge compounds.
 
 ## Usage
 
 ```bash
-/yunxing:compound                            # Document the most recent fix
-/yunxing:compound [brief context]            # Provide additional context hint
-/yunxing:compound mode:headless              # Non-interactive run for automations
-/yunxing:compound mode:headless [context]    # Non-interactive run with context hint
+/tunan:compound                            # Document the most recent fix
+/tunan:compound [brief context]            # Provide additional context hint
+/tunan:compound mode:headless              # Non-interactive run for automations
+/tunan:compound mode:headless [context]    # Non-interactive run with context hint
 ```
 
 ## CONCEPTS.md bootstrap requests
@@ -44,44 +44,44 @@ Headless mode is intended for automations and skill-to-skill invocation where no
 
 If the line above resolved to a plain branch name (like `feat/my-branch`), include it in the `sessions` invocation payload in Phase 1 so the orchestrator does not waste a turn deriving it. If it still contains a backtick command string or is empty, omit it and let `sessions` derive it at runtime.
 
-## Storage: yunxing:solution comments on the feature issue
+## Storage: tunan:solution comments on the feature issue
 
-Learnings are stored on GitHub, never local files. A feature is **one GitHub issue** for its lifetime; the solution lands as a **comment** on that feature issue whose **first line is the marker** `<!-- yunxing:solution -->`, followed by a fenced ```yaml block (the frontmatter from `references/schema.yaml`) and the resolution-template markdown sections. The feature issue is **also labeled `yunxing:solution`** so `gh issue list --label yunxing:solution` still finds every feature that carries a solution — that label is the cheap cross-feature index institutional-learnings search (`learnings-researcher`) relies on. Read `references/comment-chain-storage.md` for the comment-chain model and the exact gh recipes. Never write a learning to a local file.
+Learnings are stored on GitHub, never local files. A feature is **one GitHub issue** for its lifetime; the solution lands as a **comment** on that feature issue whose **first line is the marker** `<!-- tunan:solution -->`, followed by a fenced ```yaml block (the frontmatter from `references/schema.yaml`) and the resolution-template markdown sections. The feature issue is **also labeled `tunan:solution`** so `gh issue list --label tunan:solution` still finds every feature that carries a solution — that label is the cheap cross-feature index institutional-learnings search (`learnings-researcher`) relies on. Read `references/comment-chain-storage.md` for the comment-chain model and the exact gh recipes. Never write a learning to a local file.
 
 **GH preflight — run before any issue read or write.** If any check fails, abort and surface the guidance; never fall back to a local file.
 
-1. `gh` is installed. If not, install from https://cli.github.com or run `/yunxing:setup`.
+1. `gh` is installed. If not, install from https://cli.github.com or run `/tunan:setup`.
 2. `gh auth status` exits 0. If not, run `gh auth login` (in Claude Code, suggest typing `! gh auth login`).
 3. `gh repo view --json nameWithOwner` resolves. If not, a GitHub repo is required.
-4. **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
+4. **Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
 
 **Ensure the label exists** before relabeling:
 
 ```bash
-gh label list --search "yunxing:solution"
+gh label list --search "tunan:solution"
 ```
 
 If absent:
 
 ```bash
-gh label create "yunxing:solution" --color 1f883d --description "yunxing solution"
+gh label create "tunan:solution" --color 1f883d --description "tunan solution"
 ```
 
 **Resolve the feature issue `#N`.** The solution comment always lives on the feature issue the solved problem belongs to:
 
-- **Bound** — the solved problem traces back to a `yunxing:req`/`yunxing:plan` feature issue (an explicit `#<N>`/URL input, or the req/plan the work came from). That issue **is** the feature issue.
+- **Bound** — the solved problem traces back to a `tunan:req`/`tunan:plan` feature issue (an explicit `#<N>`/URL input, or the req/plan the work came from). That issue **is** the feature issue.
 - **Standalone** (no upstream feature issue) — create the host feature issue first, then comment on it:
 
   ```bash
-  gh issue create --title "[req] <topic>" --label "yunxing:req" --body-file <req-stub-file>
+  gh issue create --title "[req] <topic>" --label "tunan:req" --body-file <req-stub-file>
   ```
 
   The body is a short requirement stub distilled from the problem. This preserves "one feature = one issue": there is never a solution comment without a host issue.
 
-**Write or update the solution comment** (per `references/comment-chain-storage.md` — find the existing solution comment id, PATCH it in place if present, else create and add the label). The comment body's first line is the marker `<!-- yunxing:solution -->`, then the ```yaml block (from the resolution template's frontmatter, including `source_issue: #<N>`) followed by the template's markdown sections.
+**Write or update the solution comment** (per `references/comment-chain-storage.md` — find the existing solution comment id, PATCH it in place if present, else create and add the label). The comment body's first line is the marker `<!-- tunan:solution -->`, then the ```yaml block (from the resolution template's frontmatter, including `source_issue: #<N>`) followed by the template's markdown sections.
 
 ```bash
-gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:solution -->")) | .id'
+gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:solution -->")) | .id'
 ```
 
 - **None found** → create the comment and add the stage label:
@@ -90,7 +90,7 @@ gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | start
   gh issue comment <N> --body-file <tmpfile>
   ```
   ```bash
-  gh issue edit <N> --add-label "yunxing:solution"
+  gh issue edit <N> --add-label "tunan:solution"
   ```
 
 - **Exists** → update it in place by id (do not append a second comment):
@@ -149,7 +149,7 @@ If the user says yes, invoke `sessions` in Phase 1 (see step 4). If no, skip it.
 ### Full Mode
 
 <critical_requirement>
-**The primary deliverable is ONE artifact — the final `yunxing:solution` comment on the feature issue.**
+**The primary deliverable is ONE artifact — the final `tunan:solution` comment on the feature issue.**
 
 Phase 1 subagents return TEXT DATA to the orchestrator. They must NOT use Write, Edit, create files, or create/edit issues or comments. Only the orchestrator writes or PATCHes the solution comment (and creates the host feature issue when standalone). Beyond the Phase 2 solution comment, its other writes are local maintenance side effects — not additional deliverables, and creating one when absent is expected, not a violation of this rule:
 - **`CONCEPTS.md`** — create or update in Phase 2.4 (Vocabulary Capture) when a qualifying domain term surfaces.
@@ -226,8 +226,8 @@ Launch research subagents. Each returns text data to the orchestrator.
    - **Examples**: Concrete before/after or usage examples showing the practice in action
 
 #### 3. **Related Docs Finder**
-   - **Same feature issue first:** if the feature issue `#N` is known, check whether it already carries a solution comment (`gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:solution -->")) | .body'`). An existing solution comment on the same feature is the highest-overlap candidate — it is updated in place rather than duplicated.
-   - **Cross-feature by label:** searches features that carry a solution for related learnings (`gh issue list --label "yunxing:solution" --search "<terms>"`), then reads each candidate's solution comment via the `gh api ... /comments` find recipe above
+   - **Same feature issue first:** if the feature issue `#N` is known, check whether it already carries a solution comment (`gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:solution -->")) | .body'`). An existing solution comment on the same feature is the highest-overlap candidate — it is updated in place rather than duplicated.
+   - **Cross-feature by label:** searches features that carry a solution for related learnings (`gh issue list --label "tunan:solution" --search "<terms>"`), then reads each candidate's solution comment via the `gh api ... /comments` find recipe above
    - Identifies cross-references and links (by `#<N>` feature-issue references)
    - Finds related GitHub issues
    - Flags any related learning issue that may now be stale, contradicted, or overly broad
@@ -240,9 +240,9 @@ Launch research subagents. Each returns text data to the orchestrator.
    **Search strategy (issue-list filtering for efficiency):**
 
    1. Extract keywords from the problem context: module names, technical terms, error messages, component types
-   2. List candidate feature issues carrying a solution with `gh issue list --label "yunxing:solution" --search "<keywords>" --state all --json number,title,url --limit 25`. Run a few keyword variants if needed
+   2. List candidate feature issues carrying a solution with `gh issue list --label "tunan:solution" --search "<keywords>" --state all --json number,title,url --limit 25`. Run a few keyword variants if needed
    3. If the list returns >25 candidates, re-run with more specific keywords. If <3, broaden the keywords
-   4. Read only the frontmatter ```yaml block of each candidate's solution comment (`gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:solution -->")) | .body'` then inspect the top fence after the marker line) to score relevance
+   4. Read only the frontmatter ```yaml block of each candidate's solution comment (`gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:solution -->")) | .body'` then inspect the top fence after the marker line) to score relevance
    5. Fully read only strong/moderate matches
    6. Return distilled links (`#<N>` feature-issue refs / URLs) and relationships, not raw comment bodies
 
@@ -254,7 +254,7 @@ Launch research subagents. Each returns text data to the orchestrator.
 
 #### 4. **Session History via `sessions`** (synchronous skill call, after launching the parallel block — only if the user opted in)
    - **Skip entirely** if the user declined session history in the follow-up question, if running in lightweight mode, or if running in headless mode.
-   - Invoke the `sessions` skill via the platform's skill-invocation primitive (`Skill` in Claude Code, `Skill` in Codex, the equivalent on Gemini/Pi). Pass the dispatch payload below as the skill argument string. `sessions` runs in main context — it owns discovery, branch/keyword filtering, scan-window selection, the deep-dive cap, per-session extraction to a `mktemp` scratch dir, and dispatch of the synthesis-only `yunxing:session-historian` subagent. The compound orchestrator only needs to pass the topic and time window and read back the findings text.
+   - Invoke the `sessions` skill via the platform's skill-invocation primitive (`Skill` in Claude Code, `Skill` in Codex, the equivalent on Gemini/Pi). Pass the dispatch payload below as the skill argument string. `sessions` runs in main context — it owns discovery, branch/keyword filtering, scan-window selection, the deep-dive cap, per-session extraction to a `mktemp` scratch dir, and dispatch of the synthesis-only `tunan:session-historian` subagent. The compound orchestrator only needs to pass the topic and time window and read back the findings text.
 
    **Dispatch payload — keep tight.** A long, keyword-rich payload licenses sessions to keep widening. Use this shape:
 
@@ -302,10 +302,10 @@ The orchestrating agent (main conversation) performs these steps:
    - Use cross-session patterns to enrich the **Prevention** or **Why This Matters** sections
    - Tag session-sourced content with "(session history)" so its origin is clear to future readers
    - If findings are thin or "no relevant prior sessions," proceed without session context
-4. Assemble the complete comment body from the collected pieces: the marker line `<!-- yunxing:solution -->` as the first line, then a fenced ```yaml block (the frontmatter, including `source_issue: #<N>`), then the markdown sections — reading `assets/resolution-template.md` for the structure of new learnings. Write the body to a temp file.
+4. Assemble the complete comment body from the collected pieces: the marker line `<!-- tunan:solution -->` as the first line, then a fenced ```yaml block (the frontmatter, including `source_issue: #<N>`), then the markdown sections — reading `assets/resolution-template.md` for the structure of new learnings. Write the body to a temp file.
 5. Validate the YAML block against `references/schema.yaml`, including the YAML-safety quoting rule for array items (see `references/yaml-schema.md` > YAML Safety Rules)
-6. Run the GH preflight (see "Storage: yunxing:solution comments on the feature issue") and ensure the `yunxing:solution` label exists
-7. Resolve the feature issue `#N` (bound, or standalone-create per the Storage section), then write or update the solution comment per `references/comment-chain-storage.md`: for a new learning, `gh issue comment <N> --body-file <tmpfile>` then `gh issue edit <N> --add-label "yunxing:solution"`; for a high-overlap update, find the existing comment id and `gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>`
+6. Run the GH preflight (see "Storage: tunan:solution comments on the feature issue") and ensure the `tunan:solution` label exists
+7. Resolve the feature issue `#N` (bound, or standalone-create per the Storage section), then write or update the solution comment per `references/comment-chain-storage.md`: for a new learning, `gh issue comment <N> --body-file <tmpfile>` then `gh issue edit <N> --add-label "tunan:solution"`; for a high-overlap update, find the existing comment id and `gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>`
 8. **Run the parser-safety validator on the body file** — `python3 scripts/validate-frontmatter.py <body-file>` (macOS/Linux) or `python scripts/validate-frontmatter.py <body-file>` (Windows). It skips the leading marker line, extracts the top ```yaml block, and catches silent-corruption parser-safety issues the prose rules miss: unquoted ` #` in scalar values (silent comment truncation) and unquoted `: ` in scalar values (silent mapping confusion). Exit 0 means parser-safe; exit 1 means stderr names the offending field(s) — quote the value(s), rebuild the body, and re-run until exit 0 **before** writing/PATCHing the comment. Do not declare success while validation fails. The script does not enforce schema rules and does not flag YAML reserved-indicator characters (those produce loud parser errors downstream rather than silent corruption — out of scope). Uses Python 3 stdlib only (no PyYAML or other deps).
 
 When creating a new learning, preserve the section order from `assets/resolution-template.md` unless the user explicitly asks for a different structure.
@@ -369,10 +369,10 @@ When invoking or recommending `compound-refresh`, be explicit about the argument
 
 Examples:
 
-- `/yunxing:compound-refresh plugin-versioning-requirements`
-- `/yunxing:compound-refresh payments`
-- `/yunxing:compound-refresh performance-issues`
-- `/yunxing:compound-refresh critical-patterns`
+- `/tunan:compound-refresh plugin-versioning-requirements`
+- `/tunan:compound-refresh payments`
+- `/tunan:compound-refresh performance-issues`
+- `/tunan:compound-refresh critical-patterns`
 
 A single scope hint may still expand to multiple related docs when the change is cross-cutting within one domain, category, or pattern area.
 
@@ -382,15 +382,15 @@ Always capture the new learning first. Refresh is a targeted maintenance follow-
 
 ### Discoverability Check
 
-After the learning is written and the refresh decision is made, check whether the project's instruction files would lead an agent to discover and search the project's `yunxing:solution` learnings before starting work in a documented area. Learnings are comments (first line `<!-- yunxing:solution -->`) on feature issues that carry the `yunxing:solution` label, so the label list still indexes every feature that has one. This runs every time — the knowledge store only compounds value when agents can find it.
+After the learning is written and the refresh decision is made, check whether the project's instruction files would lead an agent to discover and search the project's `tunan:solution` learnings before starting work in a documented area. Learnings are comments (first line `<!-- tunan:solution -->`) on feature issues that carry the `tunan:solution` label, so the label list still indexes every feature that has one. This runs every time — the knowledge store only compounds value when agents can find it.
 
 1. Identify which root-level instruction files exist (AGENTS.md, CLAUDE.md, or both). Read the file(s) and determine which holds the substantive content — one file may just be a shim that `@`-includes the other (e.g., `CLAUDE.md` containing only `@AGENTS.md`, or vice versa). The substantive file is the assessment and edit target; ignore shims. If neither file exists, skip this check entirely.
 2. Assess whether an agent reading the instruction files would learn three things:
-   - That a searchable knowledge store of documented solutions exists as `yunxing:solution` comments on feature issues labeled `yunxing:solution`
+   - That a searchable knowledge store of documented solutions exists as `tunan:solution` comments on feature issues labeled `tunan:solution`
    - Enough about its structure to search effectively (the label finds the feature issues; each carries a solution comment with a YAML block holding fields like `category`, `module`, `tags`, `problem_type`)
    - When to search it (before implementing features, debugging issues, or making decisions in documented areas — learnings may cover bugs, best practices, workflow patterns, or other institutional knowledge)
 
-   This is a semantic assessment, not a string match. The information could be a line in an architecture section, a bullet in a gotchas section, spread across multiple places, or expressed without ever using the exact label `yunxing:solution`. Use judgment — if an agent would reasonably discover and use the knowledge store after reading the file, the check passes.
+   This is a semantic assessment, not a string match. The information could be a line in an architecture section, a bullet in a gotchas section, spread across multiple places, or expressed without ever using the exact label `tunan:solution`. Use judgment — if an agent would reasonably discover and use the knowledge store after reading the file, the check passes.
 
 3. If the spirit is already met, no action needed — move on.
 4. If not:
@@ -403,18 +403,18 @@ After the learning is written and the refresh decision is made, check whether th
 
       When there's an existing conventions or architecture section — add a line:
       ```
-      Solved-problem learnings live as `yunxing:solution` comments on feature issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each comment's YAML block carrying category, module, tags, problem_type — find features with `gh issue list --label "yunxing:solution" --search "<terms>"`, then read the issue's `<!-- yunxing:solution -->` comment.
+      Solved-problem learnings live as `tunan:solution` comments on feature issues labeled `tunan:solution` (bugs, best practices, workflow patterns), each comment's YAML block carrying category, module, tags, problem_type — find features with `gh issue list --label "tunan:solution" --search "<terms>"`, then read the issue's `<!-- tunan:solution -->` comment.
       ```
 
       When nothing in the file is a natural fit — a small headed section is appropriate:
       ```
       ## Documented Solutions
 
-      Solved-problem learnings live as `yunxing:solution` comments on feature issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each comment's YAML block carrying `category`, `module`, `tags`, `problem_type`. Find features with `gh issue list --label "yunxing:solution" --search "<terms>"`, then read the issue's `<!-- yunxing:solution -->` comment. Relevant when implementing or debugging in documented areas.
+      Solved-problem learnings live as `tunan:solution` comments on feature issues labeled `tunan:solution` (bugs, best practices, workflow patterns), each comment's YAML block carrying `category`, `module`, `tags`, `problem_type`. Find features with `gh issue list --label "tunan:solution" --search "<terms>"`, then read the issue's `<!-- tunan:solution -->` comment. Relevant when implementing or debugging in documented areas.
       ```
-   c. In full interactive mode, explain to the user why this matters — agents working in this repo (including fresh sessions, other tools, or collaborators without the plugin) won't know to check the `yunxing:solution` issues unless the instruction file surfaces them. Show the proposed change and where it would go, then use the platform's blocking question tool to get consent before making the edit: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to presenting the proposal in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. In lightweight mode, output a one-liner note and move on. In headless mode, apply the edit directly without prompting and surface it in the terminal report under "Instruction-file edit"
+   c. In full interactive mode, explain to the user why this matters — agents working in this repo (including fresh sessions, other tools, or collaborators without the plugin) won't know to check the `tunan:solution` issues unless the instruction file surfaces them. Show the proposed change and where it would go, then use the platform's blocking question tool to get consent before making the edit: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to presenting the proposal in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. In lightweight mode, output a one-liner note and move on. In headless mode, apply the edit directly without prompting and surface it in the terminal report under "Instruction-file edit"
 
-5. **If `CONCEPTS.md` exists at repo root, run a parallel discoverability check for it.** Assess whether the instruction file would lead an agent to discover the project's shared domain vocabulary. Use the same workflow as the `yunxing:solution` check above: same target file, same edit-placement judgment, same consent-then-edit interaction shape per mode. A line in an existing section is almost always better than a new headed section. Example calibration when nothing else fits:
+5. **If `CONCEPTS.md` exists at repo root, run a parallel discoverability check for it.** Assess whether the instruction file would lead an agent to discover the project's shared domain vocabulary. Use the same workflow as the `tunan:solution` check above: same target file, same edit-placement judgment, same consent-then-edit interaction shape per mode. A line in an existing section is almost always better than a new headed section. Example calibration when nothing else fits:
 
    ```
    CONCEPTS.md  # shared domain vocabulary (entities, named processes, status concepts) — relevant when orienting to the codebase or discussing domain concepts
@@ -432,10 +432,10 @@ After the learning is written and the refresh decision is made, check whether th
 
 Based on problem type, optionally invoke specialized agents to review the documentation:
 
-- **performance_issue** → `yunxing:performance-oracle`
-- **security_issue** → `yunxing:security-sentinel`
-- **database_issue** → `yunxing:data-integrity-guardian`
-- Any code-heavy issue → always run `yunxing:code-simplicity-reviewer` for minimal, clear examples. Structural concerns in the diff are already covered when the same work goes through `/yunxing:code-review` (maintainability persona).
+- **performance_issue** → `tunan:performance-oracle`
+- **security_issue** → `tunan:security-sentinel`
+- **database_issue** → `tunan:data-integrity-guardian`
+- Any code-heavy issue → always run `tunan:code-simplicity-reviewer` for minimal, clear examples. Structural concerns in the diff are already covered when the same work goes through `/tunan:code-review` (maintainability persona).
 
 </parallel_tasks>
 
@@ -455,8 +455,8 @@ The orchestrator (main conversation) performs ALL of the following in one sequen
 
 1. **Extract from conversation**: Identify the problem and solution from conversation history. Also scan the "user's auto-memory" block injected into your system prompt, if present (Claude Code only) -- use any relevant notes as supplementary context alongside conversation history. Tag any memory-sourced content incorporated into the final learning with "(auto memory [claude])"
 2. **Classify**: Read `references/schema.yaml` and `references/yaml-schema.md`, then determine track (bug vs knowledge), category, and title slug
-3. **Write the solution comment**: Run the GH preflight (see "Storage: yunxing:solution comments on the feature issue"), ensure the `yunxing:solution` label exists, resolve the feature issue `#N` (bound, or standalone-create per the Storage section), build the comment body using the appropriate track template from `assets/resolution-template.md`, then write it per `references/comment-chain-storage.md` (`gh issue comment <N> --body-file <tmpfile>` + `gh issue edit <N> --add-label "yunxing:solution"`, or PATCH an existing solution comment in place). The body has:
-   - The marker line `<!-- yunxing:solution -->` as its first line, then a fenced ```yaml block with track-appropriate fields (including `source_issue: #<N>`), applying the YAML-safety quoting rule for array items (see `references/yaml-schema.md` > YAML Safety Rules)
+3. **Write the solution comment**: Run the GH preflight (see "Storage: tunan:solution comments on the feature issue"), ensure the `tunan:solution` label exists, resolve the feature issue `#N` (bound, or standalone-create per the Storage section), build the comment body using the appropriate track template from `assets/resolution-template.md`, then write it per `references/comment-chain-storage.md` (`gh issue comment <N> --body-file <tmpfile>` + `gh issue edit <N> --add-label "tunan:solution"`, or PATCH an existing solution comment in place). The body has:
+   - The marker line `<!-- tunan:solution -->` as its first line, then a fenced ```yaml block with track-appropriate fields (including `source_issue: #<N>`), applying the YAML-safety quoting rule for array items (see `references/yaml-schema.md` > YAML Safety Rules)
    - Bug track: Problem, root cause, solution with key code snippets, one prevention tip
    - Knowledge track: Context, guidance with key examples, one applicability note
 4. **Vocabulary capture (update-only)**: if `CONCEPTS.md` exists at repo root, read `references/concepts-vocabulary.md`, then scan the new learning and the conversation for qualifying terms and add/refine entries silently (same criteria as Phase 2.4). Do **not** bootstrap or seed in lightweight mode — if `CONCEPTS.md` does not exist, defer creation to a Full run, which owns seeding. Record the outcome in the output (e.g., "Vocabulary: 1 entry refined" or "scanned, no qualifying terms"). If you refined `CONCEPTS.md` and a quick read of `AGENTS.md`/`CLAUDE.md` shows it isn't surfaced there, add the discoverability tip to the output below — lightweight **tips**, it does not edit instruction files (a Full run owns that edit).
@@ -470,7 +470,7 @@ Solution comment written on feature issue:
 - #<N> <feature title>  (<comment url>)
 
 [If discoverability check found instruction files don't surface the knowledge store:]
-Tip: Your AGENTS.md/CLAUDE.md doesn't surface the yunxing:solution issues to
+Tip: Your AGENTS.md/CLAUDE.md doesn't surface the tunan:solution issues to
 agents — a brief mention helps all agents discover these learnings.
 
 [If CONCEPTS.md was refined this run and isn't surfaced in the instruction files:]
@@ -479,7 +479,7 @@ a one-line mention helps agents find the shared vocabulary.
 
 Note: This was created in lightweight mode. For richer documentation
 (cross-references, detailed prevention strategies, specialized reviews),
-re-run /yunxing:compound in a fresh session.
+re-run /tunan:compound in a fresh session.
 ```
 
 **No subagents are launched. No parallel tasks. The solution comment is the one deliverable** (Phase 2.4's update-only vocabulary capture may also refine an existing `CONCEPTS.md`).
@@ -513,7 +513,7 @@ In lightweight mode, the overlap check is skipped (no Related Docs Finder subage
 
 ## What It Creates
 
-**One `yunxing:solution` comment on the feature issue** — first line `<!-- yunxing:solution -->`, then a fenced ```yaml block followed by the resolution-template markdown sections; the feature issue is labeled `yunxing:solution` for cross-feature discovery. Never a local file.
+**One `tunan:solution` comment on the feature issue** — first line `<!-- tunan:solution -->`, then a fenced ```yaml block followed by the resolution-template markdown sections; the feature issue is labeled `tunan:solution` for cross-feature discovery. Never a local file.
 
 **Category (a `category` slug in the YAML block, auto-detected from problem):**
 
@@ -543,7 +543,7 @@ Knowledge track:
 | ❌ Wrong | ✅ Correct |
 |----------|-----------|
 | Subagents write files or create/edit issues/comments | Subagents return text data; orchestrator writes/PATCHes the one solution comment |
-| Writing a learning to a local file | One `yunxing:solution` comment on the feature issue |
+| Writing a learning to a local file | One `tunan:solution` comment on the feature issue |
 | Creating a standalone `[solution]` issue | A solution comment on the feature issue (host req issue created first when standalone) |
 | Research and assembly run in parallel | Research completes → then assembly runs |
 | Multiple artifacts created during workflow | One solution comment written or updated (plus optional local maintenance writes: a `CONCEPTS.md` create/update from Phase 2.4 and a small instruction-file edit for discoverability) |
@@ -564,7 +564,7 @@ Category: <category>
 Overlap: <none | low | moderate — see #<N> | high — existing comment updated>
 Instruction-file edit: <none needed | applied to <path> | gap noted, not applied>
 CONCEPTS.md: <scanned, no qualifying terms | created with N entries (M seeded from the learning's area) | updated — N added, N refined>
-Refresh recommendation: <none | scope hint for /yunxing:compound-refresh>
+Refresh recommendation: <none | scope hint for /tunan:compound-refresh>
 
 Documentation complete
 ```
@@ -594,8 +594,8 @@ Subagent Results:
   ✓ Session History: 3 prior sessions on same branch, 2 failed approaches surfaced
 
 Specialized Agent Reviews (Auto-Triggered):
-  ✓ yunxing:performance-oracle: Validated query optimization approach
-  ✓ yunxing:code-simplicity-reviewer: Solution is appropriately minimal
+  ✓ tunan:performance-oracle: Validated query optimization approach
+  ✓ tunan:code-simplicity-reviewer: Solution is appropriately minimal
 
 Written:
 - Solution comment on #42 N+1 brief generation (written) — https://github.com/<owner>/<repo>/issues/42#issuecomment-<id>
@@ -632,7 +632,7 @@ Comment updated:
 This creates a compounding knowledge system:
 
 1. First time you solve "N+1 query in brief generation" → Research (30 min)
-2. Document the solution → a `yunxing:solution` comment on the feature issue (5 min)
+2. Document the solution → a `tunan:solution` comment on the feature issue (5 min)
 3. Next time similar issue occurs → Quick lookup (2 min)
 4. Knowledge compounds → Team gets smarter
 
@@ -650,34 +650,34 @@ Build → Test → Find Issue → Research → Improve → Document → Validate
 
 <auto_invoke> <trigger_phrases> - "that worked" - "it's fixed" - "working now" - "problem solved" </trigger_phrases>
 
-<manual_override> Use /yunxing:compound [context] to document immediately without waiting for auto-detection. </manual_override> </auto_invoke>
+<manual_override> Use /tunan:compound [context] to document immediately without waiting for auto-detection. </manual_override> </auto_invoke>
 
 ## Output
 
-Creates (or updates) the final learning as a `yunxing:solution` comment on the feature issue (which is labeled `yunxing:solution`).
+Creates (or updates) the final learning as a `tunan:solution` comment on the feature issue (which is labeled `tunan:solution`).
 
 ## Applicable Specialized Agents
 
 Based on problem type, these agents can enhance documentation:
 
 ### Code Quality & Review
-- **yunxing:code-simplicity-reviewer**: Ensures solution code is minimal and clear
-- **yunxing:pattern-recognition-specialist**: Identifies anti-patterns or repeating issues
+- **tunan:code-simplicity-reviewer**: Ensures solution code is minimal and clear
+- **tunan:pattern-recognition-specialist**: Identifies anti-patterns or repeating issues
 
 ### Specific Domain Experts
-- **yunxing:performance-oracle**: Analyzes performance_issue category solutions
-- **yunxing:security-sentinel**: Reviews security_issue solutions for vulnerabilities
-- **yunxing:data-integrity-guardian**: Reviews database_issue migrations and queries
+- **tunan:performance-oracle**: Analyzes performance_issue category solutions
+- **tunan:security-sentinel**: Reviews security_issue solutions for vulnerabilities
+- **tunan:data-integrity-guardian**: Reviews database_issue migrations and queries
 
 ### Enhancement & Research
-- **yunxing:best-practices-researcher**: Enriches solution with industry best practices
-- **yunxing:framework-docs-researcher**: Links to framework/library documentation references
+- **tunan:best-practices-researcher**: Enriches solution with industry best practices
+- **tunan:framework-docs-researcher**: Links to framework/library documentation references
 
 ### When to Invoke
 - **Auto-triggered** (optional): Agents can run post-documentation for enhancement
-- **Manual trigger**: User can invoke agents after /yunxing:compound completes for deeper review
+- **Manual trigger**: User can invoke agents after /tunan:compound completes for deeper review
 
 ## Related Commands
 
-- `/research [topic]` - Deep investigation (searches `yunxing:solution` issues for patterns)
-- `/yunxing:plan` - Planning workflow (references documented solutions)
+- `/research [topic]` - Deep investigation (searches `tunan:solution` issues for patterns)
+- `/tunan:plan` - Planning workflow (references documented solutions)

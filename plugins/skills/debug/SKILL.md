@@ -150,7 +150,7 @@ Options to offer:
 
 1. **Fix it now** — proceed to Phase 3
 2. **Diagnosis only — I'll take it from here** — skip the fix, proceed to Phase 4's summary, and end the skill
-3. **Rethink the design** (`/yunxing:brainstorm`) — only when the root cause reveals a design problem (see below)
+3. **Rethink the design** (`/tunan:brainstorm`) — only when the root cause reveals a design problem (see below)
 
 Do not assume the user wants action right now. The test recommendations are part of the diagnosis regardless of which path is chosen.
 
@@ -168,7 +168,7 @@ If 2-3 hypotheses are exhausted without confirmation, diagnose why:
 
 | Pattern | Diagnosis | Next move |
 |---------|-----------|-----------|
-| Hypotheses point to different subsystems | Architecture/design problem, not a localized bug | Present findings, suggest `/yunxing:brainstorm` |
+| Hypotheses point to different subsystems | Architecture/design problem, not a localized bug | Present findings, suggest `/tunan:brainstorm` |
 | Evidence contradicts itself | Wrong mental model of the code | Step back, re-read the code path without assumptions |
 | Works locally, fails in CI/prod | Environment problem | Focus on env differences, config, dependencies, timing |
 | Fix works but prediction was wrong | Symptom fix, not root cause | The real cause is still active — keep investigating |
@@ -183,7 +183,7 @@ Present the diagnosis to the user before proceeding.
 
 *Reminder: one change at a time. If you are changing multiple things, stop.*
 
-If the user chose "Diagnosis only" at the end of Phase 2, skip this phase and go straight to Phase 4 for the summary — the skill's job was the diagnosis. If they chose "Rethink the design", control has transferred to `/yunxing:brainstorm` and this skill ends.
+If the user chose "Diagnosis only" at the end of Phase 2, skip this phase and go straight to Phase 4 for the summary — the skill's job was the diagnosis. If they chose "Rethink the design", control has transferred to `/tunan:brainstorm` and this skill ends.
 
 **Workspace and branch check:** Before editing files:
 
@@ -231,7 +231,7 @@ Analyze how this was introduced and what allowed it to survive. Note any systemi
 
 1. **Check for contextual overrides first.** Look at the user's original prompt, loaded memories, and the user/repo `AGENTS.md` or `CLAUDE.md` for preferences that conflict with auto commit-and-PR — for example, "always review before pushing", "open PRs as drafts", or "don't open PRs from skills". A signal must be an explicit instruction or a clearly applicable rule, not a vague tonal cue. If any apply, honor them — switch to the pre-existing-branch menu below, or skip the PR step entirely, whichever matches the user's stated preference.
 2. **Briefly preview what will happen** — what will be committed, on what branch, and that a PR will be opened — then proceed without waiting for confirmation. The preview exists so the user can interrupt; it is not a blocking question. Format and length are your call; keep it scannable.
-3. **Run `/yunxing:commit-push-pr`.** When the entry came from an issue tracker, include the appropriate auto-close syntax for that tracker in the location it requires — most trackers parse PR descriptions (e.g., `Fixes #N` for GitHub, `Closes ABC-123` for Linear), but some only parse commit messages (e.g., Jira Smart Commits) — so the diagnosis and fix flow back to the issue and it closes on merge. Surface the resulting PR URL.
+3. **Run `/tunan:commit-push-pr`.** When the entry came from an issue tracker, include the appropriate auto-close syntax for that tracker in the location it requires — most trackers parse PR descriptions (e.g., `Fixes #N` for GitHub, `Closes ABC-123` for Linear), but some only parse commit messages (e.g., Jira Smart Commits) — so the diagnosis and fix flow back to the issue and it closes on merge. Surface the resulting PR URL.
 
 #### Pre-existing branch (skill did not create it): ask the user
 
@@ -239,16 +239,16 @@ Use the platform's blocking question tool (`AskUserQuestion` in Claude Code, `re
 
 Options:
 
-1. **Commit and open a PR (`/yunxing:commit-push-pr`)** — default for most cases
-2. **Commit the fix (`/yunxing:commit`)** — local commit only
+1. **Commit and open a PR (`/tunan:commit-push-pr`)** — default for most cases
+2. **Commit the fix (`/tunan:commit`)** — local commit only
 3. **Stop here** — user takes it from there
 
 #### After a PR is open (either path): consider offering learning capture
 
-Most bugs are localized mechanical fixes (typo, missed null check, missing import) where the only "lesson" is the bug itself. Compounding those creates low-value `yunxing:solution` comments without adding value. Decide which path applies:
+Most bugs are localized mechanical fixes (typo, missed null check, missing import) where the only "lesson" is the bug itself. Compounding those creates low-value `tunan:solution` comments without adding value. Decide which path applies:
 
 - **Skip silently** when the fix is mechanical and there's no generalizable insight. Default to this when in doubt.
 - **Offer neutrally** when the lesson can be stated in one sentence — e.g., "X.foo() returns T | undefined when Y, not just T", or "the diagnostic path was non-obvious and worth recording." If you cannot articulate the lesson, skip rather than offer.
 - **Lean into the offer** when the pattern appears in 3+ locations OR the root cause reveals a wrong assumption about a shared dependency, framework, or convention that other code is likely to repeat.
 
-When offering, use the blocking question tool described above. If the user accepts, run `/yunxing:compound` — it captures the lesson as a `<!-- yunxing:solution -->` comment on the feature issue (not a local file), adding the `yunxing:solution` label to that issue. Reference the feature issue `#<N>` (whose solution comment holds the lesson) in the PR description so the diagnosis, fix, and lesson are linked.
+When offering, use the blocking question tool described above. If the user accepts, run `/tunan:compound` — it captures the lesson as a `<!-- tunan:solution -->` comment on the feature issue (not a local file), adding the `tunan:solution` label to that issue. Reference the feature issue `#<N>` (whose solution comment holds the lesson) in the PR description so the diagnosis, fix, and lesson are linked.

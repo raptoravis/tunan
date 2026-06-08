@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-list-plugin-releases.py — Fetch yunxing plugin releases from GitHub.
+list-plugin-releases.py — Fetch tunan plugin releases from GitHub.
 
 Output: a single JSON object on stdout. Always exits 0; failures are encoded
 in the contract, never raised.
@@ -32,8 +32,8 @@ import urllib.request
 from datetime import datetime, timezone
 
 OWNER = "raptoravis"
-REPO = "yunxing"
-TAG_PREFIX = "yunxing-v"
+REPO = "tunan"
+TAG_PREFIX = "tunan-v"
 DEFAULT_API_BASE = "https://api.github.com"
 GH_TIMEOUT_SECS = 10
 ANON_TIMEOUT_SECS = 10
@@ -160,7 +160,7 @@ def attempt_anon(limit, api_base):
         url,
         headers={
             "Accept": "application/vnd.github+json",
-            "User-Agent": "yunxing-release-notes-skill",
+            "User-Agent": "tunan-release-notes-skill",
         },
     )
     try:
@@ -197,7 +197,7 @@ def emit(obj):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Fetch yunxing plugin releases from GitHub."
+        description="Fetch tunan plugin releases from GitHub."
     )
     parser.add_argument(
         "--limit",

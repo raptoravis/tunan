@@ -1,6 +1,6 @@
 # Extensive analysis path
 
-Use this path when the input is a longer recording (over ~60 seconds), contains multiple issues, requirements, or workflow walkthroughs, or the user explicitly wants requirements material. The goal is durable requirements material — captured as a `yunxing:req` GitHub issue — that feeds `brainstorm`. The analyzer's Compound Engineering scaffolds are transient working material read from a temp dir, not committed artifacts.
+Use this path when the input is a longer recording (over ~60 seconds), contains multiple issues, requirements, or workflow walkthroughs, or the user explicitly wants requirements material. The goal is durable requirements material — captured as a `tunan:req` GitHub issue — that feeds `brainstorm`. The analyzer's Compound Engineering scaffolds are transient working material read from a temp dir, not committed artifacts.
 
 Run the GH preflight from SKILL.md before any issue read/write; never fall back to a local file.
 
@@ -12,7 +12,7 @@ Run the GH preflight from SKILL.md before any issue read/write; never fall back 
    python scripts/analyze_riffrec_zip.py /path/to/input --output-dir "$(mktemp -d -t riffrec-XXXXXX)"
    ```
 
-   Capture the printed output directory; later steps read the scaffold markdown and media from it. The durable requirements output does NOT live there — it becomes a `yunxing:req` issue (step 9).
+   Capture the printed output directory; later steps read the scaffold markdown and media from it. The durable requirements output does NOT live there — it becomes a `tunan:req` issue (step 9).
 
 2. Read the generated `analysis.md`, `problem-analysis.md`, `review-prompt.md`, and `requirements-kickoff.md`.
 
@@ -39,13 +39,13 @@ Run the GH preflight from SKILL.md before any issue read/write; never fall back 
 
 8. Add source mapping to the brainstorm material as suspected implementation surfaces, not as proven root cause unless the code clearly proves it. Include confidence levels and short evidence notes explaining why each file or component is relevant.
 
-9. Create the durable `yunxing:req` issue, then continue into brainstorm. Once the temp `analysis.md`, `problem-analysis.md`, `source-materials.md`, and `requirements-kickoff.md` scaffolds exist, synthesize the requirements material (the `requirements-kickoff.md` content plus the categorized problem analysis) into a markdown issue body written to a temp file, then create the issue:
+9. Create the durable `tunan:req` issue, then continue into brainstorm. Once the temp `analysis.md`, `problem-analysis.md`, `source-materials.md`, and `requirements-kickoff.md` scaffolds exist, synthesize the requirements material (the `requirements-kickoff.md` content plus the categorized problem analysis) into a markdown issue body written to a temp file, then create the issue:
 
    ```bash
-   gh issue create --title "[req] <short feedback summary>" --label "yunxing:req" --body-file <body-file>
+   gh issue create --title "[req] <short feedback summary>" --label "tunan:req" --body-file <body-file>
    ```
 
-   Capture the resulting issue number/URL. Say "Analysis complete. Ready to brainstorm the findings." Then immediately load the `brainstorm` skill, passing the `yunxing:req` issue reference (`#<N>` or its URL) as the resume/seed — not a file path. `brainstorm` updates that same issue in place rather than creating a duplicate. Skip the issue creation and handoff only when the user explicitly asked to extract or analyze artifacts without producing requirements.
+   Capture the resulting issue number/URL. Say "Analysis complete. Ready to brainstorm the findings." Then immediately load the `brainstorm` skill, passing the `tunan:req` issue reference (`#<N>` or its URL) as the resume/seed — not a file path. `brainstorm` updates that same issue in place rather than creating a duplicate. Skip the issue creation and handoff only when the user explicitly asked to extract or analyze artifacts without producing requirements.
 
 10. In brainstorm, first ask the user to confirm the captured requirements: "Did this capture the requirements correctly, and what is missing, wrong, or grouped badly?" Do not move to planning until brainstorm has confirmed or corrected the requirements.
 
@@ -56,10 +56,10 @@ Do not end the workflow after extraction in normal use. The intended sequence is
 1. Run the analyzer (to a temp output dir).
 2. Read `source-materials.md` so brainstorm has direct links to the source feedback, transcript, frames, and analysis scaffolds.
 3. Inspect or refine `problem-analysis.md` when the evidence needs human-visible interpretation.
-4. Create the `yunxing:req` issue from the synthesized requirements material (step 9 above).
-5. Load the `brainstorm` skill, passing the `yunxing:req` issue reference (`#<N>` or URL).
+4. Create the `tunan:req` issue from the synthesized requirements material (step 9 above).
+5. Load the `brainstorm` skill, passing the `tunan:req` issue reference (`#<N>` or URL).
 6. Ask the user to confirm, correct, or regroup the captured requirements.
-7. Let `brainstorm` refine that same `yunxing:req` issue into the finished requirement — it updates the issue body in place, it does not write a local file.
+7. Let `brainstorm` refine that same `tunan:req` issue into the finished requirement — it updates the issue body in place, it does not write a local file.
 
 Only stop after step 1 or 2 when the user asks specifically for raw artifacts, transcript, screenshots, or analysis without brainstorming.
 

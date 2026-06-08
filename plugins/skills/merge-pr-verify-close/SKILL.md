@@ -6,9 +6,9 @@ argument-hint: "[<PR>] [--issue=<N>] [--base=<branch>] [--keep-branch] [--no-ver
 
 # merge-pr-verify-close — merge → verify → close
 
-> 运行环境入口约定：本仓库的 `.claude/skills` 以 Claude Code 为源，示例默认写 `/yunxing:*`。若同一 skill 在 Codex 中运行，所有面向 sponsor 的可复制入口在输出前改写为 `$yunxing:*`；Claude Code 中保持 `/yunxing:*`。
+> 运行环境入口约定：本仓库的 `.claude/skills` 以 Claude Code 为源，示例默认写 `/tunan:*`。若同一 skill 在 Codex 中运行，所有面向 sponsor 的可复制入口在输出前改写为 `$tunan:*`；Claude Code 中保持 `/tunan:*`。
 
-> **何时触发**：用户说 "merge and verify" / "合并并验收" / "merge then close issue" / "/yunxing:merge-pr-verify-close"。
+> **何时触发**：用户说 "merge and verify" / "合并并验收" / "merge then close issue" / "/tunan:merge-pr-verify-close"。
 
 This skill closes the tail end of a feature: it merges an already-reviewed, CI-green PR, then **re-verifies on the merged base branch** before closing the feature issue. The feature issue is closed **only when post-merge verification passes** — a red verification leaves the issue open and the failure recorded, never silently closed.
 
@@ -17,7 +17,7 @@ This skill closes the tail end of a feature: it merges an already-reviewed, CI-g
 ## 调用语法
 
 ```
-/yunxing:merge-pr-verify-close [<PR>] [开关]
+/tunan:merge-pr-verify-close [<PR>] [开关]
 ```
 
 - `<PR>` — PR number or URL. Omit to use the current branch's open PR.

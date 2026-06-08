@@ -48,7 +48,7 @@ This file contains the shipping workflow (Phase 3-4). Load it only when all Phas
 
 4. **Residual Work Gate** (REQUIRED when Tier 2 ran)
 
-   After Tier 2 code review and review-findings followup, inspect the **Actionable Findings** summary (or read the run artifact at `${TMPDIR:-/tmp}/yunxing/yunxing:code-review/<run-id>/`). If one or more actionable `downstream-resolver` findings were not applied in followup, do not proceed to Final Validation until the user decides how to handle them.
+   After Tier 2 code review and review-findings followup, inspect the **Actionable Findings** summary (or read the run artifact at `${TMPDIR:-/tmp}/tunan/tunan:code-review/<run-id>/`). If one or more actionable `downstream-resolver` findings were not applied in followup, do not proceed to Final Validation until the user decides how to handle them.
 
    Ask the user using the platform's blocking question tool (`AskUserQuestion` in Claude Code with `ToolSearch select:AskUserQuestion` pre-loaded if needed, `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension)). Fall back to numbered options in chat only when the harness genuinely lacks a blocking tool. Never silently skip the gate.
 
@@ -57,16 +57,16 @@ This file contains the shipping workflow (Phase 3-4). Load it only when all Phas
    Options (four or fewer, self-contained labels):
    - `Apply/fix now` — load `references/review-findings-followup.md`, dispatch batched fix subagents for remaining eligible findings, run tests, commit if needed.
    - `File tickets via project tracker` — load `references/tracker-defer.md` in Interactive mode; the agent files tickets in the project's detected tracker (or `gh` fallback, or leaves them in the report if no sink exists) and proceeds to Final Validation.
-   - `Accept and proceed` — record the residual findings verbatim in a durable "Known Residuals" sink before shipping. The durable sink is always a GitHub artifact, never a local file. If a PR will be created or updated in Phase 4, include them in the PR description's "Known Residuals" section (the agent owns this when calling `commit-push-pr`). If the user later chooses the no-PR `commit` path, run the GH preflight (`gh` installed; `gh auth status` exits 0; `gh repo view --json nameWithOwner` resolves — abort and report the gh setup problem rather than writing a local file if any check fails), ensure the `yunxing:review` label exists (`gh label list --search "yunxing:review"`, then if absent `gh label create "yunxing:review" --color 1f883d --description "yunxing review"`), write the accepted findings and source review-run context to an OS temp file (`${TMPDIR:-/tmp}` / `$env:TEMP`), and create the issue titled `[review] <branch-or-head-sha>`:
+   - `Accept and proceed` — record the residual findings verbatim in a durable "Known Residuals" sink before shipping. The durable sink is always a GitHub artifact, never a local file. If a PR will be created or updated in Phase 4, include them in the PR description's "Known Residuals" section (the agent owns this when calling `commit-push-pr`). If the user later chooses the no-PR `commit` path, run the GH preflight (`gh` installed; `gh auth status` exits 0; `gh repo view --json nameWithOwner` resolves — abort and report the gh setup problem rather than writing a local file if any check fails), ensure the `tunan:review` label exists (`gh label list --search "tunan:review"`, then if absent `gh label create "tunan:review" --color 1f883d --description "tunan review"`), write the accepted findings and source review-run context to an OS temp file (`${TMPDIR:-/tmp}` / `$env:TEMP`), and create the issue titled `[review] <branch-or-head-sha>`:
 
      ```bash
-     gh issue create --title "[review] <branch-or-head-sha>" --label "yunxing:review" --body-file <tmpfile>
+     gh issue create --title "[review] <branch-or-head-sha>" --label "tunan:review" --body-file <tmpfile>
      ```
 
-     When the related feature issue (carrying the plan comment) is known, reference it with `#<N>` in the issue body and also post the findings as a comment on that feature issue (`gh issue comment <N> --body-file <tmpfile>`). Mention the resulting `yunxing:review` issue number/URL in the final summary. The user has acknowledged the risk, but the findings must not live only in the transient session.
+     When the related feature issue (carrying the plan comment) is known, reference it with `#<N>` in the issue body and also post the findings as a comment on that feature issue (`gh issue comment <N> --body-file <tmpfile>`). Mention the resulting `tunan:review` issue number/URL in the final summary. The user has acknowledged the risk, but the findings must not live only in the transient session.
    - `Stop — do not ship` — abort the shipping workflow. The user will handle findings manually before re-invoking.
 
-   Skip this gate entirely when the review reported `Actionable findings: none.` (and followup applied everything mechanical) or when only Tier 1 was used. Do not proceed past this gate on an `Accept and proceed` decision until the agent has recorded whether the durable sink is `PR Known Residuals` (when a PR exists) or a `yunxing:review` issue (when no PR). Never a local file.
+   Skip this gate entirely when the review reported `Actionable findings: none.` (and followup applied everything mechanical) or when only Tier 1 was used. Do not proceed past this gate on an `Accept and proceed` decision until the agent has recorded whether the durable sink is `PR Known Residuals` (when a PR exists) or a `tunan:review` issue (when no PR). Never a local file.
 
 5. **Final Validation**
    - All tasks marked completed
@@ -118,7 +118,7 @@ This file contains the shipping workflow (Phase 3-4). Load it only when all Phas
    comment to flip `status: active` to `status: completed`:
 
    ```bash
-   gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .id'
+   gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:plan -->")) | .id'
    ```
    ```bash
    gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>
@@ -150,16 +150,16 @@ This file contains the shipping workflow (Phase 3-4). Load it only when all Phas
 5. **Hand Off to Compound**
 
    On a successful ship, hand off to the `compound` skill to capture
-   the solved problem. Compound writes a `yunxing:solution` **comment** on
-   the **same feature issue** (marker `<!-- yunxing:solution -->`, label
-   `yunxing:solution`) — not a separate issue and not a local file. Pass it
+   the solved problem. Compound writes a `tunan:solution` **comment** on
+   the **same feature issue** (marker `<!-- tunan:solution -->`, label
+   `tunan:solution`) — not a separate issue and not a local file. Pass it
    the **feature issue `#N`** so the solution comment lives alongside the
    requirement body and plan comment:
 
    - Provide `compound` the **feature issue ref** (`#<N>`/URL), the PR link,
      and a short summary of what was built.
-   - `compound` runs its own GH preflight, writes the `yunxing:solution`
-     comment onto the feature issue, and adds the `yunxing:solution` label.
+   - `compound` runs its own GH preflight, writes the `tunan:solution`
+     comment onto the feature issue, and adds the `tunan:solution` label.
    - Record the feature issue number/URL in the final summary.
 
 ## Quality Checklist

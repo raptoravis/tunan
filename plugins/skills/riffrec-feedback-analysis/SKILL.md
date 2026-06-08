@@ -21,7 +21,7 @@ When the input is ambiguous (e.g., a zip arrived without context), inspect the r
 
 Both the quick and extensive paths store their durable output as a GitHub issue, never a local file. Run the GH preflight before any issue read/write — abort with the guidance shown if any check fails; NEVER fall back to a local file (the analyzer's temp scaffolds are working material, not the durable artifact). The Setup path does not touch issues, so it skips this.
 
-1. `gh` installed. If not: tell the user to install it from `https://cli.github.com` or run `/yunxing:setup`.
+1. `gh` installed. If not: tell the user to install it from `https://cli.github.com` or run `/tunan:setup`.
 
 ```bash
 gh --version
@@ -39,24 +39,24 @@ gh auth status
 gh repo view --json nameWithOwner
 ```
 
-4. **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
+4. **Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
 
-**Ensure the `yunxing:req` label exists** (both paths create issues under this label):
+**Ensure the `tunan:req` label exists** (both paths create issues under this label):
 
 ```bash
-gh label list --search "yunxing:req"
+gh label list --search "tunan:req"
 ```
 
 If it is absent, create it:
 
 ```bash
-gh label create "yunxing:req" --color 1f883d --description "yunxing requirements"
+gh label create "tunan:req" --color 1f883d --description "tunan requirements"
 ```
 
 ## Common rules
 
 - Keep raw recordings, audio chunks, zip contents, session dumps, and extracted screenshots transient and local-only. Extract them to an OS temp dir (`${TMPDIR:-/tmp}` / `$env:TEMP`). Do not commit `raw/` or `frames/` directories.
-- Durable text artifacts (requirements, analysis summaries, problem analyses, bug reports) are stored as **GitHub issues** distinguished by label, never as local files. The extensive path's requirements material becomes a `yunxing:req` issue; the quick path's bug report becomes a GitHub issue. Requirements live in GitHub issues, never local files.
+- Durable text artifacts (requirements, analysis summaries, problem analyses, bug reports) are stored as **GitHub issues** distinguished by label, never as local files. The extensive path's requirements material becomes a `tunan:req` issue; the quick path's bug report becomes a GitHub issue. Requirements live in GitHub issues, never local files.
 - When referencing screenshots or evidence inside an issue body, note their transient temp-dir paths and the original source location so later agents can re-extract from the source recording — the temp media is not committed and may be cleaned up by the OS.
 
 ## Analyzer entrypoint
@@ -67,6 +67,6 @@ All non-setup paths share the same analyzer. Run it to a temp output dir (use `p
 python scripts/analyze_riffrec_zip.py /path/to/input --output-dir "$(mktemp -d -t riffrec-XXXXXX)"
 ```
 
-Accepted inputs: a Riffrec `.zip`, an `.mp4` / `.mov` / `.webm` video, an `.m4a` / `.mp3` / `.wav` audio file, or a meeting-notes `.md`. The analyzer extracts **transient media** (frames, raw, chunk transcripts) plus scaffold markdown. Always point `--output-dir <dir>` at an OS temp dir so nothing pollutes the repo — the durable analysis/requirements output does NOT live in that directory, it goes into a GitHub issue (extensive path → `yunxing:req` issue; quick path → bug-report issue). Treat the analyzer's `.md` scaffolds as working material read from temp and synthesized into the issue body, not as committed artifacts.
+Accepted inputs: a Riffrec `.zip`, an `.mp4` / `.mov` / `.webm` video, an `.m4a` / `.mp3` / `.wav` audio file, or a meeting-notes `.md`. The analyzer extracts **transient media** (frames, raw, chunk transcripts) plus scaffold markdown. Always point `--output-dir <dir>` at an OS temp dir so nothing pollutes the repo — the durable analysis/requirements output does NOT live in that directory, it goes into a GitHub issue (extensive path → `tunan:req` issue; quick path → bug-report issue). Treat the analyzer's `.md` scaffolds as working material read from temp and synthesized into the issue body, not as committed artifacts.
 
 The Compound Engineering output format used by the extensive path is documented in `references/compound-engineering-feedback-format.md`.

@@ -3,24 +3,24 @@ name: slack-research
 description: "Search Slack for interpreted organizational context -- decisions, constraints, and discussion arcs -- and produce a synthesized research digest with cross-cutting analysis. Use when the user says 'search slack for', 'what did we discuss about', 'slack context for', or 'what does the team think about'. Differs from slack:find-discussions, which returns raw message results without synthesis."
 ---
 
-# /yunxing:slack-research
+# /tunan:slack-research
 
 Search Slack for organizational context and receive an interpreted research digest.
 
 ## Usage
 
 ```
-/yunxing:slack-research [topic or question]
-/yunxing:slack-research
+/tunan:slack-research [topic or question]
+/tunan:slack-research
 ```
 
 ## Examples
 
 ```
-/yunxing:slack-research free trial
-/yunxing:slack-research What did we say about free trial recently?
-/yunxing:slack-research free trial in #proj-reverse-trial
-/yunxing:slack-research onboarding flow after:2026-03-01
+/tunan:slack-research free trial
+/tunan:slack-research What did we say about free trial recently?
+/tunan:slack-research free trial in #proj-reverse-trial
+/tunan:slack-research onboarding flow after:2026-03-01
 ```
 
 The input can be a keyword, a natural language question, or include Slack search modifiers like channel hints (`in:#channel`) and date filters (`after:YYYY-MM-DD`). The agent extracts the topic and formulates searches from whatever form the input takes.
@@ -29,7 +29,7 @@ The input can be a keyword, a natural language question, or include Slack search
 
 If no argument is provided, ask what topic to research. Use the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to asking in plain text only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question.
 
-Dispatch `yunxing:slack-researcher` with the user's topic as the task prompt. Omit the `mode` parameter so the user's configured permission settings apply.
+Dispatch `tunan:slack-researcher` with the user's topic as the task prompt. Omit the `mode` parameter so the user's configured permission settings apply.
 
 The agent handles everything from here -- Slack MCP discovery, search execution, thread reads, and synthesis. It returns a digest with:
 

@@ -1,7 +1,7 @@
 ---
 name: work
 description: Execute work efficiently while maintaining quality and finishing features
-argument-hint: "[feature issue ref (#N or URL) carrying a plan comment, or description of work. Blank to auto-pick the latest open yunxing:plan feature issue]"
+argument-hint: "[feature issue ref (#N or URL) carrying a plan comment, or description of work. Blank to auto-pick the latest open tunan:plan feature issue]"
 ---
 
 # Work Execution Command
@@ -10,9 +10,9 @@ Execute work efficiently while maintaining quality and finishing features.
 
 ## Introduction
 
-This command takes a work source — a **feature issue** carrying a plan comment (the `<!-- yunxing:plan -->` marker comment on the feature issue `#N`) or a bare prompt describing the work — and executes it systematically. The focus is on **shipping complete features** by understanding requirements quickly, following existing patterns, and maintaining quality throughout.
+This command takes a work source — a **feature issue** carrying a plan comment (the `<!-- tunan:plan -->` marker comment on the feature issue `#N`) or a bare prompt describing the work — and executes it systematically. The focus is on **shipping complete features** by understanding requirements quickly, following existing patterns, and maintaining quality throughout.
 
-A feature is **one GitHub issue** for its lifetime: the requirement is the issue body, and the plan lands as a **comment** on that same feature issue (marker `<!-- yunxing:plan -->`, label `yunxing:plan`). There are no separate plan or solution issues. The feature issue `#N` is the durable handle passed across the pipeline; on shipping, the hand-off to `compound` adds a `yunxing:solution` comment to the **same** feature issue. Pass and link by feature issue NUMBER/URL and `#<N>` references — never read or write a plan/solution as a local file. Read `references/comment-chain-storage.md` for the model and the exact gh recipes.
+A feature is **one GitHub issue** for its lifetime: the requirement is the issue body, and the plan lands as a **comment** on that same feature issue (marker `<!-- tunan:plan -->`, label `tunan:plan`). There are no separate plan or solution issues. The feature issue `#N` is the durable handle passed across the pipeline; on shipping, the hand-off to `compound` adds a `tunan:solution` comment to the **same** feature issue. Pass and link by feature issue NUMBER/URL and `#<N>` references — never read or write a plan/solution as a local file. Read `references/comment-chain-storage.md` for the model and the exact gh recipes.
 
 ## Interaction Method
 
@@ -44,7 +44,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
 > gh repo view --json nameWithOwner
 > ```
 >
-> **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
+> **Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
 
 1. **Scan the work area**
 
@@ -58,7 +58,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    |-----------|---------|--------|
    | **Trivial** | 1-2 files, no behavioral change (typo, config, rename) | Proceed to Phase 1 step 2 (environment setup), then implement directly — no task list, no execution loop. Apply Test Discovery if the change touches behavior-bearing code |
    | **Small / Medium** | Clear scope, under ~10 files | Build a task list from discovery. Proceed to Phase 1 step 2 |
-   | **Large** | Cross-cutting, architectural decisions, 10+ files, touches auth/payments/migrations | Inform the user this would benefit from `/yunxing:brainstorm` or `/yunxing:plan` to surface edge cases and scope boundaries. Honor their choice. If proceeding, build a task list and continue to Phase 1 step 2 |
+   | **Large** | Cross-cutting, architectural decisions, 10+ files, touches auth/payments/migrations | Inform the user this would benefit from `/tunan:brainstorm` or `/tunan:plan` to surface edge cases and scope boundaries. Honor their choice. If proceeding, build a task list and continue to Phase 1 step 2 |
 
 ---
 
@@ -72,20 +72,20 @@ Determine how to proceed based on what was provided in `<input_document>`.
      gh issue view <N>
      ```
 
-     Then read the plan comment on the same feature issue (the comment whose first line is the `<!-- yunxing:plan -->` marker):
+     Then read the plan comment on the same feature issue (the comment whose first line is the `<!-- tunan:plan -->` marker):
 
      ```bash
-     gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .body'
+     gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:plan -->")) | .body'
      ```
 
-     The plan comment body is markdown and carries the same section names and IDs as before; section-finding works the same way (substring match on section names). Confirm the feature issue carries the `yunxing:plan` label before treating it as the work source.
+     The plan comment body is markdown and carries the same section names and IDs as before; section-finding works the same way (substring match on section names). Confirm the feature issue carries the `tunan:plan` label before treating it as the work source.
 
      **Non-code execution check.** After reading the plan comment, scan its body for the marker `execution: knowledge-work`. If found, this plan is for a **non-code deliverable** (a document, synthesis, or research artifact) — read `references/non-code-execution.md` and follow that carve-out instead of the rest of this workflow. The normal code lifecycle (branch setup, Test Discovery, commits, CI) does not apply.
 
-   - When auto-detecting the latest plan (blank invocation), list open feature issues carrying the `yunxing:plan` label and pick the most recent:
+   - When auto-detecting the latest plan (blank invocation), list open feature issues carrying the `tunan:plan` label and pick the most recent:
 
      ```bash
-     gh issue list --label "yunxing:plan" --state open --json number,title,url,updatedAt
+     gh issue list --label "tunan:plan" --state open --json number,title,url,updatedAt
      ```
    - Treat the plan as a decision artifact, not an execution script
    - If the plan includes sections such as `Implementation Units`, `Work Breakdown`, `Requirements` (or legacy `Requirements Trace`), `Files`, `Test Scenarios`, or `Verification`, use those as the primary source material for execution
@@ -348,7 +348,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    For UI work with Figma designs:
 
    - Implement components following design specs
-   - Use yunxing:figma-design-sync agent iteratively to compare
+   - Use tunan:figma-design-sync agent iteratively to compare
    - Fix visual differences identified
    - Repeat until implementation matches design
 
@@ -417,4 +417,4 @@ Tier 1 harness-native review may still fix inline; Tier 2 always separates revie
 - **Forgetting to track progress** - Update task status as you go or lose track of what's done
 - **80% done syndrome** - Finish the feature, don't move on early
 - **Skipping review without reason** — Use Tier 1 when available; escalate to Tier 2 only on criteria in `shipping-workflow.md`; document when both are skipped
-- **Re-scoping the plan into human-time phases** - The plan's Implementation Units define the scope of execution. Do not estimate human-hours per unit, propose multi-day breakdowns, or ask the user to pick a subset of units for "this session". Agents execute at agent speed, and context-window pressure is addressed by subagent dispatch (Phase 1 Step 4), not by phased sessions. If a plan-file input is genuinely too large for a single execution, say so plainly and suggest the user return to `/yunxing:plan` to reduce scope — don't invent session phases as a workaround. For bare-prompt input, Phase 0's Large routing already handles oversized work
+- **Re-scoping the plan into human-time phases** - The plan's Implementation Units define the scope of execution. Do not estimate human-hours per unit, propose multi-day breakdowns, or ask the user to pick a subset of units for "this session". Agents execute at agent speed, and context-window pressure is addressed by subagent dispatch (Phase 1 Step 4), not by phased sessions. If a plan-file input is genuinely too large for a single execution, say so plainly and suggest the user return to `/tunan:plan` to reduce scope — don't invent session phases as a workaround. For bare-prompt input, Phase 0's Large routing already handles oversized work

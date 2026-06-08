@@ -75,7 +75,7 @@ Committed: `fix(review): cover empty-format branch + tighten export perms` (work
 
 ### Learnings & Past Solutions
 
-- [Known Pattern] `yunxing:solution` comment on #214 -- previous export pagination fix applies to this endpoint
+- [Known Pattern] `tunan:solution` comment on #214 -- previous export pagination fix applies to this endpoint
 
 ### Agent-Native Gaps
 
@@ -139,9 +139,9 @@ This fails because: no pipe-delimited tables, no severity-grouped `###` headers,
 - **Applied section (default mode only)** -- when the review applied fixes (Stage 5c), list them first, before the severity tables, as `# | File | Fix | Reviewer` followed by a one-line validation outcome (e.g. "suite 214 pass, lint clean") and the **commit status** — committed as an isolated review-labeled fix commit (`fix(review): …`, or the repo's nearest convention when `review` isn't an allowed scope) when the working tree was clean before the review, or left uncommitted (for the user's commit) when it was already dirty. A fix spanning multiple files is **one row with one `#`** (e.g. `controller.rb:88 (+test)`) -- never duplicate the number across rows. Flag green-but-unverifiable edits (auth/contract/concurrency) inline in the `Fix` cell, e.g. `(security-posture — verify in diff)`. Applied findings keep their stable `#` and appear only here, not in the severity tables. Omit in `mode:agent` and when nothing was applied
 - **Actionable Findings section** -- include when the actionable queue is non-empty (findings for the caller to handle)
 - **Pre-existing section** -- separate table, no confidence column (these are informational)
-- **Learnings & Past Solutions section** -- results from yunxing:learnings-researcher, flagging relevant solution comments on `yunxing:solution`-labeled feature issues as "Known Pattern" with their `#<N>` issue links
-- **Agent-Native Gaps section** -- results from yunxing:agent-native-reviewer. Omit if no gaps found.
-- **Deployment Notes section** -- key checklist items from yunxing:deployment-verification-agent. Omit if the agent did not run. Schema drift surfaces as `data-migration` findings — no separate section.
+- **Learnings & Past Solutions section** -- results from tunan:learnings-researcher, flagging relevant solution comments on `tunan:solution`-labeled feature issues as "Known Pattern" with their `#<N>` issue links
+- **Agent-Native Gaps section** -- results from tunan:agent-native-reviewer. Omit if no gaps found.
+- **Deployment Notes section** -- key checklist items from tunan:deployment-verification-agent. Omit if the agent did not run. Schema drift surfaces as `data-migration` findings — no separate section.
 - **Coverage section** -- suppressed count, residual risks, testing gaps, failed reviewers
 - **Summary uses blockquotes** for verdict, reasoning, and fix order
 - **Horizontal rule** (`---`) separates findings from verdict
@@ -149,7 +149,7 @@ This fails because: no pipe-delimited tables, no severity-grouped `###` headers,
 
 ## Agent mode (JSON)
 
-When `mode:agent` is active, **do not** emit the markdown table report above. Emit **one parseable JSON object** as the primary response and write the same payload to `review.json` under `${TMPDIR:-/tmp}/yunxing/yunxing:code-review/<run-id>/`.
+When `mode:agent` is active, **do not** emit the markdown table report above. Emit **one parseable JSON object** as the primary response and write the same payload to `review.json` under `${TMPDIR:-/tmp}/tunan/tunan:code-review/<run-id>/`.
 
 The contract is defined in SKILL.md under **`### JSON output format (`mode:agent` only)`**. Minimum fields: `status`, `verdict`, `scope`, `intent`, `reviewers`, `findings`, `actionable_findings`, `artifact_path`, `run_id`.
 

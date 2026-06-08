@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Validate the YAML block of a compound `yunxing:solution` issue body.
+"""Validate the YAML block of a compound `tunan:solution` issue body.
 
-A learning is a GitHub issue labeled `yunxing:solution`. Its body starts with a
+A learning is a GitHub issue labeled `tunan:solution`. Its body starts with a
 fenced ```yaml block holding the frontmatter described in `references/schema.yaml`.
 This script extracts that block and checks it for parser-safety issues.
 
@@ -24,7 +24,7 @@ values without raising.
 Block extraction: the YAML lives in the first fenced block opened by a line
 whose stripped content is ```yaml (or ``` immediately followed by a `key: value`
 line). In the comment-chain storage model a solution comment's first line is the
-marker `<!-- yunxing:solution -->`; a single leading HTML-comment marker line
+marker `<!-- tunan:solution -->`; a single leading HTML-comment marker line
 (and any blank lines) is skipped before the fence is located. For backward
 compatibility the script also accepts a raw `---`/`---` frontmatter pair at the
 very top of the input.
@@ -60,14 +60,14 @@ def extract_yaml_block(text: str, source: str) -> str:
     Accepts two shapes:
       1. A fenced ```yaml (or bare ```) block — the preferred comment/issue-body
          form. A single leading `<!-- ... -->` marker line (the comment-chain
-         storage marker, e.g. `<!-- yunxing:solution -->`) plus surrounding blank
+         storage marker, e.g. `<!-- tunan:solution -->`) plus surrounding blank
          lines is skipped before locating the fence.
       2. A leading `---` / `---` frontmatter pair — backward compatibility.
     """
     lines = text.split("\n")
 
     # Skip a single leading HTML-comment marker line (comment-chain storage:
-    # the solution comment's first line is `<!-- yunxing:solution -->`), along
+    # the solution comment's first line is `<!-- tunan:solution -->`), along
     # with blank lines around it, so the fence/frontmatter that follows is found.
     marker_re = re.compile(r"^\s*<!--.*-->\s*$")
     start = 0

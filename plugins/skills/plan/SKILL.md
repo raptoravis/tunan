@@ -1,36 +1,36 @@
 ---
 name: plan
-description: "Create structured implementation plans stored as plan comments on the feature (yunxing:req) GitHub issue -- software features and bounded refactors that benefit from breakdown. Also deepens existing plan comments with interactive sub-agent review. Use when the user says 'plan this', 'create a plan', 'how should we build', 'break this down', or when a yunxing:req requirement issue is ready for planning. Use 'deepen the plan' or 'deepening pass' for the deepening flow. For exploratory requests, prefer brainstorm first."
-argument-hint: "[optional: feature description, a yunxing:req feature issue ref (#N or URL) to plan or whose plan comment to deepen, or any task to plan]"
+description: "Create structured implementation plans stored as plan comments on the feature (tunan:req) GitHub issue -- software features and bounded refactors that benefit from breakdown. Also deepens existing plan comments with interactive sub-agent review. Use when the user says 'plan this', 'create a plan', 'how should we build', 'break this down', or when a tunan:req requirement issue is ready for planning. Use 'deepen the plan' or 'deepening pass' for the deepening flow. For exploratory requests, prefer brainstorm first."
+argument-hint: "[optional: feature description, a tunan:req feature issue ref (#N or URL) to plan or whose plan comment to deepen, or any task to plan]"
 ---
 
 # Create Technical Plan
 
 **Note: The current year is 2026.** Use this when dating plans and searching for recent documentation.
 
-`brainstorm` defines **WHAT** to build. `plan` defines **HOW** to build it. `work` executes the plan. A prior brainstorm is useful context but never required — `plan` works from any input: a `yunxing:req` requirement issue, a bug report, a feature idea, or a rough description.
+`brainstorm` defines **WHAT** to build. `plan` defines **HOW** to build it. `work` executes the plan. A prior brainstorm is useful context but never required — `plan` works from any input: a `tunan:req` requirement issue, a bug report, a feature idea, or a rough description.
 
-**The plan is stored as a comment on the feature issue (the input `yunxing:req` issue), never a local file.** A feature is one GitHub issue for its lifetime; the plan lands as a comment on it whose first line is the marker `<!-- yunxing:plan -->`, and the feature issue `#N` — not a separate plan number — is handed downstream. There is no local plan file artifact. Read `references/comment-chain-storage.md` for the model and the exact gh recipes.
+**The plan is stored as a comment on the feature issue (the input `tunan:req` issue), never a local file.** A feature is one GitHub issue for its lifetime; the plan lands as a comment on it whose first line is the marker `<!-- tunan:plan -->`, and the feature issue `#N` — not a separate plan number — is handed downstream. There is no local plan file artifact. Read `references/comment-chain-storage.md` for the model and the exact gh recipes.
 
 ## GitHub Storage Preflight
 
 Plans are GitHub issues. Before reading or writing any issue, run this preflight. If any check fails, abort with the stated guidance — never fall back to writing a local file.
 
-1. `gh` installed (else: install from https://cli.github.com or run `/yunxing:setup`).
+1. `gh` installed (else: install from https://cli.github.com or run `/tunan:setup`).
 2. `gh auth status` exits 0 (else: run `gh auth login`; in Claude Code suggest typing `! gh auth login`).
 3. `gh repo view --json nameWithOwner` resolves (else: a GitHub repo is required to store plans).
-4. **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
+4. **Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
 
-Ensure the `yunxing:plan` label exists before adding it to a feature issue:
+Ensure the `tunan:plan` label exists before adding it to a feature issue:
 
 ```bash
-gh label list --search "yunxing:plan"
+gh label list --search "tunan:plan"
 ```
 
 If absent, create it:
 
 ```bash
-gh label create "yunxing:plan" --color 1f883d --description "yunxing plan"
+gh label create "tunan:plan" --color 1f883d --description "tunan plan"
 ```
 
 **When directly invoked, always plan.** Never classify a direct invocation as "not a planning task" and abandon the workflow. If the input is unclear, ask clarifying questions or use the planning bootstrap (Phase 0.4) to establish enough context — but always stay in the planning workflow.
@@ -49,9 +49,9 @@ Ask one question at a time. Prefer a concise single-select choice when natural o
 
 <feature_description> #$ARGUMENTS </feature_description>
 
-**If the feature description above is empty, ask the user:** "What would you like to plan? Describe the task, goal, or project you have in mind, or pass a `yunxing:req` issue ref (`#N` or URL)." Then wait for their response before continuing.
+**If the feature description above is empty, ask the user:** "What would you like to plan? Describe the task, goal, or project you have in mind, or pass a `tunan:req` issue ref (`#N` or URL)." Then wait for their response before continuing.
 
-**Input forms.** The argument may be: a free-text task description; a `yunxing:req` issue ref (`#<N>` or a full issue URL) to plan against; or an existing `yunxing:plan` issue ref to resume/deepen. A brainstorm handoff may pass both a summary and a `yunxing:req` issue ref — use both. Detect an issue ref by the leading `#` or a `github.com/.../issues/<N>` URL shape; everything else is free text.
+**Input forms.** The argument may be: a free-text task description; a `tunan:req` issue ref (`#<N>` or a full issue URL) to plan against; or an existing `tunan:plan` issue ref to resume/deepen. A brainstorm handoff may pass both a summary and a `tunan:req` issue ref — use both. Detect an issue ref by the leading `#` or a `github.com/.../issues/<N>` URL shape; everything else is free text.
 
 If the input is present but unclear or underspecified, do not abandon — ask one or two clarifying questions, or proceed to Phase 0.4's planning bootstrap to establish enough context. The goal is always to help the user plan, never to exit the workflow.
 
@@ -89,7 +89,7 @@ A plan is ready when an implementer can start confidently without needing the pl
 
 #### 0.0 Plan Storage
 
-The plan is always a comment on the feature issue, rendered in markdown with the marker `<!-- yunxing:plan -->` as its first line. There is no output-format choice and no local-file artifact. Run the GitHub Storage Preflight (above) before any issue read or write. Read `references/comment-chain-storage.md` for the comment-chain model and gh recipes, `references/markdown-rendering.md` for the format principles that govern the comment body, and `references/plan-sections.md` for what the plan contains.
+The plan is always a comment on the feature issue, rendered in markdown with the marker `<!-- tunan:plan -->` as its first line. There is no output-format choice and no local-file artifact. Run the GitHub Storage Preflight (above) before any issue read or write. Read `references/comment-chain-storage.md` for the comment-chain model and gh recipes, `references/markdown-rendering.md` for the format principles that govern the comment body, and `references/plan-sections.md` for what the plan contains.
 
 **Token-parsing convention:** conventional-commit prefixes like `feat:`, `fix:`, `chore:` that may appear inside a feature description pass through verbatim as part of the description. A leading `#<N>` or an issue URL is parsed as an issue ref per Feature Description above, not as description text.
 
@@ -100,25 +100,25 @@ If the user passes a feature issue ref (`#<N>` or URL) that already carries a pl
 - Read the plan comment on the feature issue (find it by marker, then read its body):
 
   ```bash
-  gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .body'
+  gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:plan -->")) | .body'
   ```
 
-  Locate by topic when no ref was given — search feature issues that carry a plan comment (they have the `yunxing:plan` label):
+  Locate by topic when no ref was given — search feature issues that carry a plan comment (they have the `tunan:plan` label):
 
   ```bash
-  gh issue list --label "yunxing:plan" --search "<terms>" --json number,title,url
+  gh issue list --label "tunan:plan" --search "<terms>" --json number,title,url
   ```
 
 - Confirm whether to overwrite the existing plan comment in place or write a new plan onto a different feature issue.
 - If updating, revise only the still-relevant sections and PATCH the plan comment in place by id (find its id, then PATCH — see `references/comment-chain-storage.md`). Plans do not carry per-unit progress state — progress is derived from git by `work`, so there is no progress to preserve across edits.
 
-**Deepen intent:** The word "deepen" (or "deepening") in reference to a plan is the primary trigger for the deepening fast path. When the user says "deepen the plan", "deepen my plan", "run a deepening pass", or similar, the target is the **plan comment** on a feature issue, not a requirements-only issue. Use any ref, keyword, or context the user provides to identify the right feature issue (read its plan comment via `gh api .../comments`, or locate the feature issue via `gh issue list --label yunxing:plan --search`). If a ref is provided, verify the feature issue carries the `yunxing:plan` label (i.e., it already has a plan comment). If the match is not obvious, confirm with the user before proceeding.
+**Deepen intent:** The word "deepen" (or "deepening") in reference to a plan is the primary trigger for the deepening fast path. When the user says "deepen the plan", "deepen my plan", "run a deepening pass", or similar, the target is the **plan comment** on a feature issue, not a requirements-only issue. Use any ref, keyword, or context the user provides to identify the right feature issue (read its plan comment via `gh api .../comments`, or locate the feature issue via `gh issue list --label tunan:plan --search`). If a ref is provided, verify the feature issue carries the `tunan:plan` label (i.e., it already has a plan comment). If the match is not obvious, confirm with the user before proceeding.
 
 Words like "strengthen", "confidence", "gaps", and "rigor" are NOT sufficient on their own to trigger deepening. These words appear in normal editing requests ("strengthen that section about the diagram", "there are gaps in the test scenarios") and should not cause a holistic deepening pass. Only treat them as deepening intent when the request clearly targets the plan as a whole and does not name a specific section or content area to change — and even then, prefer to confirm with the user before entering the deepening flow.
 
 Once the plan comment is identified and appears complete (all major sections present, implementation units defined, `status: active` in the comment frontmatter): short-circuit to Phase 5.3 (Confidence Check and Deepening) in **interactive mode**.
 
-A `yunxing:plan` comment is always a software plan; the non-software universal-planning route (Phase 0.1b) is selected by task classification at fresh-invocation time, never by resuming a plan comment.
+A `tunan:plan` comment is always a software plan; the non-software universal-planning route (Phase 0.1b) is selected by task classification at fresh-invocation time, never by resuming a plan comment.
 
 The Phase 5.3 short-circuit avoids re-running the full planning workflow and gives the user control over which findings are integrated.
 
@@ -153,12 +153,12 @@ Otherwise, read `references/universal-planning.md` and follow that workflow inst
 
 #### 0.2 Find Upstream Requirement Issue
 
-If the invocation passed a `yunxing:req` issue ref (`#<N>` or URL) — directly or via a brainstorm handoff — that issue IS the requirement source; skip the search and go to Phase 0.3.
+If the invocation passed a `tunan:req` issue ref (`#<N>` or URL) — directly or via a brainstorm handoff — that issue IS the requirement source; skip the search and go to Phase 0.3.
 
 Otherwise, before asking planning questions, search for an existing requirement issue whose topic matches the feature description:
 
 ```bash
-gh issue list --label "yunxing:req" --search "<terms>" --state open --json number,title,url
+gh issue list --label "tunan:req" --search "<terms>" --state open --json number,title,url
 ```
 
 **Relevance criteria:** A requirement issue is relevant if:
@@ -187,7 +187,7 @@ If a relevant requirement issue exists:
 5. Reference important carried-forward decisions in the plan with `(see requirement: #<reqN>)`
 6. Do not silently omit source content — if the requirement issue discussed it, the plan must address it even if briefly. Before finalizing, scan each section of the requirement issue body to verify nothing was dropped.
 
-If no relevant requirement issue exists, planning may proceed from the user's request directly. There is still no standalone plan issue: Phase 5.2 creates a host feature issue (a `yunxing:req` requirement stub) and writes the plan comment onto it, preserving "one feature = one issue".
+If no relevant requirement issue exists, planning may proceed from the user's request directly. There is still no standalone plan issue: Phase 5.2 creates a host feature issue (a `tunan:req` requirement stub) and writes the plan comment onto it, preserving "one feature = one issue".
 
 #### 0.4 Planning Bootstrap (No Requirement Issue or Unclear Input)
 
@@ -223,9 +223,9 @@ If the bootstrap reveals that a different workflow would serve the user better:
 
   Reading code at another path is fine in principle — that's just file access. The harm to avoid is silent operation on the wrong repo, especially writing the plan comment onto a feature issue in the wrong GitHub repo where it won't be discovered. The announcement requirement makes the target visible; defaulting to the target repo for both investigation and the plan comment respects the user's stated intent (they named that repo); the orthogonal debug menu keeps the skill-choice question clean.
 
-  The accessibility classification is conservative and may under-suggest in monorepos, dependency bugs, or after renames. Users can always invoke `/yunxing:debug` manually.
+  The accessibility classification is conservative and may under-suggest in monorepos, dependency bugs, or after renames. Users can always invoke `/tunan:debug` manually.
 
-  **Headless mode**: skip the debug suggestion menu entirely; default to continuing with `/yunxing:plan` (the user's explicit invocation). There is no synchronous user to resolve a route-out choice, and auto-routing to debug would change the skill mid-flight without authorization.
+  **Headless mode**: skip the debug suggestion menu entirely; default to continuing with `/tunan:plan` (the user's explicit invocation). There is no synchronous user to resolve a route-out choice, and auto-routing to debug would change the skill mid-flight without authorization.
 
 - **Clear task ready to execute** (known root cause, obvious fix, no architectural decisions) — suggest `work` as a faster alternative alongside continuing with planning. The user decides.
 
@@ -288,7 +288,7 @@ Based on your request and our brief discussion, here's the scope I'm proposing t
 **Call outs:** (omit this header when zero forks survived the keep test)
 - [decision-level fork in 1-2 lines: name the choice and optional one-clause trade-off in parens. NO multi-sentence rationale, NO "my default is X" pitch]
 
-Confirm and I'll proceed to research, drawing on this scope. (You can also redirect to /yunxing:brainstorm if this is bigger than you initially thought — I'll stop here and load it for you.)
+Confirm and I'll proceed to research, drawing on this scope. (You can also redirect to /tunan:brainstorm if this is bigger than you initially thought — I'll stop here and load it for you.)
 ```
 
 Wait for user confirmation before continuing to Phase 1.
@@ -318,19 +318,19 @@ Prepare a concise planning context summary (a paragraph or two) to pass as input
 
 Run these agents in parallel:
 
-- Task yunxing:repo-research-analyst(Scope: technology, architecture, patterns. {planning context summary})
-- Task yunxing:learnings-researcher(planning context summary)
+- Task tunan:repo-research-analyst(Scope: technology, architecture, patterns. {planning context summary})
+- Task tunan:learnings-researcher(planning context summary)
   Collect:
 - Technology stack and versions (used in section 1.2 to make sharper external research decisions)
 - Architectural patterns and conventions to follow
 - Implementation patterns, relevant files, modules, and tests
 - AGENTS.md guidance that materially affects the plan, with CLAUDE.md used only as compatibility fallback when present
-- Institutional learnings from the solution comments on feature issues that carry the `yunxing:solution` label (`gh issue list --label yunxing:solution`, then read each one's solution comment)
+- Institutional learnings from the solution comments on feature issues that carry the `tunan:solution` label (`gh issue list --label tunan:solution`, then read each one's solution comment)
 - Product strategy context when `STRATEGY.md` is present — flag any plan decisions that pull away from the active tracks or the stated approach
 
 **Slack context** (opt-in) — never auto-dispatch. Route by condition:
 
-- **Tools available + user asked**: Dispatch `yunxing:slack-researcher` with the planning context summary in parallel with other Phase 1.1 agents. If the origin document has a Slack context section, pass it verbatim so the researcher focuses on gaps. Include findings in consolidation.
+- **Tools available + user asked**: Dispatch `tunan:slack-researcher` with the planning context summary in parallel with other Phase 1.1 agents. If the origin document has a Slack context section, pass it verbatim so the researcher focuses on gaps. Include findings in consolidation.
 - **Tools available + user didn't ask**: Note in output: "Slack tools detected. Ask me to search Slack for organizational context at any point, or include it in your next prompt."
 - **No tools + user asked**: Note in output: "Slack context was requested but no Slack tools are available. Install and authenticate the Slack plugin to enable organizational context search."
 
@@ -373,11 +373,11 @@ Ask the user only if the posture would materially change sequencing or risk and 
 - **Topic risk** — Security, payments, external APIs warrant more caution regardless of user signals.
 - **Uncertainty level** — Is the approach clear or still open-ended?
 
-**Leverage yunxing:repo-research-analyst's technology context:**
+**Leverage tunan:repo-research-analyst's technology context:**
 
-The yunxing:repo-research-analyst output includes a structured Technology & Infrastructure summary. Use it to make sharper external research decisions:
+The tunan:repo-research-analyst output includes a structured Technology & Infrastructure summary. Use it to make sharper external research decisions:
 
-- If specific frameworks and versions were detected (e.g., Rails 7.2, Next.js 14, Go 1.22), pass those exact identifiers to yunxing:framework-docs-researcher so it fetches version-specific documentation
+- If specific frameworks and versions were detected (e.g., Rails 7.2, Next.js 14, Go 1.22), pass those exact identifiers to tunan:framework-docs-researcher so it fetches version-specific documentation
 - If the feature touches a technology layer the scan found well-established in the repo (e.g., existing Sidekiq jobs when planning a new background job), lean toward skipping external research -- local patterns are likely sufficient
 - If the feature touches a technology layer the scan found absent or thin (e.g., no existing proto files when planning a new gRPC service), lean toward external research -- there are no local patterns to follow
 - If the scan detected deployment infrastructure (Docker, K8s, serverless), note it in the planning context passed to downstream agents so they can account for deployment constraints
@@ -409,17 +409,17 @@ Announce the decision and the intent briefly before continuing. Examples:
 
 #### 1.3 External Research (Default)
 
-Unless Stage 1 found an explicit opt-out, dispatch external research by the **intent** classified in Stage 2, using the platform's subagent primitive (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi). For `yunxing:web-researcher`, pass a focus hint plus the planning context summary and do **not** pass codebase content — it operates externally.
+Unless Stage 1 found an explicit opt-out, dispatch external research by the **intent** classified in Stage 2, using the platform's subagent primitive (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi). For `tunan:web-researcher`, pass a focus hint plus the planning context summary and do **not** pass codebase content — it operates externally.
 
 - **Implementation-guidance** — run in parallel:
-  - Task yunxing:best-practices-researcher(planning context summary)
-  - Task yunxing:framework-docs-researcher(planning context summary, with exact frameworks/versions from Phase 1.1 where available)
-- **Landscape / option-discovery** — Task yunxing:web-researcher(focus hint, planning context summary). When the request targets projects on a code host (e.g., "competitors on GitHub"), name the discovery dimensions in the focus hint: project names and URLs, release recency and activity, CLI/UX shape, install path, docs and examples, plugin/extension surfaces, recurring issue themes, and license — treating star counts as a weak signal only.
-- **Mixed** — **sequential, not parallel**: run `yunxing:web-researcher` first to map the landscape and produce a shortlist; then run `yunxing:framework-docs-researcher` and/or `yunxing:best-practices-researcher` against the shortlisted technologies only when their details materially shape the plan.
+  - Task tunan:best-practices-researcher(planning context summary)
+  - Task tunan:framework-docs-researcher(planning context summary, with exact frameworks/versions from Phase 1.1 where available)
+- **Landscape / option-discovery** — Task tunan:web-researcher(focus hint, planning context summary). When the request targets projects on a code host (e.g., "competitors on GitHub"), name the discovery dimensions in the focus hint: project names and URLs, release recency and activity, CLI/UX shape, install path, docs and examples, plugin/extension surfaces, recurring issue themes, and license — treating star counts as a weak signal only.
+- **Mixed** — **sequential, not parallel**: run `tunan:web-researcher` first to map the landscape and produce a shortlist; then run `tunan:framework-docs-researcher` and/or `tunan:best-practices-researcher` against the shortlisted technologies only when their details materially shape the plan.
 
-**Deep-research escalation (default-on when load-bearing).** When the external question is broad, contested, or decision-critical — a landscape/option-discovery or mixed intent where the choice materially shapes a KTD, dependency, or architecture — escalate to a deeper multi-source pass by default rather than a single web-researcher dispatch. If the host provides a dedicated deep-research skill/harness (e.g., a `deep-research` skill), prefer it for this pass; otherwise run a deeper `yunxing:web-researcher` sweep (multiple focused queries, cross-checked sources, explicit source list). Skip the escalation only when the user opted out of external research, or when the research is a narrow implementation-guidance confirmation against a settled local pattern (per Phase 1.2's narrow-scope path).
+**Deep-research escalation (default-on when load-bearing).** When the external question is broad, contested, or decision-critical — a landscape/option-discovery or mixed intent where the choice materially shapes a KTD, dependency, or architecture — escalate to a deeper multi-source pass by default rather than a single web-researcher dispatch. If the host provides a dedicated deep-research skill/harness (e.g., a `deep-research` skill), prefer it for this pass; otherwise run a deeper `tunan:web-researcher` sweep (multiple focused queries, cross-checked sources, explicit source list). Skip the escalation only when the user opted out of external research, or when the research is a narrow implementation-guidance confirmation against a settled local pattern (per Phase 1.2's narrow-scope path).
 
-**Tool-unavailable handling.** `yunxing:web-researcher` self-checks for web tools and stops if they are missing. Never block on this: if it reports research unavailable, or any researcher fails, warn and proceed, and carry the gap into Phase 1.4 so the plan records it honestly — especially when the user explicitly requested external research, where a silent skip would leave the plan looking evidence-based when it is not.
+**Tool-unavailable handling.** `tunan:web-researcher` self-checks for web tools and stops if they are missing. Never block on this: if it reports research unavailable, or any researcher fails, warn and proceed, and carry the gap into Phase 1.4 so the plan records it honestly — especially when the user explicitly requested external research, where a silent skip would leave the plan looking evidence-based when it is not.
 
 #### 1.4 Consolidate Research
 
@@ -454,7 +454,7 @@ This ensures flow analysis (Phase 1.5) runs and the confidence check (Phase 5.3)
 
 For **Standard** or **Deep** plans, or when user flow completeness is still unclear, run:
 
-- Task yunxing:spec-flow-analyzer(planning context summary, research findings)
+- Task tunan:spec-flow-analyzer(planning context summary, research findings)
 
 Use the output to:
 
@@ -485,7 +485,7 @@ Ask the user only when the answer materially affects architecture, scope, sequen
 
 - Draft a clear, searchable topic for the plan, concise (3-5 words) — e.g., "user authentication flow", "checkout race condition".
 - Determine the plan type: `feat`, `fix`, or `refactor`.
-- The feature issue title stays `[req] <topic>` (e.g., `[req] user authentication flow`) — it is not re-prefixed for the plan stage; the plan is a comment on it, and stage progress is read from the `yunxing:plan` label plus the marker comment. The conventional-commit type is carried in the `type:` frontmatter field of the plan comment body (see `references/plan-sections.md`), not in the issue title.
+- The feature issue title stays `[req] <topic>` (e.g., `[req] user authentication flow`) — it is not re-prefixed for the plan stage; the plan is a comment on it, and stage progress is read from the `tunan:plan` label plus the marker comment. The conventional-commit type is carried in the `type:` frontmatter field of the plan comment body (see `references/plan-sections.md`), not in the issue title.
 
 #### 3.2 Stakeholder and Impact Awareness
 
@@ -689,7 +689,7 @@ If the plan originated from a requirements document, re-read that document and v
 
 Surface plan-time call-outs to the user before Phase 5.2 commits the plan to disk — the latest cheap moment to catch plan-time scope errors. The brainstorm already validated WHAT to build; this phase surfaces HOW the plan will execute on the forks that matter.
 
-Fires **only when the plan was sourced from an upstream requirement issue** (Phase 0.2/0.3 bound a `yunxing:req` issue) AND not on Phase 0.1 fast paths (resume normal, deepen-intent). Skip Phase 5.1.5 in solo invocation — solo plans handled their synthesis in Phase 0.7.
+Fires **only when the plan was sourced from an upstream requirement issue** (Phase 0.2/0.3 bound a `tunan:req` issue) AND not on Phase 0.1 fast paths (resume normal, deepen-intent). Skip Phase 5.1.5 in solo invocation — solo plans handled their synthesis in Phase 0.7.
 
 **Read `references/synthesis-summary.md` before composing the scoping synthesis.** It carries the affirmability test, keep-test criteria, detail test, summary shape budgets, granularity rules, anti-patterns, revision-vs-confirmation discipline, doc-body reading rules, doc-shape routing, soft-cut behavior, self-redirect support, the worked PII compression example, and full headless-mode routing — all required for a well-shaped synthesis.
 
@@ -742,22 +742,22 @@ Then continue to Phase 5.2 without a blocking question.
 
 **REQUIRED: Write or update the plan comment on the feature issue before presenting any options.** The plan is a **comment** on the feature issue, never a new issue. Read `references/comment-chain-storage.md` for the model and the exact gh recipes.
 
-Compose the complete plan in markdown using the content from `references/plan-sections.md` and the format principles from `references/markdown-rendering.md`. The artifact's **first line is the marker** `<!-- yunxing:plan -->`; the plan metadata fields (`title`, `type`, `status: active`, `date`, optional `origin`/`deepened`) render as a fenced ```yaml block immediately after the marker, then the sections (see `references/plan-sections.md`). Write this to an OS temp file (bash `${TMPDIR:-/tmp}/yunxing-plan-body.md`, PowerShell `$env:TEMP\yunxing-plan-body.md`).
+Compose the complete plan in markdown using the content from `references/plan-sections.md` and the format principles from `references/markdown-rendering.md`. The artifact's **first line is the marker** `<!-- tunan:plan -->`; the plan metadata fields (`title`, `type`, `status: active`, `date`, optional `origin`/`deepened`) render as a fenced ```yaml block immediately after the marker, then the sections (see `references/plan-sections.md`). Write this to an OS temp file (bash `${TMPDIR:-/tmp}/tunan-plan-body.md`, PowerShell `$env:TEMP\tunan-plan-body.md`).
 
 **Resolve the feature issue `#N`:**
 
-- **Requirement bound** (Phase 0.2/0.3): the `yunxing:req` issue **is** the feature issue. Use its number.
+- **Requirement bound** (Phase 0.2/0.3): the `tunan:req` issue **is** the feature issue. Use its number.
 - **Resume/deepen** (Phase 0.1): use the feature issue the existing plan comment lives on.
 - **Standalone** (no upstream requirement): create the feature issue first — body = a short requirement stub distilled from the request, then write the plan comment onto it:
 
   ```bash
-  gh issue create --title "[req] <topic>" --label "yunxing:req" --body-file <req-stub-file>
+  gh issue create --title "[req] <topic>" --label "tunan:req" --body-file <req-stub-file>
   ```
 
 **Write or update the plan comment** (per `references/comment-chain-storage.md` — find the existing plan comment id; PATCH it in place if present, else create and add the label):
 
 ```bash
-gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .id'
+gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:plan -->")) | .id'
 ```
 
 - **None found** → create the comment and add the stage label:
@@ -766,7 +766,7 @@ gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | start
   gh issue comment <N> --body-file <tmpfile>
   ```
   ```bash
-  gh issue edit <N> --add-label "yunxing:plan"
+  gh issue edit <N> --add-label "tunan:plan"
   ```
 
 - **Exists** (resume/deepen) → update it in place by id:
@@ -844,16 +844,16 @@ After document review and final checks, print a one-line summary of the headless
 
 **Question:** "Plan comment ready on `#<N>`: `<feature issue URL>`. What would you like to do next?"
 
-1. **Start `/yunxing:work`** (recommended) - Begin implementing this plan in the current session
+1. **Start `/tunan:work`** (recommended) - Begin implementing this plan in the current session
 2. **Run deeper doc review** - Walk through the remaining findings interactively (full doc-review walkthrough)
 3. **Open in Proof (web app) — review and comment to iterate with the agent** - Export the plan body to Every's Proof editor, iterate with the agent via comments, then sync edits back to the plan comment.
 4. **Done for now** - Pause; the plan comment is saved and can be resumed later by the feature issue ref
 
 **Routing.** Act on the user's selection — do not just announce it. Elaborate sub-flows (Proof HITL state machine, post-HITL resync) live in `references/plan-handoff.md`.
 
-- **Start `/yunxing:work`** — Invoke the `work` skill via the platform's skill-invocation primitive (`Skill` in Claude Code, `Skill` in Codex, the equivalent on Gemini/Pi), passing the feature issue ref (`FEATURE_ISSUE`, e.g., `#<N>` or its URL) as the skill argument. Do not merely tell the user to type `/yunxing:work` — fire the invocation now so the plan executes in this session.
+- **Start `/tunan:work`** — Invoke the `work` skill via the platform's skill-invocation primitive (`Skill` in Claude Code, `Skill` in Codex, the equivalent on Gemini/Pi), passing the feature issue ref (`FEATURE_ISSUE`, e.g., `#<N>` or its URL) as the skill argument. Do not merely tell the user to type `/tunan:work` — fire the invocation now so the plan executes in this session.
 - **Run deeper doc review** — Re-invoke the `doc-review` skill on the feature issue ref **without** `mode:headless` so the interactive routing question and walkthrough fire. After it returns (and any edits are synced back to the plan comment), re-render this menu with refreshed counts so the user can pick a next-stage action.
-- **Open in Proof (web app) — review and comment to iterate with the agent** — Export the plan comment body to a temp markdown file, load the `proof` skill in HITL-review mode with that file as `source file`, the plan title as `doc title`, identity `ai:yunxing` / `Compound Engineering`, and recommended next step `/yunxing:work`. Then follow the post-HITL resync logic in `references/plan-handoff.md`, which handles the `proof` return statuses, syncs reviewed markdown back to the plan comment (PATCH by id), re-runs `doc-review` after material edits, and falls back gracefully on upload failure.
+- **Open in Proof (web app) — review and comment to iterate with the agent** — Export the plan comment body to a temp markdown file, load the `proof` skill in HITL-review mode with that file as `source file`, the plan title as `doc title`, identity `ai:tunan` / `Compound Engineering`, and recommended next step `/tunan:work`. Then follow the post-HITL resync logic in `references/plan-handoff.md`, which handles the `proof` return statuses, syncs reviewed markdown back to the plan comment (PATCH by id), re-runs `doc-review` after material edits, and falls back gracefully on upload failure.
 - **Done for now** — Display a brief confirmation that the plan comment is saved (show the feature issue URL) and end the turn. Do not start follow-up work without an explicit further user prompt.
 
 If the user types free-form prompts targeting the findings (e.g., "review", "walk through", "deep review"), route as if they picked `Run deeper doc review` — fire the skill rather than looping back to the menu. For other free-text revisions, accept the input and loop back to this menu after applying the revision.

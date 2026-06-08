@@ -2,8 +2,8 @@
 
 This reference describes what makes a great implementation plan. It does NOT
 prescribe how the plan looks on the page — rendering of the plan comment body is
-handled by `markdown-rendering.md`. The plan is stored as a `<!-- yunxing:plan -->`
-marker comment on the feature (`yunxing:req`) GitHub issue; there is no local plan
+handled by `markdown-rendering.md`. The plan is stored as a `<!-- tunan:plan -->`
+marker comment on the feature (`tunan:req`) GitHub issue; there is no local plan
 file. See `comment-chain-storage.md` for the storage model.
 
 ## The outcome
@@ -69,7 +69,7 @@ vs. genuine skip cases:
 
 When skipping the plan comment, the work proceeds directly to `work` or to
 implementation, and any decisions made along the way land in the commit
-message or a `yunxing:solution` learning issue if they're worth carrying
+message or a `tunan:solution` learning issue if they're worth carrying
 forward.
 
 ## Hard floor
@@ -164,7 +164,7 @@ The agent also picks per artifact:
 
 Every plan carries a small set of stable metadata fields that downstream
 tooling depends on. These fields appear as a fenced ```yaml block immediately
-after the `<!-- yunxing:plan -->` marker line at the top of the plan comment
+after the `<!-- tunan:plan -->` marker line at the top of the plan comment
 body. Field names and semantics are stable so consumers
 can locate them by name.
 
@@ -185,7 +185,7 @@ can locate them by name.
 These fields are not required, but when set they have fixed names and
 semantics so downstream tooling can rely on them:
 
-- **`origin`** — the upstream `yunxing:req` requirement issue ref (e.g.,
+- **`origin`** — the upstream `tunan:req` requirement issue ref (e.g.,
   `#142`) the plan was built from. Set when planning from a requirement issue;
   carried for traceability and re-resolved when `plan` re-deepens.
   This mirrors the human-readable `Requirement: #<reqN>` line near the top of
@@ -229,4 +229,4 @@ These apply regardless of rendering format.
 `references/markdown-rendering.md` describes how to render these sections in
 the plan comment body. This reference (`plan-sections.md`) is about WHAT the
 plan contains; the rendering reference is about HOW the markdown body presents
-it. The plan body is always markdown (a `yunxing:plan` GitHub issue).
+it. The plan body is always markdown (a `tunan:plan` GitHub issue).

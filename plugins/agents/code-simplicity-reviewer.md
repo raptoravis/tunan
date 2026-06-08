@@ -34,7 +34,7 @@ When reviewing code, you will:
    - Eliminate extensibility points without clear use cases
    - Question generic solutions for specific problems
    - Remove "just in case" code
-   - Review code only. yunxing pipeline artifacts are GitHub issues, not files in the tree: a feature is one `yunxing:req` issue, and its plan/solution are comments on it (markers `<!-- yunxing:plan -->` / `<!-- yunxing:solution -->`, with the feature issue accruing the matching label). These feature issues and their comments are out of scope for removal recommendations
+   - Review code only. tunan pipeline artifacts are GitHub issues, not files in the tree: a feature is one `tunan:req` issue, and its plan/solution are comments on it (markers `<!-- tunan:plan -->` / `<!-- tunan:solution -->`, with the feature issue accruing the matching label). These feature issues and their comments are out of scope for removal recommendations
 
 6. **Optimize for Readability**:
    - Prefer self-documenting code over comments

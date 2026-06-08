@@ -8,7 +8,7 @@
 
 set -u
 
-version=$(gh api repos/raptoravis/yunxing/contents/plugins/.claude-plugin/plugin.json --jq '.content | @base64d | fromjson | .version' 2>/dev/null)
+version=$(gh api repos/raptoravis/tunan/contents/plugins/.claude-plugin/plugin.json --jq '.content | @base64d | fromjson | .version' 2>/dev/null)
 
 if [ -n "$version" ]; then
   echo "$version"

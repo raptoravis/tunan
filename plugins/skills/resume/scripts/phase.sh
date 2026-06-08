@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# yunxing phase detector — infer a feature's lifecycle phase from its GitHub issue.
+# tunan phase detector — infer a feature's lifecycle phase from its GitHub issue.
 #
 # The feature issue IS the state machine: labels + marker comments + an open PR
 # encode how far the pipeline got. This reads that state so an interrupted run can
 # resume at the right stage instead of re-running lfg from step 1. State lives in
-# GitHub (not a local .yaml), keeping yunxing's "artifacts are issues" invariant.
+# GitHub (not a local .yaml), keeping tunan's "artifacts are issues" invariant.
 #
 # Usage:
 #   phase.sh detect <issue>
@@ -13,10 +13,10 @@
 #   phase=<plan|work|review-ci|done|unknown> next=<skill|none> pr=<url|-> issue=<N>
 #
 # Phase ladder (each later phase implies the earlier evidence is present):
-#   plan       — feature issue exists, no <!-- yunxing:plan --> comment yet  -> run plan
+#   plan       — feature issue exists, no <!-- tunan:plan --> comment yet  -> run plan
 #   work       — plan comment present, no open PR, no solution               -> run work
 #   review-ci  — an open PR references the issue, no solution comment yet     -> resume at code-review / CI watch
-#   done       — <!-- yunxing:solution --> comment present                   -> nothing to resume
+#   done       — <!-- tunan:solution --> comment present                   -> nothing to resume
 #   unknown    — issue not found / gh unavailable                            -> caller decides
 set -o pipefail
 
@@ -46,7 +46,7 @@ has_marker() { # marker
     --jq ".[] | select(.body | startswith(\"$1\")) | .id" 2>/dev/null | grep -q .
 }
 
-if has_marker "<!-- yunxing:solution -->"; then
+if has_marker "<!-- tunan:solution -->"; then
   emit done none -
   err "Feature #$n is complete (solution comment present). Nothing to resume."
   exit 0
@@ -67,7 +67,7 @@ if [ -n "$pr_url" ]; then
   exit 0
 fi
 
-if has_marker "<!-- yunxing:plan -->"; then
+if has_marker "<!-- tunan:plan -->"; then
   emit work work -
   err "Plan comment present on #$n, no PR yet — resume at work (lfg step 2)."
   exit 0

@@ -1,16 +1,16 @@
 ---
 name: align
-description: "AI-initiated alignment protocol that minimizes the sponsor's cognitive load. When any yunxing skill reaches a decision point, the agent raises the question with at least 3 ranked recommendations and pre-selects the best one as the default, so the sponsor accepts the optimal choice with a single tap or one 'accept all'. Use whenever a yunxing skill needs the sponsor to choose between options -- never hand an open-ended question back to the sponsor. Triggers -- /yunxing:align, or indirect invocation from any other yunxing skill at a decision point."
+description: "AI-initiated alignment protocol that minimizes the sponsor's cognitive load. When any tunan skill reaches a decision point, the agent raises the question with at least 3 ranked recommendations and pre-selects the best one as the default, so the sponsor accepts the optimal choice with a single tap or one 'accept all'. Use whenever a tunan skill needs the sponsor to choose between options -- never hand an open-ended question back to the sponsor. Triggers -- /tunan:align, or indirect invocation from any other tunan skill at a decision point."
 ---
 
 # align — AI-initiated alignment with pre-selected defaults
 
-The sponsor decides better by selecting than by composing. The agent does the thinking — frames the question, enumerates the realistic options, ranks them, and pre-selects the best — so the sponsor only has to confirm. Every yunxing skill routes its decision points through this single protocol instead of inventing its own way to ask.
+The sponsor decides better by selecting than by composing. The agent does the thinking — frames the question, enumerates the realistic options, ranks them, and pre-selects the best — so the sponsor only has to confirm. Every tunan skill routes its decision points through this single protocol instead of inventing its own way to ask.
 
 ## When this runs
 
-- **Direct**: the sponsor types `/yunxing:align <topic>`.
-- **Indirect (primary)**: any other yunxing skill hits a decision point, builds the question per this protocol, collects the sponsor's choice, then returns to its own flow.
+- **Direct**: the sponsor types `/tunan:align <topic>`.
+- **Indirect (primary)**: any other tunan skill hits a decision point, builds the question per this protocol, collects the sponsor's choice, then returns to its own flow.
 
 ## Core rule
 
@@ -100,4 +100,4 @@ When the host skill produces an artifact, write each resolved decision into its 
 
 ## Returning
 
-When invoked by another skill: write the resolved decisions back, then return to the calling skill to continue — do not emit a "next steps" section here. When invoked directly via `/yunxing:align`, give a brief confirmation of what was recorded and one suggested next step.
+When invoked by another skill: write the resolved decisions back, then return to the calling skill to continue — do not emit a "next steps" section here. When invoked directly via `/tunan:align`, give a brief confirmation of what was recorded and one suggested next step.

@@ -105,7 +105,7 @@ topic: <topic>
 
 ## Next Steps
 
--> /yunxing:brainstorm to confirm, correct, and regroup the captured requirements before any planning.
+-> /tunan:brainstorm to confirm, correct, and regroup the captured requirements before any planning.
 ```
 
 ## Evidence Rules

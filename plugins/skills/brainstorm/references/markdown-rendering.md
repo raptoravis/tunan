@@ -1,7 +1,7 @@
 # Markdown Rendering
 
 This reference describes how the requirement renders as the markdown
-**body of a `yunxing:req` GitHub issue**. The durable artifact is the issue,
+**body of a `tunan:req` GitHub issue**. The durable artifact is the issue,
 not a local file — there is no `.md`/`.html` file on disk and no exclusive
 output mode anymore.
 
@@ -11,7 +11,7 @@ markdown specifically presents those sections inside the issue body.
 
 ## Hard invariants
 
-These hold for every `yunxing:req` issue body.
+These hold for every `tunan:req` issue body.
 
 - **Metadata as a fenced `yaml` block at the top of the body.** GitHub issues
   have no frontmatter delimiters, so the stable metadata (e.g. `date`,

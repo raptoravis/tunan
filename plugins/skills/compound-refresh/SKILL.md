@@ -1,31 +1,31 @@
 ---
 name: compound-refresh
-description: "Refresh stale yunxing:solution learning comments (stored on feature issues labeled yunxing:solution) by reviewing them against the current codebase, then updating, consolidating, or removing drifted ones. Use when the user asks to refresh my learnings, audit yunxing:solution learnings, clean up stale learnings, or consolidate overlapping learnings, or when compound flags an older learning as superseded. Do not trigger for general refactor, debugging, or code-review work unless the user has explicitly pointed at the yunxing:solution learnings."
+description: "Refresh stale tunan:solution learning comments (stored on feature issues labeled tunan:solution) by reviewing them against the current codebase, then updating, consolidating, or removing drifted ones. Use when the user asks to refresh my learnings, audit tunan:solution learnings, clean up stale learnings, or consolidate overlapping learnings, or when compound flags an older learning as superseded. Do not trigger for general refactor, debugging, or code-review work unless the user has explicitly pointed at the tunan:solution learnings."
 argument-hint: "[optional: scope hint — directory, filename, module, or keyword] [mode:headless] "
 ---
 
 # Compound Refresh
 
-Maintain the quality of the project's `yunxing:solution` learnings over time. This workflow reviews existing learning comments against the current codebase, then refreshes any related learnings that depend on them.
+Maintain the quality of the project's `tunan:solution` learnings over time. This workflow reviews existing learning comments against the current codebase, then refreshes any related learnings that depend on them.
 
-## Storage: yunxing:solution comments on feature issues
+## Storage: tunan:solution comments on feature issues
 
-Learnings live on GitHub, never local files. Each learning is a **comment** on a feature issue — first line `<!-- yunxing:solution -->`, then a fenced ```yaml block (the frontmatter from `references/schema.yaml`) followed by markdown sections. The host feature issue carries the `yunxing:solution` label so `gh issue list --label yunxing:solution` still indexes every feature that has a learning. This skill reads, PATCHes, and deletes those **comments** (and adjusts the host issue's label when its last solution comment goes away) — it never reads or writes any local learning file. Read `references/comment-chain-storage.md` for the comment-chain model and the exact gh recipes.
+Learnings live on GitHub, never local files. Each learning is a **comment** on a feature issue — first line `<!-- tunan:solution -->`, then a fenced ```yaml block (the frontmatter from `references/schema.yaml`) followed by markdown sections. The host feature issue carries the `tunan:solution` label so `gh issue list --label tunan:solution` still indexes every feature that has a learning. This skill reads, PATCHes, and deletes those **comments** (and adjusts the host issue's label when its last solution comment goes away) — it never reads or writes any local learning file. Read `references/comment-chain-storage.md` for the comment-chain model and the exact gh recipes.
 
 **GH preflight — run before any issue read or write.** If any check fails, abort and surface the guidance; never fall back to a local file.
 
-1. `gh` is installed. If not, install from https://cli.github.com or run `/yunxing:setup`.
+1. `gh` is installed. If not, install from https://cli.github.com or run `/tunan:setup`.
 2. `gh auth status` exits 0. If not, run `gh auth login` (in Claude Code, suggest typing `! gh auth login`).
 3. `gh repo view --json nameWithOwner` resolves. If not, a GitHub repo is required.
-4. **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
+4. **Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
 
 **Core gh operations** (the feature issue `#N` carries the label; its solution lives in a comment):
 
 ```bash
 # Find feature issues carrying a learning
-gh issue list --label "yunxing:solution" --state open --json number,title,url,labels
+gh issue list --label "tunan:solution" --state open --json number,title,url,labels
 # Read the solution comment on a feature issue (id + body)
-gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:solution -->")) | {id, body}'
+gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:solution -->")) | {id, body}'
 # Update a solution comment in place by its comment id
 gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>
 # Remove a solution comment entirely
@@ -36,9 +36,9 @@ gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE
 
 - **Keep** — no write (optionally PATCH the comment only if already editing for another reason).
 - **Update** — PATCH the solution comment with the corrected body (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>`).
-- **Consolidate** — merge unique content into the canonical learning's comment (PATCH), then remove the subsumed learning's comment (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE`); if that was the host feature issue's only solution comment, drop the now-orphaned label with `gh issue edit <N> --remove-label "yunxing:solution"`.
+- **Consolidate** — merge unique content into the canonical learning's comment (PATCH), then remove the subsumed learning's comment (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE`); if that was the host feature issue's only solution comment, drop the now-orphaned label with `gh issue edit <N> --remove-label "tunan:solution"`.
 - **Replace** — write the successor body and PATCH the same comment in place (same comment, fresh content). When evidence is insufficient, mark stale instead (set `status: stale`, `stale_reason`, `stale_date` in the YAML block and PATCH).
-- **Delete** — remove the solution comment (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE`); if it was the host feature issue's only solution comment, also drop the label (`gh issue edit <N> --remove-label "yunxing:solution"`). The feature issue itself stays open (its req/plan still live there); only the learning comment is removed. Deleting a comment is permanent, so prefer Consolidate or stale-marking when in doubt.
+- **Delete** — remove the solution comment (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE`); if it was the host feature issue's only solution comment, also drop the label (`gh issue edit <N> --remove-label "tunan:solution"`). The feature issue itself stays open (its req/plan still live there); only the learning comment is removed. Deleting a comment is permanent, so prefer Consolidate or stale-marking when in doubt.
 
 ## Mode Detection
 
@@ -60,7 +60,7 @@ Check if `$ARGUMENTS` contains `mode:headless`. If present, strip it from argume
 
 ## CONCEPTS.md bootstrap requests
 
-If invoked specifically to create or bootstrap `CONCEPTS.md` (e.g., "create a CONCEPTS.md", "build the concept map", "set up shared vocabulary"), the intent is ambiguous between two jobs — building the vocabulary file and running a refresh of the `yunxing:solution` issues — so disambiguate before proceeding. Use the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to numbered options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. Two options:
+If invoked specifically to create or bootstrap `CONCEPTS.md` (e.g., "create a CONCEPTS.md", "build the concept map", "set up shared vocabulary"), the intent is ambiguous between two jobs — building the vocabulary file and running a refresh of the `tunan:solution` issues — so disambiguate before proceeding. Use the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to numbered options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. Two options:
 
 1. **Create CONCEPTS.md (build the concept map)** — seed the repo-wide concept map and commit it; skip only the learning-issue classification phases (Phases 0–4). Read `references/concepts-vocabulary.md` and follow its **Seed goal** and **Scope of a seed** (repo-wide) rules: seed the project's core domain nouns from the declared domain model (schema, core types, primary models, top-level domain docs), each meeting the qualifying bar, the codebase setting the count. Write the preamble (see Phase 4.5), cluster per the organization rules, and run the Discoverability Check so `AGENTS.md`/`CLAUDE.md` surface the new file. Then **enter Phase 5 (Commit Changes)** to commit/PR the new `CONCEPTS.md` and any instruction-file edit through the same durable-write flow the refresh uses — do not leave the bootstrap uncommitted. (`CONCEPTS.md` remains a local file; only the learnings moved to issues.)
 2. **Run a refresh cycle** — proceed with the normal refresh flow below; `CONCEPTS.md` is seeded (if absent) and reconciled as part of Phase 4.5.
@@ -126,25 +126,25 @@ For each candidate artifact, classify it into one of five outcomes:
    - newer learning issues, PRs, or other issues provide strong successor evidence.
 8. **Delete (remove the comment) when the code is gone, and only after checking for inbound links.** If the referenced code, controller, or workflow no longer exists in the codebase and no successor can be found, delete the solution comment — don't default to Keep just because the general advice is still "sound." When in doubt between Keep and Delete, ask the user (in interactive mode) or mark as stale (in headless mode). Inbound links inform classification, not cleanup: cleanup is always mechanical, but **decorative** citations (principle stated inline) allow Delete, while **substantive** citations (citing learning relies on the cited learning) signal Replace. The auto-delete case is missing code, no matching successor, and citations absent or decorative.
 9. **Evaluate document-set design, not just accuracy.** In addition to checking whether each learning is accurate, evaluate whether it is still the right unit of knowledge. If two or more learnings overlap heavily, determine whether they should remain separate, be cross-scoped more clearly, or be consolidated into one canonical learning. Redundant learnings are dangerous because they drift silently — two learnings saying the same thing will eventually say different things.
-10. **Prefer Consolidate or stale-marking over hard Delete.** Deleting a comment is permanent (GitHub keeps no comment-level undo). When a learning is no longer useful, delete its comment with a clear rationale recorded in the report; if it has any unique content, Consolidate it into the canonical learning first. Do not invent an "archived" label or a local archive directory. If the deleted comment was the host feature issue's only solution, drop the `yunxing:solution` label from that issue (`gh issue edit <N> --remove-label "yunxing:solution"`) so the cross-feature index stays accurate.
+10. **Prefer Consolidate or stale-marking over hard Delete.** Deleting a comment is permanent (GitHub keeps no comment-level undo). When a learning is no longer useful, delete its comment with a clear rationale recorded in the report; if it has any unique content, Consolidate it into the canonical learning first. Do not invent an "archived" label or a local archive directory. If the deleted comment was the host feature issue's only solution, drop the `tunan:solution` label from that issue (`gh issue edit <N> --remove-label "tunan:solution"`) so the cross-feature index stays accurate.
 
 ## Scope Selection
 
 Start by discovering open feature issues that carry a learning, after running the GH preflight:
 
 ```bash
-gh issue list --label "yunxing:solution" --state open --json number,title,url,labels --limit 200
+gh issue list --label "tunan:solution" --state open --json number,title,url,labels --limit 200
 ```
 
-Each result is a **feature issue**; its learning lives in the `<!-- yunxing:solution -->` comment, read per the Core gh operations above.
+Each result is a **feature issue**; its learning lives in the `<!-- tunan:solution -->` comment, read per the Core gh operations above.
 
-**Legacy local learning files:** if pre-migration local learning files exist in the repo, note them in the report as legacy content that should be migrated into `yunxing:solution` issues (or deleted once migrated). Do not treat them as candidates for this workflow; this skill operates only on issues.
+**Legacy local learning files:** if pre-migration local learning files exist in the repo, note them in the report as legacy content that should be migrated into `tunan:solution` issues (or deleted once migrated). Do not treat them as candidates for this workflow; this skill operates only on issues.
 
 If `$ARGUMENTS` is provided, use it to narrow scope before proceeding. Try these matching strategies in order, stopping at the first that produces results:
 
 1. **Issue ref** — if the argument is `#<N>` or a full issue URL, target that issue directly
-2. **Category match** — check if the argument matches a `category` slug (e.g., `performance-issues`, `database-issues`) in the YAML blocks; also try it as a label search term: `gh issue list --label "yunxing:solution" --search "<arg>"`
-3. **Frontmatter / body match** — search `module`, `component`, or `tags` in issue bodies, or the title slug, for the argument: `gh issue list --label "yunxing:solution" --search "<arg>"`
+2. **Category match** — check if the argument matches a `category` slug (e.g., `performance-issues`, `database-issues`) in the YAML blocks; also try it as a label search term: `gh issue list --label "tunan:solution" --search "<arg>"`
+3. **Frontmatter / body match** — search `module`, `component`, or `tags` in issue bodies, or the title slug, for the argument: `gh issue list --label "tunan:solution" --search "<arg>"`
 4. **Content search** — broaden the `--search` keyword (useful for feature names or feature areas)
 
 If no matches are found, report that and ask the user to clarify. In headless mode, when a scope hint was provided but matched nothing, report the miss in the summary and exit without widening to all issues — do not silently fall back to processing everything. (The "process everything" rule from Headless mode rules applies only when **no** scope hint was provided.)
@@ -152,7 +152,7 @@ If no matches are found, report that and ask the user to clarify. In headless mo
 If no candidate learning issues are found, report:
 
 ```text
-No candidate yunxing:solution issues found.
+No candidate tunan:solution issues found.
 Run `compound` after solving problems to start building your knowledge base.
 ```
 
@@ -198,7 +198,7 @@ Do not ask action-selection questions yet. First gather evidence.
 
 ## Phase 1: Investigate Candidate Learnings
 
-For each learning in scope, read its solution comment (`gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:solution -->")) | {id, body}'` — keep the comment id for later PATCH/DELETE), cross-reference its claims against the current codebase, and form a recommendation.
+For each learning in scope, read its solution comment (`gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:solution -->")) | {id, body}'` — keep the comment id for later PATCH/DELETE), cross-reference its claims against the current codebase, and form a recommendation.
 
 A learning has several dimensions that can independently go stale. Surface-level checks catch the obvious drift, but staleness often hides deeper:
 
@@ -357,7 +357,7 @@ Choose **Consolidate** when Phase 1.75 identified learnings that overlap heavily
 
 **Consolidate vs Delete:** If the subsumed learning has unique content worth preserving (edge cases, alternative approaches, extra prevention rules), use Consolidate to merge that content first. If the subsumed learning adds nothing the canonical learning doesn't already say, skip straight to Delete.
 
-The Consolidate action is: merge unique content from the subsumed learning into the canonical learning's comment (PATCH it), then delete the subsumed comment (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE`). If the subsumed comment was its host feature issue's only solution, drop that issue's `yunxing:solution` label. The canonical learning may note `consolidated from #<subsumed>` in its body for traceability.
+The Consolidate action is: merge unique content from the subsumed learning into the canonical learning's comment (PATCH it), then delete the subsumed comment (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE`). If the subsumed comment was its host feature issue's only solution, drop that issue's `tunan:solution` label. The canonical learning may note `consolidated from #<subsumed>` in its body for traceability.
 
 ### Replace
 
@@ -384,7 +384,7 @@ Choose **Delete** when:
 - The learning is fully redundant with another learning (use Consolidate if there is unique content to merge first)
 - There is no meaningful successor evidence suggesting it should be replaced instead
 
-Action: delete the solution comment (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE`), then drop the host feature issue's `yunxing:solution` label if that comment was its only solution. The feature issue itself stays open — its req/plan comments still live there. Deletion is permanent (no comment-level reopen), so record the rationale in the report; when unsure, prefer Consolidate or stale-marking.
+Action: delete the solution comment (`gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE`), then drop the host feature issue's `tunan:solution` label if that comment was its only solution. The feature issue itself stays open — its req/plan comments still live there. Deletion is permanent (no comment-level reopen), so record the rationale in the report; when unsure, prefer Consolidate or stale-marking.
 
 ### Before deleting: check if the problem domain is still active
 
@@ -399,7 +399,7 @@ Do not search mechanically for keywords from the old learning. Instead, understa
 
 A learning that other artifacts cite is load-bearing in a way the learning itself does not announce. Before classifying as Delete, search for citations of the learning (by its host feature issue `#<N>` or its title slug):
 
-- Other learnings referencing it by `#<N>`: `gh issue list --label "yunxing:solution" --search "#<N>"` (also try the title slug as a search term).
+- Other learnings referencing it by `#<N>`: `gh issue list --label "tunan:solution" --search "#<N>"` (also try the title slug as a search term).
 - The repo's markdown content (plans, instruction files, READMEs) referencing the feature issue number or title slug — use the platform's native content-search tool (e.g., Grep in Claude Code). Read context lines around each match (e.g., Grep's `-B`/`-A`), not whole files.
 
 Skip source code, where citations are rare and only appear in comments.
@@ -605,7 +605,7 @@ Split actions into two sections:
 If all writes succeed, the Recommended section is empty. If no writes succeed (e.g., gh unavailable), all actions appear under Recommended — the report becomes a maintenance plan.
 
 **Legacy cleanup** (if pre-migration local learning files exist in the repo):
-- Note them as pre-migration content and recommend migrating each into a `yunxing:solution` issue (or deleting once migrated). This skill does not process local files.
+- Note them as pre-migration content and recommend migrating each into a `tunan:solution` issue (or deleting once migrated). This skill does not process local files.
 
 ## Phase 5: Commit Changes
 
@@ -654,13 +654,13 @@ First, run `git branch --show-current` to determine the current branch. Then pre
 ### Commit message
 
 Write a descriptive commit message that:
-- Summarizes the local changes committed (e.g., "add 2 CONCEPTS.md entries; surface yunxing:solution learnings in AGENTS.md") and references the learning maintenance done this run (e.g., "refreshed 6 yunxing:solution learnings")
+- Summarizes the local changes committed (e.g., "add 2 CONCEPTS.md entries; surface tunan:solution learnings in AGENTS.md") and references the learning maintenance done this run (e.g., "refreshed 6 tunan:solution learnings")
 - Follows the repo's existing commit conventions (check recent git log for style)
 - Is succinct — the learning-side details live in the report and the comments themselves
 
 ## Relationship to compound
 
-- `compound` captures a newly solved, verified problem as a `yunxing:solution` comment on its feature issue
+- `compound` captures a newly solved, verified problem as a `tunan:solution` comment on its feature issue
 - `compound-refresh` maintains older learning comments as the codebase evolves — both their individual accuracy and their collective design as a knowledge set
 
 Use **Replace** only when the refresh process has enough real evidence to write a trustworthy successor. When evidence is insufficient, mark as stale and recommend `compound` for when the user next encounters that problem area.
@@ -669,15 +669,15 @@ Use **Consolidate** proactively when the learning set has grown organically and 
 
 ## Discoverability Check
 
-After the refresh report is generated, check whether the project's instruction files would lead an agent to discover and search the project's `yunxing:solution` learnings before starting work in a documented area. Learnings are comments (first line `<!-- yunxing:solution -->`) on feature issues that carry the `yunxing:solution` label, so the label list still indexes every feature that has one. This runs every time — the knowledge store only compounds value when agents can find it. If this check produces edits, they are committed as part of (or immediately after) the Phase 5 commit flow — see step 6 below.
+After the refresh report is generated, check whether the project's instruction files would lead an agent to discover and search the project's `tunan:solution` learnings before starting work in a documented area. Learnings are comments (first line `<!-- tunan:solution -->`) on feature issues that carry the `tunan:solution` label, so the label list still indexes every feature that has one. This runs every time — the knowledge store only compounds value when agents can find it. If this check produces edits, they are committed as part of (or immediately after) the Phase 5 commit flow — see step 6 below.
 
 1. Identify which root-level instruction files exist (AGENTS.md, CLAUDE.md, or both). Read the file(s) and determine which holds the substantive content — one file may just be a shim that `@`-includes the other (e.g., `CLAUDE.md` containing only `@AGENTS.md`, or vice versa). The substantive file is the assessment and edit target; ignore shims. If neither file exists, skip this check entirely.
 2. Assess whether an agent reading the instruction files would learn three things:
-   - That a searchable knowledge store of documented solutions exists as `yunxing:solution` comments on feature issues labeled `yunxing:solution`
+   - That a searchable knowledge store of documented solutions exists as `tunan:solution` comments on feature issues labeled `tunan:solution`
    - Enough about its structure to search effectively (the label finds the feature issues; each carries a solution comment with a YAML block holding fields like `category`, `module`, `tags`, `problem_type`)
    - When to search it (before implementing features, debugging issues, or making decisions in documented areas — learnings may cover bugs, best practices, workflow patterns, or other institutional knowledge)
 
-   This is a semantic assessment, not a string match. The information could be a line in an architecture section, a bullet in a gotchas section, spread across multiple places, or expressed without ever using the exact label `yunxing:solution`. Use judgment — if an agent would reasonably discover and use the knowledge store after reading the file, the check passes.
+   This is a semantic assessment, not a string match. The information could be a line in an architecture section, a bullet in a gotchas section, spread across multiple places, or expressed without ever using the exact label `tunan:solution`. Use judgment — if an agent would reasonably discover and use the knowledge store after reading the file, the check passes.
 
 3. If the spirit is already met, no action needed.
 4. If not:
@@ -690,18 +690,18 @@ After the refresh report is generated, check whether the project's instruction f
 
       When there's an existing conventions or architecture section — add a line:
       ```
-      Solved-problem learnings live as `yunxing:solution` comments on feature issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each comment's YAML block carrying category, module, tags, problem_type — find features with `gh issue list --label "yunxing:solution" --search "<terms>"`, then read the issue's `<!-- yunxing:solution -->` comment.
+      Solved-problem learnings live as `tunan:solution` comments on feature issues labeled `tunan:solution` (bugs, best practices, workflow patterns), each comment's YAML block carrying category, module, tags, problem_type — find features with `gh issue list --label "tunan:solution" --search "<terms>"`, then read the issue's `<!-- tunan:solution -->` comment.
       ```
 
       When nothing in the file is a natural fit — a small headed section is appropriate:
       ```
       ## Documented Solutions
 
-      Solved-problem learnings live as `yunxing:solution` comments on feature issues labeled `yunxing:solution` (bugs, best practices, workflow patterns), each comment's YAML block carrying `category`, `module`, `tags`, `problem_type`. Find features with `gh issue list --label "yunxing:solution" --search "<terms>"`, then read the issue's `<!-- yunxing:solution -->` comment. Relevant when implementing or debugging in documented areas.
+      Solved-problem learnings live as `tunan:solution` comments on feature issues labeled `tunan:solution` (bugs, best practices, workflow patterns), each comment's YAML block carrying `category`, `module`, `tags`, `problem_type`. Find features with `gh issue list --label "tunan:solution" --search "<terms>"`, then read the issue's `<!-- tunan:solution -->` comment. Relevant when implementing or debugging in documented areas.
       ```
-   c. In interactive mode, explain to the user why this matters — agents working in this repo (including fresh sessions, other tools, or collaborators without the plugin) won't know to check the `yunxing:solution` issues unless the instruction file surfaces them. Show the proposed change and where it would go, then use the platform's blocking question tool to get consent before making the edit: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to presenting the proposal in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. In headless mode, include it as a "Discoverability recommendation" line in the report — do not attempt to edit instruction files (headless scope is learning maintenance, not project config).
+   c. In interactive mode, explain to the user why this matters — agents working in this repo (including fresh sessions, other tools, or collaborators without the plugin) won't know to check the `tunan:solution` issues unless the instruction file surfaces them. Show the proposed change and where it would go, then use the platform's blocking question tool to get consent before making the edit: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to presenting the proposal in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question. In headless mode, include it as a "Discoverability recommendation" line in the report — do not attempt to edit instruction files (headless scope is learning maintenance, not project config).
 
-5. **If `CONCEPTS.md` exists at repo root, run a parallel discoverability check for it.** Use the same workflow as the `yunxing:solution` check above: same target file, same edit-placement judgment, same consent-then-edit interaction shape per mode. Example calibration when a conventions block is present:
+5. **If `CONCEPTS.md` exists at repo root, run a parallel discoverability check for it.** Use the same workflow as the `tunan:solution` check above: same target file, same edit-placement judgment, same consent-then-edit interaction shape per mode. Example calibration when a conventions block is present:
 
    ```
    CONCEPTS.md  # shared domain vocabulary — read when orienting to the codebase or before discussing domain concepts
@@ -709,4 +709,4 @@ After the refresh report is generated, check whether the project's instruction f
 
    **Skip this step entirely if `CONCEPTS.md` does not exist** — never nag for an artifact the project has not adopted. When skipped, this step produces no output and no edit.
 
-6. **Amend or create a follow-up commit when the check produces edits.** If step 4 or step 5 resulted in an edit to an instruction file and Phase 5 already committed the local changes, stage the newly edited file and either amend the existing commit (if still on the same branch and no push has occurred) or create a small follow-up commit (e.g., `docs: surface yunxing:solution issues in AGENTS.md`, or `docs: add CONCEPTS.md discoverability to AGENTS.md`, or a combined message when both edits landed). If Phase 5 already pushed the branch to a remote (e.g., the branch+PR path), push the follow-up commit as well so the open PR includes the discoverability change. This keeps the working tree clean and the remote in sync at the end of the run. If the user chose "Don't commit" in Phase 5, leave the instruction-file edits unstaged alongside the other uncommitted local changes — no separate commit logic needed.
+6. **Amend or create a follow-up commit when the check produces edits.** If step 4 or step 5 resulted in an edit to an instruction file and Phase 5 already committed the local changes, stage the newly edited file and either amend the existing commit (if still on the same branch and no push has occurred) or create a small follow-up commit (e.g., `docs: surface tunan:solution issues in AGENTS.md`, or `docs: add CONCEPTS.md discoverability to AGENTS.md`, or a combined message when both edits landed). If Phase 5 already pushed the branch to a remote (e.g., the branch+PR path), push the follow-up commit as well so the open PR includes the discoverability change. This keeps the working tree clean and the remote in sync at the end of the run. If the user chose "Don't commit" in Phase 5, leave the instruction-file edits unstaged alongside the other uncommitted local changes — no separate commit logic needed.

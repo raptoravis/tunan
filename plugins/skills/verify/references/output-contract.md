@@ -1,7 +1,7 @@
 # Output Contract (`mode:agent` JSON)
 
 Authoritative definition of the machine-readable contract emitted by `code-review`
-and `yunxing:verify` when run with `mode:agent`. Both skills emit the **same
+and `tunan:verify` when run with `mode:agent`. Both skills emit the **same
 top-level envelope** so a single consumer (e.g. `lfg`) can read either one the
 same way.
 

@@ -1,12 +1,12 @@
 # HITL Review Mode
 
-Human-in-the-loop iteration loop for a markdown document shared via Proof. Invoked either by an upstream skill (`brainstorm`, `ideate`, `plan`) handing off a draft artifact it produced (now stored as a `yunxing:*` GitHub issue), or directly by the user asking to iterate on a source they already have ("share this to proof and iterate", "HITL this doc with me"). Mechanics are identical in both cases: upload the markdown to Proof, let the user annotate in Proof's web UI, ingest feedback as in-thread replies and agreed edits, and sync the final doc back to the source.
+Human-in-the-loop iteration loop for a markdown document shared via Proof. Invoked either by an upstream skill (`brainstorm`, `ideate`, `plan`) handing off a draft artifact it produced (now stored as a `tunan:*` GitHub issue), or directly by the user asking to iterate on a source they already have ("share this to proof and iterate", "HITL this doc with me"). Mechanics are identical in both cases: upload the markdown to Proof, let the user annotate in Proof's web UI, ingest feedback as in-thread replies and agreed edits, and sync the final doc back to the source.
 
 ## Source shapes
 
 The source is one of two shapes (see "Source shapes" in `SKILL.md` for the full contract):
 
-- **yunxing artifact** — a durable yunxing artifact stored on GitHub, named by `#<N>` or a GitHub issue URL: a `yunxing:req` / `yunxing:idea` / `yunxing:pulse` issue **body**, or a `yunxing:plan` / `yunxing:solution` **marker comment** (`<!-- yunxing:plan -->` / `<!-- yunxing:solution -->`) on the feature issue. Run GH PREFLIGHT (`SKILL.md`), export the body (req/idea/pulse) or the marker comment (plan/solution) to a transient temp markdown file under the OS temp dir, and treat that temp file as the HITL source file. On end-sync, push the reviewed markdown back to its origin — the issue body via `gh issue edit <N> --body-file <temp-file>`, or the marker comment via `gh api .../issues/comments/<id> -X PATCH -F body=@<temp-file>` (see `SKILL.md` "Sync back"). This is the primary path for the upstream handoff.
+- **tunan artifact** — a durable tunan artifact stored on GitHub, named by `#<N>` or a GitHub issue URL: a `tunan:req` / `tunan:idea` / `tunan:pulse` issue **body**, or a `tunan:plan` / `tunan:solution` **marker comment** (`<!-- tunan:plan -->` / `<!-- tunan:solution -->`) on the feature issue. Run GH PREFLIGHT (`SKILL.md`), export the body (req/idea/pulse) or the marker comment (plan/solution) to a transient temp markdown file under the OS temp dir, and treat that temp file as the HITL source file. On end-sync, push the reviewed markdown back to its origin — the issue body via `gh issue edit <N> --body-file <temp-file>`, or the marker comment via `gh api .../issues/comments/<id> -X PATCH -F body=@<temp-file>` (see `SKILL.md` "Sync back"). This is the primary path for the upstream handoff.
 - **local markdown file** — a non-artifact markdown file the user already has on disk. The source file IS that path; end-sync writes back to it. This keeps the "elsewhere" / direct-user path working.
 
 In both shapes the HITL loop operates on a real on-disk file (the user's file, or the temp export). The only differences are how the source file is obtained (Phase 1) and where end-sync writes the result (Phase 5).
@@ -21,11 +21,11 @@ Load this file when HITL review mode is requested — whether by an upstream cal
 
 Inputs:
 
-- **Source** (required): either a **yunxing artifact issue ref** (`#<N>` or a GitHub issue URL) or a **local markdown file path** (absolute or repo-relative). When an upstream caller invokes this mode, it passes the issue ref explicitly. When the user invokes directly ("share that doc to proof and let's iterate"), derive the source from conversation context — the issue or file the user just referenced, created, or edited. If ambiguous, ask the user which source.
+- **Source** (required): either a **tunan artifact issue ref** (`#<N>` or a GitHub issue URL) or a **local markdown file path** (absolute or repo-relative). When an upstream caller invokes this mode, it passes the issue ref explicitly. When the user invokes directly ("share that doc to proof and let's iterate"), derive the source from conversation context — the issue or file the user just referenced, created, or edited. If ambiguous, ask the user which source.
 - **Doc title** (required): display title for the Proof doc. Upstream callers pass this explicitly. For an issue source with no explicit title, default to the issue `title` from `gh issue view`. For a local source with no explicit title, default to the file's H1 heading, falling back to the filename (minus extension) if no H1 exists.
-- **Recommended next step** (optional, caller-specific): short string the caller wants echoed in the final terminal output (e.g., "Recommended next: `/yunxing:plan`"). Not used on direct-user invocation — the terminal report simply summarizes the iteration and asks what's next.
+- **Recommended next step** (optional, caller-specific): short string the caller wants echoed in the final terminal output (e.g., "Recommended next: `/tunan:plan`"). Not used on direct-user invocation — the terminal report simply summarizes the iteration and asks what's next.
 
-Agent identity is fixed, not a parameter: every API call uses agent ID `ai:yunxing` and display name `Compound Engineering`. Callers do not override this.
+Agent identity is fixed, not a parameter: every API call uses agent ID `ai:tunan` and display name `Compound Engineering`. Callers do not override this.
 
 Return shape (used by upstream callers to resume their handoff; also shown to the user in the terminal when invoked directly):
 
@@ -42,11 +42,11 @@ Return shape (used by upstream callers to resume their handoff; also shown to th
 ## Phase 1: Upload and Wait
 
 0. **Resolve the source file.**
-   - **Issue source:** run GH PREFLIGHT (`SKILL.md`). Then `gh issue view <N> --json title,body,url` and write `body` to a transient temp markdown file under the OS temp dir (e.g. `${TMPDIR:-/tmp}/yunxing-proof-<N>.md` on macOS/Linux, `$env:TEMP\yunxing-proof-<N>.md` on Windows). This temp file is the "source file" (`$SOURCE`) for the rest of the flow. Record the issue number and `url` for Phase 5 sync-back and the terminal report. Use the issue `title` as the doc title unless the caller passed an explicit title.
+   - **Issue source:** run GH PREFLIGHT (`SKILL.md`). Then `gh issue view <N> --json title,body,url` and write `body` to a transient temp markdown file under the OS temp dir (e.g. `${TMPDIR:-/tmp}/tunan-proof-<N>.md` on macOS/Linux, `$env:TEMP\tunan-proof-<N>.md` on Windows). This temp file is the "source file" (`$SOURCE`) for the rest of the flow. Record the issue number and `url` for Phase 5 sync-back and the terminal report. Use the issue `title` as the doc title unless the caller passed an explicit title.
    - **Local source:** the source file (`$SOURCE`) is the user's file path directly. No export step.
 1. Read the source file into memory. Remember this content as `uploadedMarkdown` — Phase 5 compares against it to detect whether anything changed during the session.
 2. `POST https://www.proofeditor.ai/share/markdown` with `{title, markdown}` → capture `slug`, `accessToken`, `tokenUrl`
-3. `POST /api/agent/{slug}/presence` with `X-Agent-Id: ai:yunxing`, `x-share-token: <token>`, body `{"name":"Compound Engineering","status":"reading","summary":"Uploaded doc for review"}`
+3. `POST /api/agent/{slug}/presence` with `X-Agent-Id: ai:tunan`, `x-share-token: <token>`, body `{"name":"Compound Engineering","status":"reading","summary":"Uploaded doc for review"}`
 4. Display prominently in the terminal:
 
    ```
@@ -120,7 +120,7 @@ Real feedback blends types — "this is wrong, rename to Y" is both objection an
 
 ```json
 {
-  "by": "ai:yunxing",
+  "by": "ai:tunan",
   "baseToken": "<token>",
   "operations": [
     {
@@ -154,7 +154,7 @@ The user is collaborating in the doc, not waiting on approval. Every mutation wo
   "kind": "replace",
   "quote": "<anchor>",
   "content": "<new>",
-  "by": "ai:yunxing",
+  "by": "ai:tunan",
   "status": "accepted",
   "baseToken": "<token>"
 }
@@ -175,8 +175,8 @@ curl -s "https://www.proofeditor.ai/api/agent/{slug}/snapshot" -H "x-share-token
 # Apply
 curl -X POST "https://www.proofeditor.ai/api/agent/{slug}/edit/v2" \
   -H "Content-Type: application/json" -H "x-share-token: <token>" \
-  -H "X-Agent-Id: ai:yunxing" -H "Idempotency-Key: <uuid>" \
-  -d '{"by":"ai:yunxing","baseToken":"<token>","operations":[...]}'
+  -H "X-Agent-Id: ai:tunan" -H "Idempotency-Key: <uuid>" \
+  -d '{"by":"ai:tunan","baseToken":"<token>","operations":[...]}'
 ```
 
 Per-op body shape (singular `block` for `replace_block`; plural `blocks:[{markdown},...]` for anything that can add content; the server returns 422 on the wrong shape):
@@ -216,7 +216,7 @@ When the edit is semantic rather than literal, batch `replace_block`, `insert_*`
 
 - Top-level field is `type` on single `/ops` writes; top-level `operations` on `/ops` comment batches; `operations[].op` on `/edit/v2`. Do not mix `/ops` `type` entries with `/edit/v2` `op` entries.
 - Include `baseToken` from `/state.mutationBase.token` (or `/snapshot.mutationBase.token` for `/edit/v2`).
-- Set `by: "ai:yunxing"` and header `X-Agent-Id: ai:yunxing`.
+- Set `by: "ai:tunan"` and header `X-Agent-Id: ai:tunan`.
 - Include an `Idempotency-Key` header. Reuse the same key only for an exact same-body resend; if you rebuild the body with a fresh `baseToken`, mint a new key.
 - Successful mutation responses include the next `mutationBase.token`; reuse it for the next write instead of re-reading only to get a token.
 - Reply and resolve together when done: `{"type":"comment.reply","markId":"<id>","text":"...","resolve":true}` inside a `/ops` batch. Reopen if needed: `{"type":"comment.unresolve", ...}`.
@@ -384,7 +384,7 @@ Two retry classes, and they behave differently. The helper below only covers the
 ```bash
 SLUG=<slug>
 TOKEN=<accessToken>
-AGENT_ID=ai:yunxing
+AGENT_ID=ai:tunan
 BASE=<cached from most recent /state or /snapshot read>
 
 mutate() {
@@ -437,7 +437,7 @@ The `Idempotency-Key` is minted for the exact request body being sent. If a retr
 STATE=$(curl -s "https://www.proofeditor.ai/api/agent/$SLUG/state" \
   -H "x-share-token: $TOKEN")
 LANDED=$(printf '%s' "$STATE" | jq --arg q "X" --arg t "Y" \
-  '[.marks[]? | select(.by == "ai:yunxing" and .quote == $q and (.thread[0].text // .text) == $t)] | length')
+  '[.marks[]? | select(.by == "ai:tunan" and .quote == $q and (.thread[0].text // .text) == $t)] | length')
 if [ "$LANDED" -gt 0 ]; then
   echo "Already applied — skipping retry."
 else
@@ -456,7 +456,7 @@ When extracting fields from API responses with jq's `//` alternative operator, p
 
 All ops must include:
 
-- `by: "ai:yunxing"` in the request body
-- `X-Agent-Id: ai:yunxing` in headers (required for presence; recommended for ops for consistent attribution)
+- `by: "ai:tunan"` in the request body
+- `X-Agent-Id: ai:tunan` in headers (required for presence; recommended for ops for consistent attribution)
 
 Display name `Compound Engineering` is bound via `POST /presence` with `{"name":"Compound Engineering", ...}`. Set this once after upload; it carries across subsequent ops.

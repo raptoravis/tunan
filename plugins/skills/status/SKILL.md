@@ -1,27 +1,27 @@
 ---
 name: status
-description: '列出当前仓库还没合并的 open PR 和还没关闭的 open issue,快速看还剩什么工作。默认只查当前用户,--user <name> 查指定用户,--all 查所有人,--req 只看 yunxing:req 需求项。只读,不创建任何 issue。用户说"还剩什么"/"剩余工作"/"还有什么没做"/"open issues"/"what is left"/"/yunxing:status" 时用。'
+description: '列出当前仓库还没合并的 open PR 和还没关闭的 open issue,快速看还剩什么工作。默认只查当前用户,--user <name> 查指定用户,--all 查所有人,--req 只看 tunan:req 需求项。只读,不创建任何 issue。用户说"还剩什么"/"剩余工作"/"还有什么没做"/"open issues"/"what is left"/"/tunan:status" 时用。'
 ---
 
 # status — 看还剩什么工作
 
-> 运行环境入口约定：本仓库的 `.claude/skills` 以 Claude Code 为源，示例默认写 `/yunxing:*`。若同一 skill 在 Codex 中运行，所有面向 sponsor 的可复制入口在输出前改写为 `$yunxing:*`；Claude Code 中保持 `/yunxing:*`。
+> 运行环境入口约定：本仓库的 `.claude/skills` 以 Claude Code 为源，示例默认写 `/tunan:*`。若同一 skill 在 Codex 中运行，所有面向 sponsor 的可复制入口在输出前改写为 `$tunan:*`；Claude Code 中保持 `/tunan:*`。
 
-> **何时触发**：用户说 "还剩什么" / "剩余工作" / "还有什么没做" / "open issues" / "what's left" / "/yunxing:status"。
+> **何时触发**：用户说 "还剩什么" / "剩余工作" / "还有什么没做" / "open issues" / "what's left" / "/tunan:status"。
 
 只读快照：列出仓库里还没合并的 open PR 和还没关闭的 open issue。**默认只看当前用户**的工作;`--user <name>` 查指定用户;`--all` 查所有人。**不创建、不修改、不关闭任何 issue 或 PR** —— 想周期性复盘并存档报告用 `retro`,这个 skill 只做即时查询。
 
 ## 调用语法
 
 ```
-/yunxing:status [--user <github-username>] [--all] [--req]
+/tunan:status [--user <github-username>] [--all] [--req]
 ```
 
 **开关(都可选)**：
 
 - `--user <github-username>` — 查指定用户的 open PR 和 issue(按 author 过滤)
 - `--all` — 查所有人;与 `--user` 互斥,同时传时 `--all` 优先
-- `--req` — open issue 只看带 `yunxing:req` 标签的需求项(过滤掉报告/存档类 issue)
+- `--req` — open issue 只看带 `tunan:req` 标签的需求项(过滤掉报告/存档类 issue)
 
 不传任何开关时默认等价于 `--user @me`(当前认证用户)。
 
@@ -42,15 +42,15 @@ description: '列出当前仓库还没合并的 open PR 和还没关闭的 open 
    gh pr list --state open --limit 100 [--author "<value>"]
    ```
 
-3. 列出 open issue(`--req` 时加 `--label yunxing:req`):
+3. 列出 open issue(`--req` 时加 `--label tunan:req`):
 
    ```bash
-   gh issue list --state open --limit 100 [--author "<value>"] [--label yunxing:req]
+   gh issue list --state open --limit 100 [--author "<value>"] [--label tunan:req]
    ```
 
 4. 汇总解读,而不是只贴原始输出:
    - 报出 open PR 数和 open issue 数,说明当前过滤的用户范围。
-   - 区分**真正的待办**与**报告存档**:`yunxing:retro` / `yunxing:pulse` / `yunxing:idea` 标签的 issue 是历史报告归档,不是待办工作 —— 单独点出或排除,不要混进"剩余工作"里。
+   - 区分**真正的待办**与**报告存档**:`tunan:retro` / `tunan:pulse` / `tunan:idea` 标签的 issue 是历史报告归档,不是待办工作 —— 单独点出或排除,不要混进"剩余工作"里。
    - 两者都为空时,明确说"当前没有剩余/未完成的工作"。
 
 ## 不要做

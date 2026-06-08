@@ -14,7 +14,7 @@ argument-hint: "[feature, focus area, or constraint]"
 - `brainstorm` answers: "What exactly should one chosen idea mean?"
 - `plan` answers: "How should it be built?"
 
-This workflow produces a ranked ideation artifact as a **`yunxing:idea` GitHub issue** — the durable ideation record lives in a GitHub issue (markdown body), never in a local file. It does **not** produce requirements, plans, or code.
+This workflow produces a ranked ideation artifact as a **`tunan:idea` GitHub issue** — the durable ideation record lives in a GitHub issue (markdown body), never in a local file. It does **not** produce requirements, plans, or code.
 
 ## Interaction Method
 
@@ -31,7 +31,7 @@ Ask one question at a time. Prefer concise single-select choices when natural op
 Interpret any provided argument as optional context. It may be:
 
 - a concept such as `DX improvements`
-- a path such as `plugins/yunxing/skills/`
+- a path such as `plugins/tunan/skills/`
 - a constraint such as `low-complexity quick wins`
 - a volume hint such as `top 3`, `100 ideas`, or `raise the bar`
 
@@ -49,11 +49,11 @@ If no argument is provided, proceed with open-ended ideation.
 
 #### 0.1 Check for Recent Ideation Work
 
-The durable ideation record is a **`yunxing:idea` GitHub issue**, never a local file. Run the GH preflight (see below) before any issue read/write, then look for a recent matching `yunxing:idea` issue to resume.
+The durable ideation record is a **`tunan:idea` GitHub issue**, never a local file. Run the GH preflight (see below) before any issue read/write, then look for a recent matching `tunan:idea` issue to resume.
 
 **GH preflight — run before any issue read/write. Abort with the guidance shown if any check fails; NEVER fall back to a local file.**
 
-1. `gh` installed. If not: tell the user to install it from `https://cli.github.com` or run `/yunxing:setup`.
+1. `gh` installed. If not: tell the user to install it from `https://cli.github.com` or run `/tunan:setup`.
 
 ```bash
 gh --version
@@ -71,18 +71,18 @@ gh auth status
 gh repo view --json nameWithOwner
 ```
 
-4. **Setup reminder (non-blocking).** If the repo root has no `.yunxing/config.local.yaml`, this repo hasn't been through yunxing setup — tell the user once, "This repo isn't set up for yunxing yet; run `/yunxing:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
+4. **Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
 
-**Ensure the `yunxing:idea` label exists** (needed when Phase 5 creates the issue):
+**Ensure the `tunan:idea` label exists** (needed when Phase 5 creates the issue):
 
 ```bash
-gh label list --search "yunxing:idea"
+gh label list --search "tunan:idea"
 ```
 
 If it is absent, create it:
 
 ```bash
-gh label create "yunxing:idea" --color 1f883d --description "yunxing idea"
+gh label create "tunan:idea" --color 1f883d --description "tunan idea"
 ```
 
 **Resume check.** If `$ARGUMENTS` contains an issue ref (a `#<N>` token or a full GitHub issue URL), bind that issue and read its body as the resume source:
@@ -91,13 +91,13 @@ gh label create "yunxing:idea" --color 1f883d --description "yunxing idea"
 gh issue view <N> --json title,body,url,labels
 ```
 
-Otherwise, search for recent open `yunxing:idea` issues matching the requested focus:
+Otherwise, search for recent open `tunan:idea` issues matching the requested focus:
 
 ```bash
-gh issue list --label "yunxing:idea" --search "<terms>" --state open --json number,title,url,updatedAt
+gh issue list --label "tunan:idea" --search "<terms>" --state open --json number,title,url,updatedAt
 ```
 
-Treat a prior `yunxing:idea` issue as relevant when:
+Treat a prior `tunan:idea` issue as relevant when:
 
 - the topic matches the requested focus
 - the path or subsystem overlaps the requested focus
@@ -202,7 +202,7 @@ Do not prescribe correction phrases ("say X to switch"). State the inferred mode
 
 **Active confirmation on mode ambiguity.** Only fire when mode classification is genuinely ambiguous _after_ 0.2 settled the subject — e.g., "our docs" could mean repo docs (repo-grounded) or public marketing docs (elsewhere-software). Most subjects settled in 0.2 classify cleanly here. When ambiguous, ask one confirmation question via the blocking tool with two self-contained labels naming the two candidate interpretations in plain language (e.g., "Treat as repo docs in this codebase" vs "Treat as public marketing docs") — never leak internal mode names. Otherwise the one-sentence inferred-mode statement is sufficient; do not ask.
 
-**Routing rule (non-software mode).** When Decision 2 = non-software, still run Phase 1 Elsewhere-mode grounding (user-context synthesis + web-research by default; skip phrases honored). Learnings-researcher is skipped by default in this mode — the repo's `yunxing:solution` learnings (solution comments on feature issues) rarely transfer to naming, narrative, personal, or non-digital business topics; see Phase 1 for the full rationale. Then load `references/universal-ideation.md` and follow it in place of Phase 2's software frame dispatch and the Phase 6 menu narrative. This load is non-optional — the file contains the domain-agnostic generation frames, critique rubric, and wrap-up menu that replace Phase 2 and the post-ideation menu for this mode, and none of those details live in this main body. Improvising from memory produces the wrong facilitation for non-software topics. Do not run the repo-specific codebase scan at any point. The §6.5 Proof Failure Ladder in `references/post-ideation-workflow.md` still applies — load and follow it whenever a Proof save (the elsewhere-mode default for Save and end) fails, so the local-save fallback path stays reachable in non-software elsewhere runs.
+**Routing rule (non-software mode).** When Decision 2 = non-software, still run Phase 1 Elsewhere-mode grounding (user-context synthesis + web-research by default; skip phrases honored). Learnings-researcher is skipped by default in this mode — the repo's `tunan:solution` learnings (solution comments on feature issues) rarely transfer to naming, narrative, personal, or non-digital business topics; see Phase 1 for the full rationale. Then load `references/universal-ideation.md` and follow it in place of Phase 2's software frame dispatch and the Phase 6 menu narrative. This load is non-optional — the file contains the domain-agnostic generation frames, critique rubric, and wrap-up menu that replace Phase 2 and the post-ideation menu for this mode, and none of those details live in this main body. Improvising from memory produces the wrong facilitation for non-software topics. Do not run the repo-specific codebase scan at any point. The §6.5 Proof Failure Ladder in `references/post-ideation-workflow.md` still applies — load and follow it whenever a Proof save (the elsewhere-mode default for Save and end) fails, so the local-save fallback path stays reachable in non-software elsewhere runs.
 
 #### 0.4 Context-Substance Gate (Elsewhere Modes Only)
 
@@ -261,7 +261,7 @@ The line is informational; users do not need to acknowledge it.
 
 ### Phase 1: Mode-Aware Grounding
 
-Before generating ideas, gather grounding. The dispatch set depends on the mode chosen in Phase 0.3. Web research runs in all modes (skip phrases honored). Learnings runs in repo mode and elsewhere-software, and is **skipped by default in elsewhere-non-software** — the repo's `yunxing:solution` learnings (solution comments on feature issues) almost always contain engineering patterns that do not transfer to naming, narrative, personal, or non-digital business topics.
+Before generating ideas, gather grounding. The dispatch set depends on the mode chosen in Phase 0.3. Web research runs in all modes (skip phrases honored). Learnings runs in repo mode and elsewhere-software, and is **skipped by default in elsewhere-non-software** — the repo's `tunan:solution` learnings (solution comments on feature issues) almost always contain engineering patterns that do not transfer to naming, narrative, personal, or non-digital business topics.
 
 **Surprise-me grounding depth.** When Phase 0.2 routed to surprise-me mode, Phase 1 must produce richer material than specified mode — Phase 2 sub-agents will discover their own subjects from what Phase 1 returns, so texture matters:
 
@@ -274,12 +274,12 @@ Generate a `<run-id>` once at the start of Phase 1 (8 hex chars). Reuse it for t
 **Pre-resolve the scratch directory path.** Scratch lives directly under `/tmp` (not under `$TMPDIR` and not under `.context/`). `$TMPDIR` on macOS resolves to an obscure per-user path like `/var/folders/64/.../T/` that is hostile for users who want to inspect checkpoints, copy them elsewhere, or reference them later — `/tmp` is universally accessible on macOS, Linux, and WSL, and the per-user isolation `$TMPDIR` provides is not valuable for ephemeral ideation scratch. Run one bash command to create the directory and capture its absolute path for downstream use.
 
 ```bash
-SCRATCH_DIR="${TMPDIR:-/tmp}/yunxing/yunxing:ideate/<run-id>"
+SCRATCH_DIR="${TMPDIR:-/tmp}/tunan/tunan:ideate/<run-id>"
 mkdir -p "$SCRATCH_DIR"
 echo "$SCRATCH_DIR"
 ```
 
-Use the echoed absolute path (`${TMPDIR:-/tmp}/yunxing/yunxing:ideate/<run-id>`) as `<scratch-dir>` for every subsequent checkpoint write and cache read in this run. The run directory is not deleted on Phase 6 completion — the V15 cache is session-scoped and reused across run-ids, and the checkpoints follow the cross-invocation-reusable convention of leaving session-scoped artifacts for later invocations to find.
+Use the echoed absolute path (`${TMPDIR:-/tmp}/tunan/tunan:ideate/<run-id>`) as `<scratch-dir>` for every subsequent checkpoint write and cache read in this run. The run directory is not deleted on Phase 6 completion — the V15 cache is session-scoped and reused across run-ids, and the checkpoints follow the cross-invocation-reusable convention of leaving session-scoped artifacts for later invocations to find.
 
 Run grounding agents in parallel in the **foreground** (do not background — results are needed before Phase 2):
 
@@ -308,11 +308,11 @@ Run grounding agents in parallel in the **foreground** (do not background — re
    >
    > Focus hint: {focus_hint}
 
-2. **Learnings search** — dispatch `yunxing:learnings-researcher` with a brief summary of the ideation focus.
+2. **Learnings search** — dispatch `tunan:learnings-researcher` with a brief summary of the ideation focus.
 
 3. **Web research** (always-on; see "Web research" subsection below for skip-phrase and V15 cache handling).
 
-4. **Issue intelligence** (conditional) — if issue-tracker intent was detected in Phase 0.3, dispatch `yunxing:issue-intelligence-analyst` with the focus hint. Run in parallel with the other agents.
+4. **Issue intelligence** (conditional) — if issue-tracker intent was detected in Phase 0.3, dispatch `tunan:issue-intelligence-analyst` with the focus hint. Run in parallel with the other agents.
 
    If the agent returns an error (gh not installed, no remote, auth failure), log a warning to the user ("Issue analysis unavailable: {reason}. Proceeding with standard ideation.") and continue with the remaining grounding.
 
@@ -322,7 +322,7 @@ Run grounding agents in parallel in the **foreground** (do not background — re
 
 1. **User-context synthesis** — dispatch a general-purpose sub-agent (cheapest capable model) to read the user-supplied context from Phase 0.4 intake plus any rich-prompt material, and return a structured grounding summary that mirrors the codebase-context shape (project shape → topic shape; notable patterns → stated constraints; pain points → user-named pain points; leverage points → opportunity hooks the context implies). This keeps Phase 2 sub-agents agnostic to grounding source.
 
-2. **Learnings search** _(elsewhere-software only; skipped by default in elsewhere-non-software)_ — dispatch `yunxing:learnings-researcher` with the topic summary in case relevant institutional knowledge exists (skill-design patterns, prior solutions in similar shape). Skip for elsewhere-non-software: the repo's `yunxing:solution` learnings (solution comments on feature issues) are unlikely to be topically relevant for non-digital topics, and running it risks polluting generation with unrelated engineering patterns.
+2. **Learnings search** _(elsewhere-software only; skipped by default in elsewhere-non-software)_ — dispatch `tunan:learnings-researcher` with the topic summary in case relevant institutional knowledge exists (skill-design patterns, prior solutions in similar shape). Skip for elsewhere-non-software: the repo's `tunan:solution` learnings (solution comments on feature issues) are unlikely to be topically relevant for non-digital topics, and running it risks polluting generation with unrelated engineering patterns.
 
 3. **Web research** — same as repo mode (see subsection below).
 
@@ -330,11 +330,11 @@ Issue intelligence does not apply in elsewhere mode. Slack research is opt-in fo
 
 #### Web Research (V5, V15)
 
-Always-on for both modes. Skip when the user said "no external research", "skip web research", or equivalent in their prompt or earlier answers; in that case, omit `yunxing:web-researcher` from dispatch and note the skip in the consolidated grounding summary.
+Always-on for both modes. Skip when the user said "no external research", "skip web research", or equivalent in their prompt or earlier answers; in that case, omit `tunan:web-researcher` from dispatch and note the skip in the consolidated grounding summary.
 
-Reuse prior web research within a session via a sidecar cache — see `references/web-research-cache.md` for the cache file shape, reuse check, append behavior, and platform-degradation rules. Read it the first time `yunxing:web-researcher` would be dispatched in this run (and on every subsequent dispatch where the cache might apply).
+Reuse prior web research within a session via a sidecar cache — see `references/web-research-cache.md` for the cache file shape, reuse check, append behavior, and platform-degradation rules. Read it the first time `tunan:web-researcher` would be dispatched in this run (and on every subsequent dispatch where the cache might apply).
 
-When dispatching `yunxing:web-researcher`, pass: the focus hint, a brief planning context summary (one or two sentences), and the mode. Do not pass codebase content — the agent operates externally.
+When dispatching `tunan:web-researcher`, pass: the focus hint, a brief planning context summary (one or two sentences), and the mode. Do not pass codebase content — the agent operates externally.
 
 #### Consolidated Grounding Summary
 
@@ -343,14 +343,14 @@ Consolidate all dispatched results into a short grounding summary using these se
 - **Codebase context** _(repo mode)_ — project shape, notable patterns, pain points, leverage points (project-defining files: AGENTS.md/CLAUDE.md/README.md/STRATEGY.md) OR **Topic context** _(elsewhere mode)_ — topic shape, stated constraints, user-named pain points, opportunity hooks
 - **User-named references** _(repo mode, when the focus hint named root-level `_.md` files)\* — full content from files the user explicitly named in their prompt or focus. Phase 2 treats these as constraint
 - **Additional context** _(repo mode, when other root-level markdown was discovered but not named)_ — one-line gists per file. Phase 2 treats these as background, not direction
-- **Past learnings** — relevant institutional knowledge from `yunxing:solution` solution comments on feature issues
+- **Past learnings** — relevant institutional knowledge from `tunan:solution` solution comments on feature issues
 - **Issue intelligence** _(when present, repo mode only)_ — theme summaries with titles, descriptions, issue counts, and trend directions
 - **External context** _(when web research ran)_ — prior art, adjacent solutions, market signals, cross-domain analogies. Note "(reused from earlier dispatch)" when V15 reuse fired
 - **Slack context** _(when present)_ — organizational context
 
-**Failure handling.** Grounding agent failures follow "warn and proceed" — never block on grounding failure. If `yunxing:web-researcher` fails (network, tool unavailable), log a warning ("External research unavailable: {reason}. Proceeding with internal grounding only.") and continue. If elsewhere-mode intake produced no usable context, note in the grounding summary that context is thin so Phase 2 sub-agents can compensate with broader generation.
+**Failure handling.** Grounding agent failures follow "warn and proceed" — never block on grounding failure. If `tunan:web-researcher` fails (network, tool unavailable), log a warning ("External research unavailable: {reason}. Proceeding with internal grounding only.") and continue. If elsewhere-mode intake produced no usable context, note in the grounding summary that context is thin so Phase 2 sub-agents can compensate with broader generation.
 
-**Slack context** (opt-in, both modes) — never auto-dispatch. When the user asks for Slack context and Slack tools are available (look for any `slack-researcher` agent or `slack` MCP tools in the current environment), dispatch `yunxing:slack-researcher` with the focus hint in parallel with other Phase 1 agents. When tools are present but the user did not ask, mention availability in the grounding summary so they can opt in. When the user asked but no Slack tools are reachable, surface the install hint instead.
+**Slack context** (opt-in, both modes) — never auto-dispatch. When the user asks for Slack context and Slack tools are available (look for any `slack-researcher` agent or `slack` MCP tools in the current environment), dispatch `tunan:slack-researcher` with the focus hint in parallel with other Phase 1 agents. When tools are present but the user did not ask, mention availability in the grounding summary so they can opt in. When the user asked but no Slack tools are reachable, surface the install hint instead.
 
 ### Phase 1.5: Topic-Surface Decomposition
 

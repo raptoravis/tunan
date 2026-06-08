@@ -49,7 +49,7 @@ Reuse `test-browser`'s mechanics for port detection and dev-server startup (see 
 3. Serve        Detect port, start dev server, open agent-browser
 4. Execute      Work the matrix one item at a time with agent-browser
 5. Fix loop     On failure: fix -> add regression test -> commit -> continue
-6. Report       Write/update a yunxing:dogfood GitHub issue (flows, matrix, fixes, learnings, verdict)
+6. Report       Write/update a tunan:dogfood GitHub issue (flows, matrix, fixes, learnings, verdict)
 ```
 
 ### Phase 0: Scope and Get on the Right Branch
@@ -62,14 +62,14 @@ Parse `$ARGUMENTS`: a PR number, a branch name, or blank (use current branch). S
    - **Blank:** use the current branch.
 2. **Refuse to run on `main`/`master`.** If the resolved branch is the trunk, stop and tell the user — there is no diff to dogfood.
 3. **Offer isolation.** Ask whether to run in a git worktree so the main checkout stays untouched, using the platform's blocking question tool — `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini/Pi; fall back to a chat prompt only when no blocking tool exists or the call errors. If yes, hand off to `worktree`; if no, continue in place.
-4. **Resume if a prior run exists.** Look for an existing `yunxing:dogfood` issue for this branch via `gh issue list --label "yunxing:dogfood" --search "<branch-slug>" --state all --json number,title,url`. If one is found with unfinished scenarios, ask whether to resume it or start fresh — through the same blocking question tool. Never silently skip these questions. To resume, read it with `gh issue view <N>` and re-hydrate the task list from its matrix (Pass/Fixed/Skipped stay done; Pending/Blocked/in-progress become the remaining work) and continue from there.
+4. **Resume if a prior run exists.** Look for an existing `tunan:dogfood` issue for this branch via `gh issue list --label "tunan:dogfood" --search "<branch-slug>" --state all --json number,title,url`. If one is found with unfinished scenarios, ask whether to resume it or start fresh — through the same blocking question tool. Never silently skip these questions. To resume, read it with `gh issue view <N>` and re-hydrate the task list from its matrix (Pass/Fixed/Skipped stay done; Pending/Blocked/in-progress become the remaining work) and continue from there.
 
 ### Resumability (stop and return at any point)
 
 This workflow is designed to be interrupted and resumed. Two pieces of state make that safe:
 
 - **The task list** (`TaskCreate`/`TaskUpdate`) is the live to-do — one task per matrix scenario. Mark each `in_progress` when you start it and `completed` only when it genuinely passes.
-- **The report issue** — a `yunxing:dogfood` GitHub issue titled `[dogfood] <branch-slug>` — is the durable checkpoint that survives across sessions. **Create it as soon as the matrix exists (end of Phase 2)** with every scenario listed as `Pending`, and **update its body incrementally** with `gh issue edit <N> --body-file <tmpfile>` — after each scenario is judged and after each fix is committed — not only at the end. Ensure the label exists first (`gh label list --search "yunxing:dogfood"`, then `gh label create "yunxing:dogfood" --color 1f883d --description "yunxing dogfood report"` if absent).
+- **The report issue** — a `tunan:dogfood` GitHub issue titled `[dogfood] <branch-slug>` — is the durable checkpoint that survives across sessions. **Create it as soon as the matrix exists (end of Phase 2)** with every scenario listed as `Pending`, and **update its body incrementally** with `gh issue edit <N> --body-file <tmpfile>` — after each scenario is judged and after each fix is committed — not only at the end. Ensure the label exists first (`gh label list --search "tunan:dogfood"`, then `gh label create "tunan:dogfood" --color 1f883d --description "tunan dogfood report"` if absent).
 
 Because tasks are session-scoped but the report issue lives on GitHub, the issue is the source of truth for resuming. Always keep the two in sync so a later run (or a teammate) can pick up exactly where this one stopped.
 

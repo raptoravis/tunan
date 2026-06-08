@@ -1,21 +1,21 @@
 ---
 name: closeissue
-description: 'Close a specified GitHub issue, or the feature issue for the req/plan currently being worked on. Use when the user says "close the issue", "关闭 issue", "close this req", "closeissue", or wants the current feature issue (the yunxing:req issue behind the active branch/PR/plan) closed. Resolves the target by explicit number, current branch''s PR body, branch name, or a req/plan search, and confirms before closing — it never reopens, deletes, or force-closes.'
+description: 'Close a specified GitHub issue, or the feature issue for the req/plan currently being worked on. Use when the user says "close the issue", "关闭 issue", "close this req", "closeissue", or wants the current feature issue (the tunan:req issue behind the active branch/PR/plan) closed. Resolves the target by explicit number, current branch''s PR body, branch name, or a req/plan search, and confirms before closing — it never reopens, deletes, or force-closes.'
 argument-hint: "[<issue>] [--reason=completed|not_planned] [--comment=<text>] [--yes]"
 ---
 
 # closeissue — close the target / current feature issue
 
-> 运行环境入口约定：本仓库的 `.claude/skills` 以 Claude Code 为源，示例默认写 `/yunxing:*`。若同一 skill 在 Codex 中运行，所有面向 sponsor 的可复制入口在输出前改写为 `$yunxing:*`；Claude Code 中保持 `/yunxing:*`。
+> 运行环境入口约定：本仓库的 `.claude/skills` 以 Claude Code 为源，示例默认写 `/tunan:*`。若同一 skill 在 Codex 中运行，所有面向 sponsor 的可复制入口在输出前改写为 `$tunan:*`；Claude Code 中保持 `/tunan:*`。
 
-> **何时触发**：用户说 "close the issue" / "关闭这个 issue" / "关掉当前 req" / "close this req" / "/yunxing:closeissue"。
+> **何时触发**：用户说 "close the issue" / "关闭这个 issue" / "关掉当前 req" / "close this req" / "/tunan:closeissue"。
 
-This skill closes a single GitHub issue. With an explicit number it closes that issue; without one it resolves the **feature issue** behind the work currently in progress — the single `yunxing:req` issue that holds the requirement, plan, and solution for the active branch / PR / plan (one feature = one issue for its whole lifetime) — and closes that. Closing is a shared-state action, so the skill always confirms the resolved target before closing unless `--yes` is passed.
+This skill closes a single GitHub issue. With an explicit number it closes that issue; without one it resolves the **feature issue** behind the work currently in progress — the single `tunan:req` issue that holds the requirement, plan, and solution for the active branch / PR / plan (one feature = one issue for its whole lifetime) — and closes that. Closing is a shared-state action, so the skill always confirms the resolved target before closing unless `--yes` is passed.
 
 ## 调用语法
 
 ```
-/yunxing:closeissue [<issue>] [开关]
+/tunan:closeissue [<issue>] [开关]
 ```
 
 - `<issue>` — issue number (`42` / `#42`) or URL. Omit to resolve the current feature issue.
@@ -61,10 +61,10 @@ gh repo view --json nameWithOwner
       git branch --show-current
       ```
 
-   4. **req/plan search.** Otherwise search for the feature issue whose topic matches the work in progress (branch name, recent commit subjects, or the user's phrasing). Prefer issues that carry `yunxing:plan` (planned, most likely the active feature) and fall back to `yunxing:req`:
+   4. **req/plan search.** Otherwise search for the feature issue whose topic matches the work in progress (branch name, recent commit subjects, or the user's phrasing). Prefer issues that carry `tunan:plan` (planned, most likely the active feature) and fall back to `tunan:req`:
 
       ```bash
-      gh issue list --label "yunxing:req" --search "<terms>" --state open --json number,title,url,labels
+      gh issue list --label "tunan:req" --search "<terms>" --state open --json number,title,url,labels
       ```
 
 2. **Confirm the resolved target** (skip only when `--yes` was passed). Read the issue so the confirmation shows real context, not just a number:

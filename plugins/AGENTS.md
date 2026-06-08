@@ -1,7 +1,7 @@
 # Plugin Instructions
 
 These instructions apply when working in this repo, which ships the
-`yunxing` plugin directly from the root: skills under `skills/`,
+`tunan` plugin directly from the root: skills under `skills/`,
 agents under `agents/`, and the plugin manifests under `.claude-plugin/` and
 `.codex-plugin/`.
 
@@ -38,10 +38,10 @@ Before committing changes:
 
 ```
 agents/
-└── *.md          # Agent files use the bare agent name; frontmatter name carries no yunxing- prefix (lfg-style)
+└── *.md          # Agent files use the bare agent name; frontmatter name carries no tunan- prefix (lfg-style)
 
 skills/
-└── */            # Skill dirs use the bare skill name (cp, plan, code-review, …) — no yunxing- prefix; lfg is the one historical bare name
+└── */            # Skill dirs use the bare skill name (cp, plan, code-review, …) — no tunan- prefix; lfg is the one historical bare name
 ```
 
 Agents are grouped topically in `README.md` (Review, Document Review, Research, Design, Workflow, Docs) for reader navigation — those groupings are conceptual, not filesystem subdirectories.
@@ -52,7 +52,7 @@ Agents are grouped topically in `README.md` (Review, Document Review, Research, 
 
 ## Documented Solutions & Vocabulary
 
-Solved-problem learnings live as `yunxing:solution` comments on feature issues labeled `yunxing:solution` (bugs, best practices, workflow/architecture patterns); each comment's YAML block carries `category`, `module`, `tags`, `problem_type`. Find them with `gh issue list --label "yunxing:solution" --search "<terms>"`, then read the issue's `<!-- yunxing:solution -->` comment. Relevant when implementing or debugging in documented areas.
+Solved-problem learnings live as `tunan:solution` comments on feature issues labeled `tunan:solution` (bugs, best practices, workflow/architecture patterns); each comment's YAML block carries `category`, `module`, `tags`, `problem_type`. Find them with `gh issue list --label "tunan:solution" --search "<terms>"`, then read the issue's `<!-- tunan:solution -->` comment. Relevant when implementing or debugging in documented areas.
 
 `CONCEPTS.md` (repo root) holds the shared domain vocabulary (skill contracts, the autonomous pipeline) — relevant when orienting or discussing domain concepts.
 
@@ -67,21 +67,21 @@ Important: Just because the developer's installed plugin may be out of date, it'
 
 ## Naming Convention
 
-**Neither skills nor agents carry a `yunxing-` prefix.** Both get the plugin namespace from the host and surface under `yunxing:` — skills as `/yunxing:<name>` commands, agents as `yunxing:<name>` subagent types.
+**Neither skills nor agents carry a `tunan-` prefix.** Both get the plugin namespace from the host and surface under `tunan:` — skills as `/tunan:<name>` commands, agents as `tunan:<name>` subagent types.
 
-**Skills use the bare name** — the directory name and the SKILL.md `name:` frontmatter have no prefix (`cp`, `plan`, `code-review`, …). Claude Code prepends the plugin namespace automatically, so each skill surfaces to users as `/yunxing:<name>`:
+**Skills use the bare name** — the directory name and the SKILL.md `name:` frontmatter have no prefix (`cp`, `plan`, `code-review`, …). Claude Code prepends the plugin namespace automatically, so each skill surfaces to users as `/tunan:<name>`:
 
-- `/yunxing:brainstorm` - Explore requirements and approaches before planning
-- `/yunxing:plan` - Create implementation plans
-- `/yunxing:code-review` - Run comprehensive code reviews
-- `/yunxing:work` - Execute work items systematically
-- `/yunxing:compound` - Document solved problems
+- `/tunan:brainstorm` - Explore requirements and approaches before planning
+- `/tunan:plan` - Create implementation plans
+- `/tunan:code-review` - Run comprehensive code reviews
+- `/tunan:work` - Execute work items systematically
+- `/tunan:compound` - Document solved problems
 
-**Agents use the bare name too** — the frontmatter `name:` has no prefix (`adversarial-reviewer`, `learnings-researcher`, …); the agent filename is cosmetic and does not affect resolution. The host namespaces them under the plugin, so an agent is dispatched and displayed as `yunxing:<agent-name>`. Agents are not slash commands (there is no `/`), but the `subagent_type` string a skill dispatches with still carries the `yunxing:` namespace — reference an agent as `yunxing:<agent-name>`.
+**Agents use the bare name too** — the frontmatter `name:` has no prefix (`adversarial-reviewer`, `learnings-researcher`, …); the agent filename is cosmetic and does not affect resolution. The host namespaces them under the plugin, so an agent is dispatched and displayed as `tunan:<agent-name>`. Agents are not slash commands (there is no `/`), but the `subagent_type` string a skill dispatches with still carries the `tunan:` namespace — reference an agent as `tunan:<agent-name>`.
 
-**Why no prefix?** The host's plugin namespace already supplies the `yunxing:` qualifier. A `yunxing-` prefix in the name on top of it produces a doubled `/yunxing:yunxing-plan` (skills) or `yunxing:yunxing-adversarial-reviewer` (agents). The namespace colon is a display-layer construct only — directory names and `name:` frontmatter stay bare hyphenated lowercase (`code-review`), so there is no Windows/filesystem concern. `lfg` predates the scheme and was already prefix-free.
+**Why no prefix?** The host's plugin namespace already supplies the `tunan:` qualifier. A `tunan-` prefix in the name on top of it produces a doubled `/tunan:tunan-plan` (skills) or `tunan:tunan-adversarial-reviewer` (agents). The namespace colon is a display-layer construct only — directory names and `name:` frontmatter stay bare hyphenated lowercase (`code-review`), so there is no Windows/filesystem concern. `lfg` predates the scheme and was already prefix-free.
 
-**For a new skill or agent, use the bare name (no `yunxing-`):** the skill's directory name plus its SKILL.md `name:`, or the agent's frontmatter `name:`. They surface as `/yunxing:<skill>` and `yunxing:<agent>`.
+**For a new skill or agent, use the bare name (no `tunan-`):** the skill's directory name plus its SKILL.md `name:`, or the agent's frontmatter `name:`. They surface as `/tunan:<skill>` and `tunan:<agent>`.
 
 ## Skill Design Principles
 
@@ -194,7 +194,7 @@ Design rules for blocking question menus (`AskUserQuestion` / `request_user_inpu
 
 - [ ] When a skill dispatches sub-agents, instruct use of the platform's subagent primitive and name the known equivalents (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi via the `pi-subagents` extension)
 - [ ] Prefer bounded parallel execution: respect platform active-subagent limits, queue overflow work, and treat limit-related spawn errors as backpressure. Include a sequential fallback for platforms that do not support parallel dispatch
-- [ ] Prefer sub-agents shipped with this plugin (`yunxing:*`) over platform built-ins. Built-ins have different names on each target (e.g., Claude Code's `Explore` is `explorer` on Codex via `spawn_agent`'s `agent_type`, `scout` on Pi via `pi-subagents`) — using our own avoids the enumeration tax. Exception: when a built-in offers a meaningful benefit worth keeping, enumerate the per-platform equivalents inline at the call site so the model can route correctly on each target.
+- [ ] Prefer sub-agents shipped with this plugin (`tunan:*`) over platform built-ins. Built-ins have different names on each target (e.g., Claude Code's `Explore` is `explorer` on Codex via `spawn_agent`'s `agent_type`, `scout` on Pi via `pi-subagents`) — using our own avoids the enumeration tax. Exception: when a built-in offers a meaningful benefit worth keeping, enumerate the per-platform equivalents inline at the call site so the model can route correctly on each target.
 
 ### Script Path References in Skills
 
@@ -221,7 +221,7 @@ This plugin is authored once, then converted for other agent platforms. Commands
 - [ ] Because of that, slash references inside command or agent content are acceptable when they point to real published commands; target-specific conversion can remap them.
 - [ ] Inside a pass-through `SKILL.md`, do not assume slash references will be remapped for another platform. Write references according to what will still make sense after the skill is copied as-is.
 - [ ] When one skill refers to another skill, prefer semantic wording such as "load the `doc-review` skill" rather than slash syntax.
-- [ ] Use slash syntax only when referring to an actual published command or workflow such as `/yunxing:work` or `/yunxing:compound`.
+- [ ] Use slash syntax only when referring to an actual published command or workflow such as `/tunan:work` or `/tunan:compound`.
 
 ### Tool Selection in Agents and Skills
 
@@ -275,17 +275,17 @@ When dispatching sub-agents, **omit the `mode` parameter** on the Agent/Task too
 
 ### Reading Config Files from Skills
 
-Plugin config lives at `.yunxing/config.local.yaml` in the repo root. This file is gitignored (machine-local settings), which creates two gotchas:
+Plugin config lives at `.tunan/config.local.yaml` in the repo root. This file is gitignored (machine-local settings), which creates two gotchas:
 
 1. **Path resolution:** Never read the config relative to CWD — the user may invoke a skill from a subdirectory. Always resolve from the repo root. In pre-resolution commands, use `git rev-parse --show-toplevel` to find the root.
 
 2. **Worktrees:** Gitignored files are per-worktree. A config file created in the main checkout does not exist in worktrees. Use `--show-toplevel` to find the root:
 
    ```
-   !`cat "$(git rev-parse --show-toplevel 2>/dev/null)/.yunxing/config.local.yaml" 2>/dev/null || echo '__NO_CONFIG__'`
+   !`cat "$(git rev-parse --show-toplevel 2>/dev/null)/.tunan/config.local.yaml" 2>/dev/null || echo '__NO_CONFIG__'`
    ```
 
-   Outside a git repo, `git rev-parse` emits empty and `cat "/.yunxing/config.local.yaml"` fails (permission denied or not found, suppressed by `2>/dev/null`), so the `__NO_CONFIG__` sentinel fires. Note: the previous pattern used `(top=$(...); [ -n "$top" ] && cat "$top/...")` with a semicolon to guard the empty-root case, but `;` is rejected by Claude Code's safety checker as `Unhandled node type: ;` (see Pre-resolution exception above) and must not be used in `!` pre-resolution.
+   Outside a git repo, `git rev-parse` emits empty and `cat "/.tunan/config.local.yaml"` fails (permission denied or not found, suppressed by `2>/dev/null`), so the `__NO_CONFIG__` sentinel fires. Note: the previous pattern used `(top=$(...); [ -n "$top" ] && cat "$top/...")` with a semicolon to guard the empty-root case, but `;` is rejected by Claude Code's safety checker as `Unhandled node type: ;` (see Pre-resolution exception above) and must not be used in `!` pre-resolution.
 
    Note: in a worktree, `--show-toplevel` returns the worktree path, so config from the main checkout will not be found. This is acceptable — config is optional and users who work from worktrees can add a config file there. A previous pattern used `git-common-dir` with `${common%/.git}` to derive the main repo root as a fallback, but bash parameter expansion operators are rejected as "Contains expansion" (see Pre-resolution exception above), so that approach is no longer viable without a script.
 
@@ -304,7 +304,7 @@ grep -E '^description:' skills/*/SKILL.md
 ## Adding Components
 
 - **New skill:** Create `skills/<name>/SKILL.md` with required YAML frontmatter (`name`, `description`). Reference files go in `skills/<name>/references/`. Add the skill to the appropriate category table in `README.md` and update the skill count.
-- **New agent:** Create `agents/<name>.md` with frontmatter (`name`, `description`; bare name, no `yunxing-` prefix — it surfaces as `yunxing:<name>`). Add the agent to the appropriate topical section of `README.md` (Review, Document Review, Research, Design, Workflow, Docs) and update the agent count.
+- **New agent:** Create `agents/<name>.md` with frontmatter (`name`, `description`; bare name, no `tunan-` prefix — it surfaces as `tunan:<name>`). Add the agent to the appropriate topical section of `README.md` (Review, Document Review, Research, Design, Workflow, Docs) and update the agent count.
 
 ## Beta Skills
 

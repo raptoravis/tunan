@@ -196,13 +196,13 @@ After testing:
 
 ```bash
 # Test with default scheme
-/yunxing:test-xcode
+/tunan:test-xcode
 
 # Test specific scheme
-/yunxing:test-xcode MyApp-Debug
+/tunan:test-xcode MyApp-Debug
 
 # Test after making changes
-/yunxing:test-xcode current
+/tunan:test-xcode current
 ```
 
 ## Integration with code-review

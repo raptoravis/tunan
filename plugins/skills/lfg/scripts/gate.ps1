@@ -1,5 +1,5 @@
 <#
-  yunxing lfg gate — script-enforced phase exit conditions (Windows twin of gate.sh).
+  tunan lfg gate — script-enforced phase exit conditions (Windows twin of gate.sh).
 
   Replaces lfg's prose "GATE: STOP ..." self-checks with deterministic checks so an
   agent cannot hallucinate progress past a stage whose evidence does not exist.
@@ -52,18 +52,18 @@ switch ($Cmd) {
   'plan-exists' {
     if (-not $Arg) { Infra "usage: gate.ps1 plan-exists <issue>" }
     Need-Gh
-    $rc = Has-MarkerComment $Arg "<!-- yunxing:plan -->"
+    $rc = Has-MarkerComment $Arg "<!-- tunan:plan -->"
     if ($rc -eq 2) { Infra "cannot resolve repo to read issue #$Arg comments" }
     if ($rc -eq 0) { Pass "plan comment present on feature issue #$Arg" }
-    else { Fail "no <!-- yunxing:plan --> comment on feature issue #$Arg — re-run plan" }
+    else { Fail "no <!-- tunan:plan --> comment on feature issue #$Arg — re-run plan" }
   }
   'solution-exists' {
     if (-not $Arg) { Infra "usage: gate.ps1 solution-exists <issue>" }
     Need-Gh
-    $rc = Has-MarkerComment $Arg "<!-- yunxing:solution -->"
+    $rc = Has-MarkerComment $Arg "<!-- tunan:solution -->"
     if ($rc -eq 2) { Infra "cannot resolve repo to read issue #$Arg comments" }
     if ($rc -eq 0) { Pass "solution comment present on feature issue #$Arg" }
-    else { Fail "no <!-- yunxing:solution --> comment on feature issue #$Arg — re-run compound" }
+    else { Fail "no <!-- tunan:solution --> comment on feature issue #$Arg — re-run compound" }
   }
   'work-done' {
     $porcelain = (& git status --porcelain 2>$null | Out-String)

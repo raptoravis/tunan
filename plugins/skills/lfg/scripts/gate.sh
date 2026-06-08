@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# yunxing lfg gate — script-enforced phase exit conditions.
+# tunan lfg gate — script-enforced phase exit conditions.
 #
 # Replaces lfg's prose "GATE: STOP ..." self-checks with deterministic checks so
 # an agent cannot hallucinate progress past a stage whose evidence does not exist.
@@ -7,8 +7,8 @@
 # whether a phase may transition.
 #
 # Usage:
-#   gate.sh plan-exists <issue>        # feature issue carries a <!-- yunxing:plan --> comment
-#   gate.sh solution-exists <issue>    # feature issue carries a <!-- yunxing:solution --> comment
+#   gate.sh plan-exists <issue>        # feature issue carries a <!-- tunan:plan --> comment
+#   gate.sh solution-exists <issue>    # feature issue carries a <!-- tunan:solution --> comment
 #   gate.sh work-done [base-branch]    # working tree dirty OR HEAD diverged from base
 #   gate.sh verify-green [file|-]      # a verify mode:agent JSON contract is authoritative-green
 #
@@ -44,19 +44,19 @@ has_marker_comment() { # <issue> <marker>
 case "$cmd" in
   plan-exists)
     n="${1:?usage: gate.sh plan-exists <issue>}"; need_gh
-    rc=0; has_marker_comment "$n" "<!-- yunxing:plan -->" || rc=$?
+    rc=0; has_marker_comment "$n" "<!-- tunan:plan -->" || rc=$?
     [ "$rc" = 2 ] && infra "cannot resolve repo to read issue #$n comments"
     [ "$rc" = 0 ] \
       && pass "plan comment present on feature issue #$n" \
-      || fail "no <!-- yunxing:plan --> comment on feature issue #$n — re-run plan"
+      || fail "no <!-- tunan:plan --> comment on feature issue #$n — re-run plan"
     ;;
   solution-exists)
     n="${1:?usage: gate.sh solution-exists <issue>}"; need_gh
-    rc=0; has_marker_comment "$n" "<!-- yunxing:solution -->" || rc=$?
+    rc=0; has_marker_comment "$n" "<!-- tunan:solution -->" || rc=$?
     [ "$rc" = 2 ] && infra "cannot resolve repo to read issue #$n comments"
     [ "$rc" = 0 ] \
       && pass "solution comment present on feature issue #$n" \
-      || fail "no <!-- yunxing:solution --> comment on feature issue #$n — re-run compound"
+      || fail "no <!-- tunan:solution --> comment on feature issue #$n — re-run compound"
     ;;
   work-done)
     base="${1:-}"

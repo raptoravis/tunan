@@ -1,5 +1,5 @@
 <#
-  yunxing phase detector — infer a feature's lifecycle phase from its GitHub issue
+  tunan phase detector — infer a feature's lifecycle phase from its GitHub issue
   (Windows twin of phase.sh).
 
   The feature issue IS the state machine: labels + marker comments + an open PR encode
@@ -44,7 +44,7 @@ function Has-Marker([string]$marker) {
   return [bool]$ids
 }
 
-if (Has-Marker "<!-- yunxing:solution -->") {
+if (Has-Marker "<!-- tunan:solution -->") {
   Emit done none -
   Write-Error "Feature #$N is complete (solution comment present). Nothing to resume."
   exit 0
@@ -61,7 +61,7 @@ if ($pr) {
   exit 0
 }
 
-if (Has-Marker "<!-- yunxing:plan -->") {
+if (Has-Marker "<!-- tunan:plan -->") {
   Emit work work -
   Write-Error "Plan comment present on #$N, no PR yet — resume at work (lfg step 2)."
   exit 0

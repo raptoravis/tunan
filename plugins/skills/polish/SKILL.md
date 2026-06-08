@@ -1,6 +1,6 @@
 ---
 name: polish
-description: "Start the dev server, open the feature in a browser, and iterate on improvements together. Manual invocation only — type /yunxing:polish to run it."
+description: "Start the dev server, open the feature in a browser, and iterate on improvements together. Manual invocation only — type /tunan:polish to run it."
 disable-model-invocation: true
 argument-hint: "[PR number, branch name, or blank for current branch]"
 ---

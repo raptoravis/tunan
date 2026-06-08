@@ -5,9 +5,9 @@ description: commit + push 当前改动，默认允许直推 protected base（ma
 
 # cpm — commit & push（默认 allow-main）
 
-> 运行环境入口约定：本仓库的 `.claude/skills` 以 Claude Code 为源，示例默认写 `/yunxing:*`。若同一 skill 在 Codex 中运行，所有面向 sponsor 的可复制入口在输出前改写为 `$yunxing:*`；Claude Code 中保持 `/yunxing:*`。
+> 运行环境入口约定：本仓库的 `.claude/skills` 以 Claude Code 为源，示例默认写 `/tunan:*`。若同一 skill 在 Codex 中运行，所有面向 sponsor 的可复制入口在输出前改写为 `$tunan:*`；Claude Code 中保持 `/tunan:*`。
 
-> **何时触发**：用户说 "cpm" / "/yunxing:cpm" / "提交并推送到主干" / "直接推 main"。
+> **何时触发**：用户说 "cpm" / "/tunan:cpm" / "提交并推送到主干" / "直接推 main"。
 
 ## 与 cp 的关系
 
@@ -22,7 +22,7 @@ description: commit + push 当前改动，默认允许直推 protected base（ma
 ## 调用语法
 
 ```
-/yunxing:cpm [开关] [-- <commit message>]
+/tunan:cpm [开关] [-- <commit message>]
 ```
 
 开关与 `cp` 相同（`--no-push` / `--files=<glob,...>` / `--message=<text>` / `-- <text>`），但 `--am` 已默认开启，无需再传。若要**关闭**默认的 allow-main、恢复 cp 的 protected-base 确认行为，显式传 `--no-am`（此时退化为标准 `cp`）。
@@ -30,9 +30,9 @@ description: commit + push 当前改动，默认允许直推 protected base（ma
 **示例**：
 
 ```
-/yunxing:cpm                              # 自动起 message → commit + push（即便在 main 上也直推）
-/yunxing:cpm -- 修复登录 token 过期未刷新   # 显式 message，直推当前分支
-/yunxing:cpm --no-am                      # 关闭默认 allow-main，等价于标准 /yunxing:cp
+/tunan:cpm                              # 自动起 message → commit + push（即便在 main 上也直推）
+/tunan:cpm -- 修复登录 token 过期未刷新   # 显式 message，直推当前分支
+/tunan:cpm --no-am                      # 关闭默认 allow-main，等价于标准 /tunan:cp
 ```
 
 ## 红线

@@ -814,7 +814,7 @@ def write_requirements_kickoff(
             "",
             "## Next Steps",
             "",
-            "-> Resume `/yunxing:brainstorm` to confirm candidate findings and replace generic R-items with product-specific requirements.",
+            "-> Resume `/tunan:brainstorm` to confirm candidate findings and replace generic R-items with product-specific requirements.",
         ]
     )
     output_path.write_text("\n".join(lines) + "\n")
@@ -1112,7 +1112,7 @@ def main() -> int:
     print("Analysis complete. Ready to brainstorm the findings.")
     print(f"Source materials: {display_path(source_materials_md, repo_root)}")
     print(f"Problem statements: {display_path(problem_analysis_md, repo_root)}")
-    print(f"Brainstorm handoff: $yunxing:brainstorm {display_path(kickoff_md, repo_root)}")
+    print(f"Brainstorm handoff: $tunan:brainstorm {display_path(kickoff_md, repo_root)}")
     print("Brainstorm should first confirm whether the captured requirements are complete and correctly grouped.")
     return 0
 

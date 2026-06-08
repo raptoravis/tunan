@@ -19,7 +19,7 @@ Use this path when the input is a short recording (under ~60 seconds), the user 
 4. Emit a single concise bug report. Default to printing it inline in the chat so the user can confirm before anything durable is created. When the user wants it persisted, run the GH preflight from SKILL.md and create a GitHub issue (the durable bug report is a GitHub issue, never a local file). Write the bug-report markdown to a temp file, then:
 
    ```bash
-   gh issue create --title "[req] <broken behavior, one line>" --label "yunxing:req" --body-file <body-file>
+   gh issue create --title "[req] <broken behavior, one line>" --label "tunan:req" --body-file <body-file>
    ```
 
    Add a `**Type:** bug` marker line at the top of the body so the issue is distinguishable from feature requirements. Surface the resulting issue URL. Never write the report to a local file.
@@ -47,4 +47,4 @@ If the workspace is the product source code AND the broken surface is named clea
 
 ## Escalation
 
-If, while reading the transcript, the recording turns out to contain multiple distinct issues, requirements, or a workflow walkthrough, stop and tell the user: "This recording has more than one issue — switching to the extensive path." Then load `references/extensive-analysis.md` and follow it — the extensive path also runs the analyzer to a temp dir and stores its durable requirements material as a `yunxing:req` issue.
+If, while reading the transcript, the recording turns out to contain multiple distinct issues, requirements, or a workflow walkthrough, stop and tell the user: "This recording has more than one issue — switching to the extensive path." Then load `references/extensive-analysis.md` and follow it — the extensive path also runs the analyzer to a temp dir and stores its durable requirements material as a `tunan:req` issue.

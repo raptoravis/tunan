@@ -2,7 +2,7 @@
 
 This file contains post-plan-writing instructions: document review, final checks, and post-generation handoff. Load it after the plan comment has been created/updated and the confidence check (5.3.1-5.3.7) is complete.
 
-The plan is a comment on the feature issue `#N` (the `yunxing:req` issue), whose body is markdown with the marker `<!-- yunxing:plan -->` as its first line. All review and handoff operates on that plan comment — there is no local `.md` or `.html` plan file. See `references/comment-chain-storage.md` for the read/PATCH gh recipes.
+The plan is a comment on the feature issue `#N` (the `tunan:req` issue), whose body is markdown with the marker `<!-- tunan:plan -->` as its first line. All review and handoff operates on that plan comment — there is no local `.md` or `.html` plan file. See `references/comment-chain-storage.md` for the read/PATCH gh recipes.
 
 ## 5.3.8 Document Review
 
@@ -50,7 +50,7 @@ After all mutations in this run have settled (initial create/update, deepening s
 
 **Options:**
 
-1. **Start `/yunxing:work`** (recommended) - Begin implementing this plan in the current session
+1. **Start `/tunan:work`** (recommended) - Begin implementing this plan in the current session
 2. **Run deeper doc review** - Walk through the remaining findings interactively (full doc-review walkthrough)
 3. **Open in Proof (web app) — review and comment to iterate with the agent** - Export the plan body to Every's Proof editor, iterate with the agent via comments, then sync edits back to the plan comment.
 4. **Done for now** - Pause; the plan comment is saved and can be resumed later by the feature issue ref
@@ -61,19 +61,19 @@ After all mutations in this run have settled (initial create/update, deepening s
 
 Based on selection (the bare per-option routing is also stated inline in the SKILL.md so it cannot be missed when this reference is not loaded; the elaborate sub-flows below are the reason this reference still exists):
 
-- **Start `/yunxing:work`** -> Invoke the `work` skill via the platform's skill-invocation primitive (`Skill` in Claude Code, `Skill` in Codex, the equivalent on Gemini/Pi), passing the feature issue ref (`#<N>` or its URL) as the skill argument. Do not merely tell the user to type `/yunxing:work` — fire the invocation now so the plan executes in this session.
+- **Start `/tunan:work`** -> Invoke the `work` skill via the platform's skill-invocation primitive (`Skill` in Claude Code, `Skill` in Codex, the equivalent on Gemini/Pi), passing the feature issue ref (`#<N>` or its URL) as the skill argument. Do not merely tell the user to type `/tunan:work` — fire the invocation now so the plan executes in this session.
 - **Run deeper doc review** -> Re-invoke the `doc-review` skill on the feature issue ref **without** `mode:headless` so the interactive routing question and walkthrough fire. The headless pass already applied `safe_auto` fixes to the plan comment and recorded its findings in the session, so the interactive pass picks up where headless stopped — its R29 suppression rule prevents prior-round Skipped/Deferred entries from re-raising. After it returns (with any edits synced back to the plan comment), re-render this menu with the refreshed counts so the user can pick what to do next.
-- **Open in Proof (web app) — review and comment to iterate with the agent** -> Export the plan comment body to a transient markdown file in the OS temp dir (bash `${TMPDIR:-/tmp}/yunxing-plan-<N>.md`, PowerShell `$env:TEMP\yunxing-plan-<N>.md`) — find the plan comment id and `gh api repos/{owner}/{repo}/issues/comments/<comment-id> --jq '.body' > <tmpfile>`. Load the `proof` skill in HITL-review mode with:
+- **Open in Proof (web app) — review and comment to iterate with the agent** -> Export the plan comment body to a transient markdown file in the OS temp dir (bash `${TMPDIR:-/tmp}/tunan-plan-<N>.md`, PowerShell `$env:TEMP\tunan-plan-<N>.md`) — find the plan comment id and `gh api repos/{owner}/{repo}/issues/comments/<comment-id> --jq '.body' > <tmpfile>`. Load the `proof` skill in HITL-review mode with:
   - source file: the exported temp markdown file
   - doc title: `Plan: <plan title from the comment frontmatter>`
-  - identity: `ai:yunxing` / `Compound Engineering`
-  - recommended next step: `/yunxing:work` (shown in the proof skill's final terminal output)
+  - identity: `ai:tunan` / `Compound Engineering`
+  - recommended next step: `/tunan:work` (shown in the proof skill's final terminal output)
 
   Follow `references/hitl-review.md` in the proof skill. It uploads the plan markdown, prompts the user for review in Proof's web UI, ingests filtered comment threads, applies agreed edits through the current Proof edit APIs, replies/resolves in-thread, and syncs the final markdown back to the temp file on proceed.
 
   When the proof skill returns, sync the reviewed markdown back to the plan comment (PATCH it in place by id) and clean up the temp file:
   - `status: proceeded` with `localSynced: true` -> the temp markdown now reflects the review. Overwrite the plan comment with it via `gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>`. Then re-run `doc-review` on the updated plan comment before re-rendering the menu — HITL can materially rewrite the plan body, so the prior doc-review pass no longer covers the current content and section 5.3.8 requires a review before any handoff option is offered. Then return to the post-generation options with the refreshed residual findings.
-  - `status: proceeded` with `localSynced: false` -> the reviewed version lives in Proof at `docUrl` but the temp copy is stale. Offer to pull the Proof doc to the temp file using the proof skill's Pull workflow. If the pull happened, PATCH the plan comment with it via `gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>` and re-run `doc-review` on the updated plan comment before re-rendering (same 5.3.8 rationale). If the pull was declined, include a one-line note above the menu that the plan comment is stale vs. Proof — otherwise `Start /yunxing:work` will silently use the pre-review body.
+  - `status: proceeded` with `localSynced: false` -> the reviewed version lives in Proof at `docUrl` but the temp copy is stale. Offer to pull the Proof doc to the temp file using the proof skill's Pull workflow. If the pull happened, PATCH the plan comment with it via `gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>` and re-run `doc-review` on the updated plan comment before re-rendering (same 5.3.8 rationale). If the pull was declined, include a one-line note above the menu that the plan comment is stale vs. Proof — otherwise `Start /tunan:work` will silently use the pre-review body.
   - `status: done_for_now` -> the plan comment may be stale if the user edited in Proof before leaving. Offer to pull the Proof doc and PATCH the plan comment so it stays in sync. If the pull happened, PATCH the comment and re-run `doc-review` before re-rendering (same 5.3.8 rationale). If the pull was declined, include the stale note above the menu. `done_for_now` means the user stopped the HITL loop — it does not mean they ended the whole plan session; they may still want to start work.
   - `status: aborted` -> clean up the temp file and fall back to the options without changes to the plan comment.
 

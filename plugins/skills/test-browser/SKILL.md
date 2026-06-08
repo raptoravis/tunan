@@ -32,7 +32,7 @@ Check whether `agent-browser` is installed:
 command -v agent-browser >/dev/null 2>&1 && echo "Installed" || echo "NOT INSTALLED"
 ```
 
-If not installed, inform the user: "`agent-browser` is not installed. Run `/yunxing:setup` to install required dependencies." Then stop — this skill cannot function without agent-browser.
+If not installed, inform the user: "`agent-browser` is not installed. Run `/tunan:setup` to install required dependencies." Then stop — this skill cannot function without agent-browser.
 
 ## Workflow
 
@@ -44,7 +44,7 @@ Before starting, verify `agent-browser` is available:
 command -v agent-browser >/dev/null 2>&1 && echo "Ready" || echo "NOT INSTALLED"
 ```
 
-If not installed, inform the user: "`agent-browser` is not installed. Run `/yunxing:setup` to install required dependencies." Then stop.
+If not installed, inform the user: "`agent-browser` is not installed. Run `/tunan:setup` to install required dependencies." Then stop.
 
 ### 2. Ask Browser Mode
 
@@ -312,16 +312,16 @@ After all tests complete, present a summary:
 
 ```bash
 # Test current branch changes (auto-detects port)
-/yunxing:test-browser
+/tunan:test-browser
 
 # Test specific PR
-/yunxing:test-browser 847
+/tunan:test-browser 847
 
 # Test specific branch
-/yunxing:test-browser feature/new-dashboard
+/tunan:test-browser feature/new-dashboard
 
 # Test on a specific port
-/yunxing:test-browser --port 5000
+/tunan:test-browser --port 5000
 ```
 
 ## agent-browser CLI Reference

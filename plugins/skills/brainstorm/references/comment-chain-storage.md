@@ -1,4 +1,4 @@
-# Comment-Chain Storage Convention (yunxing v2)
+# Comment-Chain Storage Convention (tunan v2)
 
 > **Single source of truth.** This file is duplicated verbatim into every skill that
 > reads or writes pipeline artifacts (`brainstorm`, `plan`, `work`, `work-beta`,
@@ -10,20 +10,20 @@
 
 A feature is **one GitHub issue** for its entire lifetime. The issue NUMBER `#N` — the
 **feature issue** — is the durable handle passed across the whole pipeline (`brainstorm` →
-`plan` → `work` → `compound`). There are **no** separate `yunxing:plan` or
-`yunxing:solution` issues; every stage after the requirement lands as a **comment** on the
+`plan` → `work` → `compound`). There are **no** separate `tunan:plan` or
+`tunan:solution` issues; every stage after the requirement lands as a **comment** on the
 feature issue.
 
 | Stage | Where it lives | Marker (first line of the artifact) | Label added to the feature issue |
 |---|---|---|---|
-| Requirement | issue **body** | — (body, not a comment) | `yunxing:req` |
-| Plan | a **comment** | `<!-- yunxing:plan -->` | `yunxing:plan` |
-| Solution | a **comment** | `<!-- yunxing:solution -->` | `yunxing:solution` |
+| Requirement | issue **body** | — (body, not a comment) | `tunan:req` |
+| Plan | a **comment** | `<!-- tunan:plan -->` | `tunan:plan` |
+| Solution | a **comment** | `<!-- tunan:solution -->` | `tunan:solution` |
 
 - **Title:** `[req] <topic>`. The title is not re-prefixed per stage; stage progress is
   read from the labels and the marker comments.
-- **Labels accumulate** (`yunxing:req` → `+yunxing:plan` → `+yunxing:solution`). They are
-  the cheap cross-feature index: `gh issue list --label yunxing:solution` still finds every
+- **Labels accumulate** (`tunan:req` → `+tunan:plan` → `+tunan:solution`). They are
+  the cheap cross-feature index: `gh issue list --label tunan:solution` still finds every
   feature that has a solution, so institutional-learnings search keeps working without
   scanning comments across the repo.
 - **One comment per stage.** A stage edits its existing marker comment in place rather than
@@ -39,7 +39,7 @@ Downstream always receives the **feature issue `#N`**. To point at a specific st
 
 `plan` (and `work` from a bare prompt) can run with no feature issue yet. In that case the
 skill **creates the feature issue first** — body = a short requirement stub distilled from
-the prompt, label `yunxing:req`, title `[req] <topic>` — then writes its stage comment onto
+the prompt, label `tunan:req`, title `[req] <topic>` — then writes its stage comment onto
 it. This preserves "one feature = one issue": there is never a plan or solution comment
 without a host issue.
 
@@ -58,19 +58,19 @@ gh issue comment <N> --body-file <file>
 **Add the stage label** (first time the stage lands on the feature issue):
 
 ```bash
-gh issue edit <N> --add-label "yunxing:plan"
+gh issue edit <N> --add-label "tunan:plan"
 ```
 
 **Find an existing stage comment's id** (returns empty if none yet):
 
 ```bash
-gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .id'
+gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:plan -->")) | .id'
 ```
 
 **Read an existing stage comment's body:**
 
 ```bash
-gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- yunxing:plan -->")) | .body'
+gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:plan -->")) | .body'
 ```
 
 **Update a stage comment in place** (edit, do not append a second comment):
@@ -86,7 +86,7 @@ gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<file
 3. If none → `gh issue comment <N> --body-file <file>` and `gh issue edit <N> --add-label "<stage-label>"`.
 4. If one exists → PATCH it in place by id.
 
-Swap `<!-- yunxing:plan -->` / `yunxing:plan` for the solution marker / label as needed.
+Swap `<!-- tunan:plan -->` / `tunan:plan` for the solution marker / label as needed.
 
 ## Notes
 

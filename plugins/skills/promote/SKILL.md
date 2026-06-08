@@ -4,7 +4,7 @@ description: "Draft user-facing announcement and marketing copy for a feature th
 argument-hint: "[optional: what shipped and/or channels, e.g. 'a tweet thread and a LinkedIn post']"
 ---
 
-# /yunxing:promote
+# /tunan:promote
 
 Turn a feature that just shipped into copy-pasteable, user-facing announcement copy — right inside the engineering workflow.
 
@@ -17,10 +17,10 @@ After you ship, the messaging shouldn't wait for a separate marketing pass. `pro
 ## Usage
 
 ```bash
-/yunxing:promote                                   # Derive what shipped from context, draft defaults
-/yunxing:promote [free-form description]           # You describe what shipped
-/yunxing:promote a tweet thread and a LinkedIn post   # Request specific channels
-/yunxing:promote 3 tweet options for the new export feature
+/tunan:promote                                   # Derive what shipped from context, draft defaults
+/tunan:promote [free-form description]           # You describe what shipped
+/tunan:promote a tweet thread and a LinkedIn post   # Request specific channels
+/tunan:promote 3 tweet options for the new export feature
 ```
 
 ## Phase 1 — Figure out what shipped
@@ -130,9 +130,9 @@ Show every draft as a clean, copy-pasteable block, labeled by channel. For each:
 ## Examples
 
 **Single-channel variations — "3 tweet options":**
-> User: `/yunxing:promote 3 tweet options for the new one-click CSV export`
+> User: `/tunan:promote 3 tweet options for the new one-click CSV export`
 > → Summarize the value. Spiral path: `spiral write "3 tweet options for one-click CSV export" --instant --num-drafts 3 --json` (no cue words). No-Spiral path: write 3 distinct tweets directly. Present all three.
 
 **Multi-channel set — "a campaign across X, LinkedIn, and email":**
-> User: `/yunxing:promote draft a launch across X, LinkedIn, and email`
+> User: `/tunan:promote draft a launch across X, LinkedIn, and email`
 > → Spiral path: `spiral write "announcing one-click CSV export — a launch across X, LinkedIn, and email" --instant --json` returns a set of drafts per channel (Spiral decides the count — often several), each carrying its `channel`. (`--num-drafts` ignored here.) No-Spiral path: draft one X post, one LinkedIn post, one email directly. Present every returned draft, grouped by channel.
