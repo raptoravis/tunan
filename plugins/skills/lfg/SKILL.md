@@ -35,6 +35,8 @@ gh repo view --json nameWithOwner
 
 **FAST PATHS (`--hotfix` / `--tweak` in `$ARGUMENTS`, also reachable as the named entry skills `/tunan:hotfix` and `/tunan:tweak` which delegate here).** Both keep the one-feature-one-issue chain intact — the plan comment must still land so `work` has a plan to read — but cut ceremony, mirroring comet's hotfix/tweak presets. `--hotfix` (bug fix): tell `plan` to produce a minimal plan (no brainstorm, no deepening pass), then run steps 2–10 normally. `--tweak` (small change): minimal plan as above, and in step 3 run `code-review` at its lightest (skip the heavy conditional personas; keep the always-on correctness pass). Neither flag skips the local green gate (step 2a), CI watch (step 8), or `compound` (step 9) — evidence gates are never waived for speed. With no flag, run the full pipeline.
 
+**Subagent dispatch convention (steps 2, 2a, 6, 8).** Several steps below run a phase in an isolated subagent so its file reads, command output, and logs stay out of the orchestrator context — only a summary or the step's contract returns. Each such dispatch follows the same convention: use the platform's subagent primitive (`Agent`/`Task` with `subagent_type: general-purpose` in Claude Code; the equivalent general-purpose agent on Codex `spawn_agent` and on Pi `subagent` via `pi-subagents`), omit any `mode` override, and pass the feature issue ref / staged paths rather than inline content. If the harness cannot dispatch subagents or a subagent cannot load skills, run that step inline instead. The step text below states only what each subagent should do and return.
+
 1. Invoke the `plan` skill with `$ARGUMENTS`. If a prior `brainstorm` ran in this pipeline and produced a feature issue, pass that issue ref so the plan consumes it and writes its plan comment onto the same `#<N>`. When no upstream feature issue exists, `plan` creates the feature issue itself (requirement stub body) before writing the plan comment.
 
    GATE: STOP. If plan reported the task is non-software and cannot be processed in pipeline mode, stop the pipeline and inform the user that LFG requires software tasks. Otherwise, **record the feature issue ref (`#<N>`/URL)** that `plan` reports, then run the script gate to verify the plan comment actually landed — the gate, not the agent's recollection, decides whether step 1 is complete (pick the variant for the current OS):
@@ -49,7 +51,7 @@ gh repo view --json nameWithOwner
 
    Branch on the exit code, not the prose: `0` = plan comment present, proceed to step 2; `1` = no `<!-- tunan:plan -->` comment, invoke `plan` again with `$ARGUMENTS` and re-gate; `2` = gh/infra problem, stop and report it (do not loop). Do NOT proceed to step 2 while the gate returns `1`. The feature issue ref `#<N>` is the single handle passed to work in step 2, to code-review in step 3, and to compound in step 9 — there is no separate plan number.
 
-2. **Run `work` in an isolated subagent** so its file reads and diffs stay out of the orchestrator context — only a summary returns. Dispatch the platform's subagent primitive (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi via `pi-subagents`) with the catch-all/general-purpose agent type, omitting any `mode` override, and instruct it to load the `work` skill with the **feature issue ref `#<N>`** from step 1 as its work source (`work` reads the plan comment `<!-- tunan:plan -->` on that issue) and to return only a concise summary of what changed (files touched, key decisions). The subagent edits the working tree on disk, so the gate below still sees the changes. If the harness cannot dispatch subagents or a subagent cannot load skills, fall back to invoking `work` inline.
+2. **Run `work` in an isolated subagent** (see the dispatch convention above): instruct it to load the `work` skill with the **feature issue ref `#<N>`** from step 1 as its work source (`work` reads the plan comment `<!-- tunan:plan -->` on that issue) and to return only a concise summary of what changed (files touched, key decisions). The subagent edits the working tree on disk, so the gate below still sees the changes.
 
    GATE: STOP. Verify that implementation work was actually performed via the script gate — it confirms the working tree is dirty or HEAD diverged from the base branch, so a "done" claim with no code change is caught (pick the variant for the current OS):
 
@@ -63,7 +65,7 @@ gh repo view --json nameWithOwner
 
    Exit `0` = code changes present, proceed to step 2a; exit `1` = no changes detected, `work` did not run — re-invoke it before continuing. Do NOT proceed to step 2a while the gate returns `1`.
 
-2a. **Local green gate** — run `tunan:verify` (`mode:agent`, always the fully-qualified name, never a bare `verify`) in an isolated subagent so its test/lint/build command output stays out of the orchestrator context. Dispatch the platform's subagent primitive (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi via `pi-subagents`) with the catch-all/general-purpose agent type, omitting any `mode` override, and instruct it to load `tunan:verify` with `mode:agent` and return only the JSON output contract as its final message. If the harness cannot dispatch subagents or a subagent cannot load skills, invoke `tunan:verify` inline instead. Write the returned contract to an OS temp file and pass it through the script gate rather than eyeballing the fields (pick the variant for the current OS):
+2a. **Local green gate** — run `tunan:verify` (`mode:agent`, always the fully-qualified name, never a bare `verify`) in an isolated subagent (see the dispatch convention above): instruct it to load `tunan:verify` with `mode:agent` and return only the JSON output contract as its final message. Write the returned contract to an OS temp file and pass it through the script gate rather than eyeballing the fields (pick the variant for the current OS):
 
    ```bash
    bash scripts/gate.sh verify-green "$CONTRACT_FILE"
@@ -75,7 +77,7 @@ gh repo view --json nameWithOwner
 
    Map the exit code: `0` (`verdict_code: ready`) → proceed to step 3; `1` (`not_ready`/`failed`) → run the autopilot fix loop below, then re-verify and re-gate; `3` (`status: degraded`/`skipped`) → proceed to step 3 but do not treat as authoritative green — note in the PR body that local verification was degraded/skipped and CI remains the gate; `2` (no parseable contract / jq missing) → treat as a degraded local signal, note it, and proceed. The detailed per-status handling below still applies; the gate is the mechanical front door, the prose is the recovery detail. Read the contract's `status` and `verdict_code`:
 
-   - `not_ready` or `status: failed` → local checks are red; route into the same autopilot fix loop the pipeline uses for failures (do not prompt the user) — dispatch the diagnose-and-fix work to an isolated subagent as in step 8 so the failing-check output never enters the orchestrator context — then re-run `tunan:verify` (again in a subagent) and re-gate. **Bound the loop:** after a small number of consecutive `not_ready` results with no progress, stop the autopilot, surface the failing checks in the PR body, and proceed — CI (the remote authoritative gate) is the backstop. Never spin indefinitely on a persistently red local environment.
+   - `not_ready` or `status: failed` → local checks are red; route into the autopilot fix loop (do not prompt the user): dispatch the diagnose-and-fix work to an isolated subagent (see the dispatch convention above) so the failing-check output never enters the orchestrator context — instruct it to read the failing local checks, fix the root cause, and **edit the working tree only — do NOT commit or push at this pre-push stage** (push happens in step 7), returning a concise `{ fixed, summary, remaining }` — then re-run `tunan:verify` (again in a subagent) and re-gate. **Bound the loop:** after a small number of consecutive `not_ready` results (at most 3) with no progress, stop the autopilot, record the failing checks for the PR body created in step 7, and proceed — CI (the remote authoritative gate) is the backstop. Never spin indefinitely on a persistently red local environment.
    - `ready` → proceed to step 3.
    - `status: degraded` (ambiguous command detection / partial run) or `status: skipped` (no detectable checks) → do not loop and do not treat as authoritative green; proceed to step 3, noting in the PR body that local verification was degraded/skipped and CI remains the authoritative gate.
 
@@ -138,7 +140,7 @@ gh repo view --json nameWithOwner
 
    Never block DONE on tracker filing failures once residuals have been durably recorded. A `no_sink` outcome is success only when the findings are present in the PR body or in the created `tunan:review` issue.
 
-6. **Run `test-browser` (`mode:pipeline`) in an isolated subagent** so its screenshots, page snapshots, and browser logs stay out of the orchestrator context — only a pass/fail summary returns. Dispatch the platform's subagent primitive (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi via `pi-subagents`) with the catch-all/general-purpose agent type, omitting any `mode` override, and instruct it to load `test-browser` with `mode:pipeline` and return only a concise result summary (what was exercised, pass/fail, any defects found). If the harness cannot dispatch subagents or a subagent cannot load skills, invoke `test-browser` inline instead.
+6. **Run `test-browser` (`mode:pipeline`) in an isolated subagent** (see the dispatch convention above): instruct it to load `test-browser` with `mode:pipeline` and return only a concise result summary (what was exercised, pass/fail, any defects found).
 
 7. Invoke the `commit-push-pr` skill.
 
@@ -163,7 +165,7 @@ gh repo view --json nameWithOwner
 
       If it exits non-zero, one or more checks failed. Continue to (2).
 
-   2. **Dispatch an isolated subagent to diagnose and fix**, so the failure logs never enter the orchestrator context — only a short summary returns. Use the platform's subagent primitive (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi via `pi-subagents`) with the catch-all/general-purpose agent type, omitting any `mode` override. Instruct it to:
+   2. **Dispatch an isolated subagent to diagnose and fix** (see the dispatch convention above) so the failure logs never enter the orchestrator context — only a short summary returns. Instruct it to:
       - enumerate failing checks with `gh pr checks --json name,state,conclusion,workflow,link`, parse each failing `<run-id>` from the check's details URL, and read each failure log with `gh run view <run-id> --log-failed`;
       - identify the root cause and apply a real fix in the working tree — never weaken, skip, or mock the failing assertion; if the failure is a flaky test with no fix path, make no code change and report that;
       - stage only the files it changed, then commit and push:
@@ -174,9 +176,7 @@ gh repo view --json nameWithOwner
         git push
         ```
 
-      - return ONLY a concise structured summary — `{ fixed: <bool>, summary: <what was repaired>, remaining: <flaky/unfixable notes> }` — keeping the raw logs inside the subagent.
-
-      If the harness cannot dispatch subagents, fall back to performing this diagnose-and-fix inline.
+      - return ONLY a concise structured summary — `{ fixed: <bool>, summary: <what was repaired>, remaining: [{ check: <name>, url: <run/check URL>, note: <flaky/unfixable> }] }` — so the orchestrator can compose the exhaustion section below without re-reading logs; keep the raw logs inside the subagent.
 
    3. Read the subagent's summary (not raw logs) and return to iteration (1) with the next attempt counter. If it reported a flaky/unfixable failure with no code change, treat that as the residual outcome below rather than retrying.
 
