@@ -110,6 +110,8 @@ flowchart TD
 
 Produce one flowchart per distinct journey. Cover the happy path **and** the branch points (error, empty, boundary, permission). These diagrams ARE the understanding — they become the spine of the matrix and belong in the final report.
 
+Keep node-label text free of mermaid syntax characters. A semicolon `;` inside a label breaks the whole diagram (mermaid reads it as a statement separator) — use a comma or `/` instead. When a label must contain `[]`, `{}`, `|`, or `#`, wrap the label in double quotes (`A["text (with) chars"]`).
+
 #### 2b. Derive the matrix from the flows
 
 Walk each flowchart and turn every node and branch into one or more test scenarios. Read `references/test-matrix-taxonomy.md` for the full set of dimensions (journeys, functional checks, experiential checks, edge/error/empty states, accessibility, responsiveness). Cover both **functional** ("does it work?") and **experiential** ("does it feel right and align with the product?").

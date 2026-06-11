@@ -1,6 +1,6 @@
 {
   "upstream": "everyinc/compound-engineering-plugin",
-  "last_synced_sha": "b625049",
-  "last_synced_date": "2026-06-09",
+  "last_synced_sha": "4719dc509fdc45656a830e3ed6060f674e206076",
+  "last_synced_date": "2026-06-11",
   "note": "Baseline for the getups skill. Records the upstream main HEAD that local tunan skills are merged up to. getups reads this to compute the delta and rewrites it after a successful merge. Committed (not machine-local) so every maintainer run shares the same baseline."
 }

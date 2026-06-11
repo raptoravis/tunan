@@ -116,7 +116,7 @@ If the user passes a feature issue ref (`#<N>` or URL) that already carries a pl
 
 Words like "strengthen", "confidence", "gaps", and "rigor" are NOT sufficient on their own to trigger deepening. These words appear in normal editing requests ("strengthen that section about the diagram", "there are gaps in the test scenarios") and should not cause a holistic deepening pass. Only treat them as deepening intent when the request clearly targets the plan as a whole and does not name a specific section or content area to change — and even then, prefer to confirm with the user before entering the deepening flow.
 
-Once the plan comment is identified and appears complete (all major sections present, implementation units defined, `status: active` in the comment frontmatter): short-circuit to Phase 5.3 (Confidence Check and Deepening) in **interactive mode**.
+Once the plan comment is identified and appears complete (all major sections present, implementation units defined): short-circuit to Phase 5.3 (Confidence Check and Deepening) in **interactive mode**.
 
 A `tunan:plan` comment is always a software plan; the non-software universal-planning route (Phase 0.1b) is selected by task classification at fresh-invocation time, never by resuming a plan comment.
 
@@ -742,7 +742,7 @@ Then continue to Phase 5.2 without a blocking question.
 
 **REQUIRED: Write or update the plan comment on the feature issue before presenting any options.** The plan is a **comment** on the feature issue, never a new issue. Read `references/comment-chain-storage.md` for the model and the exact gh recipes.
 
-Compose the complete plan in markdown using the content from `references/plan-sections.md` and the format principles from `references/markdown-rendering.md`. The artifact's **first line is the marker** `<!-- tunan:plan -->`; the plan metadata fields (`title`, `type`, `status: active`, `date`, optional `origin`/`deepened`) render as a fenced ```yaml block immediately after the marker, then the sections (see `references/plan-sections.md`). Write this to an OS temp file (bash `${TMPDIR:-/tmp}/tunan-plan-body.md`, PowerShell `$env:TEMP\tunan-plan-body.md`).
+Compose the complete plan in markdown using the content from `references/plan-sections.md` and the format principles from `references/markdown-rendering.md`. The artifact's **first line is the marker** `<!-- tunan:plan -->`; the plan metadata fields (`title`, `type`, `date`, optional `origin`/`deepened`) render as a fenced ```yaml block immediately after the marker, then the sections (see `references/plan-sections.md`). Write this to an OS temp file (bash `${TMPDIR:-/tmp}/tunan-plan-body.md`, PowerShell `$env:TEMP\tunan-plan-body.md`).
 
 **Resolve the feature issue `#N`:**
 

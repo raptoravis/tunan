@@ -142,6 +142,19 @@ flowchart TB
 (`TB` direction default — keeps diagrams narrow in source view and in
 narrow rendered viewports.)
 
+**Keep mermaid label/message text free of mermaid syntax characters.**
+The most common break is a semicolon `;` inside `sequenceDiagram` message
+text (the part after the `:`) or any node label — mermaid treats `;` as a
+statement separator, so everything after it parses as a new statement and
+the whole diagram fails to render (`Expecting '->>' … got 'NEWLINE'`).
+Never put `;` in label text: use a comma, `/`, or `—`, or split one
+message into two (`A->>B: approve → insert` / `A->>B: reject → mark
+rejected`). The same care applies to other reserved punctuation in node
+labels (`[]`, `{}`, `|`, `#`) — when a label must contain them, wrap the
+label in double quotes (`A["text (with) chars"]`). Parentheses, `/`, and
+CJK text in `sequenceDiagram` message text render fine and need no
+escaping.
+
 GitHub renders fenced `mermaid` blocks natively in issue bodies. For
 quantitative comparisons (bar charts, scatter plots) markdown has no
 native equivalent — use a table with the data and let prose or caption

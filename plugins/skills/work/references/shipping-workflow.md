@@ -96,9 +96,9 @@ This file contains the shipping workflow (Phase 3-4). It is loaded when all Phas
 
    Note whether the completed work has observable behavior (UI rendering, CLI output, API/library behavior with a runnable example, generated artifacts, or workflow output). The `commit-push-pr` skill will ask whether to capture evidence only when evidence is possible.
 
-2. **Update Plan Comment Status**
+2. **Mark the Plan Shipped**
 
-   Mark the plan complete on the **feature issue `#N`**. The plan is a
+   Record that the plan shipped on the **feature issue `#N`**. The plan is a
    comment on the feature issue, not a local file — run the GH preflight
    (gh installed, `gh auth status` exits 0, `gh repo view --json nameWithOwner`
    resolves) before touching it; if any check fails, abort and report the gh
@@ -110,22 +110,13 @@ This file contains the shipping workflow (Phase 3-4). It is loaded when all Phas
    the project closes feature issues on ship) close the issue:
 
    ```bash
-   gh issue comment <N> --body "Implementation complete; shipped. status: completed"
+   gh issue comment <N> --body "Implementation complete; shipped."
    ```
 
-   If the plan comment carries a leading `status:` marker in its ```yaml
-   frontmatter, update it in place: find the plan comment id, then PATCH the
-   comment to flip `status: active` to `status: completed`:
-
-   ```bash
-   gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:plan -->")) | .id'
-   ```
-   ```bash
-   gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<tmpfile>
-   ```
-
-   If no status marker exists, the completion comment is sufficient — skip
-   the plan-comment edit.
+   Do not edit the plan comment itself — the plan is a decision artifact and
+   carries no `status` field to flip. Whether the work shipped is derived
+   from git and the feature issue's PR / close state, not from a mutable
+   field in the plan comment.
 
 3. **Commit and Create Pull Request**
 

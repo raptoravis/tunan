@@ -13,10 +13,8 @@ content rendered by different skills shares the same markdown principles.
 These hold regardless of which skill produced the artifact.
 
 - **YAML frontmatter at the top of the file.** Standard `---` delimited block
-  containing the artifact's stable metadata (title, status, date, type, etc.
-  — exact fields are per-skill, defined in the section contract). Editable
-  in place; tools and agents that do status flips (`active → completed`)
-  update the YAML directly.
+  containing the artifact's stable metadata (title, date, type, etc.
+  — exact fields are per-skill, defined in the section contract).
 - **ASCII identifiers in anchors.** Markdown headings auto-generate anchors
   from the heading text. Keep headings ASCII so anchors are predictable
   (`#implementation-units`, not `#implementación-units`).
@@ -138,6 +136,19 @@ flowchart TB
 (`TB` direction default — keeps diagrams narrow in source view and in
 narrow rendered viewports.)
 
+**Keep mermaid label/message text free of mermaid syntax characters.**
+The most common break is a semicolon `;` inside `sequenceDiagram` message
+text (the part after the `:`) or any node label — mermaid treats `;` as a
+statement separator, so everything after it parses as a new statement and
+the whole diagram fails to render (`Expecting '->>' … got 'NEWLINE'`).
+Never put `;` in label text: use a comma, `/`, or `—`, or split one
+message into two (`A->>B: approve → insert` / `A->>B: reject → mark
+rejected`). The same care applies to other reserved punctuation in node
+labels (`[]`, `{}`, `|`, `#`) — when a label must contain them, wrap the
+label in double quotes (`A["text (with) chars"]`). Parentheses, `/`, and
+CJK text in `sequenceDiagram` message text render fine and need no
+escaping.
+
 Markdown's diagram affordances are limited compared to HTML. For
 quantitative comparisons (bar charts, scatter plots) markdown has no
 native equivalent — use a table with the data and let prose or caption
@@ -181,15 +192,12 @@ brainstorm frontmatter). Common rules:
 
 - YAML at the top of the file, delimited by `---` on its own line above
   and below.
-- Field names in lowercase snake_case (`status`, `created_at`, not
-  `Status`, `CreatedAt`).
-- **Status lifecycle is per-contract.** When the section contract
-  defines a `status` field with a lifecycle (plans use
-  `active → completed`, flipped by work at shipping time via direct
-  YAML edit), it is editable in place. When the section contract does
-  not define a status lifecycle (brainstorms, for example, have no
-  `active → completed` flip — they are upstream of plans and
-  referenced via the plan's `origin:`), do not introduce one.
+- Field names in lowercase snake_case (`created_at`, `topic`, not
+  `CreatedAt`, `Topic`).
+- **No status / lifecycle field.** Artifacts are point-in-time records
+  (decision or discovery), not tracked work items. Do not introduce a
+  mutable `status` field or an `active → completed` lifecycle — whether
+  the work shipped is derived from git, not stored in the doc.
 - Stable across artifact revisions — never rename or repurpose a field.
 
 ## Post-write audit

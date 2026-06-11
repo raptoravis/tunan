@@ -213,13 +213,15 @@ and semantics are stable so consumers can locate them in the body.
   `surface-scope-earlier`, `demo-reel-local-save`). Also used as the
   human-readable part of the issue title (`[req] <topic>`).
 
-### Status flip does not apply to brainstorm
+### No status field
 
 The `tunan:req` issue body has no `status` field — there is no
 `active → completed` body lifecycle. A requirement is a one-time artifact
 that downstream consumers (`plan`, `doc-review`) reference by
 its issue `#<N>`. (GitHub's own open/closed state is the issue lifecycle, not
-a body field.)
+a body field.) No tunan artifact carries a mutable status field; whether
+work shipped is derived from git, not stored in the issue body. Do not
+introduce one.
 
 ### Field-name stability
 
