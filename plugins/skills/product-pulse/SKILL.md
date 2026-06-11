@@ -89,7 +89,7 @@ If that returns a number `<N>`, read its body and parse the fenced `yaml` block,
 gh issue view <N> --json body --jq .body
 ```
 
-If no `tunan:config` issue exists (empty result), or `gh` is unavailable, treat this as a first run. Never read a local `.tunan/config.local.yaml`.
+If no `tunan:config` issue exists (empty result), or `gh` is unavailable, treat this as a first run. Never read a local config file — config lives only in the `tunan:config` issue.
 
 **Config keys:**
 

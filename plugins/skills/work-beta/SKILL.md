@@ -56,7 +56,7 @@ Project config lives in the repo's `tunan:config` GitHub issue, not a local file
 gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
 ```
 
-If that returns a number `<N>`, read its body (`gh issue view <N> --json body`) and parse the fenced `yaml` block, extracting values for the keys listed below. If no `tunan:config` issue exists, or `gh` is unavailable, all settings fall through to defaults. Never read a local `.tunan/config.local.yaml`.
+If that returns a number `<N>`, read its body (`gh issue view <N> --json body`) and parse the fenced `yaml` block, extracting values for the keys listed below. If no `tunan:config` issue exists, or `gh` is unavailable, all settings fall through to defaults. Never read a local config file — config lives only in the `tunan:config` issue.
 
 **Per-machine consent (safety gate).** `work_delegate_consent` / `work_delegate_sandbox` read from the issue are a **team default, not authorization for this machine**. Reading `work_delegate_consent: true` does NOT mean the current machine has consented to Codex running with a yolo / full-auto sandbox. Before delegating on this machine, confirm consent for this session at least once (the Delegation Decision flow in `references/codex-delegation-workflow.md` owns the prompt); a stored `true` only pre-fills the recommended answer. In headless / unattended runs the per-machine signal is the `TUNAN_CODEX_CONSENT` env var — delegation proceeds only when it is set, never from a shared `true` alone.
 

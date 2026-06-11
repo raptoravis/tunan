@@ -41,7 +41,7 @@ GSD's source tree to where capabilities live.
    auto-stash.
 3. **Determine the audit baseline.** Use a `last_synced_sha` supplied by the
    maintainer (as an argument, or the `GSD_HEAD` reported by a prior run). There
-   is no persisted baseline file — tunan keeps no `.tunan/` local state. If no
+   is no persisted baseline file — tunan keeps no local state. If no
    baseline SHA is provided, treat the audit as a full survey (no baseline diff)
    and say so.
 
@@ -106,7 +106,7 @@ extends or whether it warrants a new skill — and confirm before writing.
 Re-express each accepted capability in tunan's own shape:
 
 - Port the *idea*, not the GSD file. Match tunan conventions: issue-state config
-  (no `.tunan/` local files), the `align` blocking-question protocol, bare skill
+  (no local config files), the `align` blocking-question protocol, bare skill
   names, Windows/PowerShell script parity, markdown-only artifacts.
 - Reuse GSD's wording only where it is genuinely generic; never carry GSD
   branding, slash-command names, or path assumptions into tunan.
@@ -121,7 +121,7 @@ Re-express each accepted capability in tunan's own shape:
    does not re-surface it.
 2. **Report the new baseline.** State the audited `GSD_HEAD` SHA and today's date
    in the summary so the maintainer can record it and pass it as the baseline on
-   the next run. Do not write a local `.tunan/` file.
+   the next run. Do not write a local baseline file.
 3. **Version + README, only if a skill was added or its surface changed.** A new
    tunan skill: bump the version in BOTH `plugins/.claude-plugin/plugin.json` and
    `plugins/.codex-plugin/plugin.json` (same value, same commit), add the skill

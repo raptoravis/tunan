@@ -30,7 +30,7 @@ unchanged.
 | `github.com/everyinc/compound-engineering-plugin` | `github.com/raptoravis/tunan` |
 | repo slug `everyinc/compound-engineering-plugin` | `raptoravis/tunan` |
 | `gh api repos/everyinc/compound-engineering-plugin/...` | `gh api repos/raptoravis/tunan/...` |
-| config dir `.compound-engineering/` (or `.tunan/`) | the repo's `tunan:config` GitHub issue — tunan keeps no local config dir; port any local-config read/write to the config issue (see the config-issue storage contract in the `setup` skill) |
+| config dir `.compound-engineering/` | the repo's `tunan:config` GitHub issue — tunan keeps no local config dir; port any local-config read/write to the config issue (see the config-issue storage contract in the `setup` skill) |
 | plugin display name "Compound Engineering" / "compound-engineering" / "ce" | "tunan" |
 
 ## Residual-token sweep

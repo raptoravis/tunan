@@ -84,7 +84,7 @@ Otherwise proceed to Phase 2 to resolve any issues. Handle repo-local cleanup (S
 
 ### Step 4: Resolve Repo-Local CE Issues
 
-Resolve the repository root (`git rev-parse --show-toplevel`). If `tunan.local.md` exists at the repo root, explain that it is obsolete because review-agent selection is automatic and CE now stores project config in a `tunan:config` GitHub issue, not a local file. Ask whether to delete it now. Use the repo-root path when deleting. Likewise, if a legacy `.tunan/config.local.yaml` (or `.tunan/config.local.example.yaml`) exists, offer to migrate its set keys into the `tunan:config` issue (Step 5) and delete the local file afterward — config no longer lives on disk.
+Resolve the repository root (`git rev-parse --show-toplevel`). If `tunan.local.md` exists at the repo root, explain that it is obsolete because review-agent selection is automatic and CE now stores project config in a `tunan:config` GitHub issue, not a local file. Ask whether to delete it now. Use the repo-root path when deleting.
 
 ### Step 5: Bootstrap Project Config
 
@@ -112,7 +112,7 @@ If the user approves, ensure the `tunan:config` label exists (`gh label list --s
 gh issue create --title "[config] tunan settings" --label "tunan:config" --body-file <tmpfile>
 ```
 
-**Present (refresh option):** the config issue already exists — leave it as-is unless the user wants to edit it. If a legacy local `.tunan/config.local.yaml` is also present, offer to merge its set keys into the issue body and delete the local file (config no longer lives on disk).
+**Present (refresh option):** the config issue already exists — leave it as-is unless the user wants to edit it.
 
 There is no `.gitignore` entry to manage — config is an issue, not a tracked-or-ignored file.
 

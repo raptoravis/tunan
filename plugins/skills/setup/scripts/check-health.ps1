@@ -182,19 +182,12 @@ foreach ($entry in $mcp) {
 #  Project checks (repo only)
 # =====================================================
 
-$legacy_cfg = 'skip'; $legacy_local_cfg = 'skip'; $config_issue = 'skip'
+$legacy_cfg = 'skip'; $config_issue = 'skip'
 
 if ($in_repo) {
   $repo_root = (git rev-parse --show-toplevel 2>$null | Select-Object -First 1)
   $legacy_cfg = 'missing'
   if (Test-Path -LiteralPath "$repo_root/tunan.local.md") { $legacy_cfg = 'present' }
-
-  # Legacy on-disk config is obsolete — project config now lives in a
-  # tunan:config GitHub issue. Flag any surviving local config for migration.
-  $legacy_local_cfg = 'missing'
-  if ((Test-Path -LiteralPath "$repo_root/.tunan/config.local.yaml") -or (Test-Path -LiteralPath "$repo_root/.tunan/config.local.example.yaml")) {
-    $legacy_local_cfg = 'present'
-  }
 
   # The config issue is the source of truth. Checking it needs an authenticated
   # gh; when gh is unavailable leave config_issue=skip (offline diagnostic).
@@ -280,7 +273,6 @@ if ($in_repo) {
   $has_project_issues = $false
 
   if ($legacy_cfg -eq 'present') { $has_project_issues = $true }
-  if ($legacy_local_cfg -eq 'present') { $has_project_issues = $true }
   if ($config_issue -eq 'missing') { $has_project_issues = $true }
 
   if ($has_project_issues) {
@@ -288,11 +280,6 @@ if ($in_repo) {
 
     if ($legacy_cfg -eq 'present') {
       Add-Warn "Outdated Compound Engineering config in this repo"
-      $issues++
-    }
-
-    if ($legacy_local_cfg -eq 'present') {
-      Add-Warn "Legacy local config present (.tunan/config.local.yaml) — migrate to the tunan:config issue via /tunan:setup"
       $issues++
     }
 

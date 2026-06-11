@@ -38,8 +38,8 @@ Confirm the working context before touching anything:
    should be able to tell them apart. Do not auto-stash.
 3. **Determine the sync baseline.** Use a `last_synced_sha` supplied by the
    maintainer (as an argument, or the `UPSTREAM_HEAD` reported by the prior run
-   in Phase 6). There is no persisted baseline file — tunan keeps no `.tunan/`
-   local state. If no baseline SHA is provided, treat the merge as a full audit
+   in Phase 6). There is no persisted baseline file — tunan keeps no local
+   state. If no baseline SHA is provided, treat the merge as a full audit
    (no baseline diff) and say so.
 
 ## Phase 1: Fetch upstream + compute the delta
@@ -143,7 +143,7 @@ unresolved or unreported.
 
 1. **Report the new baseline.** State the synced `UPSTREAM_HEAD` SHA and today's
    date in the summary so the maintainer can record it (and pass it as the
-   baseline on the next run). Do not write a local `.tunan/` file — there is no
+   baseline on the next run). Do not write a local baseline file — there is no
    persisted baseline.
 2. **Version + README, only if a skill was added or its surface changed.** A new
    tunan skill: bump the version in BOTH `plugins/.claude-plugin/plugin.json`

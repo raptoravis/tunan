@@ -2,15 +2,15 @@
 
 tunan stores project configuration in a **GitHub issue**, not a local file.
 This keeps every durable artifact — requirements, plans, solutions, and now
-config — in GitHub, so nothing depends on a machine-local `.tunan/` directory.
+config — in GitHub, so nothing depends on a machine-local config directory.
 
 ## The config issue
 
 - **One open issue per repo**, labeled `tunan:config`, titled `[config] tunan settings`.
 - Its body's first line is the marker `<!-- tunan:config -->`.
 - The settings live in a fenced ```yaml block in the body. Keys match the
-  former `.tunan/config.local.yaml` schema exactly (see
-  `references/config-template.yaml` for the full annotated key list).
+  documented config schema (see `references/config-template.yaml` for the full
+  annotated key list).
 - Found by label, not by path. There is no local config file and no
   `.gitignore` entry to manage.
 
@@ -98,4 +98,4 @@ best-effort and must never block a skill — degrade to defaults rather than
 erroring. Callers that treat config as load-bearing (e.g. `verify` choosing a
 test command, `work-beta` reading delegation consent) should be aware that a
 transient `gh` failure silently reverts to defaults. Never write or read a local
-`.tunan/config.local.yaml`; the issue is the only store.
+config file; the issue is the only store.

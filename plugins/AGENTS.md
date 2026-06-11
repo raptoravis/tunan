@@ -275,7 +275,7 @@ When dispatching sub-agents, **omit the `mode` parameter** on the Agent/Task too
 
 ### Reading Config Files from Skills
 
-Project config lives in a **GitHub issue labeled `tunan:config`**, not a local file. This keeps config in the same issue-state store as requirements, plans, and solutions — there is no `.tunan/` directory and no gitignored config file. The authoritative contract (issue shape, read/write/merge recipes, team-shared vs per-machine semantics) is `skills/setup/references/config-issue-storage.md`; consumer skills inline a short read snippet rather than sharing a file (there is no cross-skill shared-file mechanism).
+Project config lives in a **GitHub issue labeled `tunan:config`**, not a local file. This keeps config in the same issue-state store as requirements, plans, and solutions — there is no local config directory and no gitignored config file. The authoritative contract (issue shape, read/write/merge recipes, team-shared vs per-machine semantics) is `skills/setup/references/config-issue-storage.md`; consumer skills inline a short read snippet rather than sharing a file (there is no cross-skill shared-file mechanism).
 
 1. **Read:** resolve the config issue, then read and parse its fenced `yaml` block:
 
@@ -289,7 +289,7 @@ Project config lives in a **GitHub issue labeled `tunan:config`**, not a local f
 
 3. **Per-machine safety keys:** `work_delegate_consent` / `work_delegate_sandbox` are stored in the (team-shared) issue as defaults only. A stored `true` is NOT per-machine authorization to run Codex with a yolo sandbox — the running session must still confirm consent for the current machine (interactively a per-session prompt; headless via the `TUNAN_CODEX_CONSENT` env var). See `skills/setup/references/config-issue-storage.md`.
 
-If no `tunan:config` issue exists, or `gh` is unavailable, fall through to defaults — never fail or block on missing config, and never read or write a local `.tunan/config.local.yaml`.
+If no `tunan:config` issue exists, or `gh` is unavailable, fall through to defaults — never fail or block on missing config, and never read or write a local config file.
 
 ### Quick Validation Command
 

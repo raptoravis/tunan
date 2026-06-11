@@ -188,20 +188,12 @@ done
 # =====================================================
 
 legacy_cfg="skip"
-legacy_local_cfg="skip"
 config_issue="skip"
 
 if [ "$in_repo" = "yes" ]; then
   repo_root=$(git rev-parse --show-toplevel 2>/dev/null)
   legacy_cfg="missing"
   [ -f "$repo_root/tunan.local.md" ] && legacy_cfg="present"
-
-  # Legacy on-disk config is obsolete — project config now lives in a
-  # tunan:config GitHub issue. Flag any surviving local config for migration.
-  legacy_local_cfg="missing"
-  if [ -e "$repo_root/.tunan/config.local.yaml" ] || [ -e "$repo_root/.tunan/config.local.example.yaml" ]; then
-    legacy_local_cfg="present"
-  fi
 
   # The config issue is the source of truth. Checking it needs an authenticated
   # gh; when gh is unavailable leave config_issue=skip (offline diagnostic).
@@ -293,9 +285,6 @@ if [ "$in_repo" = "yes" ]; then
   if [ "$legacy_cfg" = "present" ]; then
     has_project_issues="yes"
   fi
-  if [ "$legacy_local_cfg" = "present" ]; then
-    has_project_issues="yes"
-  fi
   if [ "$config_issue" = "missing" ]; then
     has_project_issues="yes"
   fi
@@ -305,11 +294,6 @@ if [ "$in_repo" = "yes" ]; then
 
     if [ "$legacy_cfg" = "present" ]; then
       warn "Outdated Compound Engineering config in this repo"
-      issues=$((issues + 1))
-    fi
-
-    if [ "$legacy_local_cfg" = "present" ]; then
-      warn "Legacy local config present (.tunan/config.local.yaml) — migrate to the tunan:config issue via /tunan:setup"
       issues=$((issues + 1))
     fi
 
