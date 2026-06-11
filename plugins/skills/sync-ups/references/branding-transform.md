@@ -49,7 +49,7 @@ reporting the port complete.
 ## Do NOT transform
 
 - Source prose describing the upstream project by name in a historical note
-  (e.g. a CHANGELOG entry crediting upstream) — getups does not port upstream
+  (e.g. a CHANGELOG entry crediting upstream) — sync-ups does not port upstream
   CHANGELOG/README/manifests at all, so this rarely arises.
 - The word "compound" used in its plain-English or domain sense (e.g.
   "compound your team's knowledge", the `compound` skill name itself) — only

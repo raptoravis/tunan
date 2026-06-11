@@ -10,14 +10,14 @@ param([string]$LastSha = "")
 
 $ErrorActionPreference = "SilentlyContinue"
 
-$scratch = Join-Path $env:TEMP "tunan-getups-upstream"
+$scratch = Join-Path $env:TEMP "tunan-syncups-upstream"
 $repo = "https://github.com/everyinc/compound-engineering-plugin.git"
 $skillsPath = "plugins/compound-engineering/skills/"
 
 if (Test-Path $scratch) { Remove-Item -Recurse -Force $scratch }
 git clone --quiet $repo $scratch 2>$null
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path $scratch)) {
-  Write-Output "__GETUPS_CLONE_FAILED__"
+  Write-Output "__SYNCUPS_CLONE_FAILED__"
   exit 0
 }
 
@@ -39,8 +39,8 @@ if ($hasSha) {
   git diff --stat "$LastSha..HEAD" -- $skillsPath
 } else {
   Write-Output "=== COMMITS $LastSha..HEAD ==="
-  Write-Output "__GETUPS_LAST_SHA_MISSING__"
+  Write-Output "__SYNCUPS_LAST_SHA_MISSING__"
   Write-Output "=== CHANGED FILES (skills) ==="
-  Write-Output "__GETUPS_LAST_SHA_MISSING__"
+  Write-Output "__SYNCUPS_LAST_SHA_MISSING__"
 }
 Pop-Location

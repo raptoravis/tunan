@@ -1,8 +1,8 @@
 ---
-name: getups
+name: sync-ups
 description: |
   Merge the latest upstream everyinc/compound-engineering-plugin changes into
-  the local tunan skills fork. Use when the user says "getups", "拉上游更新",
+  the local tunan skills fork. Use when the user says "sync-ups", "拉上游更新",
   "merge upstream", "sync compound-engineering", "合并上游", "pull upstream into
   tunan", or asks to bring this fork up to date with the upstream
   compound-engineering-plugin. Maintainer-facing: run from the tunan fork repo
@@ -14,7 +14,7 @@ disable-model-invocation: true
 allowed-tools: Bash(bash *fetch-upstream-delta.sh), Bash(powershell.exe *fetch-upstream-delta.ps1)
 ---
 
-# Get Upstream — merge compound-engineering-plugin into tunan
+# Sync Upstream — merge compound-engineering-plugin into tunan
 
 The local `tunan` plugin is a rebranded fork of
 `everyinc/compound-engineering-plugin`. This skill brings the latest upstream
@@ -31,7 +31,7 @@ fork manages its own version and README.
 Confirm the working context before touching anything:
 
 1. **This is the tunan fork repo.** `plugins/.claude-plugin/plugin.json` must
-   have `"name": "tunan"`. If not, stop and tell the user getups only runs from
+   have `"name": "tunan"`. If not, stop and tell the user sync-ups only runs from
    the tunan fork checkout.
 2. **Clean-ish tree.** If the working tree has unrelated uncommitted changes,
    warn the user — the merge will add more unstaged changes on top, and they
@@ -62,8 +62,8 @@ The script clones upstream to a scratch dir (never into this repo) and prints:
 - `UPSTREAM_ROOT=<path>` — read upstream files from here.
 - the commit list and skill-scoped `git diff --stat` for `<last_synced_sha>..HEAD`.
 
-Sentinels: `__GETUPS_CLONE_FAILED__` (network/clone failed — stop and report),
-`__GETUPS_LAST_SHA_MISSING__` (baseline SHA absent from upstream history; fall
+Sentinels: `__SYNCUPS_CLONE_FAILED__` (network/clone failed — stop and report),
+`__SYNCUPS_LAST_SHA_MISSING__` (baseline SHA absent from upstream history; fall
 back to comparing the local skill tree against `UPSTREAM_ROOT` file-by-file).
 
 If `UPSTREAM_HEAD` already equals `last_synced_sha`, the fork is current — report
