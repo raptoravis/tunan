@@ -14,7 +14,7 @@ agents under `agents/`, and the plugin manifests under `.claude-plugin/` and
 Consequences:
 
 - Behavioral rules that govern skill _runtime_ behavior must live inside the skill itself — in `SKILL.md` or files under its `references/`. Guidance placed in this file is invisible at runtime.
-- When two or more skills share a behavioral principle, duplicate the guidance into each skill (inline for short rules, `references/` for longer ones). There is no cross-skill shared-file mechanism (see "File References in Skills" below). When a reference file is duplicated across skills (e.g., `concepts-vocabulary.md` in both `compound/references/` and `compound-refresh/references/`; `comment-chain-storage.md` in `plan/`, `work/`, `work-beta/`, `compound/`, `compound-refresh/`, `brainstorm/`, and `lfg/` `references/`; `output-contract.md` in `code-review/references/` (authoritative) and `verify/references/` (byte-identical copy)), edits must be applied to every copy in the same commit. Drift between copies produces inconsistent agent behavior depending on which skill loaded.
+- When two or more skills share a behavioral principle, duplicate the guidance into each skill (inline for short rules, `references/` for longer ones). There is no cross-skill shared-file mechanism (see "File References in Skills" below). When a reference file is duplicated across skills (e.g., `concepts-vocabulary.md` in both `compound/references/` and `compound-refresh/references/`; `comment-chain-storage.md` in `plan/`, `work/`, `work-beta/`, `compound/`, `compound-refresh/`, `brainstorm/`, and `lfg/` `references/`; `output-contract.md` in `code-review/references/` (authoritative) and `verify/references/` (byte-identical copy); `progress-marker.md` in both `work/references/` and `work-beta/references/`), edits must be applied to every copy in the same commit. Drift between copies produces inconsistent agent behavior depending on which skill loaded.
 - Do not propose that runtime guidance for ideate, brainstorm, plan, or any other skill live in this AGENTS.md. This file only shapes how contributors edit the plugin.
 
 This is easy to miss because authoring feels like using: you edit the plugin while running inside this repo, and the repo's AGENTS.md is loaded — but that load does not follow the installed skill into a user's environment.
@@ -275,21 +275,21 @@ When dispatching sub-agents, **omit the `mode` parameter** on the Agent/Task too
 
 ### Reading Config Files from Skills
 
-Plugin config lives at `.tunan/config.local.yaml` in the repo root. This file is gitignored (machine-local settings), which creates two gotchas:
+Project config lives in a **GitHub issue labeled `tunan:config`**, not a local file. This keeps config in the same issue-state store as requirements, plans, and solutions — there is no `.tunan/` directory and no gitignored config file. The authoritative contract (issue shape, read/write/merge recipes, team-shared vs per-machine semantics) is `skills/setup/references/config-issue-storage.md`; consumer skills inline a short read snippet rather than sharing a file (there is no cross-skill shared-file mechanism).
 
-1. **Path resolution:** Never read the config relative to CWD — the user may invoke a skill from a subdirectory. Always resolve from the repo root. In pre-resolution commands, use `git rev-parse --show-toplevel` to find the root.
+1. **Read:** resolve the config issue, then read and parse its fenced `yaml` block:
 
-2. **Worktrees:** Gitignored files are per-worktree. A config file created in the main checkout does not exist in worktrees. Use `--show-toplevel` to find the root:
-
-   ```
-   !`cat "$(git rev-parse --show-toplevel 2>/dev/null)/.tunan/config.local.yaml" 2>/dev/null || echo '__NO_CONFIG__'`
+   ```bash
+   gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
    ```
 
-   Outside a git repo, `git rev-parse` emits empty and `cat "/.tunan/config.local.yaml"` fails (permission denied or not found, suppressed by `2>/dev/null`), so the `__NO_CONFIG__` sentinel fires. Note: the previous pattern used `(top=$(...); [ -n "$top" ] && cat "$top/...")` with a semicolon to guard the empty-root case, but `;` is rejected by Claude Code's safety checker as `Unhandled node type: ;` (see Pre-resolution exception above) and must not be used in `!` pre-resolution.
+   If that returns a number `<N>`, `gh issue view <N> --json body --jq .body` and parse the ```yaml block. Prefer a runtime read over a `!` pre-resolution — the multi-step gh read does not fit pre-resolution's single-command safety constraints, and config reads are not hot enough to need load-time resolution.
 
-   Note: in a worktree, `--show-toplevel` returns the worktree path, so config from the main checkout will not be found. This is acceptable — config is optional and users who work from worktrees can add a config file there. A previous pattern used `git-common-dir` with `${common%/.git}` to derive the main repo root as a fallback, but bash parameter expansion operators are rejected as "Contains expansion" (see Pre-resolution exception above), so that approach is no longer viable without a script.
+2. **Write / merge:** read the body, merge keys into the yaml block preserving existing ones, then `gh issue edit <N> --body-file <tmpfile>`. Create the issue (`gh issue create --title "[config] tunan settings" --label "tunan:config"`) on first write if absent. `setup` owns bootstrapping; other skills (product-pulse, work-beta delegation, promote) merge their own keys.
 
-If neither path has the file, fall through to defaults — never fail or block on missing config.
+3. **Per-machine safety keys:** `work_delegate_consent` / `work_delegate_sandbox` are stored in the (team-shared) issue as defaults only. A stored `true` is NOT per-machine authorization to run Codex with a yolo sandbox — the running session must still confirm consent for the current machine (interactively a per-session prompt; headless via the `TUNAN_CODEX_CONSENT` env var). See `skills/setup/references/config-issue-storage.md`.
+
+If no `tunan:config` issue exists, or `gh` is unavailable, fall through to defaults — never fail or block on missing config, and never read or write a local `.tunan/config.local.yaml`.
 
 ### Quick Validation Command
 

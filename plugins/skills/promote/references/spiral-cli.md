@@ -23,13 +23,16 @@ When Spiral is unauthed or absent, offer setup once. First check the opt-out so 
 
 ### Check the opt-out
 
-Read the project config (resolve the repo root, never CWD):
+Read the project config from the repo's `tunan:config` GitHub issue (not a local file). Resolve it, then read its body's fenced `yaml` block:
 
 ```bash
-cat "$(git rev-parse --show-toplevel 2>/dev/null)/.tunan/config.local.yaml" 2>/dev/null || echo '__NO_CONFIG__'
+gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+```
+```bash
+gh issue view <N> --json body --jq .body
 ```
 
-If the contents have an **uncommented** top-level `ce_promote_spiral_optout: true` line, **skip Path 0** and go straight to Path B. **Ignore commented lines** — `setup`'s template ships a `# ce_promote_spiral_optout: true` example, and a commented line is documentation, not an opt-out (a naive substring match would wrongly suppress the offer for any project that accepted the default template). Otherwise, offer setup.
+If the yaml block has an **uncommented** top-level `ce_promote_spiral_optout: true` key, **skip Path 0** and go straight to Path B. **Ignore commented lines** — `setup`'s template ships a `# ce_promote_spiral_optout: true` example, and a commented line is documentation, not an opt-out. If no `tunan:config` issue exists, or `gh` is unavailable, treat the opt-out as absent and offer setup.
 
 ### Ask
 
@@ -62,14 +65,14 @@ There is deliberately no separate "don't ask again" option: **dismissing is itse
 
 ### Record the opt-out (best-effort)
 
-Resolve the repo root, then add `ce_promote_spiral_optout: true` as a top-level key to `<root>/.tunan/config.local.yaml`, using the native file-write/edit tool:
+Add `ce_promote_spiral_optout: true` as a top-level key to the `tunan:config` issue's fenced `yaml` block (per the config-issue storage contract in the `setup` skill):
 
-- **File already exists:** ensure an **uncommented** `ce_promote_spiral_optout: true` line is present — add one (or uncomment the example) unless an uncommented one already exists. A commented `# ce_promote_spiral_optout: true` (from `setup`'s template) does **not** count as present; leaving only the comment would let the comment-ignoring read path re-prompt next run.
-- **File absent:** create it (and its `.tunan/` directory) with the key, AND make sure the machine-local config won't be committed. Check whether the root-relative path `<root>/.tunan/config.local.yaml` is already ignored (`git check-ignore -q <path>`); if it isn't, append `.tunan/*.local.yaml` to git's **local exclude file** — resolve that file's path with `git rev-parse --git-path info/exclude` (this is correct in worktrees too, where `.git` is a _file_ and `info/exclude` lives in the common git dir; do **not** hardcode `<root>/.git/info/exclude`). Use the local exclude, **not** `.gitignore`: it keeps the rule local and avoids dirtying a tracked file on what was a drafts-only action. `setup` is the canonical place that adds the shared `.gitignore` entry for teammates. Without any ignore, a user who runs `/tunan:promote` before `/tunan:setup` could accidentally commit machine-local opt-out state.
+- **Config issue exists:** read its body, ensure an **uncommented** `ce_promote_spiral_optout: true` key is present in the yaml block — add one (or uncomment the example) unless an uncommented one already exists — and write the body back with `gh issue edit <N> --body-file <tmpfile>`. A commented `# ce_promote_spiral_optout: true` (from `setup`'s template) does **not** count as present.
+- **Config issue absent:** create it — ensure the `tunan:config` label exists, then `gh issue create --title "[config] tunan settings" --label "tunan:config" --body-file <tmpfile>` with the key set in the yaml block under the `<!-- tunan:config -->` marker. There is no local file or `.gitignore` to manage — config is an issue.
 
-If the root can't be resolved or any write fails, proceed to Path B anyway; the opt-out is a convenience, never a blocker.
+If `gh` is unavailable or any write fails, proceed to Path B anyway; the opt-out is a convenience, never a blocker.
 
-After recording, confirm it in one line so the write isn't silent and the user knows how to undo it — e.g. "Got it — I won't bring up Spiral here again (saved to `.tunan/config.local.yaml`, kept out of git). Want it back later? Just ask, or remove the `ce_promote_spiral_optout` key." Keep it to a single line; don't belabor it.
+After recording, confirm it in one line so the write isn't silent and the user knows how to undo it — e.g. "Got it — I won't bring up Spiral here again (saved to this repo's tunan:config issue). Want it back later? Just ask, or remove the `ce_promote_spiral_optout` key." Keep it to a single line; don't belabor it.
 
 ## Generate
 

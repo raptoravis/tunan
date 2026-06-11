@@ -1,5 +1,8 @@
-# Compound Engineering -- local config
-# Copy to .tunan/config.local.yaml in your project root.
+# Compound Engineering -- project config
+# These settings are stored in the repo's `tunan:config` GitHub issue (in a
+# fenced yaml block under the `<!-- tunan:config -->` marker), not a local file.
+# /tunan:setup seeds the issue body from this template. See
+# references/config-issue-storage.md for the storage contract.
 # All settings are optional. Invalid values fall through to defaults.
 
 # --- Work delegation (Codex) ---

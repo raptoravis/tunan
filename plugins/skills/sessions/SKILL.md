@@ -12,7 +12,13 @@ Search session history across Claude Code, Codex, and Cursor and synthesize find
 ```
 /tunan:sessions [question or topic]
 /tunan:sessions
+/tunan:sessions profile [--refresh] [--questionnaire]
 ```
+
+The `profile` sub-action mines session history for **how the user prefers to
+work** and writes the stable patterns to the host's persistent memory — a
+different goal from the default question-answering flow. See `Mode: profile`
+below.
 
 ## Pre-resolved context
 
@@ -40,6 +46,10 @@ These rules apply at all times during orchestration and synthesis.
 - **Fail fast on access errors.** If session discovery fails on permissions, report the issue immediately. Do not retry the same operation with different tools or approaches — repeated retries waste tokens without changing the outcome.
 
 ## Execution
+
+**Sub-action routing.** If the first argument is `profile` (optionally with
+`--refresh` / `--questionnaire`), follow `Mode: profile` below instead of the
+default question-answering flow. Otherwise run Steps 1–7 as written.
 
 **Platform note.** Command examples below use the macOS/Linux (bash) form. On Windows, translate each as you run it:
 - Bundled `.sh` scripts → their PowerShell twin: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/<name>.ps1 <args>` (same args/output contract).
@@ -206,6 +216,86 @@ rm -rf "$SCRATCH"
 ```
 
 The OS handles cleanup eventually regardless; the explicit cleanup is for readers who expect it.
+
+## Mode: profile (developer preference mining)
+
+Mine session history for **stable, cross-session preferences about how the
+user wants the agent to work** — and persist them so future sessions start
+already knowing them. This is distinct from the default flow: the default
+answers "what was worked on / tried / decided"; profile answers "how does this
+developer prefer the agent to behave", and writes the answer to memory rather
+than returning prose.
+
+### P0 — Consent gate (required)
+
+Reading a wide swath of session history to build a behavioral profile is more
+invasive than a scoped question. Before any discovery, ask the user to confirm
+using the platform's blocking question tool (same tools and fallback as the
+no-argument case above). State plainly: the agent will scan recent sessions
+across projects to infer working preferences and save the stable ones to
+memory; nothing is sent anywhere external. Proceed only on explicit yes. On
+`--questionnaire`, skip session scanning entirely (P1 below) — no consent gate
+needed because no history is read.
+
+**Headless / non-interactive:** when no blocking tool is available (no
+synchronous user to consent), do not hard-block — there is no one to say yes.
+Skip session mining and proceed via the `--questionnaire` path (P1), which reads
+no history and needs no consent, or stop with a one-line note that
+`sessions profile` mining requires an interactive session. Never scan session
+history without consent just because the loop is autonomous.
+
+### P1 — Gather signal
+
+- **Default (session mining):** run Steps 1–5 with a **wide window (30 days)**
+  and **no branch/repo filter** — preferences are cross-project. Rank by
+  recency and breadth rather than topic match (there is no topic). Keep the
+  Step 3 deep-dive cap; preferences recur, so a sample is enough.
+- **`--questionnaire` (or session data too thin):** skip mining and ask a short
+  set of preference questions via the blocking tool — commit/push cadence,
+  interaction style (terse vs. explanatory), language, review rigor, test
+  posture, alignment/approval expectations. Use the answers as the signal.
+
+### P2 — Synthesize preferences
+
+Dispatch the synthesis subagent (Step 6 mechanism) with a **preference-mining**
+goal instead of question-answering. Instruct it to return only patterns that
+are **stable and recurring** (observed across multiple sessions, not a
+one-off), **behavioral** (how the agent should act: cadence, verbosity,
+language, rigor, tool choices, approval expectations), and **actionable** in
+future sessions. Explicitly exclude project-specific facts, one-time
+decisions, and anything already derivable from the repo or git history — those
+are not preferences. Each returned item: a one-line preference, the why, and
+how to apply it.
+
+### P3 — Persist to memory (not a standalone doc)
+
+Write the stable preferences to the **host's persistent memory system** when it
+has one, reusing its format — do not invent a parallel `USER-PROFILE.md`.
+
+- **Claude Code:** the file-based memory under the project's `memory/`
+  directory — one fact per file with `type: feedback` (guidance on how to work)
+  or `type: user` (who the user is), plus a one-line pointer in `MEMORY.md`.
+  Follow the frontmatter and indexing convention the memory system documents.
+- **Other hosts:** use the host's equivalent memory/preferences store if it has
+  one; only when no memory mechanism exists, fall back to a `USER-PROFILE.md`
+  the user can reference, and say so.
+
+**Dedup before writing (required).** For each candidate preference, check
+whether an existing memory already covers it; update that entry rather than
+creating a duplicate. This matches the memory system's own "check for an
+existing file before saving" rule.
+
+**`--refresh`:** re-mine and reconcile against existing preference memories.
+Show a diff — what is new, what changed, what looks stale (contradicted by
+recent sessions) — and confirm via the blocking tool before writing or removing
+anything. Never silently delete a memory the user added by hand.
+
+### P4 — Report
+
+Print a short report card: how many sessions were mined (or that the
+questionnaire was used), the preferences written/updated/skipped-as-duplicate,
+and where they were saved. Do not dump raw session content (Guardrails still
+apply).
 
 ## Output
 

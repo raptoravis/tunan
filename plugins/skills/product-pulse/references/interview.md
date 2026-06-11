@@ -1,6 +1,6 @@
 # Product Pulse First-Run Interview
 
-Loaded by `SKILL.md` at the start of Phase 1. Captures the configuration that will be merged into `.tunan/config.local.yaml` (the unified CE local config, gitignored, machine-local) as `pulse_*` keys and re-read on every subsequent run.
+Loaded by `SKILL.md` at the start of Phase 1. Captures the configuration that will be merged into the repo's `tunan:config` GitHub issue as `pulse_*` keys and re-read on every subsequent run.
 
 For each section: ask the opening question, evaluate the answer against the quality bar, push back when it falls into a named anti-pattern, and capture the final answer in the user's own language.
 
@@ -222,11 +222,11 @@ Skipping this entirely is fine - the skill does not require a schedule to functi
 
 ---
 
-## Config File Shape
+## Config Storage Shape
 
-After the interview completes, merge a `pulse_*` block into `<repo-root>/.tunan/config.local.yaml`. Resolve the repo root with `git rev-parse --show-toplevel`. Preserve any non-pulse keys that already exist in the file (e.g., `work_delegate_*`); only add or update `pulse_*` keys.
+After the interview completes, merge a `pulse_*` block into the repo's `tunan:config` GitHub issue body (the fenced `yaml` block under the `<!-- tunan:config -->` marker), not a local file. Resolve the issue with `gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'`, read its body (`gh issue view <N> --json body`), merge the `pulse_*` keys into the yaml block preserving any non-pulse keys already present (e.g., `work_delegate_*`), and write it back with `gh issue edit <N> --body-file <tmpfile>`.
 
-If the file does not yet exist, create the directory and file. If `.tunan/config.local.yaml` is not already covered by `.gitignore`, offer to add the entry before writing.
+If no `tunan:config` issue exists yet, create it first (ensure the `tunan:config` label exists, then `gh issue create --title "[config] tunan settings" --label "tunan:config" --body-file <tmpfile>` with the `pulse_*` block in the yaml). See the config-issue storage contract documented in the `setup` skill.
 
 The pulse block uses these flat keys (matches the `work_delegate_*` precedent for consistency):
 

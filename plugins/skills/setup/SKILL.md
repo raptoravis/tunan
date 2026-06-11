@@ -59,10 +59,9 @@ After the diagnostic report, check whether:
 - any agent skills are missing (reported as yellow in the Skills section)
 - any MCP servers are missing (reported as yellow in the MCP Servers section; the section is absent on harnesses without the `claude` CLI)
 - `tunan.local.md` is present and needs cleanup
-- `.tunan/config.local.yaml` does not exist or is not safely gitignored
-- `.tunan/config.local.example.yaml` is missing or outdated
+- a `tunan:config` issue does not yet exist (project config lives in a GitHub issue, not a local file — see `references/config-issue-storage.md`)
 
-If everything is installed (tools, skills, and any MCP servers), no repo-local cleanup is needed, and `.tunan/config.local.yaml` already exists and is gitignored, display the tool, skill, and MCP list and completion message. Parse the tool, skill, and MCP server names from the script output and list each with a green circle. Omit the Skills line if the Skills section is absent from the script output, and omit the MCP line if the MCP Servers section is absent (non-Claude harnesses):
+If everything is installed (tools, skills, and any MCP servers), no repo-local cleanup is needed, and a `tunan:config` issue already exists, display the tool, skill, and MCP list and completion message. Parse the tool, skill, and MCP server names from the script output and list each with a green circle. Omit the Skills line if the Skills section is absent from the script output, and omit the MCP line if the MCP Servers section is absent (non-Claude harnesses):
 
 ```
  ✅ Compound Engineering setup complete
@@ -85,32 +84,37 @@ Otherwise proceed to Phase 2 to resolve any issues. Handle repo-local cleanup (S
 
 ### Step 4: Resolve Repo-Local CE Issues
 
-Resolve the repository root (`git rev-parse --show-toplevel`). If `tunan.local.md` exists at the repo root, explain that it is obsolete because review-agent selection is automatic and CE now uses `.tunan/config.local.yaml` for any surviving machine-local state. Ask whether to delete it now. Use the repo-root path when deleting.
+Resolve the repository root (`git rev-parse --show-toplevel`). If `tunan.local.md` exists at the repo root, explain that it is obsolete because review-agent selection is automatic and CE now stores project config in a `tunan:config` GitHub issue, not a local file. Ask whether to delete it now. Use the repo-root path when deleting. Likewise, if a legacy `.tunan/config.local.yaml` (or `.tunan/config.local.example.yaml`) exists, offer to migrate its set keys into the `tunan:config` issue (Step 5) and delete the local file afterward — config no longer lives on disk.
 
 ### Step 5: Bootstrap Project Config
 
-Resolve the repository root (`git rev-parse --show-toplevel`). All paths below are relative to the repo root, not the current working directory.
+Project config lives in a **GitHub issue labeled `tunan:config`**, not a local file. Read `references/config-issue-storage.md` for the full contract (issue shape, read/write recipes, team-shared vs per-machine semantics). A working, authenticated `gh` is required — if it is missing, skip this step and surface the gh setup hint.
 
-**Example file (always refresh):** Copy `references/config-template.yaml` to `<repo-root>/.tunan/config.local.example.yaml`, creating the directory if needed. This file is committed to the repo and always overwritten with the latest template so teammates can see available settings.
+**Check for the config issue:**
 
-**Local config (create once):** If `.tunan/config.local.yaml` does not exist, ask whether to create it:
+```bash
+gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+```
+
+**Absent (create once):** ask whether to create it:
 
 ```
-Set up a local config file for this project?
-This saves your Compound Engineering preferences (like which tools to use and how workflows behave).
-Everything starts commented out -- you only enable what you need.
+Set up a tunan config issue for this project?
+This stores your Compound Engineering preferences (which tools to use, how workflows behave) in a GitHub issue shared across the project. Everything starts commented out -- you only enable what you need.
 
 1. Yes, create it (Recommended)
 2. No thanks
 ```
 
-If the user approves, copy `references/config-template.yaml` to `<repo-root>/.tunan/config.local.yaml`. If `.tunan/config.local.yaml` is not already covered by `.gitignore`, offer to add the entry:
+If the user approves, ensure the `tunan:config` label exists (`gh label list --search "tunan:config"`, else `gh label create "tunan:config" --color 6f42c1 --description "tunan project config"`), then create the issue with the annotated template as its body — wrap the contents of `references/config-template.yaml` in a fenced ```yaml block under the `<!-- tunan:config -->` marker (per `references/config-issue-storage.md`):
 
-```text
-.tunan/*.local.yaml
+```bash
+gh issue create --title "[config] tunan settings" --label "tunan:config" --body-file <tmpfile>
 ```
 
-If the local config already exists, check whether it is safely gitignored. If not, offer to add the `.gitignore` entry as above.
+**Present (refresh option):** the config issue already exists — leave it as-is unless the user wants to edit it. If a legacy local `.tunan/config.local.yaml` is also present, offer to merge its set keys into the issue body and delete the local file (config no longer lives on disk).
+
+There is no `.gitignore` entry to manage — config is an issue, not a tracked-or-ignored file.
 
 ### Step 6: Offer Installation
 

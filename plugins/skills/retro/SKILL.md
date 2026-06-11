@@ -19,7 +19,7 @@ allowed-tools:
 
 This is the engineering-cadence complement of `product-pulse`. **`product-pulse` reports user experience and system performance and deliberately does *not* report "what shipped." `retro` is exactly that missing half** — shipped work and the cadence behind it — read straight from `git` and `gh`. Run pulse to see how users fared; run retro to see how the team moved. They never overlap.
 
-The skill is **read-only and zero-config.** It never mutates the repo, the database, or any external system — it only reads `git log`/`git shortlog` locally and queries GitHub through `gh` read commands, then writes one report issue. There is no interview and no `.tunan/config.local.yaml` dependency; the only inputs are the repo's own history and the lookback window.
+The skill is **read-only and zero-config.** It never mutates the repo, the database, or any external system — it only reads `git log`/`git shortlog` locally and queries GitHub through `gh` read commands, then writes one report issue. There is no interview and no `tunan:config` dependency; the only inputs are the repo's own history and the lookback window.
 
 ## Interaction Method
 
@@ -63,7 +63,7 @@ gh repo view --json nameWithOwner
 - If `gh` is not installed, abort and direct the user to install it from https://cli.github.com or run `/tunan:setup`. Never fall back to a local file.
 - If `gh auth status` does not exit 0, abort and direct the user to authenticate (`gh auth login`; in Claude Code suggest typing `! gh auth login`).
 - If `gh repo view` does not resolve, abort and explain that a GitHub repo is required to store retro reports.
-- **Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. retro needs no config, so this never aborts the run.
+- **Setup reminder (non-blocking).** If the repo has no `tunan:config` issue, tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. retro needs no config, so this never aborts the run.
 
 Ensure the `tunan:retro` label exists before writing (Phase 2.4 re-checks):
 

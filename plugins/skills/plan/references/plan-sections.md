@@ -130,6 +130,24 @@ a section with placeholder prose is worse than omitting it.
   about edge cases. Skip when all requirements are unconditional and
   unambiguous.
 
+- **Execution Waves** — include when the plan has **4+ Implementation Units
+  with a non-trivial dependency structure** (some units independent, others
+  gated on earlier ones). A compact derived view that groups U-IDs into
+  ordered waves: units listed in the same wave have no dependency on each
+  other and are parallel-safe to dispatch together; a later wave runs only
+  after the units it depends on land. This is the dependency graph already
+  encoded in each unit's `Dependencies` field, surfaced once so `work` can
+  read the parallel batches directly instead of re-deriving them. Example:
+  `Wave 1: U1, U2 (independent) · Wave 2: U3 (needs U1), U4 (needs U2) ·
+  Wave 3: U5 (needs U3, U4)`. The per-unit `Dependencies` field stays
+  authoritative — this section is a convenience summary, not a second source
+  of truth, and must agree with it. It is **not** a parallel-safety guarantee:
+  `work` still runs its own file-overlap Parallel Safety Check before
+  dispatching a wave concurrently. Skip for linear plans (each unit depends on
+  the one before — there is only one ordering and no batching to surface) and
+  for small plans where the per-unit `Dependencies` fields are already easy to
+  scan.
+
 - **Documentation / Operational Notes** — include when documentation,
   monitoring, runbooks, or rollout steps need explicit notes. Skip when the
   work is purely internal and uses existing operational scaffolding without

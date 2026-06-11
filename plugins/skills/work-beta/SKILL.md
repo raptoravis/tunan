@@ -48,12 +48,17 @@ After extracting tokens from arguments, resolve the delegation state using this 
 2. **Config file** -- extract settings from the config block below. Value `codex` for `work_delegate` activates delegation; `false` deactivates.
 3. **Hard default** -- `false` (delegation off)
 
-**Config (pre-resolved):**
-!`cat "$(git rev-parse --show-toplevel 2>/dev/null)/.tunan/config.local.yaml" 2>/dev/null || echo '__NO_CONFIG__'`
+**Config (read the `tunan:config` issue):**
 
-If the block above contains YAML key-value pairs, extract values for the keys listed below.
-If it shows `__NO_CONFIG__`, the file does not exist — all settings fall through to defaults.
-If it shows an unresolved command string, read `.tunan/config.local.yaml` from the repo root using the native file-read tool (e.g., Read in Claude Code, read_file in Codex). If the file does not exist, all settings fall through to defaults.
+Project config lives in the repo's `tunan:config` GitHub issue, not a local file. Resolve and read it:
+
+```bash
+gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+```
+
+If that returns a number `<N>`, read its body (`gh issue view <N> --json body`) and parse the fenced `yaml` block, extracting values for the keys listed below. If no `tunan:config` issue exists, or `gh` is unavailable, all settings fall through to defaults. Never read a local `.tunan/config.local.yaml`.
+
+**Per-machine consent (safety gate).** `work_delegate_consent` / `work_delegate_sandbox` read from the issue are a **team default, not authorization for this machine**. Reading `work_delegate_consent: true` does NOT mean the current machine has consented to Codex running with a yolo / full-auto sandbox. Before delegating on this machine, confirm consent for this session at least once (the Delegation Decision flow in `references/codex-delegation-workflow.md` owns the prompt); a stored `true` only pre-fills the recommended answer. In headless / unattended runs the per-machine signal is the `TUNAN_CODEX_CONSENT` env var — delegation proceeds only when it is set, never from a shared `true` alone.
 
 If any setting has an unrecognized value, fall through to the hard default for that setting. For optional settings without a hard default (`work_delegate_model`, `work_delegate_effort`), an unrecognized or unparseable value resolves to **unset** — the corresponding flag is omitted from the `codex exec` invocation so Codex resolves from `~/.codex/config.toml`. Never substitute an invalid value into the CLI flags.
 
@@ -100,7 +105,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
 > gh repo view --json nameWithOwner
 > ```
 >
-> **Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
+> **Setup reminder (non-blocking).** If the repo has no `tunan:config` issue, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
 
 1. **Scan the work area**
    - Identify files likely to change based on the prompt
@@ -209,7 +214,11 @@ Determine how to proceed based on what was provided in `<input_document>`.
 
    **Delegation routing gate:** If `delegation_active` is true AND the input is a feature issue carrying a plan comment (not a bare prompt), read `references/codex-delegation-workflow.md` and follow its Pre-Delegation Checks and Delegation Decision flow. If all checks pass and delegation proceeds, force **serial execution** and proceed directly to Phase 2 using the workflow's batched execution loop. If any check disables delegation, fall through to the standard strategy table below. If delegation is active but the input is a bare prompt (no feature issue / plan comment), set `delegation_active` to false with a brief note: "Codex delegation requires a feature issue with a plan comment -- using standard mode." and continue with the standard strategy selection below.
 
-   After creating the task list, decide how to execute based on the plan's size and dependency structure:
+   After creating the task list, decide how to execute based on the plan's size and dependency structure.
+
+   **If the plan has an `## Execution Waves` section, use it as the batching plan** — it already groups U-IDs into ordered, parallel-safe waves derived from the units' dependencies, so dispatch wave by wave (each wave's units together, the next wave after the prior lands) instead of re-deriving the dependency order from scratch. The per-unit `Dependencies` field stays authoritative if the two ever disagree, and the Parallel Safety Check below still runs before any wave is dispatched concurrently — Execution Waves declares dependency order, not file-overlap safety. When the plan has no Execution Waves section, derive the batches from the units' `Dependencies` fields as before.
+
+   **Progress marker (resume hint).** When the plan defines U-IDs and execution is unit-by-unit, maintain a `<!-- tunan:progress -->` comment on the feature issue recording which units have landed, refreshed at each batch boundary (see the "Update the task list" steps below). It lets `resume` report unit-level progress on an interrupted run. Git stays authoritative for shipped code — the marker is a pointer, not a source of truth. Read `references/progress-marker.md` for the exact format and gh recipe. Skip it for trivial / bare-prompt work with no U-IDs.
 
    | Strategy               | When to use                                                                                                                                                                                                                  |
    | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -246,7 +255,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    1. Review the subagent's diff — verify changes match the unit's scope and `Files:` list
    2. Run the relevant test suite to confirm the tree is healthy
    3. If tests fail, diagnose and fix before proceeding — do not dispatch dependent units on a broken tree
-   4. Update the task list (do not edit the plan comment — progress is carried by the commit)
+   4. Update the task list (do not edit the plan comment — progress is carried by the commit). Refresh the `<!-- tunan:progress -->` marker with the U-IDs landed so far (per `references/progress-marker.md`) when the plan defines U-IDs
    5. Dispatch the next unit
 
    **After all parallel subagents in a batch complete (worktree-isolated mode):**
@@ -254,7 +263,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    2. For each completed subagent, in dependency order: review the worktree's diff against the orchestrator's branch. If the subagent did not commit its own work, stage and commit it inside that worktree.
    3. Merge each subagent's branch into the orchestrator's branch sequentially in dependency order. **If a merge conflict surfaces, abort the merge (`git merge --abort`) and re-dispatch the conflicting unit serially against the now-merged tree** — hand-resolving silently picks a side and discards one unit's intent. (Predicted overlap from the Parallel Safety Check surfaces here as a conflict, not as silent data loss in shared-directory mode.)
    4. After each merge, run the relevant test suite. If tests fail, diagnose and fix before merging the next branch.
-   5. Update the task list (progress is carried by the merge commits).
+   5. Update the task list (progress is carried by the merge commits). Refresh the `<!-- tunan:progress -->` marker with the U-IDs landed so far (per `references/progress-marker.md`) when the plan defines U-IDs.
 
    6. After merging, remove each subagent's worktree and delete its branch. Use the absolute path and branch name returned in the subagent's result.
       - Unlock the worktree first — the harness locks per-subagent worktrees: `git worktree unlock <absolute-path>`
@@ -267,7 +276,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    2. Cross-check for discovered file collisions: compare the actual files modified by all subagents in the batch (not just their declared `Files:` lists). Subagents may create or modify files not anticipated during planning — this is expected, since plans describe _what_ not _how_. A collision only matters when 2+ subagents in the same batch modified the same file. In a shared working directory, only the last writer's version survives — the other unit's changes to that file are lost. If a collision is detected: commit all non-colliding files from all units first, then re-run the affected units serially for the shared file so each builds on the other's committed work
    3. For each completed unit, in dependency order: review the diff, run the relevant test suite, stage only that unit's files, and commit with a conventional message derived from the unit's Goal
    4. If tests fail after committing a unit's changes, diagnose and fix before committing the next unit
-   5. Update the task list (do not edit the plan comment — progress is carried by the commits just made)
+   5. Update the task list (do not edit the plan comment — progress is carried by the commits just made). Refresh the `<!-- tunan:progress -->` marker with the U-IDs landed so far (per `references/progress-marker.md`) when the plan defines U-IDs
    6. Dispatch the next batch of independent units, or the next dependent unit
 
 ### Phase 2: Execute

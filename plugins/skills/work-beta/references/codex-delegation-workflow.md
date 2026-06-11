@@ -76,19 +76,33 @@ Present a one-time consent warning using the platform's blocking question tool (
 
 Present the sandbox mode choice: (1) yolo (recommended), (2) full-auto.
 
+Config is stored in the repo's `tunan:config` GitHub issue, not a local file. Merge keys into the fenced `yaml` block of the issue body: resolve the issue (`gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'`), read its body (`gh issue view <N> --json body`), merge the keys preserving existing ones, and write it back (`gh issue edit <N> --body-file <tmpfile>`). If no `tunan:config` issue exists, create it first (ensure the `tunan:config` label exists, then `gh issue create --title "[config] tunan settings" --label "tunan:config" --body-file <tmpfile>`). See the config-issue storage contract documented in the `setup` skill.
+
 On acceptance:
 
-- Resolve the repo root: `git rev-parse --show-toplevel`. Write `work_delegate_consent: true` and `work_delegate_sandbox: <chosen-mode>` to `<repo-root>/.tunan/config.local.yaml`
-- To write: (1) if file or directory does not exist, create `<repo-root>/.tunan/` and write the YAML file; (2) if file exists, merge new keys preserving existing keys
-- Update `consent_granted` and `sandbox_mode` in the resolved state
+- Write `work_delegate_consent: true` and `work_delegate_sandbox: <chosen-mode>` into the `tunan:config` issue's yaml block (per the merge recipe above). This records the **team default**; it does not skip the per-machine confirmation on other machines.
+- Update `consent_granted` and `sandbox_mode` in the resolved state, and mark consent acknowledged **for this session/machine** so delegation can proceed now.
 
 On decline:
 
 - Ask whether to disable delegation entirely for this project
-- If yes: write `work_delegate: false` to `<repo-root>/.tunan/config.local.yaml` (using the same repo root resolved above). To write: (1) if file or directory does not exist, create `<repo-root>/.tunan/` and write the YAML file; (2) if file exists, merge new keys preserving existing keys. Set `delegation_active` to false, proceed in standard mode
+- If yes: write `work_delegate: false` into the `tunan:config` issue's yaml block (per the merge recipe above). Set `delegation_active` to false, proceed in standard mode
 - If no: set `delegation_active` to false for this invocation only, proceed in standard mode
 
-**Headless consent:** If running in a headless or non-interactive context, delegation proceeds only if `work_delegate_consent` is already `true` in the config file. If consent is not recorded, set `delegation_active` to false silently.
+**Per-machine consent gate.** A stored `work_delegate_consent: true` in the shared issue is a team default, not authorization for the current machine. The per-machine authorization signal is the environment variable **`TUNAN_CODEX_CONSENT`** (set it to `1`, `yolo`, or `full-auto` on a machine that may run unattended delegation; an explicit sandbox value also pins the mode for that machine). Resolve consent like this:
+
+```bash
+if [ -n "$TUNAN_CODEX_CONSENT" ]; then
+  echo "machine_consent=$TUNAN_CODEX_CONSENT"
+else
+  echo "machine_consent=unset"
+fi
+```
+
+- **Interactive session:** if `machine_consent` is unset, still confirm consent once per session before the first delegation (a stored `work_delegate_consent: true` pre-fills the recommended answer; the in-session acceptance counts as this machine's acknowledgment for the rest of the session). A set `TUNAN_CODEX_CONSENT` skips the prompt.
+- **Headless / non-interactive:** delegation proceeds **only** when `TUNAN_CODEX_CONSENT` is set on this machine. A shared `work_delegate_consent: true` alone is **not** sufficient — if `machine_consent=unset`, set `delegation_active` to false silently. When both are set and disagree on sandbox mode, `TUNAN_CODEX_CONSENT`'s explicit value wins for this machine.
+
+This prevents one developer's consent (stored in the team-shared issue) from auto-authorizing a yolo sandbox on a teammate's machine: the issue value is the default, the env var is the per-machine authorization.
 
 ## Batching
 

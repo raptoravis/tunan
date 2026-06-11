@@ -188,31 +188,29 @@ done
 # =====================================================
 
 legacy_cfg="skip"
-repo_cfg_gitignore="skip"
-example_cfg="skip"
+legacy_local_cfg="skip"
+config_issue="skip"
 
 if [ "$in_repo" = "yes" ]; then
   repo_root=$(git rev-parse --show-toplevel 2>/dev/null)
   legacy_cfg="missing"
   [ -f "$repo_root/tunan.local.md" ] && legacy_cfg="present"
 
-  if [ -e "$repo_root/.tunan/config.local.yaml" ] || [ -d "$repo_root/.tunan" ]; then
-    if git check-ignore -q "$repo_root/.tunan/config.local.yaml" 2>/dev/null; then
-      repo_cfg_gitignore="ok"
-    else
-      repo_cfg_gitignore="missing"
-    fi
+  # Legacy on-disk config is obsolete — project config now lives in a
+  # tunan:config GitHub issue. Flag any surviving local config for migration.
+  legacy_local_cfg="missing"
+  if [ -e "$repo_root/.tunan/config.local.yaml" ] || [ -e "$repo_root/.tunan/config.local.example.yaml" ]; then
+    legacy_local_cfg="present"
   fi
 
-  script_dir="$(cd "$(dirname "$0")" && pwd)"
-  template="$script_dir/../references/config-template.yaml"
-  example="$repo_root/.tunan/config.local.example.yaml"
-  if [ ! -f "$example" ]; then
-    example_cfg="missing"
-  elif [ -f "$template" ] && ! diff -q "$template" "$example" >/dev/null 2>&1; then
-    example_cfg="outdated"
-  else
-    example_cfg="ok"
+  # The config issue is the source of truth. Checking it needs an authenticated
+  # gh; when gh is unavailable leave config_issue=skip (offline diagnostic).
+  if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+    if [ -n "$(gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty' 2>/dev/null)" ]; then
+      config_issue="present"
+    else
+      config_issue="missing"
+    fi
   fi
 fi
 
@@ -295,10 +293,10 @@ if [ "$in_repo" = "yes" ]; then
   if [ "$legacy_cfg" = "present" ]; then
     has_project_issues="yes"
   fi
-  if [ "$repo_cfg_gitignore" = "missing" ]; then
+  if [ "$legacy_local_cfg" = "present" ]; then
     has_project_issues="yes"
   fi
-  if [ "$example_cfg" = "missing" ] || [ "$example_cfg" = "outdated" ]; then
+  if [ "$config_issue" = "missing" ]; then
     has_project_issues="yes"
   fi
 
@@ -310,16 +308,13 @@ if [ "$in_repo" = "yes" ]; then
       issues=$((issues + 1))
     fi
 
-    if [ "$repo_cfg_gitignore" = "missing" ]; then
-      warn "Local config not safely gitignored"
+    if [ "$legacy_local_cfg" = "present" ]; then
+      warn "Legacy local config present (.tunan/config.local.yaml) — migrate to the tunan:config issue via /tunan:setup"
       issues=$((issues + 1))
     fi
 
-    if [ "$example_cfg" = "missing" ]; then
-      warn "Example config missing (.tunan/config.local.example.yaml)"
-      issues=$((issues + 1))
-    elif [ "$example_cfg" = "outdated" ]; then
-      warn "Example config outdated (new settings available)"
+    if [ "$config_issue" = "missing" ]; then
+      warn "No tunan:config issue yet — run /tunan:setup to create one"
       issues=$((issues + 1))
     fi
   fi

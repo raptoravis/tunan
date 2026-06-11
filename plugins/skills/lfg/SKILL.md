@@ -29,7 +29,7 @@ gh auth status
 gh repo view --json nameWithOwner
 ```
 
-**Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the pipeline.
+**Setup reminder (non-blocking).** If the repo has no `tunan:config` issue, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the pipeline.
 
 **RESUME (run before step 1 when `$ARGUMENTS` references an existing feature issue — a bare `#N` / issue URL / "resume #N" — rather than a fresh feature description).** Do not re-run the whole pipeline from step 1 on an interrupted feature. Load the `resume` skill with that issue ref: it reads the issue's labels, marker comments, and any open PR to detect the phase (`plan` / `work` / `review-ci` / `done`) and reports which step to resume at. Then continue this pipeline from that step — skip any stage whose evidence already exists (a `<!-- tunan:plan -->` comment means step 1 is done; an open PR referencing the issue means steps 1–2 are done, resume at step 3; a `<!-- tunan:solution -->` comment means the feature is already complete — report and stop). When `$ARGUMENTS` is a new description, ignore this block and start at step 1.
 

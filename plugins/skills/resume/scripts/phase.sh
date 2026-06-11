@@ -10,7 +10,12 @@
 #   phase.sh detect <issue>
 #
 # Emits ONE machine line on stdout, then human hints on stderr:
-#   phase=<plan|work|review-ci|done|unknown> next=<skill|none> pr=<url|-> issue=<N>
+#   phase=<plan|work|review-ci|done|unknown> next=<skill|none> pr=<url|-> issue=<N> units_done=<csv|-> units_total=<N|->
+#
+# units_done / units_total come from an optional <!-- tunan:progress --> comment
+# that `work` maintains as a resume hint (git stays authoritative for shipped
+# code). They are `-` when no progress comment exists. Appended fields keep the
+# line backward-compatible — callers that parse only phase/next/pr/issue still work.
 #
 # Phase ladder (each later phase implies the earlier evidence is present):
 #   plan       — feature issue exists, no <!-- tunan:plan --> comment yet  -> run plan
@@ -23,8 +28,23 @@ set -o pipefail
 cmd="${1:-}"; n="${2:-}"
 
 err() { echo "$*" >&2; }
+udone="-"; utotal="-"
 emit() { # phase next pr
-  echo "phase=$1 next=$2 pr=${3:--} issue=${n:--}"
+  echo "phase=$1 next=$2 pr=${3:--} issue=${n:--} units_done=$udone units_total=$utotal"
+}
+
+# Populate udone/utotal from the optional <!-- tunan:progress --> comment, whose
+# machine line looks like: <!-- progress: done=U1,U2,U3 total=5 -->
+read_progress() {
+  local body
+  body="$(gh api "repos/$slug/issues/$n/comments" \
+    --jq '.[] | select(.body | startswith("<!-- tunan:progress -->")) | .body' 2>/dev/null)"
+  [ -n "$body" ] || return 0
+  local d t
+  d="$(printf '%s' "$body" | sed -n 's/.*progress: done=\([^ ]*\) total=.*/\1/p' | head -1)"
+  t="$(printf '%s' "$body" | sed -n 's/.*progress:.* total=\([0-9]*\).*/\1/p' | head -1)"
+  [ -n "$d" ] && udone="$d"
+  [ -n "$t" ] && utotal="$t"
 }
 
 [ "$cmd" = "detect" ] || { err "usage: phase.sh detect <issue>"; exit 2; }
@@ -62,12 +82,14 @@ if [ -z "$pr_url" ]; then
 fi
 
 if [ -n "$pr_url" ]; then
+  read_progress
   emit review-ci code-review "$pr_url"
   err "Open PR for #$n: $pr_url — resume at code-review, then CI watch + compound (lfg steps 3-9)."
   exit 0
 fi
 
 if has_marker "<!-- tunan:plan -->"; then
+  read_progress
   emit work work -
   err "Plan comment present on #$n, no PR yet — resume at work (lfg step 2)."
   exit 0

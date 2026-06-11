@@ -182,26 +182,28 @@ foreach ($entry in $mcp) {
 #  Project checks (repo only)
 # =====================================================
 
-$legacy_cfg = 'skip'; $repo_cfg_gitignore = 'skip'; $example_cfg = 'skip'
+$legacy_cfg = 'skip'; $legacy_local_cfg = 'skip'; $config_issue = 'skip'
 
 if ($in_repo) {
   $repo_root = (git rev-parse --show-toplevel 2>$null | Select-Object -First 1)
   $legacy_cfg = 'missing'
   if (Test-Path -LiteralPath "$repo_root/tunan.local.md") { $legacy_cfg = 'present' }
 
-  if ((Test-Path -LiteralPath "$repo_root/.tunan/config.local.yaml") -or (Test-Path -LiteralPath "$repo_root/.tunan" -PathType Container)) {
-    git check-ignore -q -- "$repo_root/.tunan/config.local.yaml" 2>$null
-    if ($LASTEXITCODE -eq 0) { $repo_cfg_gitignore = 'ok' } else { $repo_cfg_gitignore = 'missing' }
+  # Legacy on-disk config is obsolete — project config now lives in a
+  # tunan:config GitHub issue. Flag any surviving local config for migration.
+  $legacy_local_cfg = 'missing'
+  if ((Test-Path -LiteralPath "$repo_root/.tunan/config.local.yaml") -or (Test-Path -LiteralPath "$repo_root/.tunan/config.local.example.yaml")) {
+    $legacy_local_cfg = 'present'
   }
 
-  $template = Join-Path $PSScriptRoot '..\references\config-template.yaml'
-  $example = "$repo_root/.tunan/config.local.example.yaml"
-  if (-not (Test-Path -LiteralPath $example)) {
-    $example_cfg = 'missing'
-  } elseif ((Test-Path -LiteralPath $template) -and ((Get-Content -Raw -LiteralPath $template) -ne (Get-Content -Raw -LiteralPath $example))) {
-    $example_cfg = 'outdated'
-  } else {
-    $example_cfg = 'ok'
+  # The config issue is the source of truth. Checking it needs an authenticated
+  # gh; when gh is unavailable leave config_issue=skip (offline diagnostic).
+  if (Get-Command gh -ErrorAction SilentlyContinue) {
+    & gh auth status *> $null
+    if ($LASTEXITCODE -eq 0) {
+      $num = (& gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty' 2>$null | Out-String).Trim()
+      if ($num) { $config_issue = 'present' } else { $config_issue = 'missing' }
+    }
   }
 }
 
@@ -278,8 +280,8 @@ if ($in_repo) {
   $has_project_issues = $false
 
   if ($legacy_cfg -eq 'present') { $has_project_issues = $true }
-  if ($repo_cfg_gitignore -eq 'missing') { $has_project_issues = $true }
-  if ($example_cfg -eq 'missing' -or $example_cfg -eq 'outdated') { $has_project_issues = $true }
+  if ($legacy_local_cfg -eq 'present') { $has_project_issues = $true }
+  if ($config_issue -eq 'missing') { $has_project_issues = $true }
 
   if ($has_project_issues) {
     Add-Section "Project"
@@ -289,16 +291,13 @@ if ($in_repo) {
       $issues++
     }
 
-    if ($repo_cfg_gitignore -eq 'missing') {
-      Add-Warn "Local config not safely gitignored"
+    if ($legacy_local_cfg -eq 'present') {
+      Add-Warn "Legacy local config present (.tunan/config.local.yaml) — migrate to the tunan:config issue via /tunan:setup"
       $issues++
     }
 
-    if ($example_cfg -eq 'missing') {
-      Add-Warn "Example config missing (.tunan/config.local.example.yaml)"
-      $issues++
-    } elseif ($example_cfg -eq 'outdated') {
-      Add-Warn "Example config outdated (new settings available)"
+    if ($config_issue -eq 'missing') {
+      Add-Warn "No tunan:config issue yet — run /tunan:setup to create one"
       $issues++
     }
   }

@@ -19,7 +19,7 @@ Plans are GitHub issues. Before reading or writing any issue, run this preflight
 1. `gh` installed (else: install from https://cli.github.com or run `/tunan:setup`).
 2. `gh auth status` exits 0 (else: run `gh auth login`; in Claude Code suggest typing `! gh auth login`).
 3. `gh repo view --json nameWithOwner` resolves (else: a GitHub repo is required to store plans).
-4. **Setup reminder (non-blocking).** If the repo root has no `.tunan/config.local.yaml`, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
+4. **Setup reminder (non-blocking).** If the repo has no `tunan:config` issue, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
 
 Ensure the `tunan:plan` label exists before adding it to a feature issue:
 
@@ -112,7 +112,7 @@ If the user passes a feature issue ref (`#<N>` or URL) that already carries a pl
 - Confirm whether to overwrite the existing plan comment in place or write a new plan onto a different feature issue.
 - If updating, revise only the still-relevant sections and PATCH the plan comment in place by id (find its id, then PATCH — see `references/comment-chain-storage.md`). Plans do not carry per-unit progress state — progress is derived from git by `work`, so there is no progress to preserve across edits.
 
-**Deepen intent:** The word "deepen" (or "deepening") in reference to a plan is the primary trigger for the deepening fast path. When the user says "deepen the plan", "deepen my plan", "run a deepening pass", or similar, the target is the **plan comment** on a feature issue, not a requirements-only issue. Use any ref, keyword, or context the user provides to identify the right feature issue (read its plan comment via `gh api .../comments`, or locate the feature issue via `gh issue list --label tunan:plan --search`). If a ref is provided, verify the feature issue carries the `tunan:plan` label (i.e., it already has a plan comment). If the match is not obvious, confirm with the user before proceeding.
+**Deepen intent:** The word "deepen" (or "deepening") in reference to a plan is the primary trigger for the deepening fast path. When the user says "deepen the plan", "deepen my plan", "run a deepening pass", or similar, the target is the **plan comment** on a feature issue, not a requirements-only issue. Convergence requests — "converge the plan", "iterate the plan to convergence", or `--converge` / `--max-cycles N` — are part of the same fast path: they short-circuit to Phase 5.3 the same way, where the convergence mode note at 5.3.3 routes them into the loop instead of a single pass. Use any ref, keyword, or context the user provides to identify the right feature issue (read its plan comment via `gh api .../comments`, or locate the feature issue via `gh issue list --label tunan:plan --search`). If a ref is provided, verify the feature issue carries the `tunan:plan` label (i.e., it already has a plan comment). If the match is not obvious, confirm with the user before proceeding.
 
 Words like "strengthen", "confidence", "gaps", and "rigor" are NOT sufficient on their own to trigger deepening. These words appear in normal editing requests ("strengthen that section about the diagram", "there are gaps in the test scenarios") and should not cause a holistic deepening pass. Only treat them as deepening intent when the request clearly targets the plan as a whole and does not name a specific section or content area to change — and even then, prefer to confirm with the user before entering the deepening flow.
 
@@ -569,6 +569,10 @@ Use `Execution note` sparingly. Good uses include:
 
 Do not expand units into literal `RED/GREEN/REFACTOR` substeps.
 
+#### 3.5b Surface Execution Waves When Dependencies Warrant
+
+When the plan has 4+ Implementation Units with a non-trivial dependency structure (some independent, some gated on earlier units), add an `## Execution Waves` section that groups the U-IDs into ordered, parallel-safe batches. This surfaces the dependency graph already in each unit's `Dependencies` field so `work` can read the parallel batches directly. See the Execution Waves entry in `references/plan-sections.md` for the shape and skip criteria. Skip for linear or small plans.
+
 #### 3.6 Keep Planning-Time and Implementation-Time Unknowns Separate
 
 If something is important but not knowable yet, record it explicitly under deferred implementation notes rather than pretending to resolve it in the plan.
@@ -835,6 +839,8 @@ If a skip condition applies and neither override fires, report "Confidence check
 ##### 5.3.3–5.3.7 Deepening Execution
 
 When deepening is warranted, read `references/deepening-workflow.md` for confidence scoring checklists, section-to-agent dispatch mapping, execution mode selection, research execution, interactive finding review, and plan synthesis instructions. Execute steps 5.3.3 through 5.3.7 from that file, then return here for 5.3.8.
+
+**Convergence mode (opt-in).** When the user asked to drive the plan to convergence — "converge the plan", "iterate the plan to convergence", or passed `--converge` / `--max-cycles N` — read `references/convergence-loop.md` instead and run the bounded revise→review loop. It wraps the single deepening pass above in repeated revise + review cycles with explicit stop conditions (converged / stall / cycle budget) and escalates residual findings to the sponsor via `align`. The loop returns here for 5.3.8 when it ends. Convergence is opt-in and does not auto-trigger in pipeline mode.
 
 ##### 5.3.8–5.4 Document Review, Final Checks, and Post-Generation Options
 

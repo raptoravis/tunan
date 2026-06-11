@@ -35,10 +35,12 @@ an unnamespaced `verify`; never call it bare.
 
 Resolve which commands to run, in this precedence:
 
-1. **Config** — the `verify:` block in `.tunan/config.local.yaml` at the repo
-   root (read it via the repo-root resolution pattern; see this repo's authoring
-   guidance for the gitignored-config read). It may name `test`, `lint`, `build`
-   commands explicitly.
+1. **Config** — the `verify:` block in the repo's `tunan:config` GitHub issue.
+   Resolve it with `gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'`,
+   then read its body (`gh issue view <N> --json body`) and parse the fenced
+   `yaml` block. It may name `test`, `lint`, `build` commands explicitly. If no
+   `tunan:config` issue exists, or `gh` is unavailable, skip this source and
+   fall through to repo convention below — never read a local config file.
 2. **Repo convention** — obvious entrypoints already present (e.g. a test script
    in `package.json`, a `Makefile` target, `bin/rails test`, `pytest`,
    `go test ./...`).
