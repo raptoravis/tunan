@@ -287,7 +287,7 @@ Run grounding agents in parallel in the **foreground** (do not background — re
 
 1. **Quick context scan** — dispatch a general-purpose sub-agent using the platform's cheapest capable model (e.g., `model: "haiku"` in Claude Code) with this prompt:
 
-   > Read the project's AGENTS.md (or CLAUDE.md only as compatibility fallback, then README.md if neither exists), then discover the top-level directory layout using the native file-search/glob tool (e.g., `Glob` with pattern `*` or `*/*` in Claude Code). Also read `STRATEGY.md` if it exists — it captures the product's target problem, approach, persona, metrics, and tracks.
+   > Read the project's AGENTS.md (or CLAUDE.md only as compatibility fallback, then README.md if neither exists), then discover the top-level directory layout using the native file-search/glob tool (e.g., `Glob` with pattern `*` or `*/*` in Claude Code). Also read the `tunan:project` issue if it exists (`gh issue list --label "tunan:project" --state open --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`) — it captures the project's target problem, approach, persona, metrics, tracks, and roadmap.
    >
    > **Two paths for other root-level `*.md` files**, depending on whether the focus hint names them:
    >
@@ -300,7 +300,7 @@ Run grounding agents in parallel in the **foreground** (do not background — re
    > - notable patterns or conventions
    > - obvious pain points or gaps
    > - likely leverage points for improvement
-   > - product strategy summary, if `STRATEGY.md` was present — include the approach and active tracks verbatim so ideation can weight toward strategy-aligned directions
+   > - project intent summary, if a `tunan:project` issue was present — include the approach and active tracks verbatim so ideation can weight toward roadmap-aligned directions
    > - `User-named references` section (when the focus hint named root-level `*.md` files)
    > - `Additional context` section (when other root-level `*.md` files exist that the focus did not name)
    >
@@ -340,7 +340,7 @@ When dispatching `tunan:web-researcher`, pass: the focus hint, a brief planning 
 
 Consolidate all dispatched results into a short grounding summary using these sections (omit any section that produced nothing). Phase 1.5 will append a `Topic axes` section to this same summary after consolidation completes:
 
-- **Codebase context** _(repo mode)_ — project shape, notable patterns, pain points, leverage points (project-defining files: AGENTS.md/CLAUDE.md/README.md/STRATEGY.md) OR **Topic context** _(elsewhere mode)_ — topic shape, stated constraints, user-named pain points, opportunity hooks
+- **Codebase context** _(repo mode)_ — project shape, notable patterns, pain points, leverage points (project-defining files: AGENTS.md/CLAUDE.md/README.md plus the `tunan:project` issue) OR **Topic context** _(elsewhere mode)_ — topic shape, stated constraints, user-named pain points, opportunity hooks
 - **User-named references** _(repo mode, when the focus hint named root-level `_.md` files)\* — full content from files the user explicitly named in their prompt or focus. Phase 2 treats these as constraint
 - **Additional context** _(repo mode, when other root-level markdown was discovered but not named)_ — one-line gists per file. Phase 2 treats these as background, not direction
 - **Past learnings** — relevant institutional knowledge from `tunan:solution` solution comments on feature issues

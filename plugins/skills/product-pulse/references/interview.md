@@ -9,12 +9,12 @@ For each section: ask the opening question, evaluate the answer against the qual
 1. **Push back, but don't spiral.** One round of pushback per section max. If the second answer still isn't usable, capture what the user gave, flag it in the config as `needs-review`, and move on.
 2. **Name events in the user's own words.** The config will be readable by the whole team - use the terms they actually use, not a generic template.
 3. **Ask about tools, not credentials.** The interview captures _which_ tool and _what shape of query_. It does not collect API keys, tokens, or database passwords. Those stay in the user's environment.
-4. **Honor strategy seeds.** If `SKILL.md` Phase 1.0 surfaced a product name or a list of key metrics from `STRATEGY.md`, start with those as defaults and let the user edit. Do not re-ask questions that the strategy doc already answered unambiguously.
+4. **Honor project-doc seeds.** If `SKILL.md` Phase 1.0 surfaced a product name or a list of key metrics from the `tunan:project` issue, start with those as defaults and let the user edit. Do not re-ask questions that the project doc already answered unambiguously.
 5. **Evaluate metrics against the SMART bar.** Every event, metric, and signal the user proposes should be:
    - **Specific** - a named event or a named metric, not a category. `message_sent` passes; "engagement" does not.
    - **Measurable** - you can point to the tool and query that returns a number. "Users like it" does not pass; "NPS score from Delighted" does.
    - **Actionable** - if the number moves, the team knows what to do next. "Daily active users" alone usually fails this - pair it with a conversion or retention signal that surfaces a decision.
-   - **Relevant** - ties to the product's target problem and persona (from the strategy doc if seeded). Generic funnel metrics that don't connect to the strategy are suspect.
+   - **Relevant** - ties to the product's target problem and persona (from the project doc if seeded). Generic funnel metrics that don't connect to the project's intent are suspect.
    - **Timely** - reads in the pulse window (24h, 7d, etc.) and reflects the current state. Lagging metrics that only move quarterly don't belong in a daily pulse.
 
    When a user proposes a metric that fails one of these, push back by naming the specific dimension: "That sounds more like a vanity metric than an actionable one - if it moves, what do we do? Is there a tighter signal that would drive a decision?" Do not use the word "SMART" with the user; use the plain-English question.
@@ -25,7 +25,7 @@ For each section: ask the opening question, evaluate the answer against the qual
 
 **Opening question:**
 
-- If seeded from strategy: "Product name from strategy is `{{name}}`. Keep it or edit?"
+- If seeded from the project doc: "Product name from the project doc is `{{name}}`. Keep it or edit?"
 - Otherwise: "What's the product called?"
 
 No pushback needed. Capture verbatim.
@@ -116,7 +116,7 @@ Compile the full list of signals that need a source:
 - The primary engagement event (section 2)
 - The value-realization event (section 3), if different from engagement
 - Each completion/conversion event (section 4)
-- Each key metric carried from the strategy doc, if strategy was seeded
+- Each key metric carried from the project doc, if it was seeded
 
 For each entry, ask one question: "Where does `{{event or metric}}` live? Name the tool (e.g. Mixpanel, PostHog, Amplitude, Stripe, internal DB) and how the agent would query it."
 
@@ -129,7 +129,7 @@ The answer produces (tool name, query shape). If multiple entries land in the sa
 **If the user says "we don't have that instrumented yet"** (common for strategy-seeded metrics like retention or NPS): offer two off-ramps and let them pick.
 
 - **Defer** - append the metric name to `pulse_pending_metrics` (CSV). The metric renders as `no data` in each pulse report until instrumentation lands. Right call when the metric matters and the team will instrument it.
-- **Drop from pulse** - append the metric name to `pulse_excluded_metrics` (CSV). The metric stays in `STRATEGY.md` but the pulse skips it entirely. Right call when the metric is aspirational and won't have data any time soon.
+- **Drop from pulse** - append the metric name to `pulse_excluded_metrics` (CSV). The metric stays in the `tunan:project` issue but the pulse skips it entirely. Right call when the metric is aspirational and won't have data any time soon.
 
 Do not silently skip. Every un-instrumented strategy metric must land in exactly one of `pulse_pending_metrics` (visible as `no data`) or `pulse_excluded_metrics` (omitted from the report).
 
@@ -251,7 +251,7 @@ pulse_excluded_metrics: "{{metric,metric}}" # strategy metrics intentionally not
 
 **Notes on what is NOT persisted in config:**
 
-- **Strategy metrics carried forward**: surfaced in the report, not stored as config — they live in `STRATEGY.md` and are re-read each run from there.
+- **Project metrics carried forward**: surfaced in the report, not stored as config — they live in the `tunan:project` issue and are re-read each run from there.
 - **Per-source connection details** (URLs, API keys, query specifics): live with the user's MCP configuration, not in this config.
 - **Hardcoded operational settings** (15-minute trailing buffer, top-N error count, p50/p95/p99 latencies, "no PII in reports", "parallel analytics + tracing, serial DB"): these are skill behavior, not user config; they live in `SKILL.md` and stay constant.
 - **Schedule cadence**: handled by the `schedule` skill (or platform-native cron), not pulse config. The pulse skill only hands off; it does not own the cadence record.

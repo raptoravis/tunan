@@ -57,7 +57,8 @@ description: '列出当前仓库还没合并的 open PR 和还没关闭的 open 
 
 - 不创建、关闭、合并、编辑任何 issue / PR(那是 `closeissue` / `merge-pr-verify-close` 的事)。
 - 不写任何报告 issue(那是 `retro` / `product-pulse` 的事)。
-- 全程只读。
+- **不在 chat 里即兴写"想从哪个开始 / 接下来做什么"的散文式追问**(违反对齐硬规则)—— 要征求下一步就走下面 `## 收尾` 的阻塞问询工具。
+- 全程只读。收尾的下一步**只是加载**目标 skill,status 自身不执行任何写操作。
 
 ## 输出
 
@@ -65,3 +66,25 @@ description: '列出当前仓库还没合并的 open PR 和还没关闭的 open 
 > - PR: #<n> <title> — <author>
 > - Issue: #<n> <title>
 > （都为空时:✅ 当前没有剩余工作。）
+
+## 收尾:选下一步(交互)
+
+报完快照后,**只要存在至少一个真正的待办**(排除 `tunan:retro` / `tunan:pulse` / `tunan:idea` 归档类),用平台的阻塞问询工具让 sponsor 选下一步并路由到对应 skill。这是一个对齐点,必须走工具 —— 绝不在 chat 里即兴写"想从哪个开始?"这种征求选择的散文追问。
+
+**问询工具**:`AskUserQuestion`(Claude Code;schema 未加载时先用 `ToolSearch` `select:AskUserQuestion`)、`request_user_input`(Codex)、`ask_user`(Gemini;Pi 经 `pi-ask-user` 扩展)。无阻塞工具或调用出错时,退化为 chat 里的编号列表并等待回应,绝不静默跳过。
+
+**何时不问**:真正的待办为空(或只剩归档类)时**不问** —— 直接报"✅ 当前没有剩余工作"并结束。
+
+**怎么问**(遵循 align 协议):
+
+- 选项 ≤4,每个 label 自包含:含 issue/PR 短引用 + 选它意味着推进到哪个 skill(如 `推进 #25(已规划 → work)`)。
+- 把最高杠杆的一项排第一并在 label 末尾加 `(推荐)` —— 一般是已带 `tunan:plan` 标签、可直接进 work 的 issue。
+- 始终带一个"先不动,仅查看"的退出项。
+- 真正的待办超过 3 项放不下 4 个槽时,改用 chat 编号列表 fallback 全列出,并提示"选编号或描述"。
+
+**路由**(选中后只是**加载**对应 skill,status 自身仍不创建/修改任何东西):
+
+- 带 `tunan:plan` 标签的 issue → 载入 `resume` 或 `work`(`#<N>` 作为工作源)
+- `tunan:req` 但还没 plan → 载入 `brainstorm` 或 `plan`
+- open PR(有 review 反馈)→ 载入 `resolve-pr-feedback`;PR 就绪可合 → 载入 `merge-pr-verify-close`
+- sponsor 选"先不动" → 结束,不路由

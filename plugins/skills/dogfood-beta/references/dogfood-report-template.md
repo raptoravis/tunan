@@ -8,7 +8,7 @@
 
 ## Personas
 
-<The primary personas the flows were judged against, and what each cares about. Note the source: STRATEGY.md "Who it's for", VISION.md, a persona doc, or "inferred" if none existed.>
+<The primary personas the flows were judged against, and what each cares about. Note the source: the `tunan:project` issue "Who it's for", VISION.md, a persona doc, or "inferred" if none existed.>
 
 - **<Persona name>** — <job-to-be-done / what they care about>
 

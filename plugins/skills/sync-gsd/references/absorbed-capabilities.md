@@ -29,6 +29,26 @@ From the initial GSD-core absorption (tunan commit `32d2b5a`, 2026-06-11):
 5. **Sessions profile** — `sessions` gains a `profile` sub-action mining session
    history into memory, consent-gated with a headless fallback. (tunan: `sessions/`)
 
+From the `map-codebase` absorption (2026-06-11):
+
+6. **Codebase Map** — parallel mapper agents produce a seven-section current-state
+   snapshot (stack, integrations, architecture, structure, conventions, testing,
+   concerns) of an existing repo. Re-expressed issue-only: one living
+   `tunan:codebase-map` issue updated in place (not GSD's `.planning/codebase/*.md`
+   files), discovery parallel but the issue write serial, CodeGraph as the
+   structural index and the `query` backend. (GSD: `commands/gsd/map-codebase.md`;
+   tunan: `map-codebase/`)
+7. **New Project / New Milestone** — greenfield bootstrap (`new-project`) and
+   brownfield next-cycle (`new-milestone`) orchestrators. Re-expressed issue-only:
+   project intent + milestone roadmap live in one living `tunan:project` issue
+   (not GSD's `.planning/PROJECT.md` + `ROADMAP.md` + `STATE.md` local files);
+   requirements reuse `brainstorm` → `tunan:req`, config reuses `tunan:config`,
+   code current-state reuses `map-codebase`. The `tunan:project` issue **replaces
+   the retired `strategy` skill and its `STRATEGY.md`** — all former STRATEGY.md
+   consumers (ideate/brainstorm/plan/product-pulse/retro/dogfood-beta) now read the
+   issue. (GSD: `commands/gsd/new-project.md`, `new-milestone.md`; tunan:
+   `new-project/`, `new-milestone/`)
+
 ## How to read the GSD source
 
 GSD's capability surface, by directory:

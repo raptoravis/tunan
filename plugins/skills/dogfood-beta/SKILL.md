@@ -84,7 +84,7 @@ git diff main...HEAD                 # how it changed
 
 Build a mental model of every change: new features, modified behavior, new routes/views/components, touched data flows. Note anything that produces user-visible behavior — that is what the matrix must cover.
 
-**Ground in the product's personas and vision.** Look for persona and vision context so flows can be judged from real users' eyes, not just "does it work." Check, in order: `STRATEGY.md` (its "Who it's for" section names the primary persona and their job-to-be-done), `VISION.md`, and any persona docs (e.g. `docs/personas/`, `PERSONAS.md`). Capture the 1-3 primary personas and what each cares about. If none exist, infer a reasonable primary persona from the product and the diff, and say so in the report.
+**Ground in the product's personas and vision.** Look for persona and vision context so flows can be judged from real users' eyes, not just "does it work." Check, in order: the `tunan:project` issue (its "Who it's for" section names the primary persona and their job-to-be-done — resolve via `gh issue list --label "tunan:project" --state open --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`), `VISION.md`, and any persona docs (e.g. `docs/personas/`, `PERSONAS.md`). Capture the 1-3 primary personas and what each cares about. If none exist, infer a reasonable primary persona from the product and the diff, and say so in the report.
 
 ### Phase 2: Map the Flows, Then Build the Matrix
 
@@ -177,7 +177,7 @@ The report issue was created at the end of Phase 2 and updated incrementally thr
 Use `references/dogfood-report-template.md` as the shape — the same way plans and brainstorms are captured from a template. The finalized artifact must include:
 
 1. **Diff Summary** — what changed between the branch and `main`.
-2. **Personas** — the primary personas evaluated against (and their source: STRATEGY.md / VISION.md / inferred).
+2. **Personas** — the primary personas evaluated against (and their source: the `tunan:project` issue "Who it's for" / VISION.md / inferred).
 3. **Flows tested** — the Mermaid flowcharts from Phase 2a, so the journeys are preserved.
 4. **Test Matrix & Results** — every scenario: what was tested, pass/fail, issue found, fix applied, commit SHA.
 5. **What was fixed** — each bug, its root cause, the fix, the regression test added, and the commit.

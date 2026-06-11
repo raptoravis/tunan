@@ -116,6 +116,8 @@ The requirement body is markdown-in-issue only — there is no local-file or HTM
 
 The handoff to `plan` passes the req issue ref (`#<N>` or URL), not a file path — see `references/handoff.md`.
 
+**Current-state grounding (optional, technical brainstorms only).** When the brainstorm is inherently about a technical or architectural change (Principle 4), a `tunan:codebase-map` issue — if one exists — is useful grounding for feasibility and for the concerns already present in the repo. Resolve and read it: `gh issue list --label "tunan:codebase-map" --state open --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body` (read its ARCHITECTURE/CONCERNS). Use it to inform what is realistic to build; do not pull implementation detail into the requirement body. For non-technical/product brainstorms, skip it. Absent → skip silently, never block.
+
 #### 0.1 Resume Existing Work When Appropriate
 
 Resume from a `tunan:req` issue — never from a local file.
@@ -184,7 +186,7 @@ Scan the repo before substantive brainstorming. Match depth to scope:
 
 **Standard and Deep** — Two passes:
 
-_Constraint Check_ — Check project instruction files (`AGENTS.md`, and `CLAUDE.md` only if retained as compatibility context) for workflow, product, or scope constraints that affect the brainstorm. Also read `STRATEGY.md` if it exists — the product's target problem, approach, persona, and active tracks are direct input to what this brainstorm should deliver and should shape scope, success criteria, and which approaches are aligned vs out-of-scope. Also read `CONCEPTS.md` at repo root if it exists — the project's authoritative vocabulary. Use these names in dialogue, approaches, and the requirements doc; map user-offered synonyms back. If any of these add nothing, move on.
+_Constraint Check_ — Check project instruction files (`AGENTS.md`, and `CLAUDE.md` only if retained as compatibility context) for workflow, product, or scope constraints that affect the brainstorm. Also read the `tunan:project` issue if it exists (`gh issue list --label "tunan:project" --state open --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`) — the project's target problem, approach, persona, active tracks, and current milestone are direct input to what this brainstorm should deliver and should shape scope, success criteria, and which approaches are aligned vs out-of-scope. Also read `CONCEPTS.md` at repo root if it exists — the project's authoritative vocabulary. Use these names in dialogue, approaches, and the requirements doc; map user-offered synonyms back. If any of these add nothing, move on.
 
 _Topic Scan_ — Search for relevant terms. Read the most relevant existing artifact if one exists (brainstorm, plan, spec, skill, feature doc). Skim adjacent examples covering similar behavior.
 

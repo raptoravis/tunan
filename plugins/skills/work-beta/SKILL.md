@@ -111,6 +111,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    - Identify files likely to change based on the prompt
    - Find existing test files for those areas (search for test/spec files that import, reference, or share names with the implementation files)
    - Note local patterns and conventions in the affected areas
+   - **Current-state grounding (optional read).** If a `tunan:codebase-map` issue exists (`gh issue list --label "tunan:codebase-map" --state open --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`), read its CONVENTIONS / STRUCTURE / CONCERNS sections for the affected area before implementing — it is the `map-codebase` snapshot. Treat it as grounding, not gospel (it may be stale; check its provenance `mapped_at_sha`). Absent → skip silently, never block.
 
 2. **Assess complexity and route**
 

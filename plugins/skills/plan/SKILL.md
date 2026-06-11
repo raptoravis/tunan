@@ -313,8 +313,9 @@ Prepare a concise planning context summary (a paragraph or two) to pass as input
 
 - If an origin document exists, summarize the problem frame, requirements, and key decisions from that document
 - Otherwise use the feature description directly
-- If `STRATEGY.md` exists, read it and include the relevant pieces (target problem, approach, active tracks) in the summary so downstream research and planning decisions are anchored to product strategy
+- If a `tunan:project` issue exists, read it (`gh issue list --label "tunan:project" --state open --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`) and include the relevant pieces (target problem, approach, active tracks, current milestone) in the summary so downstream research and planning decisions are anchored to project intent and the roadmap
 - If `CONCEPTS.md` exists at repo root, read it — its definitions are the canonical names for domain entities, named processes, and status concepts. Plan with those terms rather than synonyms.
+- If a `tunan:codebase-map` issue exists, read it for current-state grounding — it is the `map-codebase` snapshot of the repo's stack, architecture, structure, conventions, testing, and concerns. Resolve and read it: `gh issue list --label "tunan:codebase-map" --state open --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`. Fold its ARCHITECTURE/CONVENTIONS/CONCERNS into the planning context summary so research starts from the known baseline rather than rediscovering it — when the map is fresh (check its provenance `mapped_at_sha`), this can narrow or skip parts of the repo scan below. Treat it as grounding, not gospel; it may be stale. Absent → skip silently, never block.
 
 Run these agents in parallel:
 
@@ -326,7 +327,7 @@ Run these agents in parallel:
 - Implementation patterns, relevant files, modules, and tests
 - AGENTS.md guidance that materially affects the plan, with CLAUDE.md used only as compatibility fallback when present
 - Institutional learnings from the solution comments on feature issues that carry the `tunan:solution` label (`gh issue list --label tunan:solution`, then read each one's solution comment)
-- Product strategy context when `STRATEGY.md` is present — flag any plan decisions that pull away from the active tracks or the stated approach
+- Project intent context when a `tunan:project` issue is present — flag any plan decisions that pull away from the active tracks, the stated approach, or the current milestone's scope
 
 **Slack context** (opt-in) — never auto-dispatch. Route by condition:
 
