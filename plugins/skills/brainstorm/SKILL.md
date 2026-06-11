@@ -12,7 +12,7 @@ Brainstorming helps answer **WHAT** to build through collaborative dialogue. It 
 
 The durable output of this workflow is a **`tunan:req` GitHub issue** — a single issue whose markdown body holds the finished requirement. In other workflows this might be called a lightweight PRD or feature brief. In compound engineering, keep the workflow name `brainstorm`, but make the written artifact strong enough that planning does not need to invent product behavior, scope boundaries, or success criteria. Requirements live in GitHub issues, never in local files.
 
-`newreq` already creates standalone `tunan:req` issues. When this skill is invoked with a req issue produced by `newreq` (or any earlier `brainstorm` run), it **updates that same issue** rather than creating a duplicate.
+`new-req` already creates standalone `tunan:req` issues. When this skill is invoked with a req issue produced by `new-req` (or any earlier `brainstorm` run), it **updates that same issue** rather than creating a duplicate.
 
 This skill does not implement code. It explores, clarifies, and documents decisions for later planning or execution.
 
@@ -102,7 +102,7 @@ gh label create "tunan:req" --color 1f883d --description "tunan requirements"
 
 **Resolve the issue binding:**
 
-- **`$ARGUMENTS` contains an issue ref** (a `#<N>` token or a full GitHub issue URL): bind that issue as `REQ_ISSUE`. Read its body and use it as the feature description / resume source (Phase 0.1). This is the path taken when `brainstorm` is invoked on a req issue produced by `newreq` — the same issue is updated in place at Phase 3, not duplicated.
+- **`$ARGUMENTS` contains an issue ref** (a `#<N>` token or a full GitHub issue URL): bind that issue as `REQ_ISSUE`. Read its body and use it as the feature description / resume source (Phase 0.1). This is the path taken when `brainstorm` is invoked on a req issue produced by `new-req` — the same issue is updated in place at Phase 3, not duplicated.
 
 ```bash
 gh issue view <N> --json title,body,url,labels
@@ -122,7 +122,7 @@ The handoff to `plan` passes the req issue ref (`#<N>` or URL), not a file path 
 
 Resume from a `tunan:req` issue — never from a local file.
 
-- **A `REQ_ISSUE` was bound in Phase 0.0** (issue ref passed): its body is already the resume source. Read it (`gh issue view <N> --json title,body,url,labels`), summarize the current state briefly, and continue from its existing decisions and outstanding questions. If the issue was created by `newreq` and holds only the captured requirement (no finished brainstorm sections yet), treat its body as the feature description and proceed through the dialogue phases normally. Phase 3 then **merges** the finished requirement into the body — it preserves the `newreq`-authored capture (the sponsor's verbatim original words and the asset placeholders), it does not clobber them.
+- **A `REQ_ISSUE` was bound in Phase 0.0** (issue ref passed): its body is already the resume source. Read it (`gh issue view <N> --json title,body,url,labels`), summarize the current state briefly, and continue from its existing decisions and outstanding questions. If the issue was created by `new-req` and holds only the captured requirement (no finished brainstorm sections yet), treat its body as the feature description and proceed through the dialogue phases normally. Phase 3 then **merges** the finished requirement into the body — it preserves the `new-req`-authored capture (the sponsor's verbatim original words and the asset placeholders), it does not clobber them.
 - **No `REQ_ISSUE`, but the user references an existing brainstorm topic:** locate a candidate issue by topic before starting fresh:
 
 ```bash
@@ -318,7 +318,7 @@ Fires for **all tiers** including Lightweight. Skip Phase 2.5 entirely on the Ph
 
 ### Phase 3: Capture the Requirements
 
-Write the requirement to a `tunan:req` GitHub issue only when the conversation produced durable decisions worth preserving — see `references/brainstorm-sections.md` "Decide whether a doc is warranted at all" for the criteria and the bug-fix stress test. Skip issue creation when the user only needs brief alignment and the decisions can flow downstream (plan, commit message, `tunan:solution` learnings) without a requirement artifact in the middle. (When a `REQ_ISSUE` is already bound — e.g., a `newreq` issue — still update it even for slim outcomes, since the issue already exists.)
+Write the requirement to a `tunan:req` GitHub issue only when the conversation produced durable decisions worth preserving — see `references/brainstorm-sections.md` "Decide whether a doc is warranted at all" for the criteria and the bug-fix stress test. Skip issue creation when the user only needs brief alignment and the decisions can flow downstream (plan, commit message, `tunan:solution` learnings) without a requirement artifact in the middle. (When a `REQ_ISSUE` is already bound — e.g., a `new-req` issue — still update it even for slim outcomes, since the issue already exists.)
 
 When a requirement is warranted, compose its markdown body using:
 
@@ -329,12 +329,12 @@ Build the body in an OS temp file (bash `${TMPDIR:-/tmp}`, PowerShell `$env:TEMP
 
 - **`REQ_ISSUE` is bound** (issue ref passed, or a match found in Phase 0.1): rewrite that issue's body with the finished requirement. The title becomes `[req] <topic>` (update it only if the existing title is a stale placeholder; preserve a good user-set title).
 
-  **Merge, do not clobber.** When the bound issue already has a populated body — the common case for a `newreq` issue — read the current body first and **carry forward verbatim** the sections `newreq` authored that the finished requirement does not regenerate:
+  **Merge, do not clobber.** When the bound issue already has a populated body — the common case for a `new-req` issue — read the current body first and **carry forward verbatim** the sections `new-req` authored that the finished requirement does not regenerate:
   - the sponsor's original words (the `## Background / original words` section) — this is the verbatim source of truth for what the user asked; the agent-synthesized Problem Frame does not replace it.
   - the assets section (`## Assets to upload`, its to-upload checklist, and any `<!-- TODO: drag in ... -->` placeholder comments) — dropping it loses the pending-asset list and the drag-in instructions the user still needs.
   - the `kind:` and `priority:` YAML fields — merge them into the metadata block alongside `date` / `topic`; do not lose them by replacing the whole block.
 
-  Dropping the verbatim sponsor words, the pending-asset checklist, or the `kind`/`priority` fields when overwriting a `newreq` body is a regression. Build the merged body, then write it:
+  Dropping the verbatim sponsor words, the pending-asset checklist, or the `kind`/`priority` fields when overwriting a `new-req` body is a regression. Build the merged body, then write it:
 
 ```bash
 gh issue edit <N> --body-file <body-file>

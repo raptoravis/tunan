@@ -70,7 +70,7 @@ Two heavier servers are **opt-in** (they pull large dependencies — browser bin
 
 After install, run `/tunan:setup` first to verify your environment (see the **⚠️ Required next step** note above), then try:
 
-- `/tunan:newreq` —  create a 'raw' req in the github issue
+- `/tunan:new-req` —  create a 'raw' req in the github issue
 - `/tunan:brainstorm` — explore requirements and approaches before planning
 - `/tunan:plan` — create an implementation plan
 - `/tunan:work` — implement the plan

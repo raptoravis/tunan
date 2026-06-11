@@ -202,10 +202,10 @@ The metadata fields are defined in `brainstorm-sections.md` (`date`,
   a `status` field. (Issue open/closed state is GitHub's own lifecycle, not
   a body field.)
 - Stable across revisions — never rename or repurpose a field.
-- When rewriting a body that `newreq` created, **merge** its `kind` / `priority`
+- When rewriting a body that `new-req` created, **merge** its `kind` / `priority`
   fields into this block alongside `date` / `topic` — do not drop them by
   replacing the whole block (see `brainstorm-sections.md` "Preserve
-  `newreq`-authored sections").
+  `new-req`-authored sections").
 
 ## Post-write audit
 
@@ -221,7 +221,7 @@ common slips:
 - Tables only where 5+ uniform-shape items justify them.
 - The leading ```` ```yaml ```` block has the required fields (`date`,
   `topic`) with reasonable values.
-- When rewriting a `newreq` body, the sponsor's `## Background / original
+- When rewriting a `new-req` body, the sponsor's `## Background / original
   words` section, the `## Assets to upload` section (with its checklist and any
   `<!-- TODO: drag in ... -->` comments), and the `kind` / `priority` metadata
   fields all survived the rewrite — none were clobbered.

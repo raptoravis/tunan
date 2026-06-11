@@ -127,7 +127,7 @@ Every review spawns all 4 always-on personas plus the 2 CE always-on agents, the
 
 tunan pipeline artifacts are durable GitHub issues distinguished by label, not local files. They must never be flagged for closing, deletion, or any "stop creating these" cleanup by any reviewer:
 
-- `tunan:req` feature issues -- requirements created by brainstorm / newreq (the issue body)
+- `tunan:req` feature issues -- requirements created by brainstorm / new-req (the issue body)
 - `<!-- tunan:plan -->` plan comments on the feature issue -- plans created by plan (decision artifacts; execution progress is derived from git, not stored in plan comments). The feature issue carries the `tunan:plan` label
 - `<!-- tunan:solution -->` solution comments on the feature issue -- solution/learning documents created during the pipeline. The feature issue carries the `tunan:solution` label
 

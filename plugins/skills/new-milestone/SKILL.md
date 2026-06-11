@@ -78,7 +78,7 @@ Decide what the next milestone delivers. Open free-form ("With <current mileston
 
 Offer to scope the new milestone into concrete requirements now, or defer. Use the blocking question tool: *Brainstorm the requirements now* (recommended) / *Defer — run brainstorm per feature later* / *Skip*.
 
-If accepted: for each deliverable, hand off to `brainstorm` to produce a `tunan:req` feature issue (or create `tunan:req` stubs via `newreq`). Collect the issue refs (`#<N>`) to link under the new milestone.
+If accepted: for each deliverable, hand off to `brainstorm` to produce a `tunan:req` feature issue (or create `tunan:req` stubs via `new-req`). Collect the issue refs (`#<N>`) to link under the new milestone.
 
 ### Phase 3: Update the project issue
 

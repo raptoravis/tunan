@@ -30,7 +30,7 @@ Skip document creation when **both** hold:
   `tunan:solution` learning comment) without a `tunan:req` issue as an
   intermediary.
 
-  (When a req issue was already bound — e.g., from `newreq` — it
+  (When a req issue was already bound — e.g., from `new-req` — it
   already exists, so update it in place even for slim outcomes rather than
   deciding whether to "create" one.)
 
@@ -78,10 +78,10 @@ When a doc is warranted, these are present.
   continuous across groups (R1, R2 in the first group; R3, R4 in the
   second; never restart at R1 per group).
 
-## Preserve `newreq`-authored sections (merge, do not clobber)
+## Preserve `new-req`-authored sections (merge, do not clobber)
 
 When the requirement is written to a `REQ_ISSUE` that already has a populated
-body — the common case for an issue created by `newreq` — read the current
+body — the common case for an issue created by `new-req` — read the current
 body first and carry these sections forward **verbatim**; they are part of the
 finished requirement, not scaffolding to discard:
 
@@ -94,7 +94,7 @@ finished requirement, not scaffolding to discard:
 - the `kind:` / `priority:` metadata fields — merge into the metadata block
   alongside `date` / `topic` rather than replacing the whole block.
 
-Overwriting a `newreq` body without preserving these is a regression.
+Overwriting a `new-req` body without preserving these is a regression.
 
 ## Include when material
 

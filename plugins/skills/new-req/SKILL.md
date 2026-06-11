@@ -1,10 +1,10 @@
 ---
-name: newreq
+name: new-req
 description: "Capture a requirement described in the current conversation (text plus any screenshots or videos) into a single GitHub issue that becomes the source of truth for that requirement. Creates the issue with a `tunan:req` label, a one-line summary, the sponsor's original words, and asset placeholders to drag in. Downstream skills like brainstorm read the issue as input and write the finished requirements back to it. Use when the user says capture this, save this as a requirement, log a req, or wants a conversation turned into a tracked GitHub issue before brainstorming or planning."
 argument-hint: "[slug] [--align] [--kind=feature|bug|chore] [--priority=P0|P1|P2] [--dry-run]"
 ---
 
-# newreq — capture a requirement into a GitHub issue
+# new-req — capture a requirement into a GitHub issue
 
 This skill turns a requirement the user just described in conversation (text plus any pasted screenshots or videos) into one **GitHub issue**. That issue is the durable source of truth for the requirement: downstream skills (`brainstorm`, `plan`) read it as input and `brainstorm` writes the finished requirements back into it. Requirements and their state live in GitHub issues, never in local files.
 
@@ -15,12 +15,12 @@ This skill only **creates the issue**. It does not expand the requirement into a
 ## Invocation
 
 ```
-/tunan:newreq                         # default: extract from the current conversation, fast path
-/tunan:newreq <slug>                  # explicit kebab-case slug for the title
-/tunan:newreq --kind=feature|bug|chore  # explicit kind; default auto-detected, else feature
-/tunan:newreq --priority=P0|P1|P2     # explicit priority; default P2
-/tunan:newreq --align                 # ask at every soft decision via align
-/tunan:newreq --dry-run               # print the title + body + asset list, create nothing
+/tunan:new-req                         # default: extract from the current conversation, fast path
+/tunan:new-req <slug>                  # explicit kebab-case slug for the title
+/tunan:new-req --kind=feature|bug|chore  # explicit kind; default auto-detected, else feature
+/tunan:new-req --priority=P0|P1|P2     # explicit priority; default P2
+/tunan:new-req --align                 # ask at every soft decision via align
+/tunan:new-req --dry-run               # print the title + body + asset list, create nothing
 ```
 
 Do not accept destructive flags. This skill never edits local files and never commits.
