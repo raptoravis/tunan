@@ -340,6 +340,12 @@ Build the body in an OS temp file (bash `${TMPDIR:-/tmp}`, PowerShell `$env:TEMP
 gh issue edit <N> --body-file <body-file>
 ```
 
+  **Verify the merge preserved the capture.** After the edit, re-read the body and confirm the `## Background / original words` section is still present with the sponsor's verbatim words intact (and that the `## Assets to upload` checklist and `kind:` / `priority:` fields survived, when they were in the original). If the section was dropped or the words were paraphrased, the merge clobbered the capture — restore it from the pre-edit body read and re-write. Do not report the requirement as captured until the verbatim original input is confirmed present.
+
+```bash
+gh issue view <N> --json body --jq .body
+```
+
 - **No `REQ_ISSUE`:** create a new issue.
 
 ```bash

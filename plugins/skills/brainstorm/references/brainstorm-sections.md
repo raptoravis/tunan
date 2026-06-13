@@ -94,7 +94,11 @@ finished requirement, not scaffolding to discard:
 - the `kind:` / `priority:` metadata fields — merge into the metadata block
   alongside `date` / `topic` rather than replacing the whole block.
 
-Overwriting a `new-req` body without preserving these is a regression.
+Overwriting a `new-req` body without preserving these is a regression. After
+writing the merged body, re-read it and confirm `## Background / original
+words` is still present with the sponsor's verbatim words intact; if it was
+dropped or paraphrased, restore it from the pre-edit body and re-write before
+reporting the requirement as captured.
 
 ## Include when material
 
