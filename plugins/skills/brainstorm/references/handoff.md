@@ -8,12 +8,14 @@ The durable requirement is a **`tunan:req` GitHub issue**, not a local file. Eve
 
 #### 4.1 Present Next-Step Options
 
-The Phase 4 menu's visible option count varies by state: no `REQ_ISSUE` hides the review and Proof options; unresolved `Resolve Before Planning` hides `Plan implementation` and `Build it now`; a failing direct-to-work gate hides `Build it now`. Count the visible options for the current state and choose the rendering mode accordingly:
+The Phase 4 menu's visible option count varies by state: no `REQ_ISSUE` hides the review and Proof options; unresolved `Resolve Before Planning` hides `Plan implementation` and `Build it now`; a failing direct-to-work gate hides `Build it now`. **Always present the menu through the platform's blocking question tool** (`AskUserQuestion` in Claude Code — call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded; `request_user_input` in Codex; `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension)) — never a markdown numbered list in chat.
 
-- **4 or fewer visible:** use the platform's blocking question tool (`AskUserQuestion` in Claude Code — call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded; `request_user_input` in Codex; `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension)). This is the default.
-- **5 or more visible:** render as a numbered list in chat. This is the narrow option-overflow fallback; trimming would hide legitimate choices (plan, review, Proof, build, refine, pause are all distinct destinations). Include a hint that free-form input is accepted ("Pick a number or describe what you want.") so the numbered list retains the blocking tool's open-endedness.
+`AskUserQuestion` caps at 4 options (a hard platform limit — a 5th is rejected by the tool schema). Count the visible options for the current state:
 
-Never silently skip the question.
+- **4 or fewer visible:** present all of them as options.
+- **5 or more visible** (possible only when `Resolve Before Planning` is empty): present the 4 highest-priority visible options — `Plan implementation` (Recommended), `Agent review of the requirement`, `More clarifying questions`, `Done for now` — and name the lower-priority remainder (`Open in Proof`, and `Build it now` when the gate passes) in the question stem so the user can reach them through the tool's free-form input (e.g., "…or say 'open in Proof' to review there, or 'build it now' to skip planning"). Do **not** fall back to a numbered list to fit all of them — option count never justifies dropping the blocking tool.
+
+The numbered-list fallback applies only when the harness genuinely lacks a blocking tool or the tool call errors. Never silently skip the question.
 
 If `Resolve Before Planning` contains any items:
 
@@ -22,7 +24,7 @@ If `Resolve Before Planning` contains any items:
 - If the user chooses to pause instead, present the handoff as paused or blocked rather than complete
 - Do not offer the `Plan implementation` or `Build it now` options while `Resolve Before Planning` remains non-empty
 
-In both preambles below, the "Pick a number or describe what you want." hint applies only in numbered-list mode. When using the blocking tool, omit that line and pass the remaining stem as the question.
+In both preambles below, the "Pick a number or describe what you want." hint applies only in the numbered-list fallback (no blocking tool / call errored). When using the blocking tool (the default), omit that line and pass the remaining stem as the question.
 
 **Reference format:** Cite the requirement by issue ref — `#<N>` and its URL — so it is clickable. Never print a local file path.
 
