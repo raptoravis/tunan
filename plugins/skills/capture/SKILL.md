@@ -14,13 +14,13 @@ handoff menu in capture modes; derailing the current task is exactly what this
 skill exists to avoid. Only `--list` is interactive.
 
 Captured items live in **GitHub issues**, never in local files — same
-invariant as `new-req` and `brainstorm`. This skill never edits the working
+invariant as `new-raw` and `brainstorm`. This skill never edits the working
 tree and never commits.
 
 Capture is the lightest rung of the capture ladder: **capture** (record a
-thought) → `new-req` (structured requirement capture) → `brainstorm` (think it
+thought) → `new-raw` (structured requirement capture) → `brainstorm` (think it
 through) → `plan` (decide how to build). A captured item is a valid input to
-`new-req`/`brainstorm`/`plan` later, via `--list` triage.
+`new-raw`/`brainstorm`/`plan` later, via `--list` triage.
 
 ## Invocation
 
@@ -163,10 +163,11 @@ schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini,
 items to browse, render the browse list as a numbered list in chat and accept a
 number or free-text in the blocking tool. Per the chosen item, offer:
 
-- **Promote to a requirement** — hand the item's text to `new-req` (or
+- **Promote to a requirement** — hand the item's text to `new-raw` (or
   `brainstorm` when the user wants to think it through first); once promoted,
-  close the capture issue with a comment linking the new `tunan:req` issue so
-  it is not double-counted.
+  close the capture issue with a comment linking the new requirement issue
+  (`tunan:raw`, or `tunan:req` once brainstorm has normalized it) so it is not
+  double-counted.
 - **Keep** — leave it open, unchanged.
 - **Close** — it is a duplicate, already done, or no longer wanted; close the
   capture issue (or check off the backlog line).
@@ -192,7 +193,7 @@ its URL. Do not ask "what next" — the user is mid-task; let them get back to i
   line and stop. Only `--list` is interactive. Derailing the current task
   defeats the skill's purpose.
 - **Expanding the idea** — capture verbatim; acceptance criteria, research, and
-  scope belong to `new-req`/`brainstorm`/`plan` after `--list` promotion.
+  scope belong to `new-raw`/`brainstorm`/`plan` after `--list` promotion.
 - **Falling back to a local file when `gh` is missing** — abort instead;
   captured items live in GitHub issues.
 - **Opening a new issue per backlog item** — `--backlog` appends to the single

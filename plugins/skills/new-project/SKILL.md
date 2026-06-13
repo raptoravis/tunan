@@ -98,7 +98,7 @@ Use the blocking question tool to confirm the milestone-1 scope boundary when th
 
 Offer to scope milestone 1 into concrete requirements now, or defer. Use the blocking question tool: *Brainstorm milestone-1 requirements now* (recommended) / *Defer — I'll run brainstorm per feature later* / *Skip*.
 
-If accepted: for each milestone-1 deliverable, hand off to `brainstorm` to produce a `tunan:req` feature issue (or create lightweight `tunan:req` stubs via `new-req` for the user to expand later). Dispatch `brainstorm` via the platform's subagent primitive (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi), or load it inline. **The `tunan:project` issue is not written until Phase 5**, so pass the captured project intent (problem, approach, persona, milestone-1 scope) explicitly to `brainstorm` rather than expecting it to read the not-yet-created issue. Collect the resulting issue refs (`#<N>`) — they link under milestone 1 in the roadmap.
+If accepted: for each milestone-1 deliverable, hand off to `brainstorm` to produce a `tunan:req` feature issue (or create lightweight `tunan:raw` stubs via `new-raw` for the user to expand later). Dispatch `brainstorm` via the platform's subagent primitive (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi), or load it inline. **The `tunan:project` issue is not written until Phase 5**, so pass the captured project intent (problem, approach, persona, milestone-1 scope) explicitly to `brainstorm` rather than expecting it to read the not-yet-created issue. Collect the resulting issue refs (`#<N>`) — they link under milestone 1 in the roadmap.
 
 ### Phase 4: Brownfield code map (optional)
 

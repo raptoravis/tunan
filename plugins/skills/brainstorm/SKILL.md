@@ -1,7 +1,7 @@
 ---
 name: brainstorm
-description: 'Explore requirements and approaches through collaborative dialogue, then capture a right-sized requirement as a GitHub issue labeled tunan:req. Use when the user says "let''s brainstorm", "what should we build", or "help me think through X", presents a vague or ambitious feature request, or seems unsure about scope or direction -- even without explicitly asking to brainstorm. Accepts an existing req issue ref to resume and update.'
-argument-hint: "[feature idea or problem to explore, or a req issue ref #N / URL] [--search]"
+description: 'Explore requirements and approaches through collaborative dialogue, then capture a right-sized requirement as a GitHub issue labeled tunan:req. Use when the user says "let''s brainstorm", "what should we build", or "help me think through X", presents a vague or ambitious feature request, or seems unsure about scope or direction -- even without explicitly asking to brainstorm. Accepts an existing tunan:raw capture or tunan:req issue ref to resume and update (a tunan:raw capture is promoted to tunan:req).'
+argument-hint: "[feature idea or problem to explore, or a tunan:raw / tunan:req issue ref #N / URL] [--search]"
 ---
 
 # Brainstorm a Feature or Improvement
@@ -12,7 +12,7 @@ Brainstorming helps answer **WHAT** to build through collaborative dialogue. It 
 
 The durable output of this workflow is a **`tunan:req` GitHub issue** — a single issue whose markdown body holds the finished requirement. In other workflows this might be called a lightweight PRD or feature brief. In compound engineering, keep the workflow name `brainstorm`, but make the written artifact strong enough that planning does not need to invent product behavior, scope boundaries, or success criteria. Requirements live in GitHub issues, never in local files.
 
-`new-req` already creates standalone `tunan:req` issues. When this skill is invoked with a req issue produced by `new-req` (or any earlier `brainstorm` run), it **updates that same issue** rather than creating a duplicate.
+`new-raw` creates standalone `tunan:raw` issues — raw, pre-brainstorm captures. When this skill is invoked with such an issue (or a `tunan:req` issue from any earlier `brainstorm` run), it **updates that same issue** rather than creating a duplicate, and promotes a `tunan:raw` capture to `tunan:req` once the normalized requirement is written.
 
 This skill does not implement code. It explores, clarifies, and documents decisions for later planning or execution.
 
@@ -102,7 +102,7 @@ gh label create "tunan:req" --color 1f883d --description "tunan requirements"
 
 **Resolve the issue binding:**
 
-- **`$ARGUMENTS` contains an issue ref** (a `#<N>` token or a full GitHub issue URL): bind that issue as `REQ_ISSUE`. Read its body and use it as the feature description / resume source (Phase 0.1). This is the path taken when `brainstorm` is invoked on a req issue produced by `new-req` — the same issue is updated in place at Phase 3, not duplicated.
+- **`$ARGUMENTS` contains an issue ref** (a `#<N>` token or a full GitHub issue URL): bind that issue as `REQ_ISSUE`. Read its body and use it as the feature description / resume source (Phase 0.1). This is the path taken when `brainstorm` is invoked on a `tunan:raw` issue produced by `new-raw` (or an earlier `tunan:req` issue) — the same issue is updated in place at Phase 3, not duplicated, and a `tunan:raw` issue is promoted to `tunan:req` there.
 
 ```bash
 gh issue view <N> --json title,body,url,labels
@@ -120,16 +120,17 @@ The handoff to `plan` passes the req issue ref (`#<N>` or URL), not a file path 
 
 #### 0.1 Resume Existing Work When Appropriate
 
-Resume from a `tunan:req` issue — never from a local file.
+Resume from an existing `tunan:raw` or `tunan:req` issue — never from a local file.
 
-- **A `REQ_ISSUE` was bound in Phase 0.0** (issue ref passed): its body is already the resume source. Read it (`gh issue view <N> --json title,body,url,labels`), summarize the current state briefly, and continue from its existing decisions and outstanding questions. If the issue was created by `new-req` and holds only the captured requirement (no finished brainstorm sections yet), treat its body as the feature description and proceed through the dialogue phases normally. Phase 3 then **merges** the finished requirement into the body — it preserves the `new-req`-authored capture (the sponsor's verbatim original words and the asset placeholders), it does not clobber them.
-- **No `REQ_ISSUE`, but the user references an existing brainstorm topic:** locate a candidate issue by topic before starting fresh:
+- **A `REQ_ISSUE` was bound in Phase 0.0** (issue ref passed): its body is already the resume source. Read it (`gh issue view <N> --json title,body,url,labels`), summarize the current state briefly, and continue from its existing decisions and outstanding questions. If the issue was created by `new-raw` (label `tunan:raw`) and holds only the captured requirement (no finished brainstorm sections yet), treat its body as the feature description and proceed through the dialogue phases normally. Phase 3 then **merges** the finished requirement into the body — it preserves the `new-raw`-authored capture (the sponsor's verbatim original words and the asset placeholders), it does not clobber them, and it promotes the label `tunan:raw → tunan:req`.
+- **No `REQ_ISSUE`, but the user references an existing brainstorm topic:** locate a candidate issue by topic before starting fresh — search both the raw captures and the normalized requirements:
 
 ```bash
-gh issue list --label "tunan:req" --search "<terms>" --json number,title,url
+gh issue list --label "tunan:raw" --search "<terms>" --json number,title,url,labels
+gh issue list --label "tunan:req" --search "<terms>" --json number,title,url,labels
 ```
 
-  Confirm with the user before resuming: "Found an existing `tunan:req` issue #<N> for [topic]. Should I continue from this, or start a new one?" If resuming, bind it as `REQ_ISSUE`, read its body, and update that issue at Phase 3 instead of creating a duplicate.
+  Confirm with the user before resuming: "Found an existing #<N> for [topic]. Should I continue from this, or start a new one?" If resuming, bind it as `REQ_ISSUE`, read its body, and update that issue at Phase 3 instead of creating a duplicate (promoting its label to `tunan:req` if it is still `tunan:raw`).
 - **Nothing matches:** continue fresh; Phase 3 creates a new issue.
 
 #### 0.1b Classify Task Domain
@@ -318,7 +319,7 @@ Fires for **all tiers** including Lightweight. Skip Phase 2.5 entirely on the Ph
 
 ### Phase 3: Capture the Requirements
 
-Write the requirement to a `tunan:req` GitHub issue only when the conversation produced durable decisions worth preserving — see `references/brainstorm-sections.md` "Decide whether a doc is warranted at all" for the criteria and the bug-fix stress test. Skip issue creation when the user only needs brief alignment and the decisions can flow downstream (plan, commit message, `tunan:solution` learnings) without a requirement artifact in the middle. (When a `REQ_ISSUE` is already bound — e.g., a `new-req` issue — still update it even for slim outcomes, since the issue already exists.)
+Write the requirement to a `tunan:req` GitHub issue only when the conversation produced durable decisions worth preserving — see `references/brainstorm-sections.md` "Decide whether a doc is warranted at all" for the criteria and the bug-fix stress test. Skip issue creation when the user only needs brief alignment and the decisions can flow downstream (plan, commit message, `tunan:solution` learnings) without a requirement artifact in the middle. (When a `REQ_ISSUE` is already bound — e.g., a `new-raw` issue — still update it even for slim outcomes, since the issue already exists.)
 
 When a requirement is warranted, compose its markdown body using:
 
@@ -327,14 +328,14 @@ When a requirement is warranted, compose its markdown body using:
 
 Build the body in an OS temp file (bash `${TMPDIR:-/tmp}`, PowerShell `$env:TEMP`), then write the issue:
 
-- **`REQ_ISSUE` is bound** (issue ref passed, or a match found in Phase 0.1): rewrite that issue's body with the finished requirement. The title becomes `[req] <topic>` (update it only if the existing title is a stale placeholder; preserve a good user-set title).
+- **`REQ_ISSUE` is bound** (issue ref passed, or a match found in Phase 0.1): rewrite that issue's body with the finished requirement. The title becomes `[req] <topic>` — **always replace a `[raw]` prefix with `[req]`** when promoting a `new-raw` capture; otherwise update the title only if it is a stale placeholder, preserving a good user-set title.
 
-  **Merge, do not clobber.** When the bound issue already has a populated body — the common case for a `new-req` issue — read the current body first and **carry forward verbatim** the sections `new-req` authored that the finished requirement does not regenerate:
+  **Merge, do not clobber.** When the bound issue already has a populated body — the common case for a `new-raw` issue — read the current body first and **carry forward verbatim** the sections `new-raw` authored that the finished requirement does not regenerate:
   - the sponsor's original words (the `## Background / original words` section) — this is the verbatim source of truth for what the user asked; the agent-synthesized Problem Frame does not replace it.
   - the assets section (`## Assets to upload`, its to-upload checklist, and any `<!-- TODO: drag in ... -->` placeholder comments) — dropping it loses the pending-asset list and the drag-in instructions the user still needs.
   - the `kind:` and `priority:` YAML fields — merge them into the metadata block alongside `date` / `topic`; do not lose them by replacing the whole block.
 
-  Dropping the verbatim sponsor words, the pending-asset checklist, or the `kind`/`priority` fields when overwriting a `new-req` body is a regression. Build the merged body, then write it:
+  Dropping the verbatim sponsor words, the pending-asset checklist, or the `kind`/`priority` fields when overwriting a `new-raw` body is a regression. Build the merged body, then write it:
 
 ```bash
 gh issue edit <N> --body-file <body-file>
@@ -344,6 +345,19 @@ gh issue edit <N> --body-file <body-file>
 
 ```bash
 gh issue view <N> --json body --jq .body
+```
+
+  **Promote the label `tunan:raw → tunan:req`.** A `new-raw` capture carries `tunan:raw`; once `brainstorm` has written the normalized requirement back, the issue IS a `tunan:req` requirement and the rest of the pipeline (`plan`, `doc-review`, `status`, `closeissue`) keys off `tunan:req`. Ensure the `tunan:req` label is present, then drop `tunan:raw` **only when the bound issue currently carries it** (known from the labels read in Phase 0.0 — `gh issue edit --remove-label` errors on a label the issue does not have). When the bound issue was already `tunan:req`, the add is idempotent and the remove is skipped.
+
+```bash
+gh issue edit <N> --add-label "tunan:req"
+gh issue edit <N> --remove-label "tunan:raw"   # only when the issue currently carries tunan:raw
+```
+
+  **Verify the promotion.** After the label edits, re-read the issue's labels and confirm `tunan:req` is present and `tunan:raw` is absent. If the swap did not take (a CLI error, wrong issue number, or the conditional remove was skipped when it should have run), an issue left carrying only `tunan:raw` is invisible to every downstream skill that keys off `tunan:req` (`plan`, `doc-review`, `status`, `closeissue`). Re-run the failed edit before reporting the requirement as captured.
+
+```bash
+gh issue view <N> --json labels --jq '[.labels[].name]'
 ```
 
 - **No `REQ_ISSUE`:** create a new issue.
