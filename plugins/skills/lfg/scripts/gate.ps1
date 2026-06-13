@@ -43,9 +43,29 @@ function Repo-Slug {
 function Has-MarkerComment([string]$n, [string]$marker) {
   $slug = Repo-Slug
   if ([string]::IsNullOrWhiteSpace($slug)) { return 2 }
-  $ids = & gh api "repos/$slug/issues/$n/comments" `
-    --jq ".[] | select(.body | startswith(`"$marker`")) | .id" 2>$null
-  if ($ids) { return 0 } else { return 1 }
+  # Do NOT interpolate the marker into a --jq filter: the marker carries spaces
+  # and embedded quotes (`<!-- tunan:solution -->`), and Windows PowerShell 5.1
+  # mangles such a native-command argument when handing it to gh, corrupting the
+  # jq expression so startswith() never matches — a false FAIL even when the
+  # comment exists. Instead pull the raw comments JSON (the only native arg is the
+  # space-free URL) and compare the marker inside PowerShell. Force UTF-8 decoding
+  # so comment bodies containing non-ASCII (e.g. Chinese) don't break ConvertFrom-Json
+  # under the legacy ANSI/GBK code page.
+  $prevEnc = [Console]::OutputEncoding
+  try {
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $raw = & gh api "repos/$slug/issues/$n/comments" 2>$null
+  } finally {
+    [Console]::OutputEncoding = $prevEnc
+  }
+  if ($LASTEXITCODE -ne 0) { return 2 }
+  $text = ($raw -join "`n")
+  if ([string]::IsNullOrWhiteSpace($text)) { return 1 }
+  try { $comments = $text | ConvertFrom-Json } catch { return 2 }
+  foreach ($c in $comments) {
+    if ($c.body -and $c.body.StartsWith($marker, [System.StringComparison]::Ordinal)) { return 0 }
+  }
+  return 1
 }
 
 switch ($Cmd) {
