@@ -51,6 +51,18 @@ gh repo view --json nameWithOwner
 
    Branch on the exit code, not the prose: `0` = plan comment present, proceed to step 2; `1` = no `<!-- tunan:plan -->` comment, invoke `plan` again with `$ARGUMENTS` and re-gate; `2` = gh/infra problem, stop and report it (do not loop). Do NOT proceed to step 2 while the gate returns `1`. The feature issue ref `#<N>` is the single handle passed to work in step 2, to code-review in step 3, and to compound in step 9 — there is no separate plan number.
 
+   **Acceptance gate (advisory).** After plan-exists passes, check whether `plan` also froze an acceptance gate (the `<!-- tunan:gate -->` comment it writes for software plans). This is **advisory, not blocking** — the gate strengthens the local green signal (step 2a passes it to `tunan:verify`, which judges it verbatim), but its absence must not stall the pipeline, since `verify` runs checks-only when no gate exists (pick the variant for the current OS):
+
+   ```bash
+   bash scripts/gate.sh gate-exists <N>
+   ```
+
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/gate.ps1 gate-exists <N>
+   ```
+
+   Exit `0` = gate frozen; carry `#<N>` into step 2a as the gate ref. Exit `1` = no gate (e.g. a knowledge-work plan, or a minimal hotfix plan); note "no acceptance gate — verify will run checks-only" and proceed. Exit `2` = gh/infra; note and proceed. Never loop or abort on this check.
+
 2. **Run `work` in an isolated subagent** (see the dispatch convention above): instruct it to load the `work` skill with the **feature issue ref `#<N>`** from step 1 as its work source (`work` reads the plan comment `<!-- tunan:plan -->` on that issue) and to return only a concise summary of what changed (files touched, key decisions). The subagent edits the working tree on disk, so the gate below still sees the changes.
 
    GATE: STOP. Verify that implementation work was actually performed via the script gate — it confirms the working tree is dirty or HEAD diverged from the base branch, so a "done" claim with no code change is caught (pick the variant for the current OS):
@@ -65,7 +77,7 @@ gh repo view --json nameWithOwner
 
    Exit `0` = code changes present, proceed to step 2a; exit `1` = no changes detected, `work` did not run — re-invoke it before continuing. Do NOT proceed to step 2a while the gate returns `1`.
 
-2a. **Local green gate** — run `tunan:verify` (`mode:agent`, always the fully-qualified name, never a bare `verify`) in an isolated subagent (see the dispatch convention above): instruct it to load `tunan:verify` with `mode:agent` and return only the JSON output contract as its final message. Write the returned contract to an OS temp file and pass it through the script gate rather than eyeballing the fields (pick the variant for the current OS):
+2a. **Local green gate** — run `tunan:verify` (`mode:agent`, always the fully-qualified name, never a bare `verify`) in an isolated subagent (see the dispatch convention above): instruct it to load `tunan:verify` with `mode:agent`, and — when step 1's advisory gate check found a frozen gate — also pass `gate:#<N>` so verify judges the acceptance gate verbatim and folds the `gates[]` dimension into the contract. Instruct it to return only the JSON output contract as its final message. Write the returned contract to an OS temp file and pass it through the script gate rather than eyeballing the fields (pick the variant for the current OS):
 
    ```bash
    bash scripts/gate.sh verify-green "$CONTRACT_FILE"

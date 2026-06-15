@@ -790,6 +790,101 @@ Plan comment ready on #<N>: <feature issue URL>
 
 **CONCEPTS.md gap-fill (only if the file already exists):** If the plan body uses a domain term whose definition is missing from `CONCEPTS.md`, add the entry. **Domain entities, named processes, and status concepts with project-specific meaning only** — not file paths, class names, function signatures, or implementation decisions. `CONCEPTS.md` is a glossary, not a spec or catch-all. Follow the format set by existing entries. Apply silently. Skip entirely if `CONCEPTS.md` does not exist — creation is owned by compound and compound-refresh.
 
+#### 5.2b Freeze the Acceptance Gate
+
+After the plan comment lands, freeze an **acceptance gate** for this feature: a
+separate `<!-- tunan:gate -->` comment on the same feature issue listing the
+verbatim, measurable criteria the work will be judged against. This is the contract
+`tunan:verify` and `code-review` later quote — not restate from memory — to decide
+whether the work meets its acceptance bar. Freezing the bar before execution is what
+prevents goalpost drift and self-grading: the criteria are committed up front and
+judged verbatim afterward.
+
+**Skip only for non-software plans** — when the plan carries `execution: knowledge-work`
+(Phase 0.1b universal-planning route), there is nothing mechanically measurable to
+gate; omit this sub-phase.
+
+**Distill the gate from the plan, do not invent new scope.** Each criterion must
+trace to something already in the plan:
+
+- every **Requirement** (R-ID) becomes one or more criteria asserting the requirement
+  is satisfied;
+- each feature-bearing **Implementation Unit**'s `Verification` field and any
+  `Covers AE<N>` test scenarios become criteria;
+- keep each criterion **measurable** — a command that should exit 0, a named test
+  that should pass, an asserted behavior, or a dynamic `observe` outcome — never a
+  vague "works correctly".
+
+Assign each criterion a stable **G-ID** (`G1`, `G2`, …) following the same stability
+rule as U-IDs (never renumber; gaps are fine), and a `source` tag tracing back to the
+R-ID / U-ID it enforces. Pick a `basis` so the judge knows how to measure it:
+`command` | `test` | `observe` | `assert`.
+
+**Gate comment shape** (first line is the marker):
+
+```text
+<!-- tunan:gate -->
+```yaml
+gate_for: "#<N>"
+schema: tunan-gate/1
+frozen_from: plan
+```
+## Acceptance Gate (frozen)
+
+Frozen from this feature's plan (Requirements + per-unit Verification). Judged
+**verbatim** by `tunan:verify` and `code-review` — criteria are quoted, not restated
+from memory. Do not edit during execution; this is the contract the work is measured
+against.
+
+| Gate | Criterion (verbatim, measurable) | Source | Basis |
+|------|----------------------------------|--------|-------|
+| G1   | `npm test` exits 0               | U1     | command |
+| G2   | login rejects an expired token   | R3 / U2 | test |
+
+> **Tamper note.** In tunan's issue-comment model this gate is a GitHub comment,
+> not a worktree file, so architect-loop's "git diff the gate file → auto-FAIL on
+> edit" check does not apply. The freeze is procedural: `work` never edits issue
+> comments, and judges quote the frozen text verbatim.
+```
+
+**Write or update the gate comment** using the comment-chain write-or-update pattern
+(`references/comment-chain-storage.md`), keyed on the `<!-- tunan:gate -->` marker —
+create it and add the `tunan:gate` label on first write, PATCH it in place by id on
+resume/deepen (preserving G-IDs). Ensure the label exists first:
+
+```bash
+gh label list --search "tunan:gate"
+```
+
+If absent: `gh label create "tunan:gate" --color 1f883d --description "tunan acceptance gate"`.
+
+Find / write the comment:
+
+```bash
+gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:gate -->")) | .id'
+```
+
+- None found → `gh issue comment <N> --body-file <gate-file>` then `gh issue edit <N> --add-label "tunan:gate"`.
+- Exists → `gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<gate-file>`.
+
+> **Why the gate lives here, not in `references/comment-chain-storage.md`.** That
+> reference documents the pipeline **lifecycle chain** (req → plan → work →
+> compound). The gate is an orthogonal **verification contract** keyed to the plan,
+> not a lifecycle stage, so its storage convention is documented inline in the
+> stages that read/write it (`plan`, `verify`, `code-review`, `lfg`) rather than in
+> the seven-copy chain doc.
+
+**Pipeline mode:** always write the gate for software plans (so `lfg`'s
+`gate-exists` check and the `tunan:verify` gate judgment have a contract to read).
+Confirm briefly: `Acceptance gate frozen on #<N> (<count> criteria).`
+
+**Re-freeze after deepening.** The gate must reflect the **final** plan. If the
+deepening pass (Phase 5.3) materially revises Requirements or Implementation Units,
+re-run this sub-phase to refresh the gate comment (PATCH in place, preserving
+existing G-IDs and assigning the next unused number to new criteria) before handoff.
+A gate frozen from a plan that deepening then rewrote would judge against stale
+criteria.
+
 #### 5.3 Confidence Check and Deepening
 
 After writing the plan comment, automatically evaluate whether the plan needs strengthening.

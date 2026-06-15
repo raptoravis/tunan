@@ -6,6 +6,7 @@
 
   Usage:
     gate.ps1 plan-exists <issue>
+    gate.ps1 gate-exists <issue>
     gate.ps1 solution-exists <issue>
     gate.ps1 work-done [base-branch]
     gate.ps1 verify-green [file]        # omit file to read the contract from stdin
@@ -77,6 +78,14 @@ switch ($Cmd) {
     if ($rc -eq 0) { Pass "plan comment present on feature issue #$Arg" }
     else { Fail "no <!-- tunan:plan --> comment on feature issue #$Arg — re-run plan" }
   }
+  'gate-exists' {
+    if (-not $Arg) { Infra "usage: gate.ps1 gate-exists <issue>" }
+    Need-Gh
+    $rc = Has-MarkerComment $Arg "<!-- tunan:gate -->"
+    if ($rc -eq 2) { Infra "cannot resolve repo to read issue #$Arg comments" }
+    if ($rc -eq 0) { Pass "acceptance gate present on feature issue #$Arg" }
+    else { Fail "no <!-- tunan:gate --> comment on feature issue #$Arg — re-run plan to freeze the gate" }
+  }
   'solution-exists' {
     if (-not $Arg) { Infra "usage: gate.ps1 solution-exists <issue>" }
     Need-Gh
@@ -121,6 +130,6 @@ switch ($Cmd) {
     exit 0
   }
   default {
-    Infra "unknown gate '$Cmd' (expected: plan-exists | solution-exists | work-done | verify-green)"
+    Infra "unknown gate '$Cmd' (expected: plan-exists | gate-exists | solution-exists | work-done | verify-green)"
   }
 }

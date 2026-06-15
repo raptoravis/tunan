@@ -81,6 +81,14 @@ Determine how to proceed based on what was provided in `<input_document>`.
 
      The plan comment body is markdown and carries the same section names and IDs as before; section-finding works the same way (substring match on section names). Confirm the feature issue carries the `tunan:plan` label before treating it as the work source.
 
+     **Read the frozen acceptance gate (when present).** `plan` may also freeze an acceptance gate — a `<!-- tunan:gate -->` comment on the same feature issue listing the verbatim criteria the work will be judged against:
+
+     ```bash
+     gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:gate -->")) | .body'
+     ```
+
+     When a gate exists, treat its G-ID criteria as the **done-definition** for this work — each criterion is something `tunan:verify` / `code-review` will later quote verbatim and judge `pass`/`fail`/`invalid`. Do not finish a unit while a gate criterion it covers would fail, and do not leave a criterion `invalid` (unmeasurable) when it could be made measurable (e.g. add the test the gate names). **Do not edit the gate comment** — it is the frozen contract, not a working note. Absent → proceed from the plan alone; the gate is additive grounding, never a blocker on its own.
+
      **Non-code execution check.** After reading the plan comment, scan its body for the marker `execution: knowledge-work`. If found, this plan is for a **non-code deliverable** (a document, synthesis, or research artifact) — read `references/non-code-execution.md` and follow that carve-out instead of the rest of this workflow. The normal code lifecycle (branch setup, Test Discovery, commits, CI) does not apply.
 
    - When auto-detecting the latest plan (blank invocation), list open feature issues carrying the `tunan:plan` label and pick the most recent:

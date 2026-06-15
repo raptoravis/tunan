@@ -8,6 +8,7 @@
 #
 # Usage:
 #   gate.sh plan-exists <issue>        # feature issue carries a <!-- tunan:plan --> comment
+#   gate.sh gate-exists <issue>        # feature issue carries a <!-- tunan:gate --> comment
 #   gate.sh solution-exists <issue>    # feature issue carries a <!-- tunan:solution --> comment
 #   gate.sh work-done [base-branch]    # working tree dirty OR HEAD diverged from base
 #   gate.sh verify-green [file|-]      # a verify mode:agent JSON contract is authoritative-green
@@ -49,6 +50,14 @@ case "$cmd" in
     [ "$rc" = 0 ] \
       && pass "plan comment present on feature issue #$n" \
       || fail "no <!-- tunan:plan --> comment on feature issue #$n — re-run plan"
+    ;;
+  gate-exists)
+    n="${1:?usage: gate.sh gate-exists <issue>}"; need_gh
+    rc=0; has_marker_comment "$n" "<!-- tunan:gate -->" || rc=$?
+    [ "$rc" = 2 ] && infra "cannot resolve repo to read issue #$n comments"
+    [ "$rc" = 0 ] \
+      && pass "acceptance gate present on feature issue #$n" \
+      || fail "no <!-- tunan:gate --> comment on feature issue #$n — re-run plan to freeze the gate"
     ;;
   solution-exists)
     n="${1:?usage: gate.sh solution-exists <issue>}"; need_gh
@@ -97,6 +106,6 @@ case "$cmd" in
     exit 0
     ;;
   *)
-    infra "unknown gate '$cmd' (expected: plan-exists | solution-exists | work-done | verify-green)"
+    infra "unknown gate '$cmd' (expected: plan-exists | gate-exists | solution-exists | work-done | verify-green)"
     ;;
 esac

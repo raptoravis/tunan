@@ -37,7 +37,7 @@ Parse `$ARGUMENTS` for optional tokens. Strip each recognized token before inter
 
 Deprecated `mode:autofix` is **not** a conflict — ignore the token and proceed with the normal flow (see below).
 
-Emit a one-line failure reason. In `mode:agent`, return JSON: `{"schema_version":1,"status":"failed","reason":"..."}`.
+Emit a one-line failure reason. In `mode:agent`, return JSON: `{"schema_version":2,"status":"failed","reason":"..."}`.
 
 ## Operating principles
 
@@ -171,7 +171,7 @@ Apply skip rules in order:
 - `state` is `CLOSED` or `MERGED` -> stop with reason `PR is closed/merged; not reviewing.`
 - **Trivial-PR judgment**: spawn a lightweight sub-agent (use `model: haiku` in Claude Code; gpt-5.4-nano or equivalent in Codex) with the PR title, body, and changed file paths. The agent's task: "Is this an automated or trivial PR that does not warrant a code review? Consider: dependency lock-file or manifest-only bumps, automated release commits, chore version increments with no substantive code changes. When in doubt, answer no — false negatives (skipped reviews that should have run) are more costly than false positives (unnecessary reviews)." If the judgment returns yes: stop with reason `PR appears to be a trivial automated PR; not reviewing. Run without a PR argument to review the current branch, or pass base:<ref> if review is intended.`
 
-When any skip rule fires, stop without dispatching reviewers. **Default mode:** emit the reason as plain text. **`mode:agent`:** emit JSON only — `{"schema_version":1,"status":"skipped","reason":"<same message>"}` — so programmatic callers can parse the outcome. **Standalone**, **`base:`**, and **branch-remote** paths are unaffected. **Draft PRs are reviewed normally.**
+When any skip rule fires, stop without dispatching reviewers. **Default mode:** emit the reason as plain text. **`mode:agent`:** emit JSON only — `{"schema_version":2,"status":"skipped","reason":"<same message>"}` — so programmatic callers can parse the outcome. **Standalone**, **`base:`**, and **branch-remote** paths are unaffected. **Draft PRs are reviewed normally.**
 
 If no skip rule fires, fetch PR metadata **without checkout**:
 
@@ -557,7 +557,7 @@ Minimum shape:
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "status": "complete",
   "verdict": "Ready to merge | Ready with fixes | Not ready",
   "verdict_code": "ready | ready_with_fixes | not_ready",
@@ -597,7 +597,7 @@ Each object in `findings` uses the merged finding fields: `#`, `title`, `severit
 
 `verdict_code` is derived deterministically from `summary` (P0>0 or any P1 actionable → `not_ready`; else `actionable`>0 → `ready_with_fixes`; else `ready`) and is the machine-readable counterpart of the human `verdict` — see the derivation rule and mapping table in `references/output-contract.md`. `summary.total` / `summary.actionable` must match the lengths of `findings` / `actionable_findings`.
 
-On failure before review completes, set `"status": "failed"` and `"reason": "<one sentence>"`. When all reviewers fail, use `"status": "degraded"` with a reason. When a PR skip rule fires (closed/merged/trivial), use `"status": "skipped"` with the skip reason. Every status object — including the `failed` / `degraded` / `skipped` short forms — carries `"schema_version": 1`. Do not emit markdown tables when `mode:agent` is active.
+On failure before review completes, set `"status": "failed"` and `"reason": "<one sentence>"`. When all reviewers fail, use `"status": "degraded"` with a reason. When a PR skip rule fires (closed/merged/trivial), use `"status": "skipped"` with the skip reason. Every status object — including the `failed` / `degraded` / `skipped` short forms — carries `"schema_version": 2`. Do not emit markdown tables when `mode:agent` is active.
 
 ## Quality Gates
 

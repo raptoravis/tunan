@@ -17,13 +17,20 @@ an unnamespaced `verify`; never call it bare.
 ## Invocation
 
 ```
-/tunan:verify [mode:agent]
+/tunan:verify [mode:agent] [gate:#N]
 ```
 
 | Mode | Behavior |
 |------|----------|
 | default | Human-readable markdown summary of each check + overall verdict. |
 | `mode:agent` | One **raw JSON object** (the contract below), no markdown fence — for programmatic callers. Report-only; the caller decides what to do. |
+
+**`gate:#N`** (optional) — a feature issue ref (`#N` or URL) carrying a frozen
+acceptance gate (a `<!-- tunan:gate -->` comment written by `plan`). When passed,
+verify judges each gate criterion verbatim and emits the `gates[]` dimension (Step
+2b). When omitted, verify tries to discover the gate from the current branch's open
+PR / feature issue, but never blocks if none is found — it simply omits `gates[]`
+and reports checks only.
 
 ## What it does NOT do
 
@@ -73,36 +80,100 @@ asks for dynamic observation. Do not build browser/app driving here; **delegate 
 the `test-browser` skill** and fold its outcome into a single `observe` check
 entry. Omit the `observe` check entirely when not requested.
 
+## Step 2b: Judge the frozen acceptance gate (when one exists)
+
+The plan stage may freeze an **acceptance gate** — a `<!-- tunan:gate -->` comment
+on the feature issue listing the verbatim, checkable criteria the work is measured
+against (each with a stable `G-ID` and a traceability `source` back to the plan's
+R-IDs / U-IDs). When a gate exists, judge it; this is the static counterpart to
+running checks — checks ask "does it run?", the gate asks "does it meet the frozen
+acceptance criteria?".
+
+**Resolve the gate** (skip the whole step, omitting `gates[]`, if none resolves):
+
+1. If `gate:#N` was passed, use that feature issue.
+2. Else discover it from the current branch's open PR body or branch name (best
+   effort): `gh pr view --json body,number` then scan the body for a `#N` feature
+   ref. Never block — if discovery is ambiguous or finds nothing, omit `gates[]`.
+3. Read the frozen gate comment (the GitHub Storage Preflight in Step 1's config
+   read applies; require `gh`):
+
+   ```bash
+   gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:gate -->")) | .body'
+   ```
+
+   Empty → no gate; omit `gates[]`.
+
+**Judge each criterion — verbatim, outcome-based.** For each `G-ID` row in the
+frozen gate, record one `gates[]` entry (see the contract's `gates[]` element).
+Quote the criterion **verbatim** from the frozen text — never restate it from
+memory (restating is how goalposts drift). Assign a verdict from the criterion's
+own basis and the actual result:
+
+- `pass` — the criterion is met (e.g. its `command` exited 0, its named test
+  passes, the asserted behavior holds).
+- `fail` — the criterion is measured and not met. A failed gate is a blocking red
+  (`gates_failed` → `verdict_code: not_ready`).
+- `invalid` — the criterion **could not be measured** by the checks available this
+  run (e.g. an `observe`-basis criterion when no dynamic observation ran). `invalid`
+  means "unmeasured", not "failed": it does not make the verdict red, but it does
+  force `status: degraded` so the green is not treated as authoritative. Record the
+  reason in `messages[]`.
+
+**Do not edit the gate comment.** The gate is the frozen contract; verify reads and
+quotes it, never rewrites it.
+
+> **Tamper note.** In tunan's issue-comment memory model the gate is a GitHub
+> comment, not a worktree file, so architect-loop's "git diff the gate file →
+> auto-FAIL on edit" check does not apply here. The freeze is procedural: `work`
+> never edits issue comments, and verify quotes the frozen text verbatim rather
+> than restating it.
+
 ## Step 3: Summarize and emit
 
-Compute `summary` (checks dimension) and `verdict_code` per the contract, then
-emit.
+Compute `summary` (checks dimension, plus the gates dimension when Step 2b ran) and
+`verdict_code` per the contract, then emit.
 
 - **default mode** — a short markdown summary: one line per check
-  (name → pass/fail/skip), then the overall verdict. Keep it ASCII-safe.
+  (name → pass/fail/skip); when a gate was judged, one line per gate criterion
+  (`G-ID` → pass/fail/invalid, with the verbatim criterion); then the overall
+  verdict. Keep it ASCII-safe.
 - **`mode:agent`** — one raw JSON object, no fence. Minimum shape:
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "status": "complete",
   "verdict_code": "ready | ready_with_fixes | not_ready",
   "summary": {
     "checks_total": 0,
     "checks_passed": 0,
-    "checks_failed": 0
+    "checks_failed": 0,
+    "gates_total": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "gates_invalid": 0
   },
-  "checks": []
+  "checks": [],
+  "gates": []
 }
 ```
 
+Include the `gates_*` counts and the `gates[]` array **only when Step 2b judged a
+gate**; omit all four `gates_*` keys and `gates[]` when no gate resolved (a
+gate-less run is unchanged from before).
+
 `verdict_code` is derived deterministically from `summary` per
-`references/output-contract.md`. For verify (checks dimension): `checks_failed > 0`
-→ `not_ready` (a failed check is a blocking red for a green gate); all pass →
-`ready`. verify never emits `ready_with_fixes` — that value is code-review's only.
-A failed check keeps `status: complete` (the run finished; the result is just red).
-Use `status: degraded` for ambiguous detection or partial runs, `status: skipped`
-when nothing was runnable; both carry `"schema_version": 1` and a `reason`.
+`references/output-contract.md`. For verify: `checks_failed > 0` **or
+`gates_failed > 0`** → `not_ready` (a failed check or a failed acceptance gate is a
+blocking red for a green gate); otherwise → `ready`. verify never emits
+`ready_with_fixes` — that value is code-review's only. A failed check or gate keeps
+`status: complete` (the run finished; the result is just red).
+Use `status: degraded` for ambiguous detection, partial runs, **or when any gate is
+`invalid`** (unmeasured → green is non-authoritative); use `status: skipped` when
+nothing was runnable. `gates_invalid` alone never makes `verdict_code` red — it only
+drives `degraded`. Every status object carries `"schema_version": 2` and, on
+`degraded`/`skipped`/`failed`, a `reason`.
 
 The contract envelope, the full `verdict_code` derivation rule, the versioning
 policy, and the stability scope are defined authoritatively in
