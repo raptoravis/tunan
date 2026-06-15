@@ -1,6 +1,6 @@
 ---
 name: merge-pr-verify-close
-description: Merge a PR, verify the merged base branch, and close the feature issue only when verification passes. Use when the user says "merge and verify", "merge then close the issue", "merge-pr-verify-close", or wants a PR landed with a post-merge safety check before the feature issue is closed. Runs after review is done and CI is green; never force-merges or bypasses branch protection.
+description: Merge a PR, verify the merged base branch, and close the feature issue only when verification passes. Use when the user says "merge and verify", "merge then close the issue", "merge-pr-verify-close", or wants a PR landed with a post-merge safety check before the feature issue is closed. When the current branch has no open PR, it instead merges the branch locally into its base, verifies, and deletes the local + remote branch. Runs after review is done and CI is green; never force-merges or bypasses branch protection.
 argument-hint: "[<PR>] [--issue=<N>] [--base=<branch>] [--keep-branch] [--no-verify]"
 ---
 
@@ -55,7 +55,7 @@ gh repo view --json nameWithOwner
    gh pr view --json number,url,state,baseRefName,headRefName,body
    ```
 
-   If no open PR exists, stop and report — there is nothing to merge.
+   If no open PR exists, take the **No-PR path** below instead of stopping.
 
 2. **Resolve the feature issue `#<N>`.** Use `--issue=<N>` if passed. Otherwise parse the PR body for a `Closes #<N>` / `Fixes #<N>` / `Resolves #<N>` line. If none is found and no `--issue` was given, **ask the user** which issue to close via the platform's blocking question tool — Claude Code `AskUserQuestion` (load its schema first via `ToolSearch` `select:AskUserQuestion` if needed), Codex `request_user_input`, Gemini/Pi `ask_user`; fall back to a numbered chat list only if no blocking tool is available or it errors. Offer: derive-none (merge but do not close any issue) as one option. Record the chosen `#<N>` (or "none").
 
@@ -116,6 +116,55 @@ gh repo view --json nameWithOwner
      ```
 
      The comment states: PR `<PR>` merged to `<BASE>`, post-merge verification FAILED, and the failing tests/summary. Leave the issue **open** for a human to address. Report the failure and exit.
+
+## No-PR path（当前分支无 open PR）
+
+Triggered from step 1 when the current branch has no open PR. Merge the branch **locally** into its base, verify, then delete the branch. No issue is closed unless `--issue=<N>` was passed explicitly.
+
+1. **Resolve `HEAD` and `BASE`.** `HEAD` = current branch (must not be the base itself — if it is, stop: nothing to merge). `BASE` = `--base=<branch>` if passed, else the repo default branch:
+
+   ```bash
+   gh repo view --json defaultBranchRef --jq .defaultBranchRef.name
+   ```
+
+2. **Require a clean working tree** (`git status --porcelain` empty). If dirty, stop and report — do not merge over uncommitted changes.
+
+3. **Merge `HEAD` into `BASE` locally** and push:
+
+   ```bash
+   git checkout <BASE>
+   ```
+   ```bash
+   git pull --ff-only origin <BASE>
+   ```
+   ```bash
+   git merge --no-ff <HEAD>
+   ```
+
+   If the merge conflicts, STOP — abort with `git merge --abort` and report. Do NOT force it. On success:
+
+   ```bash
+   git push origin <BASE>
+   ```
+
+4. **Verify on `BASE`** — same as main-flow step 6 (skip when `--no-verify`). A failed verification stops here: leave the branch **undeleted** and report the failure. Do not delete a branch whose merge did not verify.
+
+5. **Delete the branch — only on green** (skip when `--keep-branch`):
+
+   ```bash
+   git branch -d <HEAD>
+   ```
+   ```bash
+   git push origin --delete <HEAD>
+   ```
+
+   (`git branch -d` refuses an unmerged branch — that is a safety net, not an error to override; if it refuses, report rather than `-D`.)
+
+6. **Close the feature issue** only if `--issue=<N>` was passed (no PR body to derive it from) — same as main-flow step 7.
+
+Output:
+
+> ✅ Branch `<HEAD>` merged into `<BASE>` (no PR) · post-merge verify **passed** · branch deleted local + remote.
 
 ## 输出
 
