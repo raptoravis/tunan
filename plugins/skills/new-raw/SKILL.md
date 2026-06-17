@@ -40,7 +40,13 @@ The requirement is stored in a GitHub issue, so a working, authenticated `gh` is
 1. `gh` is installed. If not, tell the user to install it (`https://cli.github.com`) or run `/tunan:setup`.
 2. `gh auth status` succeeds. If it exits non-zero, tell the user to run `gh auth login` (in Claude Code they can type `! gh auth login` so the output lands in the session), then re-run this skill.
 3. Resolve the target repo with `gh repo view --json nameWithOwner`. If there is no repo, abort and explain that this skill needs a GitHub repository.
-4. **Setup reminder (non-blocking).** If the repo has no `tunan:config` issue, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the run.
+4. **Setup gate (blocking).** Check whether the repo has a `tunan:config` issue:
+
+   ```bash
+   gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+   ```
+
+   If that returns empty, this repo hasn't been through tunan setup. Do **not** capture yet — load and run the `setup` skill to completion first, then continue this skill from Step 2. If `setup` cannot complete (user declines, or it errors), abort `new-raw` with a clear message rather than capturing into an unconfigured repo. If the command returns a number, setup is already done — continue.
 
 Then ensure the `tunan:raw` label exists in the repo:
 
@@ -166,6 +172,7 @@ Fall back to a numbered list in chat only when no blocking tool exists in the ha
 ## Common mistakes
 
 - **Falling back to a local file when `gh` is missing or unauthenticated** — abort instead; requirements live in GitHub issues.
+- **Capturing into an unconfigured repo** — Step 1's setup gate is blocking: with no `tunan:config` issue, run the `setup` skill to completion first, then resume; do not skip it with a one-line reminder.
 - **Inventing scope** — capture only what the user said; acceptance criteria and research belong to `brainstorm`.
 - **Leaving a literal `[Image #N]` token in the body** — always rewrite to a `<!-- TODO -->` comment.
 - **Asking questions in default mode, or staying silent in `--align`** — default mode is silent on capture-time soft decisions and takes defaults; `--align` asks at every soft decision. The Step 8 terminal handoff is not a soft decision — it always fires the blocking question tool in both modes.

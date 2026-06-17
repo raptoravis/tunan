@@ -57,6 +57,14 @@ gh repo view --json nameWithOwner
 
 Same abort guidance as `new-project` (install gh / authenticate / repo required). Never fall back to a local file.
 
+**Setup gate (blocking).** Check whether the repo has a `tunan:config` issue:
+
+```bash
+gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+```
+
+If that returns empty, this repo hasn't been through tunan setup — load and run the `setup` skill to completion first, then continue. If `setup` cannot complete (user declines, or it errors), abort rather than extending a roadmap in an unconfigured repo. If it returns a number, setup is already done — continue.
+
 **Require an existing project issue.** Resolve it:
 
 ```bash
