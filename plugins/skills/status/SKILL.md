@@ -1,6 +1,6 @@
 ---
 name: status
-description: '列出当前仓库还没合并的 open PR 和还没关闭的 open issue,快速看还剩什么工作。默认只查当前用户,--user <name> 查指定用户,--all 查所有人,--req 只看 tunan:req 需求项。只读,不创建任何 issue。用户说"还剩什么"/"剩余工作"/"还有什么没做"/"open issues"/"what is left"/"/tunan:status" 时用。'
+description: '列出当前仓库还没合并的 open PR、还没关闭的 open issue,以及 tunan:handoff 交接单里还没完成的事项,快速看还剩什么工作。默认只查当前用户,--user <name> 查指定用户,--all 查所有人,--req 只看 tunan:req 需求项。只读,不创建任何 issue。用户说"还剩什么"/"剩余工作"/"还有什么没做"/"open issues"/"handoff 里还剩什么"/"what is left"/"/tunan:status" 时用。'
 ---
 
 # status — 看还剩什么工作
@@ -9,7 +9,7 @@ description: '列出当前仓库还没合并的 open PR 和还没关闭的 open 
 
 > **何时触发**：用户说 "还剩什么" / "剩余工作" / "还有什么没做" / "open issues" / "what's left" / "/tunan:status"。
 
-只读快照：列出仓库里还没合并的 open PR 和还没关闭的 open issue。**默认只看当前用户**的工作;`--user <name>` 查指定用户;`--all` 查所有人。**不创建、不修改、不关闭任何 issue 或 PR** —— 想周期性复盘并存档报告用 `retro`,这个 skill 只做即时查询。
+只读快照：列出仓库里还没合并的 open PR、还没关闭的 open issue,以及 `tunan:handoff` 交接单里还没勾掉的待办事项。**默认只看当前用户**的工作;`--user <name>` 查指定用户;`--all` 查所有人。**不创建、不修改、不关闭任何 issue 或 PR** —— 想周期性复盘并存档报告用 `retro`,这个 skill 只做即时查询。
 
 ## 调用语法
 
@@ -48,10 +48,19 @@ description: '列出当前仓库还没合并的 open PR 和还没关闭的 open 
    gh issue list --state open --limit 100 [--author "<value>"] [--label tunan:req]
    ```
 
-4. 汇总解读,而不是只贴原始输出:
-   - 报出 open PR 数和 open issue 数,说明当前过滤的用户范围。
+4. 列出 open 的 `tunan:handoff` 交接单,并取出每张里**还没完成的事项**(`--req` 时跳过这一步 —— `--req` 只看需求项)。先连 body 一起拉出来:
+
+   ```bash
+   gh issue list --label "tunan:handoff" --state open --limit 50 [--author "<value>"] --json number,title,url,body,updatedAt
+   ```
+
+   对每张交接单解析 body:统计 `## Not Yet Done` 段落下未勾选的 `- [ ]` 行(已勾选的 `- [x]` 是 Completed,跳过)。一张交接单的"剩余"= 它的未勾选项数;为 0(全部勾掉)说明这张已基本完成,降级处理(只在汇总里点一句"#N 交接单已无未完成项,可考虑 resume 后关闭"),不算进待办。`status: Blocked` 的交接单要醒目标出。
+
+5. 汇总解读,而不是只贴原始输出:
+   - 报出 open PR 数、open issue 数,以及 handoff 交接单数 + 其中未完成事项总数,说明当前过滤的用户范围。
    - 区分**真正的待办**与**报告存档**:`tunan:retro` / `tunan:pulse` / `tunan:idea` 标签的 issue 是历史报告归档,不是待办工作 —— 单独点出或排除,不要混进"剩余工作"里。
-   - 两者都为空时,明确说"当前没有剩余/未完成的工作"。
+   - `tunan:handoff` 交接单本身也是带标签的 open issue,会在第 3 步里被重复列出 —— 在汇总时把它从普通 open issue 里剔除,只在 handoff 区块展示(连同其未完成事项),不要两边各算一次。
+   - 三者(PR / issue / handoff 未完成项)都为空时,明确说"当前没有剩余/未完成的工作"。
 
 ## 不要做
 
@@ -62,14 +71,18 @@ description: '列出当前仓库还没合并的 open PR 和还没关闭的 open 
 
 ## 输出
 
-> 📋 剩余工作(`<过滤范围>`): `<N>` 个 open PR · `<M>` 个 open issue
+> 📋 剩余工作(`<过滤范围>`): `<N>` 个 open PR · `<M>` 个 open issue · `<H>` 张 handoff(`<K>` 项未完成)
 > - PR: #<n> <title> — <author>
 > - Issue: #<n> <title>
-> （都为空时:✅ 当前没有剩余工作。）
+> - Handoff #<n> <title>(`<status>`,剩 `<k>` 项):
+>   - [ ] <未完成事项>
+>   - [ ] <未完成事项>
+>
+> （三者都为空时:✅ 当前没有剩余工作。）
 
 ## 收尾:选下一步(交互)
 
-报完快照后,**只要存在至少一个真正的待办**(排除 `tunan:retro` / `tunan:pulse` / `tunan:idea` 归档类),用平台的阻塞问询工具让 sponsor 选下一步并路由到对应 skill。这是一个对齐点,必须走工具 —— 绝不在 chat 里即兴写"想从哪个开始?"这种征求选择的散文追问。
+报完快照后,**只要存在至少一个真正的待办**(open PR、未 plan/可推进的 issue,或还有未完成事项的 handoff 交接单;排除 `tunan:retro` / `tunan:pulse` / `tunan:idea` 归档类),用平台的阻塞问询工具让 sponsor 选下一步并路由到对应 skill。这是一个对齐点,必须走工具 —— 绝不在 chat 里即兴写"想从哪个开始?"这种征求选择的散文追问。
 
 **问询工具**:`AskUserQuestion`(Claude Code;schema 未加载时先用 `ToolSearch` `select:AskUserQuestion`)、`request_user_input`(Codex)、`ask_user`(Gemini;Pi 经 `pi-ask-user` 扩展)。无阻塞工具或调用出错时,退化为 chat 里的编号列表并等待回应,绝不静默跳过。
 
@@ -86,5 +99,6 @@ description: '列出当前仓库还没合并的 open PR 和还没关闭的 open 
 
 - 带 `tunan:plan` 标签的 issue → 载入 `resume` 或 `work`(`#<N>` 作为工作源)
 - `tunan:req` 但还没 plan → 载入 `brainstorm` 或 `plan`
+- 还有未完成事项的 `tunan:handoff` 交接单 → 载入 `handoff` skill 的 resume 模式(`/tunan:handoff resume #<N>`)从交接单继续
 - open PR(有 review 反馈)→ 载入 `resolve-pr-feedback`;PR 就绪可合 → 载入 `merge-pr-verify-close`
 - sponsor 选"先不动" → 结束,不路由
