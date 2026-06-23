@@ -110,29 +110,42 @@ gh label list --search "tunan:handoff"
 gh label create "tunan:handoff" --color 0052cc --description "tunan session handoff"
 ```
 
-**Update in place when one already applies** (mirrors HANDOFF.md's
-overwrite-the-single-file semantics): if `<issue #N>` was passed, or an open
-`tunan:handoff` issue already exists for the current branch, update it rather
-than spawning a duplicate.
+**Always reuse the single shared handoff issue** (mirrors HANDOFF.md's
+overwrite-the-single-file semantics): there is **one** `tunan:handoff` issue for
+the repo, updated in place every time — never one per branch and never a fresh
+issue each session. If `<issue #N>` was passed, update that one; otherwise find
+the existing `tunan:handoff` issue (open **or closed**) and overwrite its body,
+reopening it if it was closed. Only ever create a new issue when none exists.
 
-To match by branch, request the body (the branch lives in the body's `yaml`
-block, not in the issue's metadata) and the update time:
+List handoff issues across **all** states, so a previously closed handoff is
+reused rather than duplicated:
 
 ```bash
-gh issue list --label "tunan:handoff" --state open --json number,title,url,body,updatedAt
+gh issue list --label "tunan:handoff" --state all --json number,title,url,state,updatedAt
 ```
 
-Select the open issue whose body `branch:` equals the current branch
-(`git rev-parse --abbrev-ref HEAD`). If several match, take the most recently
-updated (`updatedAt`). If none match the branch, create a new one.
+- **One issue exists** (the normal case) → it is the shared handoff. Update it
+  regardless of which branch produced the earlier handoff; if its `state` is
+  `CLOSED`, reopen it first.
+- **Several exist** (should not happen under the single-issue rule, e.g. left
+  over from older per-branch handoffs) → use the most recently updated one
+  (`updatedAt`), reopening it if closed; mention the older duplicates so the user
+  can close them.
+- **None exist at all** → create the single handoff issue.
 
-- **Update** the matched issue (or the passed `<issue #N>`):
+- **Reopen** the resolved issue first if it is closed:
+
+  ```bash
+  gh issue reopen <N>
+  ```
+
+- **Update** the resolved issue (or the passed `<issue #N>`):
 
   ```bash
   gh issue edit <N> --body-file <body-file>
   ```
 
-- **Otherwise create** a new one. Title: `[handoff] <brief task title>`.
+- **Otherwise create** the one handoff issue. Title: `[handoff] <brief task title>`.
 
   ```bash
   gh issue create --title "[handoff] <title>" --label "tunan:handoff" --body-file <body-file>
@@ -206,12 +219,14 @@ established patterns unless the user asks to change). Start with the first item
 in Resume Instructions unless the user redirects; if the handoff is unclear on
 something critical, ask rather than guess.
 
-### Step 5 — close the consumed handoff (confirm first)
+### Step 5 — leave the shared handoff open for reuse
 
-A handoff is consumed once it is picked up. After the user confirms they are
-continuing, offer (blocking tool) to close the handoff issue so stale handoffs
-don't accumulate. Never close it without confirmation, and never close it if the
-user only previewed and isn't actually resuming.
+The handoff lives in **one shared `tunan:handoff` issue** that is overwritten on
+the next `create`, so a consumed handoff does not need closing and stale
+handoffs cannot accumulate — leave the issue **open** by default so its number
+stays stable for reuse. Only close it if the user explicitly asks to retire the
+handoff entirely (blocking tool to confirm); never close it merely because it
+was picked up, and never close it if the user only previewed.
 
 ## Common mistakes
 
@@ -224,7 +239,9 @@ user only previewed and isn't actually resuming.
 - **Resuming the wrong artifact** — for picking up an interrupted `lfg` feature
   pipeline, use the `resume` skill (it reads feature-issue phase markers). This
   skill is for free-form session handoffs.
-- **Spawning duplicate handoff issues** — update the open same-branch handoff in
-  place instead of creating a new one each time.
-- **Closing a handoff the user only previewed** — only offer to close after they
-  confirm they're actually continuing the work.
+- **Spawning duplicate handoff issues** — there is one shared `tunan:handoff`
+  issue for the repo; always reuse it (reopening it first if it was closed)
+  instead of creating a new one (per branch or per session).
+- **Closing the shared handoff on consume** — the single `tunan:handoff` issue
+  is meant to be reused and overwritten, so leave it open after resuming; close
+  it only when the user explicitly asks to retire it.
