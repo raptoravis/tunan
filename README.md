@@ -70,6 +70,7 @@ Two heavier servers are **opt-in** (they pull large dependencies — browser bin
 
 After install, run `/tunan:setup` first to verify your environment (see the **⚠️ Required next step** note above), then try:
 
+- `/tunan:strategy` — create or update the product strategy (a short durable `tunan:strategy` issue) that ideate/brainstorm/plan read as grounding
 - `/tunan:new-raw` — capture a 'raw' requirement into a GitHub issue (labeled `tunan:raw`); brainstorm later promotes it to `tunan:req`
 - `/tunan:brainstorm` — explore requirements and approaches before planning
 - `/tunan:plan` — create an implementation plan

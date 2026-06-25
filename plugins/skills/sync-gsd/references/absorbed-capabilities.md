@@ -44,7 +44,8 @@ From the `map-codebase` absorption (2026-06-11):
    (not GSD's `.planning/PROJECT.md` + `ROADMAP.md` + `STATE.md` local files);
    requirements reuse `brainstorm` → `tunan:req`, config reuses `tunan:config`,
    code current-state reuses `map-codebase`. The `tunan:project` issue **replaces
-   the retired `strategy` skill and its `STRATEGY.md`** — all former STRATEGY.md
+   the former `STRATEGY.md` local file** (the `strategy` skill still exists — it
+   now sharpens the same issue's intent sections) — all former STRATEGY.md
    consumers (ideate/brainstorm/plan/product-pulse/retro/dogfood-beta) now read the
    issue. (GSD: `commands/gsd/new-project.md`, `new-milestone.md`; tunan:
    `new-project/`, `new-milestone/`)

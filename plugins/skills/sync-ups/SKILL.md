@@ -36,11 +36,25 @@ Confirm the working context before touching anything:
 2. **Clean-ish tree.** If the working tree has unrelated uncommitted changes,
    warn the user — the merge will add more unstaged changes on top, and they
    should be able to tell them apart. Do not auto-stash.
-3. **Determine the sync baseline.** Use a `last_synced_sha` supplied by the
-   maintainer (as an argument, or the `UPSTREAM_HEAD` reported by the prior run
-   in Phase 6). There is no persisted baseline file — tunan keeps no local
-   state. If no baseline SHA is provided, treat the merge as a full audit
-   (no baseline diff) and say so.
+3. **Determine the sync baseline (auto-maintained in the `tunan:config` issue).**
+   tunan keeps no local baseline file — the baseline lives only in the repo's
+   `tunan:config` GitHub issue (issue storage, never a local file), and Phase 6
+   writes the new HEAD back there automatically. Resolve `last_synced_sha` in
+   this precedence:
+
+   1. **Explicit override** — a SHA the maintainer passes as an argument wins.
+   2. **Persisted baseline** — otherwise read the `upstream_sync_baseline` key
+      from the `tunan:config` issue's yaml block:
+
+      ```bash
+      gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+      ```
+
+      If that returns a number `<N>`, `gh issue view <N> --json body --jq .body`
+      and parse the fenced ```yaml block for `upstream_sync_baseline`. A missing
+      issue, missing key, or any transient `gh` failure is non-fatal — fall
+      through to a full audit, never error.
+   3. **Neither** — treat the merge as a full audit (no baseline diff) and say so.
 
 ## Phase 1: Fetch upstream + compute the delta
 
@@ -141,10 +155,25 @@ unresolved or unreported.
 
 ## Phase 6: Record, version, report — then STOP
 
-1. **Report the new baseline.** State the synced `UPSTREAM_HEAD` SHA and today's
-   date in the summary so the maintainer can record it (and pass it as the
-   baseline on the next run). Do not write a local baseline file — there is no
-   persisted baseline.
+1. **Persist the new baseline to the `tunan:config` issue (automatic).** This is
+   what makes the baseline self-maintaining — the next run reads it back in
+   Phase 0 with no maintainer argument. Merge `upstream_sync_baseline: <UPSTREAM_HEAD>`
+   and `upstream_synced_at: <today ISO date>` into the `tunan:config` issue's
+   yaml block, **preserving every existing key**:
+
+   - Resolve the issue number (`gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'`).
+   - **Issue exists** → read its body, update/insert the two keys in the yaml
+     block, write the merged body to a temp file, and
+     `gh issue edit <N> --body-file <tmpfile>`.
+   - **Issue absent** → ensure the label exists (`gh label list --search "tunan:config"`,
+     else `gh label create "tunan:config" --color 6f42c1 --description "tunan project config"`),
+     then `gh issue create --title "[config] tunan settings" --label "tunan:config" --body-file <tmpfile>`
+     with a body carrying the `<!-- tunan:config -->` marker and a yaml block
+     holding the two keys.
+
+   If `gh` is missing/unauthenticated, report the new SHA in the summary and tell
+   the maintainer to record it manually — never write a local baseline file.
+   Always also state the synced `UPSTREAM_HEAD` SHA and today's date in the summary.
 2. **Version + README, only if a skill was added or its surface changed.** A new
    tunan skill: bump the version in BOTH `plugins/.claude-plugin/plugin.json`
    and `plugins/.codex-plugin/plugin.json` (same value, same commit), add the
