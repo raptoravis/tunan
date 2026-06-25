@@ -1,6 +1,6 @@
 ---
 name: status
-description: '列出当前仓库还没合并的 open PR、还没关闭的 open issue,以及 tunan:handoff 交接单里还没完成的事项,快速看还剩什么工作。默认只查当前用户,--user <name> 查指定用户,--all 查所有人,--req 只看 tunan:req 需求项。只读,不创建任何 issue。用户说"还剩什么"/"剩余工作"/"还有什么没做"/"open issues"/"handoff 里还剩什么"/"what is left"/"/tunan:status" 时用。'
+description: '列出当前仓库还没合并的 open PR、还没关闭的 open issue,以及 tunan:handoff 交接单里还没完成的事项,快速看还剩什么工作。默认只查当前用户,--user <name> 查指定用户,--all 查所有人,--req 只看 tunan:req 需求项,--triage 把 open issue/PR 对照 .github 模板做合规审阅(默认仍只读;加 --label / --close-incomplete 才会打标签/关闭,且每步需确认)。只读,不创建任何 issue。用户说"还剩什么"/"剩余工作"/"还有什么没做"/"open issues"/"handoff 里还剩什么"/"triage 一下 issues"/"what is left"/"/tunan:status" 时用。'
 ---
 
 # status — 看还剩什么工作
@@ -14,7 +14,7 @@ description: '列出当前仓库还没合并的 open PR、还没关闭的 open i
 ## 调用语法
 
 ```
-/tunan:status [--user <github-username>] [--all] [--req]
+/tunan:status [--user <github-username>] [--all] [--req] [--triage [--label] [--close-incomplete]]
 ```
 
 **开关(都可选)**：
@@ -22,6 +22,9 @@ description: '列出当前仓库还没合并的 open PR、还没关闭的 open i
 - `--user <github-username>` — 查指定用户的 open PR 和 issue(按 author 过滤)
 - `--all` — 查所有人;与 `--user` 互斥,同时传时 `--all` 优先
 - `--req` — open issue 只看带 `tunan:req` 标签的需求项(过滤掉报告/存档类 issue)
+- `--triage` — 切到合规审阅模式:把 open issue/PR 逐个对照仓库 `.github` 模板与 `CONTRIBUTING` 审阅完整度,报告缺失字段与标签缺口。**默认仍只读、只报告**(保持 status 的只读契约)。
+  - `--label`(仅 `--triage` 下生效)— 审阅后允许应用建议标签,**每批改动需经阻塞问询确认**。
+  - `--close-incomplete`(仅 `--triage` 下生效)— 允许关闭不合规项(带说明评论),**每项关闭需经阻塞问询确认**。
 
 不传任何开关时默认等价于 `--user @me`(当前认证用户)。
 
@@ -62,12 +65,28 @@ description: '列出当前仓库还没合并的 open PR、还没关闭的 open i
    - `tunan:handoff` 交接单本身也是带标签的 open issue,会在第 3 步里被重复列出 —— 在汇总时把它从普通 open issue 里剔除,只在 handoff 区块展示(连同其未完成事项),不要两边各算一次。
    - 三者(PR / issue / handoff 未完成项)都为空时,明确说"当前没有剩余/未完成的工作"。
 
+## Triage 模式(`--triage`)
+
+`--triage` 把 status 从"剩余工作快照"切到"合规审阅":把 open issue/PR 对照仓库自己的贡献模板逐个审,报告每项是否齐全。**默认只读、只报告** —— 不打标签、不关闭、不评论,保持 status 的只读契约。只有显式加 `--label` / `--close-incomplete` 才会动手,且每步都经阻塞问询确认。
+
+**问询工具**:`AskUserQuestion`(Claude Code;未加载 schema 先 `ToolSearch` `select:AskUserQuestion`)、`request_user_input`(Codex)、`ask_user`(Gemini;Pi 经 `pi-ask-user`)。无工具或出错退化为 chat 编号列表并等待,绝不静默跳过。
+
+流程:
+
+1. **读审阅标准**(用原生 Read,不用 shell `cat`):`.github/ISSUE_TEMPLATE/*.yml`(各类 issue 的必填字段)、`.github/PULL_REQUEST_TEMPLATE*`(PR 清单)、`CONTRIBUTING.md`(issue-first 规则与审批闸门)。仓库没有这些模板时,只做"有没有标签、标题是否清楚、body 是否为空"的轻量检查,并在报告里点明"无模板,按通用标准审"。
+2. **拉取并分类**:`gh issue list --state open --limit 100 --json number,title,labels,body,author` 和 `gh pr list --state open --limit 100 --json number,title,labels,body,author`。按标签+body 特征把每项归到对应模板类型(feature / enhancement / bug / chore / fix PR …);归不出来的标 `needs-triage`。
+3. **逐项审合规**:对每项核对其模板要求的必填字段是否齐、是否选了类型、标签是否到位。输出纯文本报告(不用 markdown 表格):每项给 `#<n> <title>` + 合规/缺失清单 + 建议标签。
+4. **可选动作(仅显式 flag 时)**:
+   - `--label`:把建议标签**成批**列给用户,经阻塞问询确认后再 `gh issue edit` / `gh pr edit` 加标签。未确认不加。
+   - `--close-incomplete`:对不合规项,**逐项**经阻塞问询确认后才 `gh issue close` / `gh pr close`(附带说明评论解释为何关闭)。未确认不关。
+   - 两个 flag 都没给时,到第 3 步报告即止 —— 一个字都不改。
+
 ## 不要做
 
-- 不创建、关闭、合并、编辑任何 issue / PR(那是 `closeissue` / `merge-pr-verify-close` 的事)。
+- 默认(无 `--triage` 显式动作 flag)不创建、关闭、合并、编辑任何 issue / PR(那是 `closeissue` / `merge-pr-verify-close` 的事)。**例外**:`--triage --label` / `--triage --close-incomplete` 在每步阻塞确认后可打标签/关闭不合规项 —— 这是显式 opt-in,不破坏默认只读契约。
 - 不写任何报告 issue(那是 `retro` / `product-pulse` 的事)。
 - **不在 chat 里即兴写"想从哪个开始 / 接下来做什么"的散文式追问**(违反对齐硬规则)—— 要征求下一步就走下面 `## 收尾` 的阻塞问询工具。
-- 全程只读。收尾的下一步**只是加载**目标 skill,status 自身不执行任何写操作。
+- 默认快照模式全程只读;收尾的下一步**只是加载**目标 skill,status 自身不执行任何写操作。唯一的写动作入口是 `--triage` 配 `--label` / `--close-incomplete` 这两个显式 flag,且每步经阻塞确认 —— 没显式给这两个 flag 时,连 triage 也只读、只报告。
 
 ## 输出
 

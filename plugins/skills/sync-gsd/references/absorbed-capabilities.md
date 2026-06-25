@@ -50,6 +50,40 @@ From the `map-codebase` absorption (2026-06-11):
    issue. (GSD: `commands/gsd/new-project.md`, `new-milestone.md`; tunan:
    `new-project/`, `new-milestone/`)
 
+From the 2026-06-25 audit (GSD `a0e45cd`, full survey):
+
+8. **Docs-update** — generate/refresh project docs (README, architecture, contributing,
+   API/usage) with reader/writer subagents that explore the code directly, a verifier
+   pass that fact-checks every path/signature/command/endpoint against the live
+   codebase, and a bounded fix loop. Re-expressed without GSD's `.planning/` work
+   manifest or fixed 9-doc list: adapts to the repo's existing doc layout, keeps the
+   work list in the chat task list, and writes markdown doc files (the one tunan write-
+   to-disk skill, since docs are code-tree files not issue-state). CodeGraph is the
+   structural/verification index. (GSD: `commands/gsd/docs-update.md`, `gsd-doc-writer`
+   / `gsd-doc-verifier` agents; tunan: `docs-update/`)
+9. **Forensics** — read-only post-mortem of a stuck/failed pipeline run; gathers git +
+   issue-marker evidence, matches an anomaly taxonomy (stuck loop, missing markers,
+   abandoned work, crash/interruption, CI thrash), emits a diagnostic report + single
+   root cause + one corrective action. Re-expressed over git history + tunan issue
+   markers (the `tunan:progress` comment, plan marker, labels, open PR/CI) instead of
+   GSD's `.planning/` artifacts; optional report capture as a `tunan:forensics` issue.
+   (GSD: `commands/gsd/forensics.md`; tunan: `forensics/`)
+10. **Doc conflict-engine + ingest** — bootstrap the planning model from existing
+    ADRs/PRDs/SPECs with severity-bucketed conflict detection (BLOCKER/WARNING/INFO),
+    a plain-text report, a BLOCKER safety gate, and `ADR > SPEC > PRD > DOC` precedence.
+    Re-expressed as an **ingest mode folded into `new-project`** (`--ingest`, Phase 1b):
+    synthesizes intent + requirements from the docs, checks conflicts against the
+    locked decisions in an existing `tunan:project` issue, then feeds the normal
+    roadmap/requirements flow — no `.planning/INGEST-CONFLICTS.md` file. (GSD:
+    `commands/gsd/ingest-docs.md`, `import.md`, `references/doc-conflict-engine.md`;
+    tunan: `new-project/` + `new-project/references/doc-conflict-engine.md`)
+11. **Inbox triage** — review open issues/PRs against contribution templates, report
+    completeness, optionally label/close non-compliant items. Re-expressed as an
+    **opt-in `--triage` mode folded into `status`** — read-only reporting by default
+    (preserving status's read-only contract); `--label` / `--close-incomplete` act only
+    behind explicit per-step blocking confirmation. (GSD: `commands/gsd/inbox.md`;
+    tunan: `status/`)
+
 ## How to read the GSD source
 
 GSD's capability surface, by directory:

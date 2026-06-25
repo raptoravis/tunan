@@ -39,11 +39,27 @@ GSD's source tree to where capabilities live.
 2. **Clean-ish tree.** If the working tree has unrelated uncommitted changes,
    warn the user — the audit may add more unstaged changes on top. Do not
    auto-stash.
-3. **Determine the audit baseline.** Use a `last_synced_sha` supplied by the
-   maintainer (as an argument, or the `GSD_HEAD` reported by a prior run). There
-   is no persisted baseline file — tunan keeps no local state. If no
-   baseline SHA is provided, treat the audit as a full survey (no baseline diff)
-   and say so.
+3. **Determine the audit baseline (auto-maintained in the `tunan:config` issue).**
+   tunan keeps no local baseline file — the baseline lives only in the repo's
+   `tunan:config` GitHub issue (issue storage, never a local file), and Phase 5
+   writes the audited `GSD_HEAD` back there automatically. Resolve `last_synced_sha`
+   in this precedence:
+
+   1. **Explicit override** — a SHA the maintainer passes as an argument wins.
+   2. **Persisted baseline** — otherwise read the `gsd_sync_baseline` key from the
+      `tunan:config` issue's yaml block:
+
+      ```bash
+      gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+      ```
+
+      If that returns a number `<N>`, `gh issue view <N> --json body --jq .body`
+      and parse the fenced ```yaml block for `gsd_sync_baseline`. A missing issue,
+      missing key, or any transient `gh` failure is non-fatal — fall through to a
+      full survey, never error. (This key is distinct from sync-ups's
+      `upstream_sync_baseline`; the two skills track separate upstreams in the same
+      config issue.)
+   3. **Neither** — treat the audit as a full survey (no baseline diff) and say so.
 
 ## Phase 1: Fetch GSD + compute the delta
 
@@ -119,9 +135,24 @@ Re-express each accepted capability in tunan's own shape:
 1. **Update the absorbed list.** Add each absorbed capability to
    `references/absorbed-capabilities.md` (in this same change) so the next audit
    does not re-surface it.
-2. **Report the new baseline.** State the audited `GSD_HEAD` SHA and today's date
-   in the summary so the maintainer can record it and pass it as the baseline on
-   the next run. Do not write a local baseline file.
+2. **Persist the new baseline to the `tunan:config` issue (automatic).** This is
+   what makes the baseline self-maintaining — the next run reads it back in Phase 0
+   with no maintainer argument. Merge `gsd_sync_baseline: <GSD_HEAD>` and
+   `gsd_synced_at: <today ISO date>` into the `tunan:config` issue's yaml block,
+   **preserving every existing key** (including sync-ups's `upstream_sync_baseline`):
+
+   - Resolve the issue number (`gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'`).
+   - **Issue exists** → read its body, update/insert the two keys in the yaml block,
+     write the merged body to a temp file, and `gh issue edit <N> --body-file <tmpfile>`.
+   - **Issue absent** → ensure the label exists (`gh label list --search "tunan:config"`,
+     else `gh label create "tunan:config" --color 6f42c1 --description "tunan project config"`),
+     then `gh issue create --title "[config] tunan settings" --label "tunan:config" --body-file <tmpfile>`
+     with a body carrying the `<!-- tunan:config -->` marker and a yaml block holding
+     the two keys.
+
+   If `gh` is missing/unauthenticated, report the new SHA in the summary and tell the
+   maintainer to record it manually — never write a local baseline file. Always also
+   state the audited `GSD_HEAD` SHA and today's date in the summary.
 3. **Version + README, only if a skill was added or its surface changed.** A new
    tunan skill: bump the version in BOTH `plugins/.claude-plugin/plugin.json` and
    `plugins/.codex-plugin/plugin.json` (same value, same commit), add the skill

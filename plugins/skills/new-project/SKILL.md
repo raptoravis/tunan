@@ -1,7 +1,7 @@
 ---
 name: new-project
-description: "Bootstrap a new project end to end: establish the project's intent (problem, approach, users, key metrics, tracks), lay out an initial roadmap of milestones, and optionally scope the first milestone's requirements — all stored in one GitHub issue labeled tunan:project. Use when starting a new product or initiative, when the user says 'new project', 'start a project', 'set up the project', '新项目', '立项', or 'bootstrap this'. Greenfield orchestrator over setup, research, brainstorm, and map-codebase. For the next cycle of an existing project use new-milestone."
-argument-hint: "[optional: project idea / one-line pitch, or @path to an idea doc] [--auto]"
+description: "Bootstrap a new project end to end: establish the project's intent (problem, approach, users, key metrics, tracks), lay out an initial roadmap of milestones, and optionally scope the first milestone's requirements — all stored in one GitHub issue labeled tunan:project. Use when starting a new product or initiative, when the user says 'new project', 'start a project', 'set up the project', '新项目', '立项', or 'bootstrap this'. Greenfield orchestrator over setup, research, brainstorm, and map-codebase. Can also bootstrap from existing planning docs (ADRs/PRDs/SPECs) via --ingest, synthesizing intent + requirements with conflict detection against locked decisions. For the next cycle of an existing project use new-milestone."
+argument-hint: "[optional: project idea / one-line pitch, or @path to an idea doc] [--auto] [--ingest <path|globs>]"
 allowed-tools:
   - Read
   - Write
@@ -35,6 +35,8 @@ Ask one question at a time. Prefer free-form responses for the substantive inten
 <project_idea> #$ARGUMENTS </project_idea>
 
 The argument is an optional project pitch or an `@path` to an idea document. `--auto` runs the flow with minimal interaction after the intent interview (research → roadmap → requirements run sequentially using sensible defaults); it requires a non-empty idea (argument text or `@`-referenced doc) to work from. If the argument is empty, Phase 1 opens by asking what the project is.
+
+`--ingest <path|globs>` switches on **ingest mode** (Phase 1b): instead of (or before) the interactive intent interview, the project intent and an initial set of requirements are synthesized from existing planning documents in the repo — ADRs, PRDs, SPECs, RFCs — with conflict detection against any locked decisions. Without an explicit path, Phase 0 offers ingest when it detects conventional planning-doc locations. See Phase 1b and `references/doc-conflict-engine.md`.
 
 ## Core Principles
 
@@ -76,7 +78,7 @@ gh issue list --label "tunan:project" --state open --json number --jq '.[0].numb
 ```
 
 - **A `tunan:project` issue already exists** → this is not a new project. Tell the user, and use the blocking question tool to offer: *Define the next milestone* (recommended → hand off to `new-milestone`) / *Revise the existing project intent* (re-run the relevant Phase 1 sections and update in place) / *Cancel*. Do not create a second project issue.
-- **No issue** → continue to Phase 1.
+- **No issue** → continue to Phase 1. If `--ingest` was passed, or a quick native-Glob scan finds conventional planning-doc locations (`docs/adr/`, `docs/prd/`, `docs/specs/`, `docs/rfc/`, root `{ADR,PRD,SPEC,RFC}-*.md`), offer ingest mode via the blocking question tool (*Bootstrap intent from existing docs (recommended)* / *Run the interactive interview instead*) and route to Phase 1b if accepted.
 
 **Setup gate (blocking).** Check whether the repo has a `tunan:config` issue:
 
@@ -91,6 +93,18 @@ If that returns empty, this repo hasn't been through tunan setup — load and ru
 Read `references/project-interview.md` and run it. Capture, in order: target problem, approach, who it's for, key metrics, tracks (sections 1–5 required), plus the optional sections only if the user engages them. Apply the pushback rules — push back once, maybe twice, quote the user back, keep answers tight.
 
 If `--auto` and an idea doc was provided, draft each section from the doc and skip the interactive pushback, but still produce all five required sections.
+
+### Phase 1b: Ingest existing planning docs (brownfield bootstrap)
+
+Run this phase when `--ingest <path|globs>` is given, or when Phase 0 detected conventional planning-doc locations (`docs/adr/`, `docs/prd/`, `docs/specs/`, `docs/rfc/`, root-level `{ADR,PRD,SPEC,RFC}-*.md`) and the user opted in via the blocking question tool. It replaces or augments the Phase 1 interview by synthesizing intent **from the docs**.
+
+**Read `references/doc-conflict-engine.md` first** — its severity semantics (BLOCKER/WARNING/INFO), plain-text report format, and the BLOCKER safety gate are load-bearing.
+
+1. **Discover docs.** Resolve the explicit `--ingest` path/globs, or scan the conventional locations with native Glob (not shell `find`). Cap at 50 docs per run; if more match, report the cap and ask which subset. Classify each by type (ADR/SPEC/PRD/DOC) from its path/heading.
+2. **Synthesize.** Read the docs (pass paths to a subagent for large sets) and extract: the project's target problem, approach, users, metrics, tracks, plus candidate requirements (one per discrete deliverable). Apply the precedence rule **ADR > SPEC > PRD > DOC** when two docs disagree on the same decision.
+3. **Detect conflicts.** Run the conflict checks defined by `references/doc-conflict-engine.md` against any **already-locked decisions** — primarily an existing `tunan:project` issue's intent sections (if one exists, this is not a fresh bootstrap; route per Phase 0). Bucket findings into BLOCKER/WARNING/INFO. A doc that contradicts a locked decision is a BLOCKER; competing variants among the ingested docs are WARNINGs; superseded-by-precedence notes are INFO.
+4. **Gate.** Render the plain-text conflict report. **If any BLOCKER exists, exit without writing the project issue or any `tunan:req`** — the gate holds regardless of WARNING/INFO counts. If only WARNINGs/INFO, get explicit approval via the blocking question tool before proceeding. Empty report → continue silently.
+5. **Hand to the normal flow.** The synthesized intent feeds Phase 2 (roadmap) and Phase 3 (requirements) exactly as the interview output would — the synthesized requirements become milestone-1 `tunan:req` candidates (created via `brainstorm`/`new-raw` in Phase 3). The `tunan:project` issue is still written only in Phase 5.
 
 **Optional research seed.** If the project is in a domain where prior art matters and the user wants it, dispatch lightweight research (the `deep-research` skill or a web-research subagent) before or during the interview, and fold findings into approach/metrics. Skip by default; do not force research on a clearly-scoped internal tool.
 
