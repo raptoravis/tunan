@@ -1,7 +1,7 @@
-import { defineTool } from '@opencode-ai/plugin/tool';
+import { tool } from '@opencode-ai/plugin/tool';
 import { execSync } from 'child_process';
 
-export const runTests = defineTool({
+export const runTests = tool({
   name: 'run-tests',
   description: 'Run test suite with options',
   parameters: {

@@ -1,8 +1,8 @@
-import { defineTool } from '@opencode-ai/plugin/tool';
+import { tool } from '@opencode-ai/plugin/tool';
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 
-export const lintCheck = defineTool({
+export const lintCheck = tool({
   name: 'lint-check',
   description: 'Run linter and check for issues',
   parameters: {

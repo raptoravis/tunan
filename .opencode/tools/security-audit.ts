@@ -1,9 +1,9 @@
-import { defineTool } from '@opencode-ai/plugin/tool';
+import { tool } from '@opencode-ai/plugin/tool';
 import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 import { globSync } from 'glob';
 
-export const securityAudit = defineTool({
+export const securityAudit = tool({
   name: 'security-audit',
   description: 'Run security vulnerability scan',
   parameters: {

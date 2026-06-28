@@ -1,7 +1,7 @@
-import { defineTool } from '@opencode-ai/plugin/tool';
+import { tool } from '@opencode-ai/plugin/tool';
 import { execSync } from 'child_process';
 
-export const gitSummary = defineTool({
+export const gitSummary = tool({
   name: 'git-summary',
   description: 'Generate git status summary',
   parameters: {

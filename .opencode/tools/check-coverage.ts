@@ -1,8 +1,8 @@
-import { defineTool } from '@opencode-ai/plugin/tool';
+import { tool } from '@opencode-ai/plugin/tool';
 import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 
-export const checkCoverage = defineTool({
+export const checkCoverage = tool({
   name: 'check-coverage',
   description: 'Check test coverage',
   parameters: {

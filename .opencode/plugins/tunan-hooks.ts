@@ -15,7 +15,7 @@ function shouldRunInProfile(level: 'minimal' | 'standard' | 'strict'): boolean {
 
 const store = new ChangedFilesStore();
 
-export const TunanHooksPlugin: Plugin = {
+const TunanHooksPlugin: Plugin = {
   name: 'tunan-hooks',
   version: '1.0.0',
 
@@ -161,3 +161,9 @@ export const TunanHooksPlugin: Plugin = {
     },
   },
 };
+
+// OpenCode expects plugin modules to export a factory function
+const createTunanHooksPlugin = async () => TunanHooksPlugin;
+export { TunanHooksPlugin };
+export default createTunanHooksPlugin;
+export { createTunanHooksPlugin as server };

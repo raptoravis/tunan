@@ -1,7 +1,7 @@
-import { defineTool } from '@opencode-ai/plugin/tool';
+import { tool } from '@opencode-ai/plugin/tool';
 import { execSync } from 'child_process';
 
-export const changedFiles = defineTool({
+export const changedFiles = tool({
   name: 'changed-files',
   description: 'List files changed in session',
   parameters: {

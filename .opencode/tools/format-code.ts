@@ -1,8 +1,8 @@
-import { defineTool } from '@opencode-ai/plugin/tool';
+import { tool } from '@opencode-ai/plugin/tool';
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 
-export const formatCode = defineTool({
+export const formatCode = tool({
   name: 'format-code',
   description: 'Format code using project formatter',
   parameters: {
