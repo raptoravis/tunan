@@ -2,7 +2,7 @@
 
 AI-powered development tools that get smarter with every use — make each unit of engineering work easier than the last. Brainstorm requirements, plan implementations, review code with specialized reviewers, research institutional learnings, and capture solved problems so future work compounds.
 
-This repository is a Claude Code / Codex **plugin marketplace**. It ships a single plugin, **`tunan`**, bundling 50+ agents, 38+ skills, and 5 MCP servers.
+This repository is a Claude Code / Codex / OpenCode **plugin marketplace**. It ships a single plugin, **`tunan`**, bundling 50+ agents, 38+ skills, and 5 MCP servers.
 
 | Component   | Count |
 | ----------- | ----- |
@@ -46,6 +46,30 @@ Inside Codex, run `/plugins`, select the **tunan** marketplace, choose the **tun
 
 > **⚠️ Required next step — run setup.** After restarting, run `/tunan:setup` in any project to diagnose your environment, install missing tools, verify `gh` auth, and bootstrap project config. Don't skip it — it's what makes the skills work on first use.
 
+### OpenCode
+
+Install via npm, then add to your `opencode.json`:
+
+```bash
+npm install tunan-opencode
+```
+
+```json
+{
+  "plugin": ["tunan-opencode"]
+}
+```
+
+Or clone and run OpenCode directly in the repository:
+
+```bash
+git clone https://github.com/raptoravis/tunan.git
+cd tunan
+opencode
+```
+
+> **⚠️ Required next step — run setup.** After installation, run `/tunan:setup` in any project to diagnose your environment, install missing tools, verify `gh` auth, and bootstrap project config.
+
 ### Local development (from a checkout)
 
 To run the plugin straight from a working copy — useful when developing or testing changes — point Claude Code at the bundled plugin directory:
@@ -57,12 +81,56 @@ claude --plugin-dir ./tunan/plugins
 
 This loads the plugin's skills, agents, and MCP servers directly from your checkout, no marketplace registration required.
 
+### Cross-platform installer
+
+For a unified installation experience across all platforms, use the install scripts:
+
+```bash
+# Clone the repository
+git clone https://github.com/raptoravis/tunan.git
+cd tunan
+
+# Install for specific platform
+./install.sh --target claude    # Claude Code
+./install.sh --target codex     # Codex
+./install.sh --target opencode  # OpenCode
+./install.sh --target all       # All platforms
+
+# Preview what would be installed
+./install.sh --dry-run
+```
+
+Windows PowerShell:
+
+```powershell
+# Install for specific platform
+.\install.ps1 -Target claude    # Claude Code
+.\install.ps1 -Target codex     # Codex
+.\install.ps1 -Target opencode  # OpenCode
+.\install.ps1 -Target all       # All platforms
+
+# Preview what would be installed
+.\install.ps1 -DryRun
+```
+
+npm:
+
+```bash
+# Install globally
+npm install -g tunan
+
+# Run installer
+tunan-install --target claude
+tunan-install --target all
+```
+
 ## MCP servers
 
-The plugin ships a bundled [`.mcp.json`](plugins/.mcp.json). Two lightweight, no-API-key servers load **automatically** the moment the plugin is enabled:
+The plugin ships a bundled [`.mcp.json`](plugins/.mcp.json). Three lightweight, no-API-key servers load **automatically** the moment the plugin is enabled:
 
 - `context7` — up-to-date library / API documentation lookup
 - `sequential-thinking` — structured multi-step reasoning
+- `codegraph` — structural code search via AST index (callers, callees, impact analysis)
 
 Two heavier servers are **opt-in** (they pull large dependencies — browser binaries, a Chrome install): `playwright` and `chrome-devtools`. Run `/tunan:setup` to check which MCP servers are registered and install any missing ones interactively. See the [MCP reference](plugins/README.md#mcp-servers) for details.
 

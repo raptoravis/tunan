@@ -40,6 +40,7 @@ skills=(
 mcp=(
   "context7|recommended|claude mcp add context7 -- npx -y @upstash/context7-mcp@latest|https://github.com/upstash/context7"
   "sequential-thinking|recommended|claude mcp add sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking|https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking"
+  "codegraph|recommended|claude mcp add codegraph -- npx -y @anthropics/codegraph-mcp@latest|https://github.com/anthropics/codegraph"
   "playwright|optional|claude mcp add playwright -- npx @playwright/mcp@latest|https://github.com/microsoft/playwright-mcp"
   "chrome-devtools|optional|claude mcp add chrome-devtools -- npx chrome-devtools-mcp@latest|https://github.com/ChromeDevTools/chrome-devtools-mcp"
 )

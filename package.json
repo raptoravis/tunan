@@ -19,7 +19,29 @@
     "python",
     "typescript",
     "knowledge-management",
-    "image-generation"
+    "image-generation",
+    "claude-code",
+    "codex",
+    "opencode"
   ],
-  "mcpServers": "./.mcp.json"
+  "bin": {
+    "tunan-install": "./install.sh"
+  },
+  "files": [
+    "plugins/",
+    "install.sh",
+    "install.ps1",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "install:claude": "./install.sh --target claude",
+    "install:codex": "./install.sh --target codex",
+    "install:opencode": "./install.sh --target opencode",
+    "install:all": "./install.sh --target all",
+    "install:dry-run": "./install.sh --dry-run"
+  }
 }

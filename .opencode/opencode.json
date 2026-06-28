@@ -1,0 +1,273 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "anthropic/claude-sonnet-4-5",
+  "small_model": "anthropic/claude-haiku-4-5",
+  "default_agent": "build",
+  "plugin": ["./plugins"],
+  "instructions": [
+    "AGENTS.md",
+    "instructions/INSTRUCTIONS.md",
+    "skills/brainstorm/SKILL.md",
+    "skills/plan/SKILL.md",
+    "skills/code-review/SKILL.md",
+    "skills/work/SKILL.md",
+    "skills/verify/SKILL.md",
+    "skills/compound/SKILL.md",
+    "skills/debug/SKILL.md",
+    "skills/optimize/SKILL.md"
+  ],
+  "agent": {
+    "build": {
+      "model": "anthropic/claude-sonnet-4-5",
+      "description": "Primary coding agent for development work",
+      "prompt": "prompts/agents/build.txt",
+      "permission": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "planner": {
+      "model": "anthropic/claude-opus-4-5",
+      "description": "Implementation planning",
+      "prompt": "prompts/agents/planner.txt",
+      "permission": {
+        "read": true,
+        "write": false,
+        "edit": false,
+        "bash": false
+      }
+    },
+    "architect": {
+      "model": "anthropic/claude-opus-4-5",
+      "description": "System design",
+      "prompt": "prompts/agents/architect.txt",
+      "permission": {
+        "read": true,
+        "write": false,
+        "edit": false,
+        "bash": false
+      }
+    },
+    "code-reviewer": {
+      "model": "anthropic/claude-opus-4-5",
+      "description": "Code review",
+      "prompt": "prompts/agents/code-reviewer.txt",
+      "permission": {
+        "read": true,
+        "write": false,
+        "edit": false,
+        "bash": false
+      }
+    },
+    "security-reviewer": {
+      "model": "anthropic/claude-opus-4-5",
+      "description": "Security analysis",
+      "prompt": "prompts/agents/security-reviewer.txt",
+      "permission": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "tdd-guide": {
+      "model": "anthropic/claude-opus-4-5",
+      "description": "Test-driven development",
+      "prompt": "prompts/agents/tdd-guide.txt",
+      "permission": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "build-error-resolver": {
+      "model": "anthropic/claude-opus-4-5",
+      "description": "Build error fixes",
+      "prompt": "prompts/agents/build-error-resolver.txt",
+      "permission": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "e2e-runner": {
+      "model": "anthropic/claude-opus-4-5",
+      "description": "E2E testing",
+      "prompt": "prompts/agents/e2e-runner.txt",
+      "permission": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "doc-updater": {
+      "model": "anthropic/claude-opus-4-5",
+      "description": "Documentation",
+      "prompt": "prompts/agents/doc-updater.txt",
+      "permission": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "refactor-cleaner": {
+      "model": "anthropic/claude-opus-4-5",
+      "description": "Dead code cleanup",
+      "prompt": "prompts/agents/refactor-cleaner.txt",
+      "permission": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "database-reviewer": {
+      "model": "anthropic/claude-opus-4-5",
+      "description": "Database optimization",
+      "prompt": "prompts/agents/database-reviewer.txt",
+      "permission": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "docs-lookup": {
+      "model": "anthropic/claude-sonnet-4-5",
+      "description": "Documentation lookup via Context7",
+      "prompt": "prompts/agents/docs-lookup.txt",
+      "permission": {
+        "read": true,
+        "write": false,
+        "edit": false,
+        "bash": false
+      }
+    },
+    "harness-optimizer": {
+      "model": "anthropic/claude-sonnet-4-5",
+      "description": "Harness config tuning",
+      "prompt": "prompts/agents/harness-optimizer.txt",
+      "permission": {
+        "read": true,
+        "write": true,
+        "edit": false,
+        "bash": false
+      }
+    },
+    "loop-operator": {
+      "model": "anthropic/claude-sonnet-4-5",
+      "description": "Autonomous loop execution",
+      "prompt": "prompts/agents/loop-operator.txt",
+      "permission": {
+        "read": true,
+        "write": true,
+        "edit": false,
+        "bash": false
+      }
+    }
+  },
+  "command": {
+    "plan": {
+      "description": "Create implementation plan",
+      "agent": "tunan:planner",
+      "template": "commands/plan.md",
+      "subtask": true
+    },
+    "tdd": {
+      "description": "TDD workflow",
+      "agent": "tunan:tdd-guide",
+      "template": "commands/tdd.md",
+      "subtask": true
+    },
+    "code-review": {
+      "description": "Review code changes",
+      "agent": "tunan:code-reviewer",
+      "template": "commands/code-review.md",
+      "subtask": true
+    },
+    "security": {
+      "description": "Security review",
+      "agent": "tunan:security-reviewer",
+      "template": "commands/security.md",
+      "subtask": true
+    },
+    "build-fix": {
+      "description": "Fix build errors",
+      "agent": "tunan:build-error-resolver",
+      "template": "commands/build-fix.md",
+      "subtask": true
+    },
+    "e2e": {
+      "description": "E2E tests",
+      "agent": "tunan:e2e-runner",
+      "template": "commands/e2e.md",
+      "subtask": true
+    },
+    "refactor-clean": {
+      "description": "Remove dead code",
+      "agent": "tunan:refactor-cleaner",
+      "template": "commands/refactor-clean.md",
+      "subtask": true
+    },
+    "orchestrate": {
+      "description": "Multi-agent workflow",
+      "agent": "tunan:build",
+      "template": "commands/orchestrate.md",
+      "subtask": true
+    },
+    "verify": {
+      "description": "Verification loop",
+      "agent": "tunan:build",
+      "template": "commands/verify.md",
+      "subtask": true
+    },
+    "update-docs": {
+      "description": "Update docs",
+      "agent": "tunan:doc-updater",
+      "template": "commands/update-docs.md",
+      "subtask": true
+    },
+    "test-coverage": {
+      "description": "Coverage analysis",
+      "agent": "tunan:build",
+      "template": "commands/test-coverage.md",
+      "subtask": true
+    },
+    "brainstorm": {
+      "description": "Explore requirements and approaches",
+      "agent": "tunan:build",
+      "template": "commands/brainstorm.md",
+      "subtask": true
+    },
+    "work": {
+      "description": "Execute work items",
+      "agent": "tunan:build",
+      "template": "commands/work.md",
+      "subtask": true
+    },
+    "compound": {
+      "description": "Document solved problems",
+      "agent": "tunan:build",
+      "template": "commands/compound.md",
+      "subtask": true
+    },
+    "debug": {
+      "description": "Find root causes and fix bugs",
+      "agent": "tunan:build",
+      "template": "commands/debug.md",
+      "subtask": true
+    },
+    "optimize": {
+      "description": "Run optimization loops",
+      "agent": "tunan:build",
+      "template": "commands/optimize.md",
+      "subtask": true
+    }
+  }
+}

@@ -1,0 +1,151 @@
+# tunan
+
+AI 驱动的开发工具，让每次使用都更智能——让每个工程任务都比上一个更容易。探索需求、规划实现、使用专业审查器审查代码、研究机构经验，并捕获已解决的问题，使未来的工作能够复合增长。
+
+本仓库是一个 Claude Code / Codex / OpenCode **插件市场**。它提供一个名为 **`tunan`** 的插件，包含 50+ 代理、38+ 技能和 5 个 MCP 服务器。
+
+| 组件 | 数量 |
+|------|------|
+| 代理 | 50+ |
+| 技能 | 38+ |
+| MCP 服务器 | 5 |
+
+## 安装
+
+### Claude Code
+
+将此仓库注册为插件市场，然后安装插件：
+
+```text
+/plugin marketplace add raptoravis/tunan
+/plugin install tunan@tunan
+```
+
+重新加载时会收到提示。
+
+> **⚠️ 必需的下一步——运行 setup。** 安装插件仅注册技能；它**不会**配置您的环境。插件安装并重新加载后，在任何项目中运行：
+>
+> ```text
+> /tunan:setup
+> ```
+>
+> 它会诊断您的环境、安装缺少的 CLI 工具和 MCP 服务器、验证 `gh` 是否已安装**且**已认证（工作流将其工件存储在 GitHub issues 中），并在一个交互式流程中引导项目配置——跳过设置是技能首次使用时失败的最常见原因。随时重新运行 `/tunan:setup` 以重新检查。
+
+### Codex
+
+注册市场，然后通过 Codex TUI 安装：
+
+```bash
+codex plugin marketplace add raptoravis/tunan
+codex
+```
+
+在 Codex 中，运行 `/plugins`，选择 **tunan** 市场，选择 **tunan** 插件并安装。之后重启 Codex。（Codex 原生安装技能集；一些技能生成的审查/研究/工作流代理是 Claude Code 功能。）
+
+> **⚠️ 必需的下一步——运行 setup。** 重启后，在任何项目中运行 `/tunan:setup` 以诊断您的环境、安装缺少的工具、验证 `gh` 认证并引导项目配置。不要跳过——这是技能首次使用时正常工作的原因。
+
+### OpenCode
+
+通过 npm 安装，然后添加到您的 `opencode.json`：
+
+```bash
+npm install tunan
+```
+
+```json
+{
+  "plugin": ["tunan"]
+}
+```
+
+或者克隆并直接在仓库中运行 OpenCode：
+
+```bash
+git clone https://github.com/raptoravis/tunan.git
+cd tunan
+opencode
+```
+
+> **⚠️ 必需的下一步——运行 setup。** 安装后，在任何项目中运行 `/tunan:setup` 以诊断您的环境、安装缺少的工具、验证 `gh` 认证并引导项目配置。
+
+### 跨平台安装器
+
+要获得所有平台的统一体验，请使用安装脚本：
+
+```bash
+# 克隆仓库
+git clone https://github.com/raptoravis/tunan.git
+cd tunan
+
+# 安装到特定平台
+./install.sh --target claude    # Claude Code
+./install.sh --target codex     # Codex
+./install.sh --target opencode  # OpenCode
+./install.sh --target all       # 所有平台
+
+# 预览将要安装的内容
+./install.sh --dry-run
+```
+
+Windows PowerShell：
+
+```powershell
+# 安装到特定平台
+.\install.ps1 -Target claude    # Claude Code
+.\install.ps1 -Target codex     # Codex
+.\install.ps1 -Target opencode  # OpenCode
+.\install.ps1 -Target all       # 所有平台
+
+# 预览将要安装的内容
+.\install.ps1 -DryRun
+```
+
+### 本地开发（从检出）
+
+要直接从工作副本运行插件——在开发或测试更改时很有用——将 Claude Code 指向捆绑的插件目录：
+
+```bash
+git clone https://github.com/raptoravis/tunan.git
+claude --plugin-dir ./tunan/plugins
+```
+
+这会直接从您的检出加载插件的技能、代理和 MCP 服务器，无需市场注册。
+
+## MCP 服务器
+
+插件捆绑了 [`.mcp.json`](plugins/.mcp.json)。两个轻量级、无 API 密钥的服务器在插件启用时**自动**加载：
+
+- `context7` — 最新的库/API 文档查找
+- `sequential-thinking` — 结构化多步推理
+
+两个较重的服务器是**可选的**（它们会拉取大型依赖——浏览器二进制文件、Chrome 安装）：`playwright` 和 `chrome-devtools`。运行 `/tunan:setup` 以检查哪些 MCP 服务器已注册并交互式安装任何缺少的服务器。参见 [MCP 参考](plugins/README.md#mcp-servers) 获取详情。
+
+## 快速开始
+
+安装后，首先运行 `/tunan:setup` 以验证您的环境（参见上面的**⚠️ 必需的下一步**说明），然后尝试：
+
+- `/tunan:strategy` — 创建或更新产品策略（一个简短的持久 `tunan:strategy` issue），ideate/brainstorm/plan 读取作为基础
+- `/tunan:new-raw` — 将原始需求捕获到 GitHub issue（标记为 `tunan:raw`）；brainstorm 稍后将其提升为 `tunan:req`
+- `/tunan:brainstorm` — 在规划前探索需求和方法
+- `/tunan:plan` — 创建实现计划
+- `/tunan:work` — 实现计划
+- `/tunan:code-review` — 运行全面的多代理审查
+- `/lfg` — 完整的自主工程工作流
+
+## 环境检查
+
+运行医生脚本以检查您的环境配置：
+
+```bash
+./scripts/doctor.sh
+```
+
+Windows PowerShell：
+
+```powershell
+.\scripts\doctor.ps1
+```
+
+## 许可证
+
+MIT — 参见 [LICENSE](LICENSE)。

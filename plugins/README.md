@@ -134,6 +134,7 @@ The plugin ships a bundled [`.mcp.json`](.mcp.json). Two lightweight, no-API-key
 | --------------------- | ---------- | ------------------------------------------------ |
 | `context7`            | ✅          | Up-to-date library / API documentation lookup    |
 | `sequential-thinking` | ✅          | Structured multi-step reasoning                  |
+| `codegraph`           | ✅          | Structural code search via AST index             |
 
 Two heavier servers are **opt-in** — they pull large dependencies (browser binaries, a Chrome install), so `/tunan:setup` offers them but leaves them unchecked by default:
 
@@ -222,7 +223,39 @@ Agents are specialized subagents invoked by skills — you typically don't call 
 
 ## Installation
 
-See the repo root [Install section](../../README.md#install) for current installation instructions across Claude Code, Codex, Cursor, Copilot, Droid, Qwen, and converter-backed targets.
+See the repo root [Install section](../../README.md#install) for current installation instructions across Claude Code, Codex, OpenCode, and other platforms.
+
+### Cross-platform installer
+
+For a unified installation experience, use the install scripts:
+
+```bash
+# Clone the repository
+git clone https://github.com/raptoravis/tunan.git
+cd tunan
+
+# Install for specific platform
+./install.sh --target claude    # Claude Code
+./install.sh --target codex     # Codex
+./install.sh --target opencode  # OpenCode
+./install.sh --target all       # All platforms
+
+# Preview what would be installed
+./install.sh --dry-run
+```
+
+Windows PowerShell:
+
+```powershell
+# Install for specific platform
+.\install.ps1 -Target claude    # Claude Code
+.\install.ps1 -Target codex     # Codex
+.\install.ps1 -Target opencode  # OpenCode
+.\install.ps1 -Target all       # All platforms
+
+# Preview what would be installed
+.\install.ps1 -DryRun
+```
 
 Then run `/tunan:setup` to check your environment and install recommended tools.
 
