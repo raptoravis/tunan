@@ -48,7 +48,13 @@ Inside Codex, run `/plugins`, select the **tunan** marketplace, choose the **tun
 
 ### OpenCode
 
-Add to the `plugin` array in your `opencode.json` (global at `~/.config/opencode/opencode.json` or project-level):
+Install via CLI (this also adds the entry to your config automatically):
+
+```bash
+opencode plugin tunan@git+https://github.com/raptoravis/tunan.git
+```
+
+Or add to the `plugin` array in your `opencode.json` (global at `~/.config/opencode/opencode.json` or project-level):
 
 ```json
 {
@@ -57,6 +63,12 @@ Add to the `plugin` array in your `opencode.json` (global at `~/.config/opencode
 ```
 
 Restart OpenCode. The plugin installs through OpenCode's plugin manager and registers all tunan skills.
+
+> **Updating**: To pull the latest version after the repo has been updated, use `--force` to bypass npm's cache:
+>
+> ```bash
+> opencode plugin tunan@git+https://github.com/raptoravis/tunan.git --force
+> ```
 
 Or run OpenCode directly from a checkout:
 
