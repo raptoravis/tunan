@@ -4,19 +4,14 @@ This directory contains OpenCode-specific configuration for the tunan plugin.
 
 ## Installation
 
-### Via npm
+### Via git-backed plugin
 
-```bash
-npm install -g tunan
-tunan-install --target opencode
-```
+Add to the `plugin` array in your `opencode.json`:
 
-### Via git
-
-```bash
-git clone https://github.com/raptoravis/tunan.git
-cd tunan
-./install.sh --target opencode
+```json
+{
+  "plugin": ["tunan@git+https://github.com/raptoravis/tunan.git"]
+}
 ```
 
 ### Manual

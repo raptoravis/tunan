@@ -2,7 +2,7 @@
 
 AI-powered development tools that get smarter with every use — make each unit of engineering work easier than the last. Brainstorm requirements, plan implementations, review code with specialized reviewers, research institutional learnings, and capture solved problems so future work compounds.
 
-This repository is a Claude Code / Codex / OpenCode **plugin marketplace**. It ships a single plugin, **`tunan`**, bundling 50+ agents, 38+ skills, and 5 MCP servers.
+This repository ships the **`tunan`** plugin, bundling 50+ agents, 38+ skills, and 5 MCP servers for Claude Code, Codex, and OpenCode.
 
 | Component   | Count |
 | ----------- | ----- |
@@ -48,19 +48,17 @@ Inside Codex, run `/plugins`, select the **tunan** marketplace, choose the **tun
 
 ### OpenCode
 
-Install via npm, then add to your `opencode.json`:
-
-```bash
-npm install tunan-opencode
-```
+Add to the `plugin` array in your `opencode.json` (global at `~/.config/opencode/opencode.json` or project-level):
 
 ```json
 {
-  "plugin": ["tunan-opencode"]
+  "plugin": ["tunan@git+https://github.com/raptoravis/tunan.git"]
 }
 ```
 
-Or clone and run OpenCode directly in the repository:
+Restart OpenCode. The plugin installs through OpenCode's plugin manager and registers all tunan skills.
+
+Or run OpenCode directly from a checkout:
 
 ```bash
 git clone https://github.com/raptoravis/tunan.git
@@ -80,49 +78,6 @@ claude --plugin-dir ./tunan/plugins
 ```
 
 This loads the plugin's skills, agents, and MCP servers directly from your checkout, no marketplace registration required.
-
-### Cross-platform installer
-
-For a unified installation experience across all platforms, use the install scripts:
-
-```bash
-# Clone the repository
-git clone https://github.com/raptoravis/tunan.git
-cd tunan
-
-# Install for specific platform
-./install.sh --target claude    # Claude Code
-./install.sh --target codex     # Codex
-./install.sh --target opencode  # OpenCode
-./install.sh --target all       # All platforms
-
-# Preview what would be installed
-./install.sh --dry-run
-```
-
-Windows PowerShell:
-
-```powershell
-# Install for specific platform
-.\install.ps1 -Target claude    # Claude Code
-.\install.ps1 -Target codex     # Codex
-.\install.ps1 -Target opencode  # OpenCode
-.\install.ps1 -Target all       # All platforms
-
-# Preview what would be installed
-.\install.ps1 -DryRun
-```
-
-npm:
-
-```bash
-# Install globally
-npm install -g tunan
-
-# Run installer
-tunan-install --target claude
-tunan-install --target all
-```
 
 ## MCP servers
 

@@ -1,6 +1,8 @@
 {
   "name": "tunan",
   "version": "3.37.0",
+  "type": "module",
+  "main": ".opencode/plugins/tunan-plugin.js",
   "description": "AI-powered development tools for code review, research, design, and workflow automation.",
   "author": {
     "name": "raptoravis",
@@ -24,24 +26,13 @@
     "codex",
     "opencode"
   ],
-  "bin": {
-    "tunan-install": "./install.sh"
-  },
   "files": [
     "plugins/",
-    "install.sh",
-    "install.ps1",
+    ".opencode/plugins/tunan-plugin.js",
     "README.md",
     "LICENSE"
   ],
   "engines": {
     "node": ">=18"
-  },
-  "scripts": {
-    "install:claude": "./install.sh --target claude",
-    "install:codex": "./install.sh --target codex",
-    "install:opencode": "./install.sh --target opencode",
-    "install:all": "./install.sh --target all",
-    "install:dry-run": "./install.sh --dry-run"
   }
 }

@@ -3,23 +3,8 @@
   "model": "anthropic/claude-sonnet-4-5",
   "small_model": "anthropic/claude-haiku-4-5",
   "default_agent": "build",
-  "instructions": [
-    "../AGENTS.md",
-    "../CLAUDE.md",
-    "../skills/brainstorm/SKILL.md",
-    "../skills/plan/SKILL.md",
-    "../skills/work/SKILL.md",
-    "../skills/code-review/SKILL.md",
-    "../skills/verify/SKILL.md",
-    "../skills/compound/SKILL.md"
-  ],
-  "plugin": [
-    "./plugins"
-  ],
   "skills": {
-    "paths": [
-      "../skills"
-    ]
+    "paths": ["../skills"]
   },
   "agent": {
     "build": {
@@ -30,12 +15,11 @@
         "write": true,
         "edit": true,
         "bash": true,
-        "read": true,
-        "changed-files": true
+        "read": true
       }
     },
     "planner": {
-      "description": "Expert planning specialist for complex features and refactoring. Use for implementation planning, architectural changes, or complex refactoring.",
+      "description": "Expert planning specialist for complex features and refactoring.",
       "mode": "subagent",
       "model": "anthropic/claude-opus-4-5",
       "prompt": "{file:prompts/agents/planner.txt}",
@@ -47,7 +31,7 @@
       }
     },
     "code-reviewer": {
-      "description": "Expert code review specialist. Reviews code for quality, security, and maintainability. Use immediately after writing or modifying code.",
+      "description": "Expert code review specialist.",
       "mode": "subagent",
       "model": "anthropic/claude-opus-4-5",
       "prompt": "{file:prompts/agents/code-reviewer.txt}",
@@ -59,7 +43,7 @@
       }
     },
     "security-reviewer": {
-      "description": "Security vulnerability detection and remediation specialist. Use after writing code that handles user input, authentication, API endpoints, or sensitive data.",
+      "description": "Security vulnerability detection specialist.",
       "mode": "subagent",
       "model": "anthropic/claude-opus-4-5",
       "prompt": "{file:prompts/agents/security-reviewer.txt}",

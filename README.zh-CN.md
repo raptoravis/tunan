@@ -46,17 +46,15 @@ codex
 
 ### OpenCode
 
-通过 npm 安装，然后添加到您的 `opencode.json`：
-
-```bash
-npm install tunan
-```
+添加到 `opencode.json` 的 `plugin` 数组中（全局 `~/.config/opencode/opencode.json` 或项目级）：
 
 ```json
 {
-  "plugin": ["tunan"]
+  "plugin": ["tunan@git+https://github.com/raptoravis/tunan.git"]
 }
 ```
+
+重启 OpenCode。插件管理器会自动安装并注册所有 tunan 技能。
 
 或者克隆并直接在仓库中运行 OpenCode：
 
@@ -67,38 +65,6 @@ opencode
 ```
 
 > **⚠️ 必需的下一步——运行 setup。** 安装后，在任何项目中运行 `/tunan:setup` 以诊断您的环境、安装缺少的工具、验证 `gh` 认证并引导项目配置。
-
-### 跨平台安装器
-
-要获得所有平台的统一体验，请使用安装脚本：
-
-```bash
-# 克隆仓库
-git clone https://github.com/raptoravis/tunan.git
-cd tunan
-
-# 安装到特定平台
-./install.sh --target claude    # Claude Code
-./install.sh --target codex     # Codex
-./install.sh --target opencode  # OpenCode
-./install.sh --target all       # 所有平台
-
-# 预览将要安装的内容
-./install.sh --dry-run
-```
-
-Windows PowerShell：
-
-```powershell
-# 安装到特定平台
-.\install.ps1 -Target claude    # Claude Code
-.\install.ps1 -Target codex     # Codex
-.\install.ps1 -Target opencode  # OpenCode
-.\install.ps1 -Target all       # 所有平台
-
-# 预览将要安装的内容
-.\install.ps1 -DryRun
-```
 
 ### 本地开发（从检出）
 
