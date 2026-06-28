@@ -1,6 +1,4 @@
-import { TunanHooksPlugin } from './tunan-hooks.js';
-
-// OpenCode expects plugin modules to export a factory function
-const createPlugin = async () => TunanHooksPlugin;
-export default createPlugin;
-export { createPlugin as server };
+// OpenCode loads plugins via the "plugin" config field. The module must export
+// a factory function as default export or named "server" export.
+// The factory: (input?: PluginInput, options?: PluginOptions) => Promise<Hooks>
+export { default, default as server } from './tunan-hooks.js';
