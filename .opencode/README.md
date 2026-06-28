@@ -101,8 +101,6 @@ Full configuration in `opencode.json`:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "anthropic/claude-sonnet-4-5",
-  "small_model": "anthropic/claude-haiku-4-5",
   "plugin": ["./plugins"],
   "instructions": [
     "AGENTS.md",
