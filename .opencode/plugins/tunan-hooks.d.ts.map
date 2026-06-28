@@ -1,0 +1,1 @@
+{"version":3,"file":"tunan-hooks.d.ts","sourceRoot":"","sources":["tunan-hooks.ts"],"names":[],"mappings":"AAkFA;;;;GAIG;AACH,QAAA,MAAM,sBAAsB;IAC1B;;OAEG;qBACoB,GAAG;IAuD1B;;OAEG;qDACoD,GAAG,UAAU,GAAG;iCA0BpC,GAAG;gCA8BJ,GAAG;8BA8BL,GAAG;0BAUP,GAAG;yBAuBJ,GAAG;uBAOL,GAAG;;;;4BAOE,GAAG;;;EAmCjC,CAAC;AAEH,eAAe,sBAAsB,CAAC;AACtC,OAAO,EAAE,sBAAsB,IAAI,MAAM,EAAE,CAAC"}

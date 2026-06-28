@@ -78,10 +78,53 @@ const createTunanHooksPlugin = async () => ({
      */
     config: async (config) => {
         try {
+            // 1. Register skills path for skill tool/model access
             config.skills = config.skills || {};
             config.skills.paths = config.skills.paths || [];
             if (!config.skills.paths.includes(tunanSkillsDir)) {
                 config.skills.paths.push(tunanSkillsDir);
+            }
+            // 2. Register each skill as a slash command so the UI discovers them
+            config.command = config.command || {};
+            if (fs.existsSync(tunanSkillsDir)) {
+                const entries = fs.readdirSync(tunanSkillsDir, { withFileTypes: true });
+                for (const entry of entries) {
+                    if (!entry.isDirectory())
+                        continue;
+                    const skillDir = path.join(tunanSkillsDir, entry.name);
+                    const skillFile = path.join(skillDir, 'SKILL.md');
+                    if (!fs.existsSync(skillFile))
+                        continue;
+                    // Read frontmatter name and description
+                    const content = fs.readFileSync(skillFile, 'utf8');
+                    const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+                    let skillName = entry.name;
+                    let skillDesc = '';
+                    if (fmMatch) {
+                        const fm = fmMatch[1];
+                        const nameMatch = fm.match(/^name:\s*(.+)$/m);
+                        if (nameMatch)
+                            skillName = nameMatch[1].trim();
+                        const descMatch = fm.match(/^description:\s*(.+)$/m);
+                        if (descMatch) {
+                            let d = descMatch[1].trim();
+                            // Strip surrounding quotes
+                            if ((d.startsWith("'") && d.endsWith("'")) || (d.startsWith('"') && d.endsWith('"'))) {
+                                d = d.slice(1, -1);
+                            }
+                            skillDesc = d;
+                        }
+                    }
+                    // Use namespaced name to avoid collision with other plugins/builtins
+                    const cmdName = `tunan:${skillName}`;
+                    if (!config.command[cmdName]) {
+                        config.command[cmdName] = {
+                            template: `# ${skillName}\n\n${skillDesc}\n\nUse the \`skill\` tool to load the tunan:${skillName} skill and follow its instructions.\n\n$ARGUMENTS`,
+                            description: skillDesc.slice(0, 100),
+                        };
+                    }
+                }
+                console.error(`[tunan] registered ${Object.keys(config.command).filter(k => k.startsWith('tunan:')).length} slash commands`);
             }
         }
         catch (e) {
