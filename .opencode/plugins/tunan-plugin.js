@@ -122,10 +122,11 @@ const createPlugin = async () => {
           config.skills.paths.push(tunanSkillsDir);
         }
 
-        // Register each skill as a slash command
+        // Register each skill as a slash command (use tunan- prefix: colon
+        // breaks slash-command prefix matching in the UI)
         config.command = config.command || {};
         for (const skill of skills) {
-          const cmdName = `tunan:${skill.name}`;
+          const cmdName = `tunan-${skill.name}`;
           if (!config.command[cmdName]) {
             config.command[cmdName] = {
               template: `# ${skill.name}\n\n${skill.description}\n\nUse the \`skill\` tool to load the tunan:${skill.name} skill and follow its instructions.\n\n$ARGUMENTS`,
@@ -133,7 +134,7 @@ const createPlugin = async () => {
             };
           }
         }
-        console.error(`[tunan] registered ${skills.length} skills + ${Object.keys(config.command).filter(k => k.startsWith('tunan:')).length} slash commands`);
+        console.error(`[tunan] registered ${skills.length} skills + ${Object.keys(config.command).filter(k => k.startsWith('tunan-')).length} slash commands`);
       } catch (e) {
         console.error('[tunan] config hook error:', e.message);
       }

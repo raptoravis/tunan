@@ -115,8 +115,8 @@ const createTunanHooksPlugin = async () => ({
                             skillDesc = d;
                         }
                     }
-                    // Use namespaced name to avoid collision with other plugins/builtins
-                    const cmdName = `tunan:${skillName}`;
+                    // Use tunan- prefix (colon breaks slash-command prefix matching)
+                    const cmdName = `tunan-${skillName}`;
                     if (!config.command[cmdName]) {
                         config.command[cmdName] = {
                             template: `# ${skillName}\n\n${skillDesc}\n\nUse the \`skill\` tool to load the tunan:${skillName} skill and follow its instructions.\n\n$ARGUMENTS`,
@@ -124,7 +124,7 @@ const createTunanHooksPlugin = async () => ({
                         };
                     }
                 }
-                console.error(`[tunan] registered ${Object.keys(config.command).filter(k => k.startsWith('tunan:')).length} slash commands`);
+                console.error(`[tunan] registered ${Object.keys(config.command).filter(k => k.startsWith('tunan-')).length} slash commands`);
             }
         }
         catch (e) {
