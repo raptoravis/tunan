@@ -1,4 +1,4 @@
-# tunan
+﻿# tunan
 
 AI 驱动的开发工具，让每次使用都更智能——让每个工程任务都比上一个更容易。探索需求、规划实现、使用专业审查器审查代码、研究机构经验，并捕获已解决的问题，使未来的工作能够复合增长。
 
@@ -46,7 +46,13 @@ codex
 
 ### OpenCode
 
-添加到 `opencode.json` 的 `plugin` 数组中（全局 `~/.config/opencode/opencode.json` 或项目级）：
+通过 CLI 安装（该命令会自动将配置项添加到您的配置文件中）：
+
+```bash
+opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git
+```
+
+或者添加到 `opencode.json` 的 `plugin` 数组中（全局 `~/.config/opencode/opencode.json` 或项目级）：
 
 ```json
 {
@@ -54,7 +60,21 @@ codex
 }
 ```
 
+如果已克隆本仓库并直接在仓库目录下工作，可以改用本地路径（无需远程拉取）：
+
+```json
+{
+  "plugin": ["./plugins"]
+}
+```
+
 重启 OpenCode。插件管理器会自动安装并注册所有 tunan 技能。
+
+> **更新**：仓库更新后如需拉取最新版本，可以使用 `--force` 跳过 npm 缓存：
+>
+> ```bash
+> opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git --force
+> ```
 
 或者克隆并直接在仓库中运行 OpenCode：
 

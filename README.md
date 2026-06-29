@@ -51,7 +51,7 @@ Inside Codex, run `/plugins`, select the **tunan** marketplace, choose the **tun
 Install via CLI (this also adds the entry to your config automatically):
 
 ```bash
-opencode plugin tunan@git+https://github.com/raptoravis/tunan.git
+opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git
 ```
 
 Or add to the `plugin` array in your `opencode.json` (global at `~/.config/opencode/opencode.json` or project-level):
@@ -67,7 +67,7 @@ Restart OpenCode. The plugin installs through OpenCode's plugin manager and regi
 > **Updating**: To pull the latest version after the repo has been updated, use `--force` to bypass npm's cache:
 >
 > ```bash
-> opencode plugin tunan@git+https://github.com/raptoravis/tunan.git --force
+> opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git --force
 > ```
 
 Or run OpenCode directly from a checkout:
