@@ -1,4 +1,4 @@
-# Compound Engineering -- project config
+# tunan -- project config
 # These settings are stored in the repo's `tunan:config` GitHub issue (in a
 # fenced yaml block under the `<!-- tunan:config -->` marker), not a local file.
 # /tunan:setup seeds the issue body from this template. See
@@ -33,19 +33,8 @@
 # pulse_pending_metrics: "retention_d7,nps"             # comma-separated strategy metrics awaiting instrumentation; render as 'no data'
 # pulse_excluded_metrics: "north_star"                  # comma-separated strategy metrics intentionally not in pulse
 
-# --- Output format ---
-# Per-skill output format default. Selects the exclusive format the artifact
-# is written in: `md` produces a markdown file, `html` produces a single
-# self-contained HTML file. The two are mutually exclusive -- there is no
-# sibling artifact. See DESIGN.md or your agent instructions to influence
-# HTML styling. CLI arguments override these defaults; pipeline contexts
-# (e.g., LFG, disable-model-invocation) always force `md` regardless.
-
-# plan_output: html              # md | html (default: md)
-# brainstorm_output: html        # md | html (default: md)
-
 # --- promote ---
 # Written automatically when you decline the Spiral setup offer in /tunan:promote.
 # Suppresses that one-time setup nudge in this project. Remove the key to re-enable.
 
-# ce_promote_spiral_optout: true   # true | (absent) (default: absent -- offer once)
+# tunan_promote_spiral_optout: true   # true | (absent) (default: absent -- offer once)
