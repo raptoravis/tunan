@@ -247,3 +247,16 @@ If research reveals a product-level ambiguity that should change behavior or sco
 - Do not silently decide it here
 - Record it under `Open Questions`
 - Recommend `brainstorm` if the gap is truly product-defining
+
+## 5.3.7b Assumption-Delta Checkpoint (advisory)
+
+After synthesis but before the document-review pass, run the assumption-delta checkpoint. Read `references/assumption-delta.md` for the full protocol.
+
+In brief:
+- Scan the plan scope text (strip code blocks first) for pluralization / optional / chosen signals.
+- If no signals: skip. Most phases do not fire it.
+- If signals: surface ONE identity-model question before finalizing — "does the current primary identity still name the right thing?"
+- Record the decision (`promote` | `add-alongside` | `no-change`) in the plan comment as an `<!-- assumption-delta -->` block.
+- Advisory only; never blocks plan finalization.
+
+Toggleable via `plan.assumption_delta` in the `tunan:config` issue (default: `true`).

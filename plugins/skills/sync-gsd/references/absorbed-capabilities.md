@@ -84,6 +84,25 @@ From the 2026-06-25 audit (GSD `a0e45cd`, full survey):
     behind explicit per-step blocking confirmation. (GSD: `commands/gsd/inbox.md`;
     tunan: `status/`)
 
+From the 2026-06-30 audit (GSD `b31b562`):
+
+12. **Assumption-delta checkpoint** — advisory, non-blocking checkpoint during plan
+    deepening that detects when the plan scope introduces a singular→plural /
+    required→optional / derived→chosen transition and surfaces one identity-model
+    question ("does the primary key still name the right thing?"). Conservative
+    detector, fires rarely, never blocks plan finalization. Re-expressed as a
+    deepening reference without GSD's CLI query engine or `.planning/config.json`
+    toggle; config via `tunan:config` issue (`plan.assumption_delta`). (GSD:
+    `capabilities/assumption-delta/`; tunan: `plan/references/assumption-delta.md` +
+    `plan/references/deepening-workflow.md` 5.3.7b)
+13. **Honest verifier** — verify-time abstention on non-inferable gate criteria
+    tagged `verification: backstop`. The verifier returns `insufficient_spec` instead
+    of confidently false-passing on blind-spot checks the spec cannot resolve. Trigger
+    is the exogenous `backstop` tag, never the verifier's self-judgment. Re-expressed
+    as a verify reference, wired into the Step 2b gate-judgment logic. (GSD:
+    `gsd-core/references/honest-verifier.md`; tunan:
+    `verify/references/honest-verifier.md`)
+
 ## How to read the GSD source
 
 GSD's capability surface, by directory:

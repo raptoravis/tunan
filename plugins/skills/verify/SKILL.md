@@ -120,6 +120,16 @@ own basis and the actual result:
   force `status: degraded` so the green is not treated as authoritative. Record the
   reason in `messages[]`.
 
+**Honest-verifier abstention.** When a gate criterion carries a `verification: backstop`
+marker (set at plan time to flag a non-inferable check), the verifier must **abstain**
+rather than confidently false-pass. The backstop tag means the correct answer cannot be
+derived from the spec alone — the verifier does not know that it does not know, and a
+bare "are you sure?" prompt does not fix it. Read `references/honest-verifier.md` for
+the full disposition table. In brief: a `backstop` criterion with explicit evidence
+(wired test / observed behavior) → `pass`; without → `invalid` with
+`reason: insufficient_spec`. An inferable criterion (no `backstop` tag) is never
+abstained — over-abstention is as wrong as false-passing.
+
 **Do not edit the gate comment.** The gate is the frozen contract; verify reads and
 quotes it, never rewrites it.
 
