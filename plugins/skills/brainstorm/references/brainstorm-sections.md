@@ -165,6 +165,18 @@ worse than omitting it.
   without follow-ups"). Skip when Requirements ARE the success criteria
   (every R is "done when the R is true").
 
+- **Testing Decisions** — include when the brainstorm produced testing
+  strategy decisions that planning and implementation should carry forward.
+  Three sub-items, any subset valid:
+  - **What makes a good test** — a one-sentence principle (e.g., "only test
+    external behavior, not implementation details").
+  - **Which modules will be tested** — scoped to units/areas named in the
+    brainstorm, not implementation files.
+  - **Prior art** — existing tests in the codebase that are similar in
+    shape and should be used as models.
+  Skip when testing strategy is obvious from the repo's existing conventions
+  and the brainstorm added no new decisions about it.
+
 - **Scope Boundaries** — include when scope is contested or there are
   tempting non-goals worth naming explicitly. When the brainstorm is about
   positioning a product against adjacent ones the team could have built but
