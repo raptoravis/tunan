@@ -137,7 +137,7 @@ gh label list --search "tunan:codebase-map"
 gh label create "tunan:codebase-map" --color 0e8a16 --description "tunan codebase current-state map"
 ```
 
-Surface in chat: a one-to-two-line summary per section plus the top CONCERNS item, and the issue URL returned by `gh`. `brainstorm` (technical brainstorms), `plan` (Phase 1 research), and `work`/`work-beta` (work-area scan) automatically read this issue as their current-state baseline when present — and `lfg` inherits it through `plan`/`work` — so once this map exists, downstream work starts from it.
+Surface in chat: a one-to-two-line summary per section plus the top CONCERNS item, and the issue URL returned by `gh`. `brainstorm` (technical brainstorms), `plan` (Phase 1 research), and `work` (work-area scan) automatically read this issue as their current-state baseline when present — and `lfg` inherits it through `plan`/`work` — so once this map exists, downstream work starts from it.
 
 ## What This Skill Does Not Do
 

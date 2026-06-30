@@ -1,7 +1,7 @@
 # Comment-Chain Storage Convention (tunan v2)
 
 > **Single source of truth.** This file is duplicated verbatim into every skill that
-> reads or writes pipeline artifacts (`brainstorm`, `plan`, `work`, `work-beta`,
+> reads or writes pipeline artifacts (`brainstorm`, `plan`, `work`,
 > `compound`, `compound-refresh`, `lfg`). When editing one copy, edit all copies in the
 > same commit — see the sync list in `plugins/AGENTS.md`. Drift produces inconsistent
 > storage behavior depending on which skill ran.

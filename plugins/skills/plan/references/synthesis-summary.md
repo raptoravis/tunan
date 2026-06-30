@@ -138,6 +138,8 @@ The announcement is mandatory when skipping — silent proceeding is not allowed
 
 For Standard/Deep with zero call-outs, the confirmation template still fires; the "Call outs:" header is simply omitted. The user gets the summary plus the explicit confirmation request.
 
+There is a third skip condition: the **opt-in `SKIP_SCOPING_CONFIRM` setting** (resolved in SKILL.md Phase 0.0 — `confirm:auto` token, or user-stated preference, or `plan_skip_scoping_confirm` config key in the `tunan:config` issue). When it resolves to skip, the gate auto-proceeds for *any* tier or call-out count — the user has pre-authorized it. The announcement is still mandatory (it names that confirmation is off and that inferred scope landed in `## Assumptions`), and the skip is scoped to this confirmation only: genuine blocking questions and the Phase 5.4 menu still fire. This differs from headless mode only in that announcement — headless has no synchronous user to announce to.
+
 ---
 
 ## Synthesis structural discipline (shared)
@@ -352,7 +354,7 @@ When the skill is invoked from an automated workflow such as LFG or any `disable
   - **Out-of-scope** content → Scope Boundaries
   - **Inferred** content → `## Assumptions` section in the plan — explicitly labeled as un-validated agent bets. Do NOT route Inferred items into Key Technical Decisions or Implementation Units; that would make un-validated bets indistinguishable from user-confirmed decisions.
 
-The `## Assumptions` section appears in non-interactive plans only. Interactive plans don't need it (Inferred bets either get user-corrected via call-outs and become Key Technical Decisions, are revised away, or were judged not-fork material by the keep test and dissolved into Implementation Units silently).
+The `## Assumptions` section appears in non-interactive plans and in interactive plans where the user opted into `SKIP_SCOPING_CONFIRM` — both cases proceed without confirming Inferred bets, so those bets must stay visibly labeled. A normal interactive plan doesn't need it (Inferred bets either get user-corrected via call-outs and become Key Technical Decisions, are revised away, or were judged not-fork material by the keep test and dissolved into Implementation Units silently).
 
 This restores the audit visibility the original design intended (un-validated bets must not propagate as authoritative content), but surfaces them under their own label rather than hiding them. Downstream review (doc-review, work, human PR review) can scrutinize Assumptions specifically.
 
@@ -377,7 +379,7 @@ After user confirmation (or after the soft-cut decision proceeds), Phase 5.2 wri
 |---|---|
 | Summary (stage 2) | `## Summary` (1-3 lines prose, forward-looking) — rewrite to plan convention if the chat-time summary used bullets. Solo variant: scope being targeted. Brainstorm-sourced: implementation approach |
 | Stated bullets | `## Requirements` (R-IDs) and where relevant `## Problem Frame` for narrative context |
-| Inferred bullets | `## Key Technical Decisions` (with rationale) and Implementation Units when the bet drives a structural choice. In non-interactive mode, route to `## Assumptions` instead — see Headless mode above. |
+| Inferred bullets | `## Key Technical Decisions` (with rationale) and Implementation Units when the bet drives a structural choice. In non-interactive mode **or an interactive `SKIP_SCOPING_CONFIRM` skip run**, route to `## Assumptions` instead — both proceed without confirming the bets, so they must stay labeled; see Headless mode above. |
 | Out-of-scope bullets | `## Scope Boundaries` — including the `### Deferred to Follow-Up Work` subsection when relevant |
 
 No italic capture-context note (e.g., "Captured at Phase 0.7..."). It would leak engineering process into an artifact whose readers do not need that signal.

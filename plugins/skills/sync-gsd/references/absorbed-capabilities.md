@@ -20,7 +20,7 @@ From the initial GSD-core absorption (tunan commit `32d2b5a`, 2026-06-11):
    waves; `work` dispatches wave-by-wave. (tunan: `plan/`, `work/` SKILL.md)
 2. **Progress anchor** — `work` maintains a `<!-- tunan:progress -->` issue
    comment; `resume`'s `phase.{sh,ps1}` read it and report `units_done/units_total`.
-   (tunan: `work/`, `work-beta/` `references/progress-marker.md`, `resume/scripts/`)
+   (tunan: `work/` `references/progress-marker.md`, `resume/scripts/`)
 3. **Convergence loop** — `plan` gains max-cycles + stall detection + a
    severity convergence gate + align escalation on non-convergence.
    (tunan: `plan/references/convergence-loop.md`)
@@ -46,7 +46,7 @@ From the `map-codebase` absorption (2026-06-11):
    code current-state reuses `map-codebase`. The `tunan:project` issue **replaces
    the former `STRATEGY.md` local file** (the `strategy` skill still exists — it
    now sharpens the same issue's intent sections) — all former STRATEGY.md
-   consumers (ideate/brainstorm/plan/product-pulse/retro/dogfood-beta) now read the
+   consumers (ideate/brainstorm/plan/product-pulse/retro/dogfood) now read the
    issue. (GSD: `commands/gsd/new-project.md`, `new-milestone.md`; tunan:
    `new-project/`, `new-milestone/`)
 

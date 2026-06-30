@@ -1,6 +1,6 @@
 # tunan:project issue — body contract
 
-The `tunan:project` issue is the project's living document: project intent (the former `STRATEGY.md` content) **plus** the roadmap (an ordered milestone ledger). One per repo, updated in place, never duplicated, never a local file. It is the upstream grounding read by `ideate`, `brainstorm`, `plan`, `product-pulse`, and `dogfood-beta`.
+The `tunan:project` issue is the project's living document: project intent (the former `STRATEGY.md` content) **plus** the roadmap (an ordered milestone ledger). One per repo, updated in place, never duplicated, never a local file. It is the upstream grounding read by `ideate`, `brainstorm`, `plan`, `product-pulse`, and `dogfood`.
 
 This contract is duplicated byte-for-byte across `new-project/references/project-issue-contract.md` and `new-milestone/references/project-issue-contract.md`. Edits must be applied to both copies in the same commit.
 

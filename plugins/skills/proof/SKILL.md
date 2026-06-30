@@ -444,11 +444,18 @@ curl -X POST "https://www.proofeditor.ai/api/agent/abc123/edit/v2?return=minimal
 
 ## Workflow: Create and Share a New Document
 
+**Publishing a local file (the primary case):** read the file and JSON-encode its full contents into the `markdown` field with `jq --rawfile` so newlines, quotes, and backticks are escaped correctly. Never hand-write the body or leave the inline placeholder — that publishes a placeholder doc instead of the source artifact.
+
 ```bash
-# 1. Create
-RESPONSE=$(curl -s -X POST https://www.proofeditor.ai/share/markdown \
-  -H "Content-Type: application/json" \
-  -d '{"title":"My Doc","markdown":"# Title\n\nContent here."}')
+SRC="docs/plans/2026-05-04-001-feat-foo-plan.md"   # source file from the caller
+TITLE="Plan: Foo"                                   # caller-provided title
+
+# 1. Create — from a local source file:
+RESPONSE=$(jq -n --arg title "$TITLE" --rawfile md "$SRC" '{title:$title, markdown:$md}' \
+  | curl -s -X POST https://www.proofeditor.ai/share/markdown \
+    -H "Content-Type: application/json" -d @-)
+# (Ad-hoc inline content instead of a file:
+#  -d '{"title":"My Doc","markdown":"# Title\n\nContent here."}')
 
 # 2. Extract URL and token
 URL=$(echo "$RESPONSE" | jq -r '.tokenUrl')

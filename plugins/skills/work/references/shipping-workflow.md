@@ -48,9 +48,11 @@ This file contains the shipping workflow (Phase 3-4). It is loaded when all Phas
 
 4. **Residual Work Gate** (REQUIRED when Tier 2 ran)
 
-   After Tier 2 code review and review-findings followup, inspect the **Actionable Findings** summary (or read the run artifact at `${TMPDIR:-/tmp}/tunan/tunan:code-review/<run-id>/` if the summary was truncated). If one or more actionable `downstream-resolver` findings were not applied in followup, do not proceed to Final Validation until the user decides how to handle them.
+   After Tier 2 code review and review-findings followup, inspect the **Actionable Findings** summary (or read the run artifact at `${TMPDIR:-/tmp}/tunan/tunan:code-review/<run-id>/` if the summary was truncated). If one or more actionable `downstream-resolver` findings were not applied in followup, do not proceed to Final Validation until they are resolved or durably recorded.
 
-   Ask the user using the platform's blocking question tool (`AskUserQuestion` in Claude Code with `ToolSearch select:AskUserQuestion` pre-loaded if needed, `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension)). Fall back to numbered options in chat only when the harness genuinely lacks a blocking tool. Never silently skip the gate.
+   **Non-interactive / autonomous sessions (no human can answer — e.g. an `lfg`-style pipeline or a headless run):** do **not** call the blocking tool — that would hang the pipeline. After step 3b auto-applied every mechanically-eligible finding, take the `Accept and proceed` path automatically: record the remaining actionable residuals verbatim to the durable Known Residuals sink (the PR description's Known Residuals section, or a `tunan:review` issue on the no-PR path) and continue to Final Validation. Residuals are recorded, never dropped — this keeps autonomous shipping unblocked without losing findings.
+
+   **Interactive sessions:** Ask the user using the platform's blocking question tool (`AskUserQuestion` in Claude Code with `ToolSearch select:AskUserQuestion` pre-loaded if needed, `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension)). Fall back to numbered options in chat only when the harness genuinely lacks a blocking tool. Never silently skip the gate.
 
    Stem: `Code review left N actionable finding(s) not yet fixed. How should the agent proceed?`
 
@@ -181,9 +183,9 @@ Before creating PR, verify:
 
 **Skip dedicated review** when no Tier 1 and Tier 2 criteria not met (document in summary).
 
-Escalate to Tier 2 when any of these holds:
+Escalate to Tier 2 when **any** of the following is true:
 
-- Sensitive surface touched (auth/authz, payments/billing, data migrations or backfills, cryptography or secrets, security-relevant config, public API or library contracts, dependency manifests)
-- Large and diffuse change (>=400 changed lines AND >3 directories or 2 subsystems)
-- Very large change (>=1,000 changed lines)
-- Plan or task explicitly requests a full / deep / thorough code review
+- **Sensitive surface touched.** The diff modifies any of: authentication or authorization, payments or billing, data migrations or backfills, cryptography or secret handling, security-relevant configuration, public API or library contracts, or dependency manifests.
+- **Large and diffuse change.** The diff exceeds >=400 changed lines **and** spans more than 3 directories or 2 distinct subsystems. Either alone is a soft signal; together they are an escalation trigger.
+- **Very large change.** The diff exceeds >=1,000 changed lines regardless of diffusion.
+- **Plan or task explicitly requests it.** The plan, the originating task, or another instruction in scope calls for a full / deep / thorough code review.

@@ -317,9 +317,18 @@ Prepare a concise planning context summary (a paragraph or two) to pass as input
 - If `CONCEPTS.md` exists at repo root, read it — its definitions are the canonical names for domain entities, named processes, and status concepts. Plan with those terms rather than synonyms.
 - If a `tunan:codebase-map` issue exists, read it for current-state grounding — it is the `map-codebase` snapshot of the repo's stack, architecture, structure, conventions, testing, and concerns. Resolve and read it: `gh issue list --label "tunan:codebase-map" --state open --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`. Fold its ARCHITECTURE/CONVENTIONS/CONCERNS into the planning context summary so research starts from the known baseline rather than rediscovering it — when the map is fresh (check its provenance `mapped_at_sha`), this can narrow or skip parts of the repo scan below. Treat it as grounding, not gospel; it may be stale. Absent → skip silently, never block.
 
+**Resolve the project profile from the shared cache first.** The agnostic profile (stack, deps, conventions, structure) is identical at this commit, so reuse it instead of having `tunan:repo-research-analyst` re-derive `technology`/`architecture`/`conventions` every run. Set `SKILL_DIR` to this skill's directory and run the helper (protocol in `references/repo-profile-cache.md`):
+
+```bash
+SKILL_DIR="<absolute path of the directory containing the SKILL.md you just read>"
+python3 "$SKILL_DIR/scripts/repo-profile-cache.py" get
+```
+
+On `HIT`, load the profile JSON as your agnostic grounding. On `MISS`, dispatch a generic subagent with `references/agents/repo-profiler.md` to derive it, write its JSON to a file, then `python3 "$SKILL_DIR/scripts/repo-profile-cache.py" put <file>` (re-set `SKILL_DIR` in that call — shell vars don't persist between Bash invocations). On `NO-CACHE` — or if the call errors or returns nothing — derive it inline and skip the `put`; never block on the cache. Pass the resulting profile to `tunan:repo-research-analyst` below so it skips the agnostic scopes. The cached profile covers only *root* conventions — if the work targets a subdirectory with its own scoped instruction file (a nested `AGENTS.md`/`CLAUDE.md`), read that fresh; subdirectory-scoped instructions are deliberately excluded from the cache.
+
 Run these agents in parallel:
 
-- Task tunan:repo-research-analyst(Scope: technology, architecture, patterns. {planning context summary})
+- Task tunan:repo-research-analyst(Scope: patterns — the question-specific slice; the agnostic `technology`/`architecture`/`conventions` grounding comes from the cached profile passed in its context — the profile's `stack`/`topology`/`conventions` keys cover those analyst scopes. Pass the planning context summary and the cached profile.)
 - Task tunan:learnings-researcher(planning context summary)
   Collect:
 - Technology stack and versions (used in section 1.2 to make sharper external research decisions)
@@ -376,7 +385,7 @@ Ask the user only if the posture would materially change sequencing or risk and 
 
 **Leverage tunan:repo-research-analyst's technology context:**
 
-The tunan:repo-research-analyst output includes a structured Technology & Infrastructure summary. Use it to make sharper external research decisions:
+The cached project profile's stack/versions (or, when uncached, the `tunan:repo-research-analyst` Technology & Infrastructure summary) gives you the technology context. Use it to make sharper external research decisions:
 
 - If specific frameworks and versions were detected (e.g., Rails 7.2, Next.js 14, Go 1.22), pass those exact identifiers to tunan:framework-docs-researcher so it fetches version-specific documentation
 - If the feature touches a technology layer the scan found well-established in the repo (e.g., existing Sidekiq jobs when planning a new background job), lean toward skipping external research -- local patterns are likely sufficient

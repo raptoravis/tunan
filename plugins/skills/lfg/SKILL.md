@@ -31,9 +31,9 @@ gh repo view --json nameWithOwner
 
 **Setup reminder (non-blocking).** If the repo has no `tunan:config` issue, this repo hasn't been through tunan setup — tell the user once, "This repo isn't set up for tunan yet; run `/tunan:setup` to configure it," then continue. A missing config is non-blocking and never aborts the pipeline.
 
-**RESUME (run before step 1 when `$ARGUMENTS` references an existing feature issue — a bare `#N` / issue URL / "resume #N" — rather than a fresh feature description).** Do not re-run the whole pipeline from step 1 on an interrupted feature. Load the `resume` skill with that issue ref: it reads the issue's labels, marker comments, and any open PR to detect the phase (`plan` / `work` / `review-ci` / `done`) and reports which step to resume at. Then continue this pipeline from that step — skip any stage whose evidence already exists (a `<!-- tunan:plan -->` comment means step 1 is done; an open PR referencing the issue means steps 1–2 are done, resume at step 3; a `<!-- tunan:solution -->` comment means the feature is already complete — report and stop). When `$ARGUMENTS` is a new description, ignore this block and start at step 1.
+**RESUME (run before step 1 when `$ARGUMENTS` references an existing feature issue — a bare `#N` / issue URL / "resume #N" — rather than a fresh feature description).** Do not re-run the whole pipeline from step 1 on an interrupted feature. Load the `resume` skill with that issue ref: it reads the issue's labels, marker comments, and any open PR to detect the phase (`plan` / `work` / `review-ci` / `done`) and reports which step to resume at. Then continue this pipeline from that step — skip any stage whose evidence already exists (a `<!-- tunan:plan -->` comment means step 1 is done; an open PR referencing the issue means steps 1–2a are done, resume at step 4; a `<!-- tunan:solution -->` comment means the feature is already complete — report and stop). When `$ARGUMENTS` is a new description, ignore this block and start at step 1.
 
-**FAST PATHS (`--hotfix` / `--tweak` in `$ARGUMENTS`, also reachable as the named entry skills `/tunan:hotfix` and `/tunan:tweak` which delegate here).** Both keep the one-feature-one-issue chain intact — the plan comment must still land so `work` has a plan to read — but cut ceremony, mirroring comet's hotfix/tweak presets. `--hotfix` (bug fix): tell `plan` to produce a minimal plan (no brainstorm, no deepening pass), then run steps 2–10 normally. `--tweak` (small change): minimal plan as above, and in step 3 run `code-review` at its lightest (skip the heavy conditional personas; keep the always-on correctness pass). Neither flag skips the local green gate (step 2a), CI watch (step 8), or `compound` (step 9) — evidence gates are never waived for speed. With no flag, run the full pipeline.
+**FAST PATHS (`--hotfix` / `--tweak` in `$ARGUMENTS`, also reachable as the named entry skills `/tunan:hotfix` and `/tunan:tweak` which delegate here).** Both keep the one-feature-one-issue chain intact — the plan comment must still land so `work` has a plan to read — but cut ceremony, mirroring comet's hotfix/tweak presets. `--hotfix` (bug fix): tell `plan` to produce a minimal plan (no brainstorm, no deepening pass), then run steps 2–11 normally. `--tweak` (small change): minimal plan as above, and in step 4 run `code-review` at its lightest (skip the heavy conditional personas; keep the always-on correctness pass). Neither flag skips the local green gate (step 2a), CI watch (step 9), or `compound` (step 10) — evidence gates are never waived for speed. With no flag, run the full pipeline.
 
 **Subagent dispatch convention (steps 2, 2a, 6, 8).** Several steps below run a phase in an isolated subagent so its file reads, command output, and logs stay out of the orchestrator context — only a summary or the step's contract returns. Each such dispatch follows the same convention: use the platform's subagent primitive (`Agent`/`Task` with `subagent_type: general-purpose` in Claude Code; the equivalent general-purpose agent on Codex `spawn_agent` and on Pi `subagent` via `pi-subagents`), omit any `mode` override, and pass the feature issue ref / staged paths rather than inline content. If the harness cannot dispatch subagents or a subagent cannot load skills, run that step inline instead. The step text below states only what each subagent should do and return.
 
@@ -49,7 +49,7 @@ gh repo view --json nameWithOwner
    powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/gate.ps1 plan-exists <N>
    ```
 
-   Branch on the exit code, not the prose: `0` = plan comment present, proceed to step 2; `1` = no `<!-- tunan:plan -->` comment, invoke `plan` again with `$ARGUMENTS` and re-gate; `2` = gh/infra problem, stop and report it (do not loop). Do NOT proceed to step 2 while the gate returns `1`. The feature issue ref `#<N>` is the single handle passed to work in step 2, to code-review in step 3, and to compound in step 9 — there is no separate plan number.
+   Branch on the exit code, not the prose: `0` = plan comment present, proceed to step 2; `1` = no `<!-- tunan:plan -->` comment, invoke `plan` again with `$ARGUMENTS` and re-gate; `2` = gh/infra problem, stop and report it (do not loop). Do NOT proceed to step 2 while the gate returns `1`. The feature issue ref `#<N>` is the single handle passed to work in step 2, to code-review in step 4, and to compound in step 10 — there is no separate plan number.
 
    **Acceptance gate (advisory).** After plan-exists passes, check whether `plan` also froze an acceptance gate (the `<!-- tunan:gate -->` comment it writes for software plans). This is **advisory, not blocking** — the gate strengthens the local green signal (step 2a passes it to `tunan:verify`, which judges it verbatim), but its absence must not stall the pipeline, since `verify` runs checks-only when no gate exists (pick the variant for the current OS):
 
@@ -89,24 +89,30 @@ gh repo view --json nameWithOwner
 
    Map the exit code: `0` (`verdict_code: ready`) → proceed to step 3; `1` (`not_ready`/`failed`) → run the autopilot fix loop below, then re-verify and re-gate; `3` (`status: degraded`/`skipped`) → proceed to step 3 but do not treat as authoritative green — note in the PR body that local verification was degraded/skipped and CI remains the gate; `2` (no parseable contract / jq missing) → treat as a degraded local signal, note it, and proceed. The detailed per-status handling below still applies; the gate is the mechanical front door, the prose is the recovery detail. Read the contract's `status` and `verdict_code`:
 
-   - `not_ready` or `status: failed` → local checks are red; route into the autopilot fix loop (do not prompt the user): dispatch the diagnose-and-fix work to an isolated subagent (see the dispatch convention above) so the failing-check output never enters the orchestrator context — instruct it to read the failing local checks, fix the root cause, and **edit the working tree only — do NOT commit or push at this pre-push stage** (push happens in step 7), returning a concise `{ fixed, summary, remaining }` — then re-run `tunan:verify` (again in a subagent) and re-gate. **Bound the loop:** after a small number of consecutive `not_ready` results (at most 3) with no progress, stop the autopilot, record the failing checks for the PR body created in step 7, and proceed — CI (the remote authoritative gate) is the backstop. Never spin indefinitely on a persistently red local environment.
+   - `not_ready` or `status: failed` → local checks are red; route into the autopilot fix loop (do not prompt the user): dispatch the diagnose-and-fix work to an isolated subagent (see the dispatch convention above) so the failing-check output never enters the orchestrator context — instruct it to read the failing local checks, fix the root cause, and **edit the working tree only — do NOT commit or push at this pre-push stage** (push happens in step 8), returning a concise `{ fixed, summary, remaining }` — then re-run `tunan:verify` (again in a subagent) and re-gate. **Bound the loop:** after a small number of consecutive `not_ready` results (at most 3) with no progress, stop the autopilot, record the failing checks for the PR body created in step 8, and proceed — CI (the remote authoritative gate) is the backstop. Never spin indefinitely on a persistently red local environment.
    - `ready` → proceed to step 3.
    - `status: degraded` (ambiguous command detection / partial run) or `status: skipped` (no detectable checks) → do not loop and do not treat as authoritative green; proceed to step 3, noting in the PR body that local verification was degraded/skipped and CI remains the authoritative gate.
 
    **Division of labor (do not duplicate):** `tunan:verify` is the pre-push **local static green** signal (test/lint/build). Its optional `observe` check delegates to the same `test-browser` skill used later in this pipeline — do not run app/browser observation twice. The CI watch later in this pipeline remains the **remote authoritative** gate. **Anti-false-green:** verify's detected commands should align with the project's CI command set; a `degraded` or partial verify must not be treated as `ready`, so the autopilot loop is never taught to trust a local signal that does not predict the real CI gate.
 
-3. Invoke the `code-review` skill with `mode:agent plan:<feature-issue-ref-from-step-1>`.
+3. Invoke the `simplify-code` skill on the branch diff.
+
+   This runs **before** review so the code-review in step 4 covers the simplified code. **Skip** this step when the change is docs-only (only markdown/docs paths changed) or trivial (roughly under 10 changed lines). Otherwise let `simplify-code` resolve the branch-diff scope itself; it preserves behavior and runs the test suite.
+
+   Do not commit in this step. `simplify-code` leaves its changes in the working tree; step 4's review scopes the working tree (uncommitted changes included), and step 8's `commit-push-pr` commits whatever remains. Committing here would sweep any still-uncommitted `work` edits into a misleading `refactor` commit and could stall on a tree that never goes clean.
+
+4. Invoke the `code-review` skill with `mode:agent plan:<feature-issue-ref-from-step-1>`.
 
    Pass the feature issue ref `#<N>` from step 1 so code-review reads its plan comment and can verify requirements completeness. Read the **Actionable Findings** summary the skill emits, and its machine-readable `verdict_code` / `summary` fields (the shared `mode:agent` output contract that `code-review` and `verify` both emit) rather than string-matching the human `verdict` prose.
 
-4. **Apply and persist review fixes** (REQUIRED after step 3, before residual handoff)
+5. **Apply and persist review fixes** (REQUIRED after step 4, before residual handoff)
 
-   Load `references/review-followup.md` and execute step 4 there (mechanical apply + commit/push when changes exist). Do not proceed to step 5, run browser tests, or output DONE while eligible review fixes remain only in the working tree uncommitted.
+   Load `references/review-followup.md` and execute step 4 there (mechanical apply + commit/push when changes exist). Do not proceed to step 6, run browser tests, or output DONE while eligible review fixes remain only in the working tree uncommitted.
 
-5. **Autonomous residual handoff** (only when step 3 reported one or more actionable `downstream-resolver` findings not applied in step 4; skip when it reported `Actionable findings: none.`)
+6. **Autonomous residual handoff** (only when step 4 reported one or more actionable `downstream-resolver` findings not applied in step 5; skip when it reported `Actionable findings: none.`)
 
    Do not prompt the user. This step embraces the autopilot contract: residuals must become durable before DONE, but the agent never stops to ask.
-   1. Load `references/tracker-defer.md` in **non-interactive mode**. Pass the residual actionable findings from step 3/4 (or the run artifact when the summary was truncated).
+   1. Load `references/tracker-defer.md` in **non-interactive mode**. Pass the residual actionable findings from step 4/5 (or the run artifact when the summary was truncated).
    2. Collect the structured return: `{ filed: [...], failed: [...], no_sink: [...] }`.
    3. Compose a `## Residual Review Findings` markdown section from the structured return:
       - For each item in `filed`: a bullet with severity, file:line, title, and a link to the tracker ticket URL.
@@ -152,15 +158,15 @@ gh repo view --json nameWithOwner
 
    Never block DONE on tracker filing failures once residuals have been durably recorded. A `no_sink` outcome is success only when the findings are present in the PR body or in the created `tunan:review` issue.
 
-6. **Run `test-browser` (`mode:pipeline`) in an isolated subagent** (see the dispatch convention above): instruct it to load `test-browser` with `mode:pipeline` and return only a concise result summary (what was exercised, pass/fail, any defects found).
+7. **Run `test-browser` (`mode:pipeline`) in an isolated subagent** (see the dispatch convention above): instruct it to load `test-browser` with `mode:pipeline` and return only a concise result summary (what was exercised, pass/fail, any defects found).
 
-7. Invoke the `commit-push-pr` skill.
+8. Invoke the `commit-push-pr` skill.
 
-   This commits any remaining changes, pushes the branch, and opens a pull request. If step 5 already opened a PR (check with `gh pr view --json number,url,state 2>/dev/null`), skip PR creation but still commit and push any uncommitted changes.
+   This commits any remaining changes, pushes the branch, and opens a pull request. If step 6 already opened a PR (check with `gh pr view --json number,url,state 2>/dev/null`), skip PR creation but still commit and push any uncommitted changes.
 
-8. **CI watch and autofix loop** (only when an open PR exists for the current branch)
+9. **CI watch and autofix loop** (only when an open PR exists for the current branch)
 
-   Detect the PR; if none exists or `gh` is unavailable, skip this step entirely and proceed to step 9.
+   Detect the PR; if none exists or `gh` is unavailable, skip this step entirely and proceed to step 10.
 
    ```bash
    gh pr view --json number,url,state
@@ -173,7 +179,7 @@ gh repo view --json nameWithOwner
       gh pr checks --watch
       ```
 
-      If the command exits 0, all checks passed. Break out of the loop and proceed to step 9.
+      If the command exits 0, all checks passed. Break out of the loop and proceed to step 10.
 
       If it exits non-zero, one or more checks failed. Continue to (2).
 
@@ -200,9 +206,9 @@ gh repo view --json nameWithOwner
      gh pr edit PR_NUMBER --body-file BODY_FILE
      ```
 
-   - Do NOT continue looping. The autopilot contract is "make residuals durable, then exit." Proceed to step 9.
+   - Do NOT continue looping. The autopilot contract is "make residuals durable, then exit." Proceed to step 10.
 
-9. Invoke the `compound` skill to capture the solved problem.
+10. Invoke the `compound` skill to capture the solved problem.
 
    Pass it the **feature issue ref `#<N>`** from step 1, the PR URL, and a short summary of what was built. `compound` runs its own GH preflight and writes the solution as a **comment** on that same feature issue (first line `<!-- tunan:solution -->`, label `tunan:solution` added) — not a separate issue or a local file. If `compound` is unavailable on the harness, note that compounding was skipped — do not write a local solution file.
 
@@ -216,8 +222,8 @@ gh repo view --json nameWithOwner
    powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/gate.ps1 solution-exists <N>
    ```
 
-   Exit `0` confirms the `<!-- tunan:solution -->` comment is present — proceed to step 10. Exit `1` means compound silently failed to post — re-invoke `compound` once, then re-gate. If `compound` was unavailable on the harness, skip this gate and note the skip in the summary; an infra exit (`2`) is non-blocking here.
+   Exit `0` confirms the `<!-- tunan:solution -->` comment is present — proceed to step 11. Exit `1` means compound silently failed to post — re-invoke `compound` once, then re-gate. If `compound` was unavailable on the harness, skip this gate and note the skip in the summary; an infra exit (`2`) is non-blocking here.
 
-10. Output `<promise>DONE</promise>` when complete. Include the chain in the summary: the **feature issue `#<N>`** (carrying its req body plus `tunan:plan` and `tunan:solution` comments) and the PR URL — a single issue handle, not three separate issue numbers.
+11. Output `<promise>DONE</promise>` when complete. Include the chain in the summary: the **feature issue `#<N>`** (carrying its req body plus `tunan:plan` and `tunan:solution` comments) and the PR URL — a single issue handle, not three separate issue numbers.
 
 Start with step 1 now. Remember: GH preflight and plan FIRST, then work. Never skip the plan.

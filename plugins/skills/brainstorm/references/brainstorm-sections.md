@@ -57,6 +57,50 @@ brainstorm with sparse content produces a sparse doc; one with rich content
 produces a rich doc. Don't add ceremony to make a slim brainstorm look
 substantial.
 
+## Prose economy
+
+Match-depth-to-content sizes *which* sections appear and how deep each goes.
+This sizes *how the kept prose reads*. A section can be material and still be
+written loosely — the failure mode is a material section padded into a wall of
+text where contradictions hide and a downstream agent loses the thread. Length
+that earns its place is fine; wordiness around that length is not.
+
+Hold every kept section to these:
+
+- **Lead with the decision or outcome.** Put the conclusion first, then the
+  reason, then background; keep one claim plus its support per paragraph. Don't
+  bury the chosen scope, an open blocker, or a Key Decision beneath its
+  rationale. This does not override section roles — Summary stays proposal-only,
+  Problem Frame stays motivation-only and never restates the remedy.
+- **One idea per sentence.** A Summary is a handful of sentences, not one
+  sentence with five semicolons and four parentheticals. If a sentence needs a
+  second parenthetical to stay true, split it.
+- **A requirement is one sentence of intent plus at most one qualifier.** When
+  a requirement would specify two outcomes ("either A or B, planning decides"),
+  state the intent and send the fork to Outstanding Questions — don't write both
+  arms in full inside the requirement.
+- **Cut hedges and intensifiers.** "Critically", "deliberately", "explicitly",
+  "genuinely", "actually", "simply" carry nothing a downstream agent acts on.
+- **Prefer the verb to the nominalization.** "Demote the grid", not "the
+  demotion of the grid is the deliberate change in this brief".
+
+Precision is not padding: keep IDs, dates, actor names, domain terms,
+conditionals, and exact thresholds verbatim; when a concrete anchor is knowable
+from the work already done, use it instead of a vague abstraction. Economy
+targets the connective tissue around precision, never the precision itself.
+
+**Resolve in place; don't stratify.** When a later decision answers a parked
+question or supersedes earlier text, rewrite or remove the original entry —
+don't append a separate "resolutions" layer that leaves the superseded text
+standing, and don't keep superseded prose as strikethrough. Version control
+holds the history. Stacked question/resolution strata double the reading surface
+and hide which text is live.
+
+**Named test, run before the doc is declared written:** could a reader find a
+contradiction in each section in one pass? A sentence carrying more than one
+parenthetical, or a requirement specifying two outcomes, fails the test — split
+it or defer it.
+
 ## Hard floor
 
 When a doc is warranted, these are present.
@@ -128,20 +172,28 @@ worse than omitting it.
   together prevent downstream invention of paths. When omitting from a
   behavioral brainstorm, note the reason in the doc.
 
-- **Visualizations** — include a diagram when the brainstorm contains a
-  diagram-shaped concept that a picture carries faster than prose. Common
-  shapes: a data-shape transformation (before/after schema or field
-  mapping), a source-of-truth fan-out (one authority feeding many derived
-  surfaces), state-or-lifecycle logic, a multi-step flow, or a quantitative
-  comparison. A diagram is cross-cutting, not a section of its own — it sits
-  next to the Key Decision, Requirements group, or Flow it illustrates. The
-  named test: *does the picture let a reader grasp the concept faster than
-  the paragraph alone?* If yes, add it; if the prose already conveys it at a
-  glance, skip it. One diagram per load-bearing concept — don't add visuals
-  for ceremony. This affordance is the conceptual-diagram path; it is
-  distinct from the wireframe affordance (a wireframe is for visual-product
-  UI and does not apply to non-visual systems like data models or agent
-  workflows, but a conceptual diagram does).
+- **Visualizations** — a brainstorm earns a visual when a concept has a
+  **structure worth showing**, and that decision turns on whether the
+  structure exists, *not* on whether your own prose reads clearly. Calling
+  your prose "clear enough" is the trap that quietly under-produces the
+  visuals a reader actually uses — decide on the shape, not the wording.
+  Shapes that warrant one: a data-shape transformation (before/after schema
+  or field mapping), a source-of-truth fan-out (one authority feeding many
+  derived surfaces), state-or-lifecycle logic, a multi-step flow, an
+  entity/relationship structure, a decision boundary, a quantitative
+  comparison — and, for any requirement that changes a UI, screen layout,
+  component placement, or screen flow, a **wireframe**. This applies to
+  backend and conceptual work, not only visual products: a data model, sync
+  protocol, or agent workflow earns a conceptual diagram exactly as a UI
+  requirement earns a wireframe. Match the visual to the shape — a UI/layout
+  shape takes a wireframe in HTML (a mermaid layout diagram or prose in
+  markdown; there is no inline-SVG wireframe in markdown), any other structure
+  takes a conceptual diagram. A visual is cross-cutting, not a section of its
+  own — it sits next to the Key Decision, Requirements group, or Flow it
+  illustrates. **A point with nothing structural to show gets no visual** — a
+  single-field add, a rename, or a one-line change has no structure, and a
+  before/after of one changed line is decoration. One visual per load-bearing
+  concept, never decoration or ceremony.
 
   **Diagrams complement prose; they never replace it.** A diagram is an
   on-ramp to the prose it illustrates, not a substitute. The IDed prose

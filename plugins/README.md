@@ -15,7 +15,7 @@ AI-powered development tools that get smarter with every use. Make each unit of 
 | Component   | Count |
 | ----------- | ----- |
 | Agents      | 50+   |
-| Skills      | 44+   |
+| Skills      | 45+   |
 | MCP Servers | 5     |
 
 ## Skills
@@ -28,9 +28,10 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 
 | Skill                                                              | Description                                                                                                                                                                                                                                                                             |
 | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/tunan:new-project`                                                      | Bootstrap a new project: establish intent (problem, approach, persona, key metrics, tracks) and an initial milestone roadmap, optionally seeding the first milestone's requirements. Stores everything in one GitHub issue labeled `tunan:project` (replaces the former `STRATEGY.md`). Read as grounding by `/tunan:ideate`, `/tunan:brainstorm`, `/tunan:plan`, `/tunan:product-pulse`, and `/tunan:dogfood-beta`                |
+| `/tunan:new-project`                                                      | Bootstrap a new project: establish intent (problem, approach, persona, key metrics, tracks) and an initial milestone roadmap, optionally seeding the first milestone's requirements. Stores everything in one GitHub issue labeled `tunan:project` (replaces the former `STRATEGY.md`). Read as grounding by `/tunan:ideate`, `/tunan:brainstorm`, `/tunan:plan`, `/tunan:product-pulse`, and `/tunan:dogfood`                |
 | `/tunan:new-milestone`                                                    | Start the next cycle of an existing project: close the current milestone, define and scope the next, and extend the roadmap in the `tunan:project` issue. Brownfield complement of `/tunan:new-project`                                                                          |
 | `/tunan:strategy`                                                         | Sharpen the product strategy — the intent sections (target problem, approach, persona, key metrics, tracks) of the `tunan:project` issue — through a rigorous Rumelt-style interview that pushes back on weak answers. Writes the same issue `/tunan:new-project` bootstraps and `/tunan:new-milestone` extends, preserving the roadmap; `new-project` is the quick bootstrap, `strategy` is the deep intent refinement                |
+| `/tunan:pov`                                                               | Form a decisive, project-grounded verdict on an external input (technology, library, pattern, platform, or architecture) — judged against this project, not in the abstract. Use to decide whether to adopt, switch to, or revisit something |
 | `/tunan:map-codebase`                                                     | Map an existing codebase into a durable current-state snapshot (stack, integrations, architecture, structure, conventions, testing, concerns) stored as one GitHub issue labeled `tunan:codebase-map`. Read as grounding by `/tunan:plan`, `/tunan:work`, and technical `/tunan:brainstorm`                |
 | [`/tunan:ideate`](../../docs/skills/ideate.md)                     | Optional big-picture ideation: generate and critically evaluate grounded ideas, then route the strongest one into brainstorming. Stores the ideation record as a GitHub issue labeled `tunan:idea`                                                                                     |
 | `/tunan:capture`                                                          | Zero-friction capture of a passing idea, note, backlog item, or seed (a forward-looking idea with a trigger condition) into a lightweight GitHub issue labeled `tunan:capture` / `tunan:backlog`, without derailing the current task. `--list` browses and triages captured items, promoting them to `tunan:raw`. The lightest rung before `/tunan:new-raw` |
@@ -126,7 +127,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 
 | Skill             | Description                                                                                                                                                                                                       |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dogfood-beta` | Diff-scoped browser QA of the active branch: builds an exhaustive test matrix of every change, drives the app with agent-browser, then auto-fixes issues, adds regression tests, and commits each fix until green |
+| `dogfood`       | Diff-scoped browser QA of the active branch: maps user flows, drives a real browser, autonomously fixes small breakages with regression tests and commits, and writes a durable dogfood report |
 | `/lfg`            | Full autonomous engineering pipeline end-to-end: plan, work, code review, test, commit, push, open PR, watch CI, and fix CI failures until green — stops at an open PR for human review (does not auto-merge or close the issue)                                                                                                                                                 |
 
 ## MCP Servers

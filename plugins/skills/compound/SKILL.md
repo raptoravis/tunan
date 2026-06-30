@@ -109,6 +109,8 @@ These files are the durable contract for the workflow. Read them on-demand at th
 - `references/schema.yaml` — canonical frontmatter fields and enum values for the solution comment's ```yaml block (read when validating YAML)
 - `references/yaml-schema.md` — category classification from problem_type (read when classifying)
 - `references/concepts-vocabulary.md` — CONCEPTS.md format and inclusion rules (read in Phase 2.4 when domain terms surface)
+- `references/repo-profile-cache.md` — shared project-profile cache protocol (read in Phase 1 before dispatching subagents)
+- `references/agents/repo-profiler.md` — derives the question-agnostic project profile (dispatched on cache MISS)
 - `assets/resolution-template.md` — issue body structure for new learnings (read when assembling)
 
 When spawning subagents, pass the relevant file contents into the task prompt so they have the contract without needing cross-skill paths.
@@ -182,6 +184,21 @@ If no relevant entries are found, proceed to Phase 1 without passing memory cont
 ### Phase 1: Research
 
 Launch research subagents. Each returns text data to the orchestrator.
+
+**Resolve the agnostic project orientation from the shared cache (before dispatching subagents).** The question-agnostic orientation the Context Analyzer and Related Docs Finder rely on — the project's `CONCEPTS.md` vocabulary and the root instruction-file conventions/digests — is identical for every run at this commit, so reuse it instead of re-deriving. Set `SKILL_DIR` to this skill's directory and run the helper (full protocol in `references/repo-profile-cache.md`):
+
+```bash
+SKILL_DIR="<absolute path of the directory containing the SKILL.md you just read>"
+python3 "$SKILL_DIR/scripts/repo-profile-cache.py" get
+```
+
+- On `HIT`: load the profile JSON and use its `vocabulary` (CONCEPTS canonical terms) and `conventions` (root instruction/convention digests) as the agnostic orientation; do not re-derive them.
+- On `MISS`: dispatch a generic subagent seeded with `references/agents/repo-profiler.md` to derive the profile, write its JSON to a file, then persist with `python3 "$SKILL_DIR/scripts/repo-profile-cache.py" put <file>` (re-set `SKILL_DIR` in that call — shell vars don't persist between Bash invocations).
+- On `NO-CACHE` (no git repo or no writable cache): derive the orientation inline this run and skip `put`.
+
+The cache is an optimization, never a correctness dependency — if the helper errors or returns nothing usable, fall back to deriving the orientation inline and continue. Pass the resolved vocabulary/conventions into the Context Analyzer (for vocabulary and instruction-file convention grounding) so it does not re-derive them.
+
+**CRITICAL — the `tunan:solution` comment search is NEVER cached; the Related Docs Finder must query it FRESH every run.** `compound` *writes* new learnings as comments on feature issues, so a cached index would miss a comment added moments ago. The cached profile supplies only the agnostic orientation above; the `tunan:solution` search in step 3 always runs against live GitHub issues.
 
 **Dispatch order:**
 - Launch `Context Analyzer`, `Solution Extractor`, and `Related Docs Finder` in parallel (background)

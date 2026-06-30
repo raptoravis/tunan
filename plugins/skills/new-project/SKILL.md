@@ -18,7 +18,7 @@ allowed-tools:
 
 `new-project` is the greenfield bootstrap orchestrator. It establishes a project's durable intent and an initial roadmap, then optionally seeds the first milestone's work — sequencing tunan's existing skills (`setup`, research, `brainstorm`, `map-codebase`) into one guided flow so a project starts from a written baseline instead of an empty repo.
 
-**The durable artifact is one GitHub issue labeled `tunan:project`** — the project's living document, one per repo, updated in place (like `tunan:config` / `tunan:codebase-map`), never a local file. It holds the project intent (problem, approach, users, key metrics, tracks) **and** the roadmap (an ordered list of milestones, each linking its `tunan:req` feature issues). This issue is the upstream grounding that `ideate`, `brainstorm`, `plan`, `product-pulse`, and `dogfood-beta` read — it replaces the former `STRATEGY.md` local file.
+**The durable artifact is one GitHub issue labeled `tunan:project`** — the project's living document, one per repo, updated in place (like `tunan:config` / `tunan:codebase-map`), never a local file. It holds the project intent (problem, approach, users, key metrics, tracks) **and** the roadmap (an ordered list of milestones, each linking its `tunan:req` feature issues). This issue is the upstream grounding that `ideate`, `brainstorm`, `plan`, `product-pulse`, and `dogfood` read — it replaces the former `STRATEGY.md` local file.
 
 Read `references/project-issue-contract.md` for the exact body shape and the gh read/write recipes. Read `references/project-interview.md` for the intent interview (problem/approach/persona/metrics/tracks) — its pushback rules are load-bearing; improvising from memory produces a passive transcription instead of a project doc.
 

@@ -96,6 +96,6 @@ defaults and surface the gh setup hint. The same fall-through applies to
 **transient** failures (network error, rate limit, timeout): config reads are
 best-effort and must never block a skill — degrade to defaults rather than
 erroring. Callers that treat config as load-bearing (e.g. `verify` choosing a
-test command, `work-beta` reading delegation consent) should be aware that a
+test command) should be aware that a
 transient `gh` failure silently reverts to defaults. Never write or read a local
 config file; the issue is the only store.
