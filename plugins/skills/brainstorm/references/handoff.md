@@ -89,7 +89,7 @@ Then load the `proof` skill in HITL-review mode with:
 
 - **source file:** the temp markdown file just exported
 - **doc title:** `Requirements: <topic title>`
-- **identity:** `ai:tunan` / `Compound Engineering`
+- **identity:** `ai:tunan` / `tunan`
 - **recommended next step:** `plan` (shown in the proof skill's final terminal output)
 
 Follow `references/hitl-review.md` in the proof skill. It uploads the markdown, prompts the user for review in Proof's web UI, ingests filtered comment threads, applies agreed edits through the current Proof edit APIs, replies/resolves in-thread, and syncs the final markdown back to the temp file atomically on proceed.

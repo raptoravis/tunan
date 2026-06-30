@@ -24,9 +24,9 @@
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
-    "displayName": "Compound Engineering",
+    "displayName": "tunan",
     "shortDescription": "AI-powered development tools for code review, research, design, and workflow automation.",
-    "longDescription": "Compound Engineering is a suite of skills and agents that make each unit of engineering work easier than the last. Brainstorm requirements, plan implementations, review code with specialized reviewers, research institutional learnings, and capture solved problems so future work benefits. Skills install natively via Codex; for the full experience with specialized review and research agents, run the companion Bun converter after install (see README).",
+    "longDescription": "tunan is a suite of skills and agents that make each unit of engineering work easier than the last. Brainstorm requirements, plan implementations, review code with specialized reviewers, research institutional learnings, and capture solved problems so future work benefits. Skills install natively via Codex; for the full experience with specialized review and research agents, run the companion Bun converter after install (see README).",
     "developerName": "Every",
     "category": "Coding",
     "capabilities": ["Interactive", "Read", "Write"],

@@ -20,7 +20,7 @@ Proof is a collaborative document editor for humans and agents. It supports two 
 Every write to a Proof doc must be attributed. Two fields carry the agent's identity:
 
 - **Machine ID (`by` on every op, `X-Agent-Id` header):** `ai:tunan` — stable, lowercase-hyphenated, machine-parseable. Appears in marks, events, and the API response.
-- **Display name (`name` on `POST /presence`):** `Compound Engineering` — human-readable, shown in Proof's presence chips and comment-author badges.
+- **Display name (`name` on `POST /presence`):** `tunan` — human-readable, shown in Proof's presence chips and comment-author badges.
 
 Set the display name once per doc session by posting to presence with the `X-Agent-Id` header; Proof binds the name to that agent ID for the session. These values are the defaults for any caller of this skill; callers running HITL review (`references/hitl-review.md`) may pass a different `identity` pair if a distinct sub-agent should own the doc. Do not use `ai:compound` or other ad-hoc variants — identity stays uniform unless a caller explicitly overrides it.
 
@@ -460,7 +460,7 @@ curl -s -X POST "https://www.proofeditor.ai/api/agent/$SLUG/presence" \
   -H "Content-Type: application/json" \
   -H "x-share-token: $TOKEN" \
   -H "X-Agent-Id: ai:tunan" \
-  -d '{"name":"Compound Engineering","status":"reading","summary":"Uploaded doc"}'
+  -d '{"name":"tunan","status":"reading","summary":"Uploaded doc"}'
 
 # 4. Share the URL
 echo "$URL"

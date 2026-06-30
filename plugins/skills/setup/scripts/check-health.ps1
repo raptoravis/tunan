@@ -1,4 +1,4 @@
-# Compound Engineering environment health check
+# tunan environment health check
 # PowerShell 5.1-compatible twin of check-health.sh. The stdout contract is
 # preserved byte-for-byte: identical status glyphs, section headers, install
 # and url detail lines, the issue count, and the tools/skills/mcp summary.
@@ -280,7 +280,7 @@ if ($in_repo) {
     Add-Section "Project"
 
     if ($legacy_cfg -eq 'present') {
-      Add-Warn "Outdated Compound Engineering config in this repo"
+      Add-Warn "Outdated tunan config in this repo"
       $issues++
     }
 

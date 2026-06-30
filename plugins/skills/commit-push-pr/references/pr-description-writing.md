@@ -83,7 +83,7 @@ For small + non-trivial bugfixes, the 3-5 sentence target still needs a user-vis
 
 ## Step C: Assemble the body
 
-In order: opening → body sections that earn their keep → test plan if non-obvious → evidence block if one exists → Compound Engineering badge after a `---` rule.
+In order: opening → body sections that earn their keep → test plan if non-obvious → evidence block if one exists → tunan badge after a `---` rule.
 
 The opening goes under `## Summary` if the body uses any `##` headings; bare paragraph otherwise. No orphaned opening paragraphs above the first heading.
 
@@ -100,7 +100,7 @@ The opening goes under `## Summary` if the body uses any `##` headings; bare par
 ```markdown
 ---
 
-[![Compound Engineering](https://img.shields.io/badge/Built_with-Compound_Engineering-6366f1)](https://github.com/raptoravis/tunan)
+[![tunan](https://img.shields.io/badge/Built_with-Compound_Engineering-6366f1)](https://github.com/raptoravis/tunan)
 ![HARNESS](https://img.shields.io/badge/MODEL_SLUG-COLOR?logo=LOGO&logoColor=white)
 ```
 

@@ -25,7 +25,7 @@ Inputs:
 - **Doc title** (required): display title for the Proof doc. Upstream callers pass this explicitly. For an issue source with no explicit title, default to the issue `title` from `gh issue view`. For a local source with no explicit title, default to the file's H1 heading, falling back to the filename (minus extension) if no H1 exists.
 - **Recommended next step** (optional, caller-specific): short string the caller wants echoed in the final terminal output (e.g., "Recommended next: `/tunan:plan`"). Not used on direct-user invocation — the terminal report simply summarizes the iteration and asks what's next.
 
-Agent identity is fixed, not a parameter: every API call uses agent ID `ai:tunan` and display name `Compound Engineering`. Callers do not override this.
+Agent identity is fixed, not a parameter: every API call uses agent ID `ai:tunan` and display name `tunan`. Callers do not override this.
 
 Return shape (used by upstream callers to resume their handoff; also shown to the user in the terminal when invoked directly):
 
@@ -46,7 +46,7 @@ Return shape (used by upstream callers to resume their handoff; also shown to th
    - **Local source:** the source file (`$SOURCE`) is the user's file path directly. No export step.
 1. Read the source file into memory. Remember this content as `uploadedMarkdown` — Phase 5 compares against it to detect whether anything changed during the session.
 2. `POST https://www.proofeditor.ai/share/markdown` with `{title, markdown}` → capture `slug`, `accessToken`, `tokenUrl`
-3. `POST /api/agent/{slug}/presence` with `X-Agent-Id: ai:tunan`, `x-share-token: <token>`, body `{"name":"Compound Engineering","status":"reading","summary":"Uploaded doc for review"}`
+3. `POST /api/agent/{slug}/presence` with `X-Agent-Id: ai:tunan`, `x-share-token: <token>`, body `{"name":"tunan","status":"reading","summary":"Uploaded doc for review"}`
 4. Display prominently in the terminal:
 
    ```
@@ -459,4 +459,4 @@ All ops must include:
 - `by: "ai:tunan"` in the request body
 - `X-Agent-Id: ai:tunan` in headers (required for presence; recommended for ops for consistent attribution)
 
-Display name `Compound Engineering` is bound via `POST /presence` with `{"name":"Compound Engineering", ...}`. Set this once after upload; it carries across subsequent ops.
+Display name `tunan` is bound via `POST /presence` with `{"name":"tunan", ...}`. Set this once after upload; it carries across subsequent ops.

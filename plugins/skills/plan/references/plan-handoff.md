@@ -66,7 +66,7 @@ Based on selection (the bare per-option routing is also stated inline in the SKI
 - **Open in Proof (web app) — review and comment to iterate with the agent** -> Export the plan comment body to a transient markdown file in the OS temp dir (bash `${TMPDIR:-/tmp}/tunan-plan-<N>.md`, PowerShell `$env:TEMP\tunan-plan-<N>.md`) — find the plan comment id and `gh api repos/{owner}/{repo}/issues/comments/<comment-id> --jq '.body' > <tmpfile>`. Load the `proof` skill in HITL-review mode with:
   - source file: the exported temp markdown file
   - doc title: `Plan: <plan title from the comment frontmatter>`
-  - identity: `ai:tunan` / `Compound Engineering`
+  - identity: `ai:tunan` / `tunan`
   - recommended next step: `/tunan:work` (shown in the proof skill's final terminal output)
 
   Follow `references/hitl-review.md` in the proof skill. It uploads the plan markdown, prompts the user for review in Proof's web UI, ingests filtered comment threads, applies agreed edits through the current Proof edit APIs, replies/resolves in-thread, and syncs the final markdown back to the temp file on proceed.

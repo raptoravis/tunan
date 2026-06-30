@@ -69,4 +69,4 @@ python scripts/analyze_riffrec_zip.py /path/to/input --output-dir "$(mktemp -d -
 
 Accepted inputs: a Riffrec `.zip`, an `.mp4` / `.mov` / `.webm` video, an `.m4a` / `.mp3` / `.wav` audio file, or a meeting-notes `.md`. The analyzer extracts **transient media** (frames, raw, chunk transcripts) plus scaffold markdown. Always point `--output-dir <dir>` at an OS temp dir so nothing pollutes the repo — the durable analysis/requirements output does NOT live in that directory, it goes into a GitHub issue (extensive path → `tunan:req` issue; quick path → bug-report issue). Treat the analyzer's `.md` scaffolds as working material read from temp and synthesized into the issue body, not as committed artifacts.
 
-The Compound Engineering output format used by the extensive path is documented in `references/compound-engineering-feedback-format.md`.
+The tunan output format used by the extensive path is documented in `references/compound-engineering-feedback-format.md`.

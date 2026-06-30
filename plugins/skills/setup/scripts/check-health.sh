@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Compound Engineering environment health check
+# tunan environment health check
 # Outputs a formatted diagnostic report in one pass
 
 set -o pipefail
@@ -294,7 +294,7 @@ if [ "$in_repo" = "yes" ]; then
     section "Project"
 
     if [ "$legacy_cfg" = "present" ]; then
-      warn "Outdated Compound Engineering config in this repo"
+      warn "Outdated tunan config in this repo"
       issues=$((issues + 1))
     fi
 

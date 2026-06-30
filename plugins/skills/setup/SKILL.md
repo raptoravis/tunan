@@ -4,7 +4,7 @@ description: "Diagnose and configure tunan environment. Checks CLI dependencies,
 disable-model-invocation: true
 ---
 
-# Compound Engineering Setup
+# tunan Setup
 
 ## Interaction Method
 
@@ -24,7 +24,7 @@ If a version is found, pass it to the check script via `--version`. Otherwise om
 
 ### Step 2: Run the Health Check Script
 
-Before running the script, display: "Compound Engineering -- checking your environment..."
+Before running the script, display: "tunan -- checking your environment..."
 
 Run the bundled check script. Do not perform manual dependency checks -- the script handles all CLI tools, agent skills, MCP servers, repo-local CE file checks, and `.gitignore` guidance in one pass. Pick the variant for the current OS: PowerShell (`.ps1`) on Windows, bash (`.sh`) on macOS/Linux. Both accept the same arguments and print identical output.
 
@@ -64,7 +64,7 @@ After the diagnostic report, check whether:
 If everything is installed (tools, skills, and any MCP servers), no repo-local cleanup is needed, and a `tunan:config` issue already exists, display the tool, skill, and MCP list and completion message. Parse the tool, skill, and MCP server names from the script output and list each with a green circle. Omit the Skills line if the Skills section is absent from the script output, and omit the MCP line if the MCP Servers section is absent (non-Claude harnesses):
 
 ```
- ✅ Compound Engineering setup complete
+ ✅ tunan setup complete
 
     Tools:  🟢 agent-browser  🟢 gh  🟢 jq  🟢 vhs  🟢 silicon  🟢 ffmpeg  🟢 ast-grep
     Skills: 🟢 ast-grep
@@ -100,7 +100,7 @@ gh issue list --label "tunan:config" --state open --json number --jq '.[0].numbe
 
 ```
 Set up a tunan config issue for this project?
-This stores your Compound Engineering preferences (which tools to use, how workflows behave) in a GitHub issue shared across the project. Everything starts commented out -- you only enable what you need.
+This stores your tunan preferences (which tools to use, how workflows behave) in a GitHub issue shared across the project. Everything starts commented out -- you only enable what you need.
 
 1. Yes, create it (Recommended)
 2. No thanks
@@ -177,7 +177,7 @@ For each selected dependency, in order:
 Display a brief summary:
 
 ```
- ✅ Compound Engineering setup complete
+ ✅ tunan setup complete
 
     Installed: agent-browser, gh, jq
     Skipped:   rtk

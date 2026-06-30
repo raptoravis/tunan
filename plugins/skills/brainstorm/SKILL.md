@@ -10,7 +10,7 @@ argument-hint: "[feature idea or problem to explore, or a tunan:raw / tunan:req 
 
 Brainstorming helps answer **WHAT** to build through collaborative dialogue. It precedes `/tunan:plan`, which answers **HOW** to build it.
 
-The durable output of this workflow is a **`tunan:req` GitHub issue** — a single issue whose markdown body holds the finished requirement. In other workflows this might be called a lightweight PRD or feature brief. In compound engineering, keep the workflow name `brainstorm`, but make the written artifact strong enough that planning does not need to invent product behavior, scope boundaries, or success criteria. Requirements live in GitHub issues, never in local files.
+The durable output of this workflow is a **`tunan:req` GitHub issue** — a single issue whose markdown body holds the finished requirement. In other workflows this might be called a lightweight PRD or feature brief. In tunan, keep the workflow name `brainstorm`, but make the written artifact strong enough that planning does not need to invent product behavior, scope boundaries, or success criteria. Requirements live in GitHub issues, never in local files.
 
 `new-raw` creates standalone `tunan:raw` issues — raw, pre-brainstorm captures. When this skill is invoked with such an issue (or a `tunan:req` issue from any earlier `brainstorm` run), it **updates that same issue** rather than creating a duplicate, and promotes a `tunan:raw` capture to `tunan:req` once the normalized requirement is written.
 

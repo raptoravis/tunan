@@ -2,8 +2,8 @@
 name: update
 description: |
   Check if the tunan plugin is up to date and recommend the
-  update command if not. Use when the user says "update compound engineering",
-  "check compound engineering version", "ce update", "is compound engineering
+  update command if not. Use when the user says "update tunan",
+  "check tunan version", "ce update", "is tunan
   up to date", "update ce plugin", or reports issues that might stem from a
   stale tunan plugin version. This skill only works in Claude
   Code — it relies on the plugin harness cache layout.

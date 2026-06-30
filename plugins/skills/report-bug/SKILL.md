@@ -5,7 +5,7 @@ argument-hint: "[optional: brief description of the bug]"
 disable-model-invocation: true
 ---
 
-# Report a Compound Engineering Plugin Bug
+# Report a tunan Plugin Bug
 
 Report bugs encountered while using the tunan plugin. This skill gathers structured information and creates a GitHub issue for the maintainer.
 
