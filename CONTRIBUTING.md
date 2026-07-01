@@ -81,10 +81,9 @@ MCP servers should:
 ## Pull Request Process
 
 1. Update documentation if needed
-2. Add tests for new functionality
-3. Ensure all checks pass
-4. Request review from maintainers
-5. Address feedback promptly
+2. Verify changes locally with `claude --plugin-dir ./plugins`
+3. Request review from maintainers
+4. Address feedback promptly
 
 ## Code Style
 
@@ -96,7 +95,7 @@ MCP servers should:
 ## Documentation
 
 - Update README.md for new features
-- Add or update skill documentation in `docs/skills/`
+- Add or update skill documentation in SKILL.md files
 - Include examples where helpful
 - Keep documentation up-to-date
 
