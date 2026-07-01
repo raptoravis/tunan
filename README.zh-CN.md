@@ -2,13 +2,13 @@
 
 AI 驱动的开发工具，让每次使用都更智能——让每个工程任务都比上一个更容易。探索需求、规划实现、使用专业审查器审查代码、研究机构经验，并捕获已解决的问题，使未来的工作能够复合增长。
 
-本仓库是一个 Claude Code / Codex / OpenCode **插件市场**。它提供一个名为 **`tunan`** 的插件，包含 43 代理、64 技能和 5 个 MCP 服务器。
+本仓库是一个 Claude Code / Codex / OpenCode **插件市场**。它提供一个名为 **`tunan`** 的插件，包含 43 代理、64 技能和 4 个 MCP 服务器。
 
 | 组件 | 数量 |
 |------|------|
 | 代理 | 43 |
 | 技能 | 64 |
-| MCP 服务器 | 5 |
+| MCP 服务器 | 4 |
 
 完整组件清单（按类别分组）见 [组件参考](plugins/README.md)。
 
@@ -101,13 +101,12 @@ claude --plugin-dir ./tunan/plugins
 
 ## MCP 服务器
 
-插件捆绑了 [`.mcp.json`](plugins/.mcp.json)。三个轻量级、无 API 密钥的服务器在插件启用时**自动**加载：
+插件捆绑了 [`.mcp.json`](plugins/.mcp.json)。两个轻量级、无 API 密钥的服务器在插件启用时**自动**加载：
 
 - `context7` — 最新的库/API 文档查找
 - `sequential-thinking` — 结构化多步推理
-- `codegraph` — 基于 AST 索引的结构化代码搜索（调用者、被调用者、影响分析）
 
-两个较重的服务器是**可选的**（它们会拉取大型依赖——浏览器二进制文件、Chrome 安装）：`playwright` 和 `chrome-devtools`。运行 `/tunan:setup` 以检查哪些 MCP 服务器已注册并交互式安装任何缺少的服务器。参见 [MCP 参考](plugins/README.md#mcp-servers) 获取详情。
+两个较重的服务器是**可选的**（它们会拉取大型依赖——浏览器二进制文件、Chrome 安装）：`playwright` 和 `chrome-devtools`。我们还推荐 `codegraph`（基于 AST 索引的结构化代码搜索：调用者、被调用者、影响分析），需一次性全局安装（`npm i -g @colbymchenry/codegraph`）。运行 `/tunan:setup` 以检查哪些 MCP 服务器已注册并交互式安装任何缺少的服务器。参见 [MCP 参考](plugins/README.md#mcp-servers) 获取详情。
 
 ## 快速开始
 

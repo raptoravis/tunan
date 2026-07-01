@@ -2,13 +2,13 @@
 
 AI-powered development tools that get smarter with every use — make each unit of engineering work easier than the last. Brainstorm requirements, plan implementations, review code with specialized reviewers, research institutional learnings, and capture solved problems so future work compounds.
 
-This repository ships the **`tunan`** plugin, bundling 43 agents, 64 skills, and 5 MCP servers for Claude Code, Codex, and OpenCode.
+This repository ships the **`tunan`** plugin, bundling 43 agents, 64 skills, and 4 MCP servers for Claude Code, Codex, and OpenCode.
 
 | Component   | Count |
 | ----------- | ----- |
 | Agents      | 43    |
 | Skills      | 64    |
-| MCP Servers | 5     |
+| MCP Servers | 4     |
 
 See the [full component reference](plugins/README.md) for the complete inventory, grouped by category.
 
@@ -93,13 +93,12 @@ This loads the plugin's skills, agents, and MCP servers directly from your check
 
 ## MCP servers
 
-The plugin ships a bundled [`.mcp.json`](plugins/.mcp.json). Three lightweight, no-API-key servers load **automatically** the moment the plugin is enabled:
+The plugin ships a bundled [`.mcp.json`](plugins/.mcp.json). Two lightweight, no-API-key servers load **automatically** the moment the plugin is enabled:
 
 - `context7` — up-to-date library / API documentation lookup
 - `sequential-thinking` — structured multi-step reasoning
-- `codegraph` — structural code search via AST index (callers, callees, impact analysis)
 
-Two heavier servers are **opt-in** (they pull large dependencies — browser binaries, a Chrome install): `playwright` and `chrome-devtools`. Run `/tunan:setup` to check which MCP servers are registered and install any missing ones interactively. See the [MCP reference](plugins/README.md#mcp-servers) for details.
+Two heavier servers are **opt-in** (they pull large dependencies — browser binaries, a Chrome install): `playwright` and `chrome-devtools`. We also recommend `codegraph` (structural code search via AST index: callers, callees, impact analysis), which needs a one-time global install (`npm i -g @colbymchenry/codegraph`). Run `/tunan:setup` to check which MCP servers are registered and install any missing ones interactively. See the [MCP reference](plugins/README.md#mcp-servers) for details.
 
 ## Getting started
 

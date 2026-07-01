@@ -7,10 +7,6 @@
     "sequential-thinking": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
-    },
-    "codegraph": {
-      "command": "npx",
-      "args": ["-y", "@anthropics/codegraph-mcp@latest"]
     }
   }
 }

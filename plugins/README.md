@@ -16,7 +16,7 @@ AI-powered development tools that get smarter with every use — make each unit 
 | ----------- | ----- |
 | Agents      | 43    |
 | Skills      | 64    |
-| MCP Servers | 5     |
+| MCP Servers | 4     |
 
 ## Skills
 
@@ -138,9 +138,10 @@ The plugin ships a bundled [`.mcp.json`](.mcp.json). Two lightweight, no-API-key
 | --------------------- | ---------- | ------------------------------------------------ |
 | `context7`            | ✅          | Up-to-date library / API documentation lookup    |
 | `sequential-thinking` | ✅          | Structured multi-step reasoning                  |
-| `codegraph`           | ✅          | Structural code search via AST index             |
 
-Two heavier servers are **opt-in** — they pull large dependencies (browser binaries, a Chrome install), so `/tunan:setup` offers them but leaves them unchecked by default:
+Two heavier servers are **opt-in** — they pull large dependencies (browser binaries, a Chrome install), so `/tunan:setup` offers them but leaves them unchecked by default.
+
+We also recommend `codegraph` (structural code search via AST index: callers, callees, impact analysis). Install it once globally (`npm i -g @colbymchenry/codegraph`), then register it with `claude mcp add codegraph -- codegraph serve --mcp`.
 
 | Server            | Installs via                          | Purpose                                  |
 | ----------------- | ------------------------------------- | ---------------------------------------- |
