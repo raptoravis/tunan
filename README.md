@@ -105,13 +105,14 @@ Two heavier servers are **opt-in** (they pull large dependencies — browser bin
 
 After install, run `/tunan:setup` first to verify your environment (see the **⚠️ Required next step** note above), then try:
 
-- `/tunan:strategy` — create or update the product strategy (a short durable `tunan:strategy` issue) that ideate/brainstorm/plan read as grounding
+- `/tunan:new-project` — bootstrap a new project: define intent (problem, approach, persona, metrics, tracks) and lay out an initial milestone roadmap, stored as a `tunan:project` issue that ideate/brainstorm/plan read as grounding
+- `/tunan:strategy` — sharpen the product strategy through a Rumelt-style interview that pushes back on weak answers; refines the `tunan:project` issue bootstrapped by `new-project`
 - `/tunan:new-raw` — capture a 'raw' requirement into a GitHub issue (labeled `tunan:raw`); brainstorm later promotes it to `tunan:req`
-- `/tunan:brainstorm` — explore requirements and approaches before planning
-- `/tunan:plan` — create an implementation plan
-- `/tunan:work` — implement the plan
-- `/tunan:code-review` — run a comprehensive multi-agent review
-- `/lfg` — full autonomous engineering workflow
+- `/tunan:brainstorm` — explore requirements and approaches through collaborative dialogue before planning
+- `/tunan:plan` — create a structured implementation plan with automatic confidence checking
+- `/tunan:work` — execute work items systematically
+- `/tunan:code-review` — run a comprehensive multi-agent review with tiered persona agents
+- `/tunan:lfg` — full autonomous engineering pipeline end-to-end (plan → work → review → PR → CI → green)
 
 ## License
 

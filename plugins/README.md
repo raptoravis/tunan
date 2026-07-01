@@ -1,6 +1,6 @@
-# Compounding Engineering
+# tunan
 
-AI-powered development tools that get smarter with every use. Make each unit of engineering work easier than the last.
+AI-powered development tools that get smarter with every use — make each unit of engineering work easier than the last. Brainstorm requirements, plan implementations, review code with specialized reviewers, research institutional learnings, and capture solved problems so future work compounds.
 
 ## Getting Started
 
