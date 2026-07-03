@@ -1,0 +1,97 @@
+# AGENTS.md
+
+This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+
+## What this repo is
+
+This is the **tunan** plugin — 43 agents, 64 skills, and 5 MCP servers that ship as a marketplace plugin for Codex, Codex, and OpenCode. The plugin payload lives under `plugins/`.
+
+## Plugin structure
+
+```
+plugins/
+├── .Codex-plugin/plugin.json   # Codex manifest (version, skills path, MCP servers)
+├── .codex-plugin/plugin.json    # Codex manifest (version + interface section)
+├── .mcp.json                    # Bundled MCP server config
+├── skills/<name>/SKILL.md       # Each skill = SKILL.md + references/
+├── agents/<name>.md             # Each agent = bare-name .md file
+├── AGENTS.md                    # Comprehensive authoring guide (read this first)
+└── AGENTS.md                    # Delegates to AGENTS.md via @AGENTS.md
+```
+
+## No build / test / lint toolchain
+
+This repo was simplified — the Bun toolchain, release-please, CI workflows, and test suite were removed. There is no `bun run`, `npm test`, or `CHANGELOG.md` automation. Do not reference them.
+
+## Version bumping
+
+Both manifests MUST stay in sync. When bumping:
+
+```
+plugins/.Codex-plugin/plugin.json  →  "version": "X.Y.Z"
+plugins/.codex-plugin/plugin.json   →  "version": "X.Y.Z"
+```
+
+## Local development (testing skills live)
+
+Run Codex pointed at the checkout so skills load from disk:
+
+```bash
+Codex --plugin-dir ./plugins
+```
+
+**Cache trap:** `~/.Codex/plugins/cache/tunan/` is a stale cache copy. Always edit under `plugins/` in the repo, not the cache. If you accidentally edited the cache, diff it against the repo source and re-apply to the correct file.
+
+## Key conventions (from AGENTS.md)
+
+### Naming
+
+- Skills and agents use **bare names** with no `tunan-` prefix. The host namespace supplies `tunan:`.
+- Skill directory name = `SKILL.md` `name:` frontmatter = bare name (e.g., `code-review`)
+- Agent filename = bare name (e.g., `correctness-reviewer.md`), frontmatter `name:` = bare name
+
+### Windows support
+
+Every helper script under `skills/*/scripts/` ships in both `.sh` (bash) and `.ps1` (PowerShell 5.1) form with identical args and stdout contracts. PowerShell variants target Windows PowerShell 5.1 (no 7+-only syntax). When adding or changing one, change the other in the same commit.
+
+**SKILL.md** invokes the OS-appropriate variant:
+
+```markdown
+```bash
+bash scripts/gate.sh plan-exists <N>
+```
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/gate.ps1 plan-exists <N>
+```
+```
+
+### Artifact model: GitHub issues, not local files
+
+Durable artifacts live as GitHub issues. A feature is **one issue** for its lifetime:
+- Issue body = requirement (`tunan:req`)
+- `<!-- tunan:plan -->` marker comment = plan (label `tunan:plan`)
+- `<!-- tunan:gate -->` marker comment = acceptance gate (label `tunan:gate`)
+- `<!-- tunan:solution -->` marker comment = solution (label `tunan:solution`)
+
+Other artifact kinds (ideas, reports, retros, review residuals) are their own issues distinguished by label. There is no local-file fallback.
+
+### Skill design principles
+
+- **Calibrate prescription to failure mode.** Hard rules for deterministic safety, strong guidance + examples for judgment calls, trust where prescription would harm.
+- **SKILL.md caches at session start; references load on demand.** Load-bearing rules go in SKILL.md, not just references.
+- **Rationale discipline.** Every line in SKILL.md loads on every invocation — include rationale only when it changes agent behavior.
+- **Extract conditional or late-sequence blocks to `references/`** when they represent ~20%+ of the skill and fire after many tool/agent calls.
+- **Process exhaust stays out of artifacts.** Engineering metadata belongs in chat, not in user-facing docs.
+
+Full conventions live in `plugins/AGENTS.md` — read it before making substantial changes.
+
+## Skill editing checklist
+
+- `name:` in frontmatter matches directory name
+- `description:` describes what + when, ≤1024 chars, colons quoted, no raw `<angle-bracket>` tokens
+- Reference files use backtick paths (`` `references/foo.md` ``), NOT markdown links
+- Cross-platform: blocking questions use the platform tool (`AskUserQuestion` / `request_user_input` / `ask_user`)
+- Sub-agent dispatch names platform primitives (`Agent`/`Task` in Codex, `spawn_agent` in Codex)
+- Script references use relative paths (`bash scripts/foo.sh`), not `${CLAUDE_PLUGIN_ROOT}`
+- OS: every `.sh` has a `.ps1` twin
