@@ -74,10 +74,10 @@ gh label create "tunan:codebase-map" --color 0e8a16 --description "tunan codebas
 
 Run the create command only if the list shows no `tunan:codebase-map` label.
 
-**Resolve the existing map issue:**
+**Resolve the existing map issue (search all states so a closed map is reused, not duplicated):**
 
 ```bash
-gh issue list --label "tunan:codebase-map" --state open --json number --jq '.[0].number // empty'
+gh issue list --label "tunan:codebase-map" --state all --json number --jq '.[0].number // empty'
 ```
 
 Route on the result and the mode:
