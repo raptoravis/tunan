@@ -168,16 +168,25 @@ Mention the next agent can pick it up with `/tunan:handoff resume #<N>` (or just
   If it is closed, carries no `tunan:handoff` label, or its body lacks the
   `kind: handoff` metadata block, warn and confirm (blocking tool) before
   resuming against it — a stale or mistyped `#N` should not be resumed silently.
-- Otherwise list open handoff issues:
+- Otherwise list handoff issues across **all** states (so a previously closed
+  handoff is found rather than missed — mirrors `create` and the
+  `tunan:config` / `tunan:codebase-map` single-issue lookups):
 
   ```bash
-  gh issue list --label "tunan:handoff" --state open --json number,title,url,updatedAt
+  gh issue list --label "tunan:handoff" --state all --json number,title,url,state,updatedAt
   ```
 
-  - **One** → use it.
+  - **One** → use it. If its `state` is `CLOSED`, reopen it first — it is the
+    single shared handoff reused in place, so reopening keeps its number
+    stable for reuse (same as `create` does):
+
+    ```bash
+    gh issue reopen <N>
+    ```
   - **Several** → ask the user which to resume via the blocking question tool
-    (show number, title, and how recent each is).
-  - **None** → tell the user there is no open handoff issue and stop; offer to
+    (show number, title, and how recent each is); reopen the chosen one if
+    closed.
+  - **None** → tell the user there is no handoff issue and stop; offer to
     create one (`/tunan:handoff create`) if they meant to save state instead.
 
   Distinguish "the command succeeded and returned zero issues" from "the command

@@ -116,7 +116,7 @@ The requirement body is markdown-in-issue only — there is no local-file or HTM
 
 The handoff to `plan` passes the req issue ref (`#<N>` or URL), not a file path — see `references/handoff.md`.
 
-**Current-state grounding (optional, technical brainstorms only).** When the brainstorm is inherently about a technical or architectural change (Principle 4), a `tunan:codebase-map` issue — if one exists — is useful grounding for feasibility and for the concerns already present in the repo. Resolve and read it: `gh issue list --label "tunan:codebase-map" --state open --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body` (read its ARCHITECTURE/CONCERNS). Use it to inform what is realistic to build; do not pull implementation detail into the requirement body. For non-technical/product brainstorms, skip it. Absent → skip silently, never block.
+**Current-state grounding (optional, technical brainstorms only).** When the brainstorm is inherently about a technical or architectural change (Principle 4), a `tunan:codebase-map` issue — if one exists — is useful grounding for feasibility and for the concerns already present in the repo. Resolve and read it: `gh issue list --label "tunan:codebase-map" --state all --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body` (read its ARCHITECTURE/CONCERNS). Use it to inform what is realistic to build; do not pull implementation detail into the requirement body. For non-technical/product brainstorms, skip it. Absent → skip silently, never block.
 
 #### 0.1 Resume Existing Work When Appropriate
 
