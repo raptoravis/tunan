@@ -1,6 +1,6 @@
 {
   "name": "tunan",
-  "version": "3.39.0",
+  "version": "3.43.2",
   "type": "module",
   "main": ".opencode/plugins/tunan-plugin.js",
   "description": "AI-powered development tools for code review, research, design, and workflow automation.",
