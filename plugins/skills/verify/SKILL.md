@@ -43,7 +43,7 @@ and reports checks only.
 Resolve which commands to run, in this precedence:
 
 1. **Config** — the `verify:` block in the repo's `tunan:config` GitHub issue.
-   Resolve it with `gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'`,
+   Resolve it with `gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'`,
    then read its body (`gh issue view <N> --json body`) and parse the fenced
    `yaml` block. It may name `test`, `lint`, `build` commands explicitly. If no
    `tunan:config` issue exists, or `gh` is unavailable, skip this source and

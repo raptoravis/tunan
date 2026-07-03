@@ -281,7 +281,7 @@ Project config lives in a **GitHub issue labeled `tunan:config`**, not a local f
 1. **Read:** resolve the config issue, then read and parse its fenced `yaml` block:
 
    ```bash
-   gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+   gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'
    ```
 
    If that returns a number `<N>`, `gh issue view <N> --json body --jq .body` and parse the ```yaml block. Prefer a runtime read over a `!` pre-resolution — the multi-step gh read does not fit pre-resolution's single-command safety constraints, and config reads are not hot enough to need load-time resolution.

@@ -195,7 +195,7 @@ if ($in_repo) {
   if (Get-Command gh -ErrorAction SilentlyContinue) {
     & gh auth status *> $null
     if ($LASTEXITCODE -eq 0) {
-      $num = (& gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty' 2>$null | Out-String).Trim()
+      $num = (& gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty' 2>$null | Out-String).Trim()
       if ($num) { $config_issue = 'present' } else { $config_issue = 'missing' }
     }
   }

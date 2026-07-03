@@ -224,7 +224,7 @@ Skipping this entirely is fine - the skill does not require a schedule to functi
 
 ## Config Storage Shape
 
-After the interview completes, merge a `pulse_*` block into the repo's `tunan:config` GitHub issue body (the fenced `yaml` block under the `<!-- tunan:config -->` marker), not a local file. Resolve the issue with `gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'`, read its body (`gh issue view <N> --json body`), merge the `pulse_*` keys into the yaml block preserving any non-pulse keys already present (e.g., `work_delegate_*`), and write it back with `gh issue edit <N> --body-file <tmpfile>`.
+After the interview completes, merge a `pulse_*` block into the repo's `tunan:config` GitHub issue body (the fenced `yaml` block under the `<!-- tunan:config -->` marker), not a local file. Resolve the issue with `gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'`, read its body (`gh issue view <N> --json body`), merge the `pulse_*` keys into the yaml block preserving any non-pulse keys already present (e.g., `work_delegate_*`), and write it back with `gh issue edit <N> --body-file <tmpfile>`.
 
 If no `tunan:config` issue exists yet, create it first (ensure the `tunan:config` label exists, then `gh issue create --title "[config] tunan settings" --label "tunan:config" --body-file <tmpfile>` with the `pulse_*` block in the yaml). See the config-issue storage contract documented in the `setup` skill.
 

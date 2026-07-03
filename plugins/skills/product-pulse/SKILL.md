@@ -80,7 +80,7 @@ Run the create command only if the list shows no `tunan:pulse` label.
 Project config lives in the repo's `tunan:config` GitHub issue, not a local file. Resolve and read it:
 
 ```bash
-gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'
 ```
 
 If that returns a number `<N>`, read its body and parse the fenced `yaml` block, extracting values for the `pulse_*` keys listed under "Config keys" below:
@@ -119,7 +119,7 @@ If the argument was `setup`, `reconfigure`, or `edit config`, go to Phase 1 rega
 
 #### 1.0 Seed from the project doc (if available)
 
-Before asking any questions, read the `tunan:project` issue if it exists (`gh issue list --label "tunan:project" --state open --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`). If present, extract:
+Before asking any questions, read the `tunan:project` issue if it exists (`gh issue list --label "tunan:project" --state all --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`). If present, extract:
 
 - The product name from the `name` key in the body's YAML frontmatter
 - The list of key metrics from the `## Key metrics` section, one per line
@@ -147,13 +147,13 @@ Apply the pushback rules in `references/interview.md` for each section. Treat ev
 
 If the user offers read-write database access, refuse and offer the alternatives documented in `references/interview.md` section 6.
 
-Write the captured config to the repo's `tunan:config` GitHub issue as flat `pulse_*` keys in its fenced `yaml` block, using the schema in `references/interview.md` under "Config Storage Shape". Resolve the issue (`gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'`), read its body (`gh issue view <N> --json body`), merge the new `pulse_*` keys preserving any non-pulse keys (e.g., `work_delegate_*`), and write it back (`gh issue edit <N> --body-file <tmpfile>`). If no `tunan:config` issue exists, create it first (ensure the `tunan:config` label exists, then `gh issue create --title "[config] tunan settings" --label "tunan:config" --body-file <tmpfile>`). Show the resulting pulse block to the user in chat and offer one round of edits.
+Write the captured config to the repo's `tunan:config` GitHub issue as flat `pulse_*` keys in its fenced `yaml` block, using the schema in `references/interview.md` under "Config Storage Shape". Resolve the issue (`gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'`), read its body (`gh issue view <N> --json body`), merge the new `pulse_*` keys preserving any non-pulse keys (e.g., `work_delegate_*`), and write it back (`gh issue edit <N> --body-file <tmpfile>`). If no `tunan:config` issue exists, create it first (ensure the `tunan:config` label exists, then `gh issue create --title "[config] tunan settings" --label "tunan:config" --body-file <tmpfile>`). Show the resulting pulse block to the user in chat and offer one round of edits.
 
 After the config is written, run the **scheduling recommendation** from `references/interview.md` section 9: offer to set up a recurring run so the user gets the pulse on a cadence instead of having to remember to run it. Accept yes/no/later. If yes, hand off to whichever scheduling primitive the current harness exposes — the in-plugin `schedule` skill if it is installed, otherwise note that scheduling is platform-specific (cron, GitHub Actions, the host's own automation) and emit a brief hint covering what would need to run. Do not schedule inline. Then proceed to Phase 2.
 
 ### Phase 2: Run the Pulse
 
-If Phase 1 ran (first run, or `setup`/`reconfigure` argument), re-read the `tunan:config` issue body (resolve via `gh issue list --label "tunan:config"`, then `gh issue view <N> --json body`) to pick up any `pulse_*` edits written during the Phase 1 review step. Otherwise, use the `pulse_*` values already extracted in Phase 0. Apply hard defaults for any unset settings (see Phase 0 "Config keys").
+If Phase 1 ran (first run, or `setup`/`reconfigure` argument), re-read the `tunan:config` issue body (resolve via `gh issue list --label "tunan:config" --state all`, then `gh issue view <N> --json body`) to pick up any `pulse_*` edits written during the Phase 1 review step. Otherwise, use the `pulse_*` values already extracted in Phase 0. Apply hard defaults for any unset settings (see Phase 0 "Config keys").
 
 #### 2.1 Dispatch Queries
 

@@ -50,7 +50,7 @@ GSD's source tree to where capabilities live.
       `tunan:config` issue's yaml block:
 
       ```bash
-      gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+      gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'
       ```
 
       If that returns a number `<N>`, `gh issue view <N> --json body --jq .body`
@@ -141,7 +141,7 @@ Re-express each accepted capability in tunan's own shape:
    `gsd_synced_at: <today ISO date>` into the `tunan:config` issue's yaml block,
    **preserving every existing key** (including sync-ups's `upstream_sync_baseline`):
 
-   - Resolve the issue number (`gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'`).
+   - Resolve the issue number (`gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'`).
    - **Issue exists** → read its body, update/insert the two keys in the yaml block,
      write the merged body to a temp file, and `gh issue edit <N> --body-file <tmpfile>`.
    - **Issue absent** → ensure the label exists (`gh label list --search "tunan:config"`,

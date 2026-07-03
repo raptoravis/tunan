@@ -199,7 +199,7 @@ if [ "$in_repo" = "yes" ]; then
   # The config issue is the source of truth. Checking it needs an authenticated
   # gh; when gh is unavailable leave config_issue=skip (offline diagnostic).
   if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    if [ -n "$(gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty' 2>/dev/null)" ]; then
+    if [ -n "$(gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty' 2>/dev/null)" ]; then
       config_issue="present"
     else
       config_issue="missing"

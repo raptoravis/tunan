@@ -53,7 +53,7 @@ If `gh` is missing, tell the user to install it from `https://cli.github.com` or
 **Resolve the `tunan:project` issue** (one open issue per repo):
 
 ```bash
-gh issue list --label "tunan:project" --state open --json number,title --jq '.[0].number // empty'
+gh issue list --label "tunan:project" --state all --json number,title --jq '.[0].number // empty'
 ```
 
 - **No issue** -> First run. Ensure the `tunan:project` label exists (`gh label list --search "tunan:project"`, else `gh label create "tunan:project" --color 1f883d --description "tunan project intent + roadmap"`). Go to Phase 1; Phase 1 creates the issue with the intent sections plus a placeholder `## Roadmap` (`_No milestones yet — run \`/tunan:new-milestone\` to plan the first._`).

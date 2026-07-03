@@ -39,7 +39,7 @@ mattpocock_sync:
 Resolve the config issue before any read or write:
 
 ```bash
-gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'
 ```
 
 If the config issue does not exist, create it — the baseline is load-bearing for periodic sync and a missing config is a blocker, not a skip:

@@ -60,7 +60,7 @@ Same abort guidance as `new-project` (install gh / authenticate / repo required)
 **Setup gate (blocking).** Check whether the repo has a `tunan:config` issue:
 
 ```bash
-gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'
 ```
 
 If that returns empty, this repo hasn't been through tunan setup — load and run the `setup` skill to completion first, then continue. If `setup` cannot complete (user declines, or it errors), abort rather than extending a roadmap in an unconfigured repo. If it returns a number, setup is already done — continue.
@@ -68,7 +68,7 @@ If that returns empty, this repo hasn't been through tunan setup — load and ru
 **Require an existing project issue.** Resolve it:
 
 ```bash
-gh issue list --label "tunan:project" --state open --json number --jq '.[0].number // empty'
+gh issue list --label "tunan:project" --state all --json number --jq '.[0].number // empty'
 ```
 
 - **No `tunan:project` issue** → there is no project to extend. Tell the user and offer to run `new-project` to bootstrap one. Stop unless they accept.

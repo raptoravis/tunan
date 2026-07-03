@@ -6,7 +6,7 @@ config — in GitHub, so nothing depends on a machine-local config directory.
 
 ## The config issue
 
-- **One open issue per repo**, labeled `tunan:config`, titled `[config] tunan settings`.
+- **One issue per repo**, labeled `tunan:config`, titled `[config] tunan settings`.
 - Its body's first line is the marker `<!-- tunan:config -->`.
 - The settings live in a fenced ```yaml block in the body. Keys match the
   documented config schema (see `references/config-template.yaml` for the full
@@ -37,7 +37,7 @@ Resolve the config issue number, then read its body and parse the yaml block.
 Cheap enough to run in a skill preflight.
 
 ```bash
-gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'
 ```
 
 If that returns a number `<N>`, read the body and extract the fenced yaml:

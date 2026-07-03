@@ -105,7 +105,7 @@ git diff "$TRUNK...HEAD"               # how it changed
 
 Build a mental model of every change: new features, modified behavior, new routes/views/components, touched data flows. Note anything that produces user-visible behavior — that is what the matrix must cover.
 
-**Ground in the product's personas and vision.** Look for persona and vision context so flows can be judged from real users' eyes, not just "does it work." Check, in order: the `tunan:project` issue (its "Who it's for" section names the primary persona and their job-to-be-done — resolve via `gh issue list --label "tunan:project" --state open --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`), `VISION.md`, and any persona docs (e.g. `docs/personas/`, `PERSONAS.md`). Capture the 1-3 primary personas and what each cares about. If none exist, infer a reasonable primary persona from the product and the diff, and say so in the report.
+**Ground in the product's personas and vision.** Look for persona and vision context so flows can be judged from real users' eyes, not just "does it work." Check, in order: the `tunan:project` issue (its "Who it's for" section names the primary persona and their job-to-be-done — resolve via `gh issue list --label "tunan:project" --state all --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`), `VISION.md`, and any persona docs (e.g. `docs/personas/`, `PERSONAS.md`). Capture the 1-3 primary personas and what each cares about. If none exist, infer a reasonable primary persona from the product and the diff, and say so in the report.
 
 ### Phase 2: Map the Flows, Then Build the Matrix
 

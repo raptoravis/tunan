@@ -74,7 +74,7 @@ Run the create command only if the list shows no `tunan:project` label.
 **Resolve any existing project issue:**
 
 ```bash
-gh issue list --label "tunan:project" --state open --json number --jq '.[0].number // empty'
+gh issue list --label "tunan:project" --state all --json number --jq '.[0].number // empty'
 ```
 
 - **A `tunan:project` issue already exists** → this is not a new project. Tell the user, and use the blocking question tool to offer: *Define the next milestone* (recommended → hand off to `new-milestone`) / *Revise the existing project intent* (re-run the relevant Phase 1 sections and update in place) / *Cancel*. Do not create a second project issue.
@@ -83,7 +83,7 @@ gh issue list --label "tunan:project" --state open --json number --jq '.[0].numb
 **Setup gate (blocking).** Check whether the repo has a `tunan:config` issue:
 
 ```bash
-gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'
 ```
 
 If that returns empty, this repo hasn't been through tunan setup — load and run the `setup` skill to completion first, then continue to Phase 1. If `setup` cannot complete (user declines, or it errors), abort rather than bootstrapping a project into an unconfigured repo. If it returns a number, setup is already done — continue.

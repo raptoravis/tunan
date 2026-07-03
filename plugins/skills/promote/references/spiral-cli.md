@@ -26,7 +26,7 @@ When Spiral is unauthed or absent, offer setup once. First check the opt-out so 
 Read the project config from the repo's `tunan:config` GitHub issue (not a local file). Resolve it, then read its body's fenced `yaml` block:
 
 ```bash
-gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'
 ```
 ```bash
 gh issue view <N> --json body --jq .body

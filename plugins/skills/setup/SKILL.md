@@ -93,7 +93,7 @@ Project config lives in a **GitHub issue labeled `tunan:config`**, not a local f
 **Check for the config issue:**
 
 ```bash
-gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'
 ```
 
 **Absent (create once):** ask whether to create it:

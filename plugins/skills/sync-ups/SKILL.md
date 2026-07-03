@@ -47,7 +47,7 @@ Confirm the working context before touching anything:
       from the `tunan:config` issue's yaml block:
 
       ```bash
-      gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+      gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'
       ```
 
       If that returns a number `<N>`, `gh issue view <N> --json body --jq .body`
@@ -161,7 +161,7 @@ unresolved or unreported.
    and `upstream_synced_at: <today ISO date>` into the `tunan:config` issue's
    yaml block, **preserving every existing key**:
 
-   - Resolve the issue number (`gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'`).
+   - Resolve the issue number (`gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'`).
    - **Issue exists** → read its body, update/insert the two keys in the yaml
      block, write the merged body to a temp file, and
      `gh issue edit <N> --body-file <tmpfile>`.

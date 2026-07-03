@@ -43,7 +43,7 @@ The requirement is stored in a GitHub issue, so a working, authenticated `gh` is
 4. **Setup gate (blocking).** Check whether the repo has a `tunan:config` issue:
 
    ```bash
-   gh issue list --label "tunan:config" --state open --json number --jq '.[0].number // empty'
+   gh issue list --label "tunan:config" --state all --json number --jq '.[0].number // empty'
    ```
 
    If that returns empty, this repo hasn't been through tunan setup. Do **not** capture yet — load and run the `setup` skill to completion first, then continue this skill from Step 2. If `setup` cannot complete (user declines, or it errors), abort `new-raw` with a clear message rather than capturing into an unconfigured repo. If the command returns a number, setup is already done — continue.

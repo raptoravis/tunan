@@ -7,7 +7,7 @@ This contract is duplicated byte-for-byte across `new-project/references/project
 ## Read recipe (consumers and both skills)
 
 ```bash
-gh issue list --label "tunan:project" --state open --json number --jq '.[0].number // empty'
+gh issue list --label "tunan:project" --state all --json number --jq '.[0].number // empty'
 ```
 
 If that returns a number `<N>`, read and parse its body:
