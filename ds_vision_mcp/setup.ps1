@@ -61,7 +61,7 @@ $EnvFile = Join-Path $HOME ".env"
 if (Test-Path $EnvFile) {
     Write-Host "  .env   : $EnvFile (已存在)" -ForegroundColor Green
 } else {
-    Write-Host "  .env   : $EnvFile (不存在 — 记得写入 DS_VISION_API_KEY)" -ForegroundColor Yellow
+    Write-Host "  .env   : $EnvFile (不存在 — 记得写入 SILICONFLOW_API_KEY)" -ForegroundColor Yellow
 }
 
 # 先移除同名旧注册(忽略不存在的报错),再添加

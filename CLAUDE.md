@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-This is the **tunan** plugin — 43 agents, 64 skills, and 5 MCP servers that ship as a marketplace plugin for Claude Code, Codex, and OpenCode. The plugin payload lives under `plugins/`.
+This is the **tunan** plugin — 43 agents, 66 skills, and 5 MCP servers that ship as a marketplace plugin for Claude Code, Codex, and OpenCode. The plugin payload lives under `plugins/`.
 
 ## Plugin structure
 

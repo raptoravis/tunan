@@ -7,7 +7,8 @@ ds_vision_mcp — 给纯文本模型(如 DeepSeek)补上"看图"能力的极简 
   * 零三方依赖: 只用 Python 标准库 + 系统自带的 curl.exe 发 HTTP 请求,
     彻底绕过 Anaconda/conda 自带 OpenSSL 与某些证书链不兼容的问题。
   * OpenAI 兼容: 任何提供 /chat/completions 且支持 image_url 的视觉端点都能接,
-    base_url / api_key / model 全部走环境变量,默认指向小米 MiMo。
+    base_url / api_key / model 全部走环境变量,默认指向硅基流动 SiliconFlow
+    (并自动复用 ~/.env 里已有的 SILICONFLOW_* 配置,零额外配置)。
   * stdio JSON-RPC: 标准 MCP over stdio,逐行读 stdin、逐行写 stdout。
 
 对外暴露一个工具: describe_image(image_path, prompt?)
@@ -64,15 +65,29 @@ def _load_dotenv():
 
 
 def _get_config():
-    """从环境变量读取后端配置。默认指向小米 MiMo(OpenAI 兼容端点)。"""
+    """从环境变量读取后端配置。
+
+    优先级:
+      DS_VISION_*        显式覆盖,可指向任意 OpenAI 兼容端点(最高)
+      SILICONFLOW_*      复用 ~/.env 里已有的硅基流动配置(零额外配置)
+      内置默认            SiliconFlow + Qwen/Qwen2.5-VL-72B-Instruct
+    """
     _load_dotenv()
-    base_url = os.environ.get(
-        "DS_VISION_BASE_URL", "https://api.mimo.xiaomi.com/v1"
+    api_key = (
+        os.environ.get("DS_VISION_API_KEY")
+        or os.environ.get("SILICONFLOW_API_KEY")
+        or ""
+    )
+    base_url = (
+        os.environ.get("DS_VISION_BASE_URL")
+        or os.environ.get("SILICONFLOW_BASE_URL")
+        or "https://api.siliconflow.cn/v1"
     ).rstrip("/")
     return {
-        "api_key": os.environ.get("DS_VISION_API_KEY", ""),
+        "api_key": api_key,
         "base_url": base_url,
-        "model": os.environ.get("DS_VISION_MODEL", "mimo-v2.5"),
+        # 模型只认 DS_VISION_MODEL;切端点时一并覆盖它(如 dashscope: qwen-vl-max)
+        "model": os.environ.get("DS_VISION_MODEL", "Qwen/Qwen2.5-VL-72B-Instruct"),
         # 整体超时(秒),交给 curl 控制
         "timeout": int(os.environ.get("DS_VISION_TIMEOUT", "120")),
     }
@@ -109,7 +124,8 @@ def call_vision(image_path, prompt):
     cfg = _get_config()
     if not cfg["api_key"]:
         raise RuntimeError(
-            "未设置 DS_VISION_API_KEY 环境变量,无法调用视觉模型。"
+            "未设置视觉模型 API key:请在 ~/.env 写入 SILICONFLOW_API_KEY,"
+            "或用 DS_VISION_API_KEY 显式覆盖。"
         )
 
     data_url = encode_image(image_path)
