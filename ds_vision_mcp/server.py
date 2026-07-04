@@ -7,8 +7,9 @@ ds_vision_mcp — 给纯文本模型(如 DeepSeek)补上"看图"能力的极简 
   * 零三方依赖: 只用 Python 标准库 + 系统自带的 curl.exe 发 HTTP 请求,
     彻底绕过 Anaconda/conda 自带 OpenSSL 与某些证书链不兼容的问题。
   * OpenAI 兼容: 任何提供 /chat/completions 且支持 image_url 的视觉端点都能接,
-    base_url / api_key / model 全部走环境变量,默认指向硅基流动 SiliconFlow
-    (并自动复用 ~/.env 里已有的 SILICONFLOW_* 配置,零额外配置)。
+     base_url / api_key / model 全部走环境变量。
+   * 多提供者: 与 tunan:vision skill 共用 ~/.env,自动识别 doubao / qwen /
+     openai / siliconflow 四个提供者,也支持 VISION_PROVIDER 显式选择。
   * stdio JSON-RPC: 标准 MCP over stdio,逐行读 stdin、逐行写 stdout。
 
 对外暴露一个工具: describe_image(image_path, prompt?)
@@ -29,16 +30,49 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", write_through
 
 
 # --------------------------------------------------------------------------- #
+# 提供者注册表(与 skills/vision/scripts/vision.py 的 PROVIDERS 对齐)
+# --------------------------------------------------------------------------- #
+PROVIDERS = {
+    "doubao": {
+        "key_env": "DOUBAO_API_KEY",
+        "base_env": "DOUBAO_BASE_URL",
+        "base_default": "https://ark.cn-beijing.volces.com/api/v3",
+        "model_default": "doubao-seed-2-0-pro-260215",
+    },
+    "qwen": {
+        "key_env": "DASHSCOPE_API_KEY",
+        "base_env": "DASHSCOPE_BASE_URL",
+        "base_default": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "model_default": "qwen-vl-max",
+    },
+    "openai": {
+        "key_env": "OPENAI_API_KEY",
+        "base_env": "OPENAI_BASE_URL",
+        "base_default": "https://api.openai.com/v1",
+        "model_default": "gpt-4o",
+    },
+    "siliconflow": {
+        "key_env": "SILICONFLOW_API_KEY",
+        "base_env": "SILICONFLOW_BASE_URL",
+        "base_default": "https://api.siliconflow.cn/v1",
+        "model_default": "Qwen/Qwen2.5-VL-72B-Instruct",
+    },
+}
+
+# --------------------------------------------------------------------------- #
 # 配置
 # --------------------------------------------------------------------------- #
 def _load_dotenv():
-    """把 home 目录下的 ~/.env 加载进环境变量(零依赖,已存在的真实环境变量优先)。
+    """把 ~/.env 加载进环境变量(与 vision skill 共用的零依赖 loader)。
 
-    支持: KEY=VALUE / KEY="VALUE" / KEY='VALUE'、# 注释、可选的 export 前缀。
-    路径可用 DS_VISION_ENV_FILE 覆盖。
+    支持: KEY=VALUE / KEY="VALUE" / KEY='VALUE'、# 注释、export 前缀。
+    路径: VISION_ENV_FILE(与 vision skill 统一)或 DS_VISION_ENV_FILE(兼容旧版),
+    默认 ~/.env。真实环境变量优先,不覆盖。
     """
-    path = os.environ.get("DS_VISION_ENV_FILE") or os.path.join(
-        os.path.expanduser("~"), ".env"
+    path = (
+        os.environ.get("DS_VISION_ENV_FILE")
+        or os.environ.get("VISION_ENV_FILE")
+        or os.path.join(os.path.expanduser("~"), ".env")
     )
     if not os.path.isfile(path):
         return
@@ -57,43 +91,99 @@ def _load_dotenv():
                 val = val.strip()
                 if (len(val) >= 2) and val[0] == val[-1] and val[0] in "\"'":
                     val = val[1:-1]
-                # 真实环境变量优先,不覆盖
                 if key and key not in os.environ:
                     os.environ[key] = val
     except OSError:
         pass
 
 
-def _get_config():
-    """从环境变量读取后端配置。
+def _resolve_model(provider_name, config):
+    """按优先级解析模型: VISION_MODEL(全局) > {PROVIDER}_MODEL > 内置默认。"""
+    global_model = os.environ.get("VISION_MODEL", "")
+    if global_model:
+        return global_model
+    provider_model_env = f"{provider_name.upper()}_MODEL"
+    provider_model = os.environ.get(provider_model_env, "")
+    if provider_model:
+        return provider_model
+    return config["model_default"]
+
+
+def _resolve_provider_config():
+    """按优先级解析提供者配置。
 
     优先级:
-      DS_VISION_*        显式覆盖,可指向任意 OpenAI 兼容端点(最高)
-      SILICONFLOW_*      复用 ~/.env 里已有的硅基流动配置(零额外配置)
-      内置默认            SiliconFlow + Qwen/Qwen2.5-VL-72B-Instruct
+      DS_VISION_*        显式覆盖,可指向任意 OpenAI 兼容端点(最高,兼容旧版)
+      VISION_PROVIDER    指定提供者(doubao | qwen | openai | siliconflow)
+      自动检测           第一个有 *_API_KEY 的提供者
+      内置默认           SiliconFlow(无 key 时后续调用会报明确错误)
     """
     _load_dotenv()
-    api_key = (
-        os.environ.get("DS_VISION_API_KEY")
-        or os.environ.get("SILICONFLOW_API_KEY")
-        or ""
-    )
-    base_url = (
-        os.environ.get("DS_VISION_BASE_URL")
-        or os.environ.get("SILICONFLOW_BASE_URL")
-        or "https://api.siliconflow.cn/v1"
-    ).rstrip("/")
+
+    # (1) DS_VISION_* explicit override (highest priority)
+    ds_api_key = os.environ.get("DS_VISION_API_KEY", "")
+    if ds_api_key:
+        return {
+            "api_key": ds_api_key,
+            "base_url": os.environ.get(
+                "DS_VISION_BASE_URL", "https://api.siliconflow.cn/v1"
+            ).rstrip("/"),
+            "model": os.environ.get(
+                "DS_VISION_MODEL", "Qwen/Qwen2.5-VL-72B-Instruct"
+            ),
+        }
+
+    # (2) VISION_PROVIDER (shared with vision skill)
+    env_provider = os.environ.get("VISION_PROVIDER", "").lower()
+    if env_provider:
+        if env_provider not in PROVIDERS:
+            available = ", ".join(PROVIDERS)
+            raise RuntimeError(
+                f"VISION_PROVIDER='{env_provider}' 不是有效的提供者(可用: {available})"
+            )
+        p = PROVIDERS[env_provider]
+        api_key = os.environ.get(p["key_env"], "")
+        if not api_key:
+            raise RuntimeError(
+                f"VISION_PROVIDER={env_provider},但 {p['key_env']} 未设置。"
+                f"请在 ~/.env 中配置该 key,或更改 VISION_PROVIDER。"
+            )
+        return {
+            "api_key": api_key,
+            "base_url": os.environ.get(p["base_env"], p["base_default"]).rstrip("/"),
+            "model": _resolve_model(env_provider, p),
+        }
+
+    # (3) auto-detect: first provider with an API key set
+    for pname, pconf in PROVIDERS.items():
+        api_key = os.environ.get(pconf["key_env"], "")
+        if api_key:
+            return {
+                "api_key": api_key,
+                "base_url": os.environ.get(
+                    pconf["base_env"], pconf["base_default"]
+                ).rstrip("/"),
+                "model": _resolve_model(pname, pconf),
+            }
+
+    # (4) fallback (no key -- call_vision will error with a clear message)
     return {
-        "api_key": api_key,
-        "base_url": base_url,
-        # 模型只认 DS_VISION_MODEL;切端点时一并覆盖它(如 dashscope: qwen-vl-max)
-        "model": os.environ.get("DS_VISION_MODEL", "Qwen/Qwen2.5-VL-72B-Instruct"),
-        # 整体超时(秒),交给 curl 控制
-        "timeout": int(os.environ.get("DS_VISION_TIMEOUT", "120")),
+        "api_key": "",
+        "base_url": "https://api.siliconflow.cn/v1",
+        "model": "Qwen/Qwen2.5-VL-72B-Instruct",
     }
 
 
-# --------------------------------------------------------------------------- #
+def _get_config():
+    """从环境变量读取后端配置(与 vision skill 共用 ~/.env)。"""
+    cfg = _resolve_provider_config()
+    return {
+        "api_key": cfg["api_key"],
+        "base_url": cfg["base_url"],
+        "model": cfg["model"],
+        "timeout": int(os.environ.get("DS_VISION_TIMEOUT", "120")),
+    }
+
 # 图片 -> base64 data URL
 # --------------------------------------------------------------------------- #
 def encode_image(image_path):
@@ -124,8 +214,9 @@ def call_vision(image_path, prompt):
     cfg = _get_config()
     if not cfg["api_key"]:
         raise RuntimeError(
-            "未设置视觉模型 API key:请在 ~/.env 写入 SILICONFLOW_API_KEY,"
-            "或用 DS_VISION_API_KEY 显式覆盖。"
+            "未设置视觉模型 API key:请在 ~/.env 写入 DOUBAO_API_KEY / "
+            "DASHSCOPE_API_KEY / OPENAI_API_KEY / SILICONFLOW_API_KEY 之一,"
+            "或用 DS_VISION_API_KEY 显式覆盖。详见 skills/vision/.env.example。"
         )
 
     data_url = encode_image(image_path)
@@ -228,7 +319,7 @@ def handle_request(req):
             {
                 "protocolVersion": PROTOCOL_VERSION,
                 "capabilities": {"tools": {}},
-                "serverInfo": {"name": "ds_vision_mcp", "version": "0.1.0"},
+                "serverInfo": {"name": "ds_vision_mcp", "version": "0.2.0"},
             }
         )
 

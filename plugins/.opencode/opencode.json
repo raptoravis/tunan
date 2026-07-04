@@ -8,7 +8,6 @@
     "build": {
       "description": "Primary coding agent for development work",
       "mode": "primary",
-
       "tools": {
         "write": true,
         "edit": true,
@@ -16,60 +15,595 @@
         "read": true
       }
     },
-    "planner": {
-      "description": "Expert planning specialist for complex features and refactoring.",
-      "mode": "subagent",
 
-      "prompt": "{file:prompts/agents/planner.txt}",
-      "tools": {
-        "read": true,
-        "bash": true,
-        "write": false,
-        "edit": false
-      }
+    "adversarial-document-reviewer": {
+      "description": "Challenges premises, surfaces unstated assumptions, and stress-tests decisions in high-stakes documents",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/adversarial-document-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
-    "code-reviewer": {
-      "description": "Expert code review specialist.",
+    "adversarial-reviewer": {
+      "description": "Constructs failure scenarios to break implementations across component boundaries",
       "mode": "subagent",
-
-      "prompt": "{file:prompts/agents/code-reviewer.txt}",
-      "tools": {
-        "read": true,
-        "bash": true,
-        "write": false,
-        "edit": false
-      }
+      "prompt": "{file:../../agents/adversarial-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "agent-native-reviewer": {
+      "description": "Verifies agent-native parity -- any action a user can take, an agent can also take",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/agent-native-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "ankane-readme-writer": {
+      "description": "Creates README files following Ankane-style template for Ruby gems",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/ankane-readme-writer.md}",
+      "tools": { "read": true, "bash": true, "write": true, "edit": true }
+    },
+    "api-contract-reviewer": {
+      "description": "Detects breaking API contract changes in routes, serializers, and type signatures",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/api-contract-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "architecture-strategist": {
+      "description": "Analyzes architectural decisions and pattern compliance",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/architecture-strategist.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "best-practices-researcher": {
+      "description": "Researches and synthesizes external best practices, documentation, and examples",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/best-practices-researcher.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "code-simplicity-reviewer": {
+      "description": "Final pass for simplicity and minimalism -- identifies YAGNI violations and simplification opportunities",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/code-simplicity-reviewer.md}",
+      "tools": { "read": true, "write": true, "edit": true, "bash": true }
+    },
+    "coherence-reviewer": {
+      "description": "Reviews documents for internal consistency, contradictions, and terminology drift",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/coherence-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "correctness-reviewer": {
+      "description": "Reviews code for logic errors, edge cases, state bugs, and error propagation failures",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/correctness-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "data-integrity-guardian": {
+      "description": "Reviews database migrations, data models, and persistent data code for safety",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/data-integrity-guardian.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "data-migration-reviewer": {
+      "description": "Reviews migration files, schema dumps, backfills -- schema drift, mapping correctness, deploy-window safety",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/data-migration-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "deployment-verification-agent": {
+      "description": "Produces Go/No-Go deployment checklists with SQL verification queries and rollback procedures",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/deployment-verification-agent.md}",
+      "tools": { "read": true, "write": true, "edit": true, "bash": true }
+    },
+    "design-implementation-reviewer": {
+      "description": "Visually compares live UI implementation against Figma designs",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/design-implementation-reviewer.md}",
+      "tools": { "read": true, "write": true, "edit": true, "bash": true }
+    },
+    "design-iterator": {
+      "description": "Iteratively refines UI design through screenshot-analyze-improve cycles",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/design-iterator.md}",
+      "tools": { "read": true, "write": true, "edit": true, "bash": true }
+    },
+    "design-lens-reviewer": {
+      "description": "Reviews plans for missing design decisions -- information architecture, interaction states, user flows",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/design-lens-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "feasibility-reviewer": {
+      "description": "Evaluates whether proposed technical approaches will survive contact with reality",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/feasibility-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "figma-design-sync": {
+      "description": "Detects and fixes visual differences between web implementation and Figma design",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/figma-design-sync.md}",
+      "tools": { "read": true, "write": true, "edit": true, "bash": true }
+    },
+    "framework-docs-researcher": {
+      "description": "Gathers comprehensive documentation and best practices for frameworks and libraries",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/framework-docs-researcher.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "git-history-analyzer": {
+      "description": "Performs archaeological analysis of git history to trace code evolution",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/git-history-analyzer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "issue-intelligence-analyst": {
+      "description": "Analyzes GitHub issues to surface recurring themes and pain patterns",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/issue-intelligence-analyst.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "julik-frontend-races-reviewer": {
+      "description": "Reviews Stimulus/Turbo/DOM-timing-sensitive frontend code for race conditions",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/julik-frontend-races-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "learnings-researcher": {
+      "description": "Searches tunan:solution-labeled feature issues for applicable past learnings",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/learnings-researcher.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "maintainability-reviewer": {
+      "description": "Reviews code for structural quality, coupling, naming, dead code, and abstraction debt",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/maintainability-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "pattern-recognition-specialist": {
+      "description": "Analyzes code for design patterns, anti-patterns, naming conventions, and duplication",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/pattern-recognition-specialist.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "performance-oracle": {
+      "description": "Analyzes code for performance bottlenecks, algorithmic complexity, and scalability",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/performance-oracle.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "performance-reviewer": {
+      "description": "Reviews code for runtime performance and scalability issues with confidence calibration",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/performance-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "pr-comment-resolver": {
+      "description": "Evaluates and resolves PR review threads -- assesses validity, implements fixes",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/pr-comment-resolver.md}",
+      "tools": { "read": true, "write": true, "edit": true, "bash": true }
+    },
+    "previous-comments-reviewer": {
+      "description": "Checks whether prior PR review feedback has been addressed in the current diff",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/previous-comments-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "product-lens-reviewer": {
+      "description": "Challenges problem framing, evaluates scope decisions, and surfaces goal misalignment",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/product-lens-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "project-standards-reviewer": {
+      "description": "Audits changes against the project's own AGENTS.md and CLAUDE.md standards",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/project-standards-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "reliability-reviewer": {
+      "description": "Reviews code for production reliability -- error handling, retries, timeouts, background jobs",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/reliability-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "repo-research-analyst": {
+      "description": "Conducts thorough research on repository structure, documentation, conventions, and patterns",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/repo-research-analyst.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "scope-guardian-reviewer": {
+      "description": "Challenges unjustified complexity, scope creep, and premature abstractions",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/scope-guardian-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "security-lens-reviewer": {
+      "description": "Evaluates plans for security gaps -- auth/authz assumptions, data exposure, API vulnerabilities",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/security-lens-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "security-reviewer": {
-      "description": "Security vulnerability detection specialist.",
+      "description": "Reviews code for exploitable vulnerabilities -- auth, user input, permissions",
       "mode": "subagent",
-
-      "prompt": "{file:prompts/agents/security-reviewer.txt}",
-      "tools": {
-        "read": true,
-        "write": true,
-        "edit": true,
-        "bash": true
-      }
+      "prompt": "{file:../../agents/security-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "security-sentinel": {
+      "description": "Performs security audits for vulnerabilities, OWASP compliance, and hardcoded secrets",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/security-sentinel.md}",
+      "tools": { "read": true, "write": true, "edit": true, "bash": true }
+    },
+    "session-historian": {
+      "description": "Synthesizes findings from prior coding-agent sessions about the same problem or topic",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/session-historian.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "slack-researcher": {
+      "description": "Searches Slack for organizational context -- decisions, constraints, and discussions",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/slack-researcher.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "spec-flow-analyzer": {
+      "description": "Analyzes specifications and feature descriptions for user flow completeness and gap identification",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/spec-flow-analyzer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "swift-ios-reviewer": {
+      "description": "Reviews Swift/iOS code -- SwiftUI state, retain cycles, concurrency, Core Data threading",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/swift-ios-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "testing-reviewer": {
+      "description": "Reviews code for test coverage gaps, weak assertions, and brittle tests",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/testing-reviewer.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "web-researcher": {
+      "description": "Performs iterative web research and returns structured external grounding",
+      "mode": "subagent",
+      "prompt": "{file:../../agents/web-researcher.md}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
     }
   },
   "command": {
-    "plan": {
-      "description": "Create a detailed implementation plan for complex features",
-      "template": "{file:commands/plan.md}\n\n$ARGUMENTS",
-      "agent": "planner",
+    "agent-native-architecture": {
+      "description": "Build applications where agents are first-class citizens",
+      "template": "Load the tunan:agent-native-architecture skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "agent-native-audit": {
+      "description": "Run comprehensive agent-native architecture review with scored principles",
+      "template": "Load the tunan:agent-native-audit skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "align": {
+      "description": "AI-initiated alignment protocol -- surface ranked options with best pre-selected as default",
+      "template": "Load the tunan:align skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "brainstorm": {
+      "description": "Explore requirements and approaches through collaborative dialogue, capture as a tunan:req GitHub issue",
+      "template": "Load the tunan:brainstorm skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "capture": {
+      "description": "Zero-friction capture of an idea, note, or follow-up into a lightweight GitHub issue",
+      "template": "Load the tunan:capture skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "check-balance": {
+      "description": "Check LLM provider connectivity and account balance from API keys",
+      "template": "Load the tunan:check-balance skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "clean-gone-branches": {
+      "description": "Clean up local branches whose remote tracking branch is gone",
+      "template": "Load the tunan:clean-gone-branches skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "closeissue": {
+      "description": "Close a specified GitHub issue, or the feature issue for the current req/plan",
+      "template": "Load the tunan:closeissue skill and follow its instructions.\n\n$ARGUMENTS",
       "subtask": true
     },
     "code-review": {
-      "description": "Review code for quality, security, and maintainability",
-      "template": "{file:commands/code-review.md}\n\n$ARGUMENTS",
-      "agent": "code-reviewer",
+      "description": "Structured code review using tiered persona agents, confidence-gated findings, and dedup pipeline",
+      "template": "Load the tunan:code-review skill and follow its instructions.\n\n$ARGUMENTS",
       "subtask": true
     },
-    "security": {
-      "description": "Run comprehensive security review",
-      "template": "{file:commands/security.md}\n\n$ARGUMENTS",
-      "agent": "security-reviewer",
+    "commit": {
+      "description": "Create a git commit with a clear, value-communicating message",
+      "template": "Load the tunan:commit skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "commit-push-pr": {
+      "description": "Commit, push, and open a PR with an adaptive, value-first description",
+      "template": "Load the tunan:commit-push-pr skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "compound": {
+      "description": "Document a recently solved problem as a tunan:solution comment to compound team knowledge",
+      "template": "Load the tunan:compound skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "compound-refresh": {
+      "description": "Refresh stale tunan:solution learnings by reviewing them against the current codebase",
+      "template": "Load the tunan:compound-refresh skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "cp": {
+      "description": "Commit + push current changes with auto-drafted message",
+      "template": "Load the tunan:cp skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "cpm": {
+      "description": "Commit + push directly to protected base (main/master/dev/test) without confirmation prompt",
+      "template": "Load the tunan:cpm skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "debug": {
+      "description": "Systematically find root causes and fix bugs with test-first discipline",
+      "template": "Load the tunan:debug skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "demo-reel": {
+      "description": "Capture a visual demo reel (GIF, terminal recording, screenshots) for PR descriptions",
+      "template": "Load the tunan:demo-reel skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "dhh-rails-style": {
+      "description": "Write Ruby and Rails code in DHH's distinctive 37signals style",
+      "template": "Load the tunan:dhh-rails-style skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "doc-review": {
+      "description": "Review documents using parallel persona agents for role-specific feedback",
+      "template": "Load the tunan:doc-review skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "docs-update": {
+      "description": "Generate or refresh project documentation verified against the live codebase",
+      "template": "Load the tunan:docs-update skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "dogfood": {
+      "description": "Hands-off, diff-scoped browser QA of the active branch with autonomous fixes",
+      "template": "Load the tunan:dogfood skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "forensics": {
+      "description": "Post-mortem a stuck or failed tunan pipeline run -- read-only investigation",
+      "template": "Load the tunan:forensics skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "frontend-design": {
+      "description": "Build web interfaces with genuine design quality, not AI slop",
+      "template": "Load the tunan:frontend-design skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "gemini-imagegen": {
+      "description": "Generate and edit images using Google's Gemini API",
+      "template": "Load the tunan:gemini-imagegen skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "grill-me": {
+      "description": "Relentless one-question-at-a-time interview to stress-test a plan, design, or document",
+      "template": "Load the tunan:grill-me skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "handoff": {
+      "description": "Transfer working context between AI coding sessions via a GitHub issue",
+      "template": "Load the tunan:handoff skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "hotfix": {
+      "description": "Fast-path autonomous pipeline for a bug fix -- full pipeline, minimal plan",
+      "template": "Load the tunan:hotfix skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "ideate": {
+      "description": "Generate and critically evaluate grounded ideas about a topic",
+      "template": "Load the tunan:ideate skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "lfg": {
+      "description": "Full autonomous engineering pipeline end-to-end -- plan, work, review, PR, CI watch",
+      "template": "Load the tunan:lfg skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "loop-me": {
+      "description": "Design workflow specs through a grilling session -- for recurring patterns worth delegating",
+      "template": "Load the tunan:loop-me skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "map-codebase": {
+      "description": "Map an existing codebase into a durable current-state snapshot as a GitHub issue",
+      "template": "Load the tunan:map-codebase skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "merge-pr-verify-close": {
+      "description": "Merge a PR, verify the merged base branch, and close the feature issue",
+      "template": "Load the tunan:merge-pr-verify-close skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "new-milestone": {
+      "description": "Start the next cycle of an existing project -- scope the next milestone",
+      "template": "Load the tunan:new-milestone skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "new-project": {
+      "description": "Bootstrap a new project end to end -- intent, roadmap, first milestone requirements",
+      "template": "Load the tunan:new-project skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "new-raw": {
+      "description": "Capture a requirement from conversation into a GitHub issue as raw source of truth",
+      "template": "Load the tunan:new-raw skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "optimize": {
+      "description": "Run metric-driven iterative optimization loops with parallel experiments",
+      "template": "Load the tunan:optimize skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "plan": {
+      "description": "Create structured implementation plans stored as plan comments on the feature GitHub issue",
+      "template": "Load the tunan:plan skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "polish": {
+      "description": "Start the dev server, open the feature in a browser, and iterate on improvements together",
+      "template": "Load the tunan:polish skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "pov": {
+      "description": "Give a decisive, project-grounded verdict on an external technology, library, or pattern",
+      "template": "Load the tunan:pov skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "product-pulse": {
+      "description": "Generate a time-windowed pulse report on what users experienced and how the product performed",
+      "template": "Load the tunan:product-pulse skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "promote": {
+      "description": "Draft user-facing announcement and marketing copy for a feature that just shipped",
+      "template": "Load the tunan:promote skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "proof": {
+      "description": "Run human-in-the-loop review loops over markdown via Proof collaborative editor",
+      "template": "Load the tunan:proof skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "release-notes": {
+      "description": "Summarize recent tunan plugin releases, or answer questions about past releases",
+      "template": "Load the tunan:release-notes skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "report-bug": {
+      "description": "Report a bug in the tunan plugin",
+      "template": "Load the tunan:report-bug skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "req": {
+      "description": "Short alias for brainstorm -- explore requirements and capture as a tunan:req GitHub issue",
+      "template": "Load the tunan:req skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "resolve-pr-feedback": {
+      "description": "Resolve PR review feedback by evaluating validity and fixing issues in parallel",
+      "template": "Load the tunan:resolve-pr-feedback skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "resume": {
+      "description": "Resume an interrupted tunan feature pipeline at the right stage",
+      "template": "Load the tunan:resume skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "retro": {
+      "description": "Generate a time-windowed engineering retrospective on what actually shipped",
+      "template": "Load the tunan:retro skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "riffrec-feedback-analysis": {
+      "description": "Convert Riffrec recordings, videos, audio, or notes into structured feedback",
+      "template": "Load the tunan:riffrec-feedback-analysis skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "sessions": {
+      "description": "Search and ask questions about coding agent session history across Claude Code, Codex, and Cursor",
+      "template": "Load the tunan:sessions skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "setup": {
+      "description": "Diagnose and configure tunan environment -- CLI dependencies, plugin version, repo config",
+      "template": "Load the tunan:setup skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "simplify-code": {
+      "description": "Simplify and refine recently changed code for clarity, reuse, quality, and efficiency",
+      "template": "Load the tunan:simplify-code skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "slack-research": {
+      "description": "Search Slack for interpreted organizational context -- decisions, constraints, discussion arcs",
+      "template": "Load the tunan:slack-research skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "status": {
+      "description": "Read-only snapshot of what's left -- open PRs, open issues, unfinished handoff items",
+      "template": "Load the tunan:status skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "strategy": {
+      "description": "Create or sharpen the product strategy through a rigorous interview",
+      "template": "Load the tunan:strategy skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "sync-gsd": {
+      "description": "Audit upstream open-gsd/gsd-core for new capabilities worth absorbing into tunan",
+      "template": "Load the tunan:sync-gsd skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "sync-mattpocock": {
+      "description": "Periodically sync skills from mattpocock/skills into tunan",
+      "template": "Load the tunan:sync-mattpocock skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "sync-ups": {
+      "description": "Merge the latest upstream everyinc/compound-engineering-plugin changes into tunan",
+      "template": "Load the tunan:sync-ups skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "test-browser": {
+      "description": "Run browser tests on pages affected by current PR or branch",
+      "template": "Load the tunan:test-browser skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "test-xcode": {
+      "description": "Build and test iOS apps on simulator using XcodeBuildMCP",
+      "template": "Load the tunan:test-xcode skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "tweak": {
+      "description": "Fast-path autonomous pipeline for a small change -- minimal plan, lightest code review",
+      "template": "Load the tunan:tweak skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "update": {
+      "description": "Check if the tunan plugin is up to date and recommend the update command if not",
+      "template": "Load the tunan:update skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "verify": {
+      "description": "Run project test/lint/build checks and emit a structured validation contract",
+      "template": "Load the tunan:verify skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "vision": {
+      "description": "Call vision models to analyze images -- screenshots, UI layouts, diagrams, charts",
+      "template": "Load the tunan:vision skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "work": {
+      "description": "Execute work efficiently while maintaining quality and finishing features",
+      "template": "Load the tunan:work skill and follow its instructions.\n\n$ARGUMENTS",
+      "subtask": true
+    },
+    "worktree": {
+      "description": "Create an isolated git worktree for parallel feature work or PR review",
+      "template": "Load the tunan:worktree skill and follow its instructions.\n\n$ARGUMENTS",
       "subtask": true
     }
   },
