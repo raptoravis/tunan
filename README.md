@@ -14,8 +14,7 @@ See the [full component reference](plugins/README.md) for the complete inventory
 
 ## Install
 
-
-### Quick install via npx (recommended for all agents)
+### Quick install via npx (recommended)
 
 Install all tunan skills for your AI coding agent in one command:
 
@@ -49,9 +48,13 @@ On Windows (PowerShell):
 
 Use `--force` (`-Force` on Windows) to replace existing skills. Works with any agent that reads skills from `~/.codex/skills/`, `~/.claude/skills/`, `~/.reasonix/skills/`, or `~/.config/opencode/skills/`.
 
-### Claude Code
+> **⚠️ Required next step — run setup.** After installing, run `/tunan:setup` in any project to diagnose your environment, install missing CLI tools and MCP servers, verify `gh` is installed **and** authenticated (the workflow stores its artifacts in GitHub issues), and bootstrap project config. Skipping setup is the most common cause of skills failing on first use. Re-run `/tunan:setup` anytime to re-check.
 
-Register this repository as a plugin marketplace, then install the plugin:
+### Plugin marketplace install
+
+For deeper integration (slash commands, MCP auto-load), install as a native plugin through your agent's marketplace.
+
+**Claude Code:**
 
 ```text
 /plugin marketplace add raptoravis/tunan
@@ -60,36 +63,22 @@ Register this repository as a plugin marketplace, then install the plugin:
 
 Reload when prompted.
 
-> **⚠️ Required next step — run setup.** Installing the plugin only registers the skills; it does **not** configure your environment. Once the plugin is installed and reloaded, run this in any project:
->
-> ```text
-> /tunan:setup
-> ```
->
-> It diagnoses your environment, installs missing CLI tools and MCP servers, verifies `gh` is installed **and** authenticated (the workflow stores its artifacts in GitHub issues), and bootstraps project config — all in one interactive flow. Skipping setup is the most common cause of skills failing on first use. Re-run `/tunan:setup` anytime to re-check.
-
-### Codex
-
-Register the marketplace, then install through the Codex TUI:
+**Codex:**
 
 ```bash
 codex plugin marketplace add raptoravis/tunan
 codex
 ```
 
-Inside Codex, run `/plugins`, select the **tunan** marketplace, choose the **tunan** plugin, and install. Restart Codex afterward. (Codex installs the skill set natively; the review/research/workflow agents that some skills spawn are a Claude Code feature.)
+Inside Codex, run `/plugins`, select the **tunan** marketplace, choose the **tunan** plugin, and install. Restart Codex afterward.
 
-> **⚠️ Required next step — run setup.** After restarting, run `/tunan:setup` in any project to diagnose your environment, install missing tools, verify `gh` auth, and bootstrap project config. Don't skip it — it's what makes the skills work on first use.
-
-### OpenCode
-
-Install via CLI (this also adds the entry to your config automatically):
+**OpenCode:**
 
 ```bash
 opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git
 ```
 
-Or add to the `plugin` array in your `opencode.json` (global at `~/.config/opencode/opencode.json` or project-level):
+Or add to the `plugin` array in your `opencode.json`:
 
 ```json
 {
@@ -97,34 +86,24 @@ Or add to the `plugin` array in your `opencode.json` (global at `~/.config/openc
 }
 ```
 
-Restart OpenCode. The plugin installs through OpenCode's plugin manager and registers all tunan skills.
+Restart OpenCode.
 
-> **Updating**: To pull the latest version after the repo has been updated, use `--force` to bypass npm's cache:
+> **Updating**: To pull the latest version, use `--force` to bypass npm's cache:
 >
 > ```bash
 > opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git --force
 > ```
 
-Or run OpenCode directly from a checkout:
-
-```bash
-git clone https://github.com/raptoravis/tunan.git
-cd tunan
-opencode
-```
-
-> **⚠️ Required next step — run setup.** After installation, run `/tunan:setup` in any project to diagnose your environment, install missing tools, verify `gh` auth, and bootstrap project config.
-
 ### Local development (from a checkout)
 
-To run the plugin straight from a working copy — useful when developing or testing changes — point Claude Code at the bundled plugin directory:
+Point your agent directly at the checkout to test skill changes live:
 
 ```bash
 git clone https://github.com/raptoravis/tunan.git
 claude --plugin-dir ./tunan/plugins
 ```
 
-This loads the plugin's skills, agents, and MCP servers directly from your checkout, no marketplace registration required.
+**Cache trap:** `~/.claude/plugins/cache/tunan/` is a stale cache copy. Always edit under `skills/` in the repo, not the cache.
 
 ## MCP servers
 
@@ -137,7 +116,7 @@ Two heavier servers are **opt-in** (they pull large dependencies — browser bin
 
 ## Getting started
 
-After install, run `/tunan:setup` first to verify your environment (see the **⚠️ Required next step** note above), then try:
+After install, run `/tunan:setup` first to verify your environment, then try:
 
 - `/tunan:new-project` — bootstrap a new project: define intent (problem, approach, persona, metrics, tracks) and lay out an initial milestone roadmap, stored as a `tunan:project` issue that ideate/brainstorm/plan read as grounding
 - `/tunan:strategy` — sharpen the product strategy through a Rumelt-style interview that pushes back on weak answers; refines the `tunan:project` issue bootstrapped by `new-project`
