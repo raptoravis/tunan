@@ -15,7 +15,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Resolve paths from the package root (2 levels up from .opencode/plugins/)
 const packageRoot = path.resolve(__dirname, '../..');
-const tunanSkillsDir = path.resolve(packageRoot, 'plugins/skills');
+const tunanSkillsDir = path.resolve(packageRoot, 'skills');
 const instructionsFile = path.resolve(packageRoot, 'plugins/.opencode/INSTRUCTIONS.md');
 
 // Module-level cache for bootstrap content

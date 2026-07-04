@@ -2,17 +2,52 @@
 
 AI-powered development tools that get smarter with every use — make each unit of engineering work easier than the last. Brainstorm requirements, plan implementations, review code with specialized reviewers, research institutional learnings, and capture solved problems so future work compounds.
 
-This repository ships the **`tunan`** plugin, bundling 43 agents, 64 skills, and 4 MCP servers for Claude Code, Codex, and OpenCode.
+This repository ships the **`tunan`** plugin, bundling 43 agents, 66 skills, and 4 MCP servers for Claude Code, Codex, OpenCode, and Reasonix.
 
 | Component   | Count |
 | ----------- | ----- |
 | Agents      | 43    |
-| Skills      | 64    |
+| Skills      | 66    |
 | MCP Servers | 4     |
 
 See the [full component reference](plugins/README.md) for the complete inventory, grouped by category.
 
 ## Install
+
+
+### Quick install via npx (recommended for all agents)
+
+Install all tunan skills for your AI coding agent in one command:
+
+```bash
+npx skills add raptoravis/tunan --skill '*' -a claude-code -g -y   # Claude Code
+npx skills add raptoravis/tunan --skill '*' -a codex -g -y         # Codex
+npx skills add raptoravis/tunan --skill '*' -a reasonix -g -y      # Reasonix
+```
+
+Or install from a cloned checkout:
+
+```bash
+git clone https://github.com/raptoravis/tunan.git
+cd tunan
+./install.sh --codex      # Codex
+./install.sh --claude     # Claude Code
+./install.sh --opencode   # OpenCode
+./install.sh --reasonix   # Reasonix
+./install.sh --all        # All at once
+```
+
+On Windows (PowerShell):
+
+```powershell
+.\install.ps1 -Codex
+.\install.ps1 -Claude
+.\install.ps1 -OpenCode
+.\install.ps1 -Reasonix
+.\install.ps1 -All
+```
+
+Use `--force` (`-Force` on Windows) to replace existing skills. Works with any agent that reads skills from `~/.codex/skills/`, `~/.claude/skills/`, `~/.reasonix/skills/`, or `~/.config/opencode/skills/`.
 
 ### Claude Code
 

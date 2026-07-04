@@ -24,15 +24,34 @@
     "image-generation",
     "claude-code",
     "codex",
-    "opencode"
+    "opencode",
+    "agent-skills",
+    "npx-skills",
+    "reasonix",
+    "ai-tools"
   ],
   "files": [
+    "skills/",
+    "agents/",
     "plugins/",
     ".opencode/plugins/tunan-plugin.js",
+    "install.sh",
+    "install.ps1",
+    "bin/cli.js",
     "README.md",
     "LICENSE"
   ],
   "engines": {
     "node": ">=18"
+  },
+  "bin": {
+    "tunan": "./bin/cli.js"
+  },
+  "scripts": {
+    "install:reasonix": "./install.sh --reasonix",
+    "install:codex": "./install.sh --codex",
+    "install:all": "./install.sh --all",
+    "install:opencode": "./install.sh --opencode",
+    "install:claude": "./install.sh --claude"
   }
 }

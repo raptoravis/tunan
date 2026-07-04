@@ -3,7 +3,7 @@
   "default_agent": "build",
   "plugin": ["./plugins"],
   "skills": {
-    "paths": ["../plugins/skills"]
+    "paths": ["../skills"]
   },
   "instructions": [
     "AGENTS.md",

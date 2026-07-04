@@ -14,7 +14,7 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "@opencode-ai/plugin": "1.17.11",
+    "@opencode-ai/plugin": "1.17.13",
     "glob": "^10.3.10"
   },
   "devDependencies": {

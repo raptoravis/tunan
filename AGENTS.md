@@ -4,20 +4,34 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## What this repo is
 
-This is the **tunan** plugin — 43 agents, 64 skills, and 5 MCP servers that ship as a marketplace plugin for Codex, Codex, and OpenCode. The plugin payload lives under `plugins/`.
+This is the **tunan** plugin — 43 agents, 66 skills, and 4 MCP servers that ship as a marketplace plugin and npx-installable skill collection for Claude Code, Codex, OpenCode, Reasonix, and other AI coding agents.
 
-## Plugin structure
+## Repo structure
 
 ```
-plugins/
-├── .Codex-plugin/plugin.json   # Codex manifest (version, skills path, MCP servers)
+skills/<name>/SKILL.md           # Each skill = SKILL.md + references/ (root level, npx-discoverable)
+agents/<name>.md                 # Each agent = bare-name .md file (root level)
+plugins/                         # Plugin manifest payload for Claude Code / Codex marketplaces
+├── .claude-plugin/plugin.json   # Claude Code manifest (version, skills path "../skills/", MCP servers)
 ├── .codex-plugin/plugin.json    # Codex manifest (version + interface section)
 ├── .mcp.json                    # Bundled MCP server config
-├── skills/<name>/SKILL.md       # Each skill = SKILL.md + references/
-├── agents/<name>.md             # Each agent = bare-name .md file
 ├── AGENTS.md                    # Comprehensive authoring guide (read this first)
-└── AGENTS.md                    # Delegates to AGENTS.md via @AGENTS.md
+└── CLAUDE.md                    # Claude Code companion instructions
+install.sh                       # Local skill installer (bash)
+install.ps1                      # Local skill installer (PowerShell)
+bin/cli.js                       # npx entry point
+package.json                     # npm package (enables npx tunan install)
 ```
+
+Skills and agents live at the repo root so that `npx skills add raptoravis/tunan` can discover them. The `plugins/` directory holds the Claude Code and Codex marketplace manifests; plugin manifests reference the root `skills/` via relative paths (`"skills": "../skills/"`).
+
+## Installation
+
+Users install tunan in three ways:
+
+1. **npx (recommended):** `npx skills add raptoravis/tunan --skill '*' -a <agent> -g -y`
+2. **From checkout:** `./install.sh --claude` or `./install.ps1 -Codex`
+3. **Marketplace:** Register `raptoravis/tunan` in Claude Code or Codex plugin marketplace
 
 ## No build / test / lint toolchain
 
@@ -28,21 +42,21 @@ This repo was simplified — the Bun toolchain, release-please, CI workflows, an
 Both manifests MUST stay in sync. When bumping:
 
 ```
-plugins/.Codex-plugin/plugin.json  →  "version": "X.Y.Z"
+plugins/.claude-plugin/plugin.json  →  "version": "X.Y.Z"
 plugins/.codex-plugin/plugin.json   →  "version": "X.Y.Z"
 ```
 
 ## Local development (testing skills live)
 
-Run Codex pointed at the checkout so skills load from disk:
+Run Claude Code pointed at the checkout so skills load from disk:
 
 ```bash
-Codex --plugin-dir ./plugins
+claude --plugin-dir .
 ```
 
-**Cache trap:** `~/.Codex/plugins/cache/tunan/` is a stale cache copy. Always edit under `plugins/` in the repo, not the cache. If you accidentally edited the cache, diff it against the repo source and re-apply to the correct file.
+**Cache trap:** `~/.claude/plugins/cache/tunan/` is a stale cache copy. Always edit under `skills/` in the repo, not the cache. If you accidentally edited the cache, diff it against the repo source and re-apply to the correct file.
 
-## Key conventions (from AGENTS.md)
+## Key conventions (from plugins/AGENTS.md)
 
 ### Naming
 
@@ -92,6 +106,6 @@ Full conventions live in `plugins/AGENTS.md` — read it before making substanti
 - `description:` describes what + when, ≤1024 chars, colons quoted, no raw `<angle-bracket>` tokens
 - Reference files use backtick paths (`` `references/foo.md` ``), NOT markdown links
 - Cross-platform: blocking questions use the platform tool (`AskUserQuestion` / `request_user_input` / `ask_user`)
-- Sub-agent dispatch names platform primitives (`Agent`/`Task` in Codex, `spawn_agent` in Codex)
+- Sub-agent dispatch names platform primitives (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex)
 - Script references use relative paths (`bash scripts/foo.sh`), not `${CLAUDE_PLUGIN_ROOT}`
 - OS: every `.sh` has a `.ps1` twin
