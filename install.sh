@@ -135,7 +135,6 @@ if [[ "$reasonix" == "true" ]]; then
     source_names="$source_names$skill_name "
     dest="$target/$skill_name"
     if [[ -e "$dest" && "$force" != "true" ]]; then
-      echo "Skipping existing skill: $dest"
       continue
     fi
     rm -rf "$dest"

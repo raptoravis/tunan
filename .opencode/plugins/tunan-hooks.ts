@@ -137,7 +137,7 @@ const createTunanHooksPlugin = async () => ({
             };
           }
         }
-        console.error(`[tunan] registered ${Object.keys(config.command).filter(k => k.startsWith('tunan-')).length} slash commands`);
+        console.log(`[tunan] registered ${Object.keys(config.command).filter(k => k.startsWith('tunan-')).length} slash commands`);
       }
     } catch (e) {
       console.error('[tunan] config hook error:', (e as Error).message);
