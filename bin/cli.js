@@ -9,18 +9,22 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
 
 function usage() {
-  console.log(`tunan installer — install skills for AI coding agents
+  console.log(`tunan installer — install tunan for AI coding agents
 
 Usage:
   npx tunan install [--claude] [--codex] [--opencode] [--reasonix] [--all] [--force]
 
+Each platform uses its native install mechanism:
+  Claude Code / Codex / OpenCode → native plugin commands
+  Reasonix                       → file copy (no plugin marketplace)
+
 Install to specific agents:
-  npx tunan install --codex          Install for Codex
-  npx tunan install --claude         Install for Claude Code
-  npx tunan install --opencode       Install for OpenCode
-  npx tunan install --reasonix       Install for Reasonix
-  npx tunan install --all            Install for all agents
-  npx tunan install --all --force    Force-replace existing skills
+  npx tunan install --claude         Claude Code (native plugin)
+  npx tunan install --codex          Codex (native plugin)
+  npx tunan install --opencode       OpenCode (native plugin)
+  npx tunan install --reasonix       Reasonix (file copy)
+  npx tunan install --all            All four platforms
+  npx tunan install --all --force    Force-replace / update
 
 After installing, restart your agent and run /tunan:setup in any project.
 `);
@@ -42,14 +46,12 @@ if (subCmd === 'install') {
   if (isWindows) {
     // Translate bash-style --flags to PowerShell -Flags
     const psArgs = rawArgs.map(a => {
-      if (a === '--codex') return '-Codex';
       if (a === '--claude') return '-Claude';
+      if (a === '--codex') return '-Codex';
       if (a === '--opencode') return '-OpenCode';
       if (a === '--reasonix') return '-Reasonix';
-      if (a === '--agents') return '-Agents';
       if (a === '--all') return '-All';
       if (a === '--force') return '-Force';
-      if (a === '--prune-managed') return '-PruneManaged';
       return a;
     });
 

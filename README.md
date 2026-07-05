@@ -2,7 +2,7 @@
 
 AI-powered development tools that get smarter with every use — make each unit of engineering work easier than the last. Brainstorm requirements, plan implementations, review code with specialized reviewers, research institutional learnings, and capture solved problems so future work compounds.
 
-This repository ships the **`tunan`** plugin, bundling 43 agents, 66 skills, and 4 MCP servers for Claude Code, Codex, OpenCode, and Reasonix.
+This repository ships the **`tunan`** plugin, bundling 43 agents, 66 skills, and 4 MCP servers — as a marketplace plugin for Claude Code, Codex, and OpenCode, and as an npx-installable skill collection for Reasonix.
 
 | Component   | Count |
 | ----------- | ----- |
@@ -14,43 +14,7 @@ See the [full component reference](plugins/README.md) for the complete inventory
 
 ## Install
 
-### Quick install via npx (recommended)
-
-Install all tunan skills for your AI coding agent in one command:
-
-```bash
-npx skills add raptoravis/tunan --skill '*' -a claude-code -g -y   # Claude Code
-npx skills add raptoravis/tunan --skill '*' -a codex -g -y         # Codex
-npx skills add raptoravis/tunan --skill '*' -a reasonix -g -y      # Reasonix
-```
-
-Or install from a cloned checkout:
-
-```bash
-git clone https://github.com/raptoravis/tunan.git
-cd tunan
-./install.sh --codex      # Codex
-./install.sh --claude     # Claude Code
-./install.sh --opencode   # OpenCode
-./install.sh --reasonix   # Reasonix
-./install.sh --all        # All at once
-```
-
-On Windows (PowerShell):
-
-```powershell
-.\install.ps1 -Codex
-.\install.ps1 -Claude
-.\install.ps1 -OpenCode
-.\install.ps1 -Reasonix
-.\install.ps1 -All
-```
-
-Use `--force` (`-Force` on Windows) to replace existing skills. Works with any agent that reads skills from `~/.codex/skills/`, `~/.claude/skills/`, `~/.reasonix/skills/`, or `~/.config/opencode/skills/`.
-
-> **⚠️ Required next step — run setup.** After installing, run `/tunan:setup` in any project to diagnose your environment, install missing CLI tools and MCP servers, verify `gh` is installed **and** authenticated (the workflow stores its artifacts in GitHub issues), and bootstrap project config. Skipping setup is the most common cause of skills failing on first use. Re-run `/tunan:setup` anytime to re-check.
-
-### Native plugin install (CLI)
+### Native plugin (recommended for Claude Code, Codex, OpenCode)
 
 For deeper integration (slash commands, MCP auto-load), install as a native plugin through each tool's CLI. Restart your agent afterward.
 
@@ -77,9 +41,10 @@ claude plugin update tunan@tunan
 ```bash
 # Install
 codex plugin marketplace add raptoravis/tunan
+codex plugin add tunan@tunan
 ```
 
-Launch Codex, run `/plugins`, select the **tunan** marketplace, choose the **tunan** plugin, and install. Restart Codex afterward.
+Restart Codex afterward.
 
 **OpenCode:**
 
@@ -99,9 +64,39 @@ Or add to the `plugin` array in your `opencode.json`:
 }
 ```
 
-### Local development (from a checkout)
+### npx install (Reasonix)
 
-Point your agent directly at the checkout to test skill changes live:
+Reasonix does not have a plugin marketplace — install via npx:
+
+```bash
+npx skills add raptoravis/tunan --skill '*' -a reasonix -g -y
+```
+
+### From checkout (Reasonix only)
+
+For Reasonix, you can install directly from a local clone — the script copies `skills/` into the Reasonix directory:
+
+```bash
+git clone https://github.com/raptoravis/tunan.git
+cd tunan
+./install.sh --reasonix
+```
+
+On Windows (PowerShell):
+
+```powershell
+.\install.ps1 -Reasonix
+```
+
+Use `--force` (`-Force` on Windows) to replace existing skills.
+
+> For Claude Code, Codex, and OpenCode, install directly via the native plugin commands above — no clone needed. The install script also accepts `--claude` / `--codex` / `--opencode` (which delegate to each platform's plugin CLI), but those still install from the marketplace, not the checkout.
+
+> **⚠️ Required next step — run setup.** After installing, run `/tunan:setup` in any project to diagnose your environment, install missing CLI tools and MCP servers, verify `gh` is installed **and** authenticated (the workflow stores its artifacts in GitHub issues), and bootstrap project config. Skipping setup is the most common cause of skills failing on first use. Re-run `/tunan:setup` anytime to re-check.
+
+### Test skill changes live
+
+Point your agent directly at the checkout to test skill edits:
 
 ```bash
 git clone https://github.com/raptoravis/tunan.git

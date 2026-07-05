@@ -3,60 +3,38 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: ./install.sh [--claude] [--codex] [--opencode] [--reasonix] [--agents] [--all] [--force] [--prune-managed] [--env]
+Usage: ./install.sh [--claude] [--codex] [--opencode] [--reasonix] [--all] [--force]
 
-Installs tunan skills from ./skills into local agent skill directories.
-
-Recommended:
-  ./install.sh --codex
-  ./install.sh --claude
-  ./install.sh --reasonix
-  ./install.sh --all
+Installs tunan for AI coding agents using each platform's native install mechanism:
+  Claude Code / Codex / OpenCode → native plugin commands
+  Reasonix                       → file copy (no plugin marketplace)
 
 Targets:
-  --codex    Install into ${CODEX_HOME:-$HOME/.codex}/skills
-  --claude   Install into ${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}
-  --opencode Install into ${OPENCODE_SKILLS_DIR:-$HOME/.config/opencode/skills}
-  --reasonix Install into ${REASONIX_SKILLS_DIR:-$HOME/.reasonix/skills}
-  --agents   Install into ${AGENTS_SKILLS_DIR:-$HOME/.agents/skills}
-  --all      Install into Codex, Claude, OpenCode, and Reasonix
+  --claude   Install via: claude plugin marketplace add raptoravis/tunan && claude plugin install tunan@tunan
+  --codex    Install via: codex plugin marketplace add raptoravis/tunan && codex plugin add tunan@tunan
+  --opencode Install via: opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git
+  --reasonix Install skills into ${REASONIX_SKILLS_DIR:-$HOME/.reasonix}/skills
+  --all      Install for all four platforms
 
 Options:
-  --force          Replace same-named skills in the target directory
-  --prune-managed  Remove stale skills recorded in this repo's managed manifest
-  --env            Load API keys from $HOME/.env (TRIPO_API_KEY, GEMINI_API_KEY, ELEVENLABS_API_KEY)
+  --force   For --reasonix: replace same-named skills. For --claude/--codex/--opencode: passed as --force / update to the plugin command.
 USAGE
 }
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source_dir="$script_dir/skills"
-codex="false"
 claude="false"
+codex="false"
 opencode="false"
 reasonix="false"
-agents="false"
 force="false"
-prune="false"
-env_flag="false"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --codex)
-      codex="true"
-      shift
-      ;;
-    --claude)
-      claude="true"
-      shift
-      ;;
-    --opencode)
-      opencode="true"
-      shift
-      ;;
-    --reasonix)
-      reasonix="true"
-      shift
-      ;;
+    --codex)    codex="true"; shift ;;
+    --claude)   claude="true"; shift ;;
+    --opencode) opencode="true"; shift ;;
+    --reasonix) reasonix="true"; shift ;;
     --all)
       codex="true"
       claude="true"
@@ -64,153 +42,112 @@ while [[ $# -gt 0 ]]; do
       reasonix="true"
       shift
       ;;
-    --agents)
-      agents="true"
-      shift
-      ;;
-    --force)
-      force="true"
-      shift
-      ;;
-    --prune-managed)
-      prune="true"
-      shift
-      ;;
-    --env)
-      env_flag="true"
-      shift
-      ;;
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      usage
-      exit 1
-      ;;
+    --force)    force="true"; shift ;;
+    -h|--help)  usage; exit 0 ;;
+    *)          usage; exit 1 ;;
   esac
 done
 
-if [[ "$env_flag" == "true" ]]; then
-  env_file="${HOME:-$USERPROFILE}/.env"
-  if [[ -f "$env_file" ]]; then
-    while IFS='=' read -r key value || [[ -n "$key" ]]; do
-      key="${key##*( )}"; key="${key%%*( )}"
-      [[ -z "$key" || "$key" =~ ^# ]] && continue
-      case "$key" in
-        TRIPO_API_KEY|GEMINI_API_KEY|ELEVENLABS_API_KEY)
-          value="${value#\"}"; value="${value%\"}"
-          value="${value#\'}"; value="${value%\'}"
-          export "$key"="$value"
-          echo "Set $key from $env_file"
-          ;;
-      esac
-    done < "$env_file"
-  else
-    echo "Warning: --env specified but $env_file not found" >&2
-  fi
-fi
-
-if [[ "$codex" != "true" && "$claude" != "true" && "$opencode" != "true" && "$reasonix" != "true" && "$agents" != "true" ]]; then
+if [[ "$codex" != "true" && "$claude" != "true" && "$opencode" != "true" && "$reasonix" != "true" ]]; then
   usage
   exit 1
 fi
 
-if [[ ! -d "$source_dir" ]]; then
-  echo "Source skills directory not found: $source_dir" >&2
-  exit 1
+# ── Claude Code ──
+if [[ "$claude" == "true" ]]; then
+  echo "Installing tunan for Claude Code (native plugin)…"
+  if command -v claude >/dev/null 2>&1; then
+    claude plugin marketplace add raptoravis/tunan 2>/dev/null || true
+    if [[ "$force" == "true" ]]; then
+      claude plugin update tunan@tunan || claude plugin install tunan@tunan
+    else
+      claude plugin install tunan@tunan
+    fi
+    echo "Claude Code: plugin installed. Restart Claude Code, then run /tunan:setup."
+  else
+    echo "Claude Code CLI not found. Install it first, then run:"
+    echo "  claude plugin marketplace add raptoravis/tunan"
+    echo "  claude plugin install tunan@tunan"
+  fi
 fi
 
-copy_skill() {
-  local source="$1"
-  local dest="$2"
-
-  if command -v rsync >/dev/null 2>&1; then
-    rsync -a \
-      --exclude '.DS_Store' \
-      --exclude '__pycache__/' \
-      --exclude 'node_modules/' \
-      --exclude 'dist/' \
-      --exclude 'artifacts/' \
-      --exclude 'test-results/' \
-      --exclude 'playwright-report/' \
-      --exclude 'coverage/' \
-      "$source"/ "$dest"/
+# ── Codex ──
+if [[ "$codex" == "true" ]]; then
+  echo "Installing tunan for Codex (native plugin)…"
+  if command -v codex >/dev/null 2>&1; then
+    codex plugin marketplace add raptoravis/tunan 2>/dev/null || true
+    codex plugin add tunan@tunan
+    echo "Codex: plugin installed. Restart Codex, then run /tunan:setup."
   else
-    cp -R "$source"/. "$dest"/
-    find "$dest" \( \
-      -name '.DS_Store' -o \
-      -name '__pycache__' -o \
-      -name 'node_modules' -o \
-      -name 'dist' -o \
-      -name 'artifacts' -o \
-      -name 'test-results' -o \
-      -name 'playwright-report' -o \
-      -name 'coverage' \
-      \) -prune -exec rm -rf {} +
+    echo "Codex CLI not found. Install it first, then run:"
+    echo "  codex plugin marketplace add raptoravis/tunan"
+    echo "  codex plugin add tunan@tunan"
   fi
-}
+fi
 
-install_skills() {
-  local target="$1"
-  local label="$2"
-  local manifest="$target/.tunan-skills-managed"
-  local source_names=" "
+# ── OpenCode ──
+if [[ "$opencode" == "true" ]]; then
+  echo "Installing tunan for OpenCode (native plugin)…"
+  if command -v opencode >/dev/null 2>&1; then
+    plugin_spec="tunan@git+https://github.com/raptoravis/tunan.git"
+    if [[ "$force" == "true" ]]; then
+      opencode plugin -g "$plugin_spec" --force
+    else
+      opencode plugin -g "$plugin_spec"
+    fi
+    echo "OpenCode: plugin installed. Restart OpenCode, then run /tunan:setup."
+  else
+    echo "OpenCode CLI not found. Install it first, then run:"
+    echo "  opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git"
+  fi
+fi
+
+# ── Reasonix (file copy) ──
+if [[ "$reasonix" == "true" ]]; then
+  if [[ ! -d "$source_dir" ]]; then
+    echo "Source skills directory not found: $source_dir" >&2
+    exit 1
+  fi
+
+  target="${REASONIX_SKILLS_DIR:-$HOME/.reasonix}/skills"
+  manifest="$target/.tunan-skills-managed"
+  source_names=" "
 
   mkdir -p "$target"
-  echo "Installing tunan skills for $label -> $target"
+  echo "Installing tunan skills for Reasonix -> $target"
+
+  copy_skill() {
+    if command -v rsync >/dev/null 2>&1; then
+      rsync -a --exclude '.DS_Store' --exclude '__pycache__/' --exclude 'node_modules/' \
+        --exclude 'dist/' --exclude 'artifacts/' --exclude 'test-results/' \
+        --exclude 'playwright-report/' --exclude 'coverage/' "$1"/ "$2"/
+    else
+      cp -R "$1"/. "$2"/
+      find "$2" \( -name '.DS_Store' -o -name '__pycache__' -o -name 'node_modules' \
+        -o -name 'dist' -o -name 'artifacts' -o -name 'test-results' \
+        -o -name 'playwright-report' -o -name 'coverage' \) -prune -exec rm -rf {} +
+    fi
+  }
 
   for skill in "$source_dir"/*; do
     [[ -d "$skill" && -f "$skill/SKILL.md" ]] || continue
-    local skill_name
     skill_name="$(basename "$skill")"
     source_names="$source_names$skill_name "
-    local dest="$target/$skill_name"
-
+    dest="$target/$skill_name"
     if [[ -e "$dest" && "$force" != "true" ]]; then
       echo "Skipping existing skill: $dest"
       continue
     fi
-
     rm -rf "$dest"
     mkdir -p "$dest"
     copy_skill "$skill" "$dest"
     echo "Installed $skill_name -> $dest"
   done
 
-  if [[ "$prune" == "true" && -f "$manifest" ]]; then
-    while IFS= read -r installed_name; do
-      [[ -n "$installed_name" ]] || continue
-      if [[ "$source_names" != *" $installed_name "* && -d "$target/$installed_name" ]]; then
-        rm -rf "$target/$installed_name"
-        echo "Pruned stale managed skill: $target/$installed_name"
-      fi
-    done < "$manifest"
-  fi
-
   for skill in "$source_dir"/*; do
     [[ -d "$skill" && -f "$skill/SKILL.md" ]] || continue
     basename "$skill"
   done | sort > "$manifest"
-}
 
-if [[ "$codex" == "true" ]]; then
-  install_skills "${CODEX_HOME:-$HOME/.codex}/skills" "Codex"
-fi
-
-if [[ "$claude" == "true" ]]; then
-  install_skills "${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}" "Claude"
-fi
-
-if [[ "$opencode" == "true" ]]; then
-  install_skills "${OPENCODE_SKILLS_DIR:-$HOME/.config/opencode/skills}" "OpenCode"
-fi
-
-if [[ "$reasonix" == "true" ]]; then
-  install_skills "${REASONIX_SKILLS_DIR:-$HOME/.reasonix/skills}" "Reasonix"
-fi
-
-if [[ "$agents" == "true" ]]; then
-  echo "Warning: --agents can duplicate skills in Codex if Codex also reads ~/.agents/skills." >&2
-  install_skills "${AGENTS_SKILLS_DIR:-$HOME/.agents/skills}" ".agents"
+  echo "Reasonix: skills installed. Restart Reasonix, then run /tunan:setup."
 fi

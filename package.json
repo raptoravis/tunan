@@ -3,7 +3,7 @@
   "version": "3.43.2",
   "type": "module",
   "main": ".opencode/plugins/tunan-plugin.js",
-  "description": "AI-powered development tools for code review, research, design, and workflow automation.",
+  "description": "AI-powered development tools for code review, research, design, and workflow automation — marketplace plugin for Claude Code, Codex, and OpenCode; npx-installable for Reasonix.",
   "author": {
     "name": "raptoravis",
     "email": "raptoravis@gmail.com",
@@ -26,7 +26,6 @@
     "codex",
     "opencode",
     "agent-skills",
-    "npx-skills",
     "reasonix",
     "ai-tools"
   ],
@@ -49,9 +48,9 @@
   },
   "scripts": {
     "install:reasonix": "./install.sh --reasonix",
+    "install:claude": "./install.sh --claude",
     "install:codex": "./install.sh --codex",
-    "install:all": "./install.sh --all",
     "install:opencode": "./install.sh --opencode",
-    "install:claude": "./install.sh --claude"
+    "install:all": "./install.sh --all"
   }
 }

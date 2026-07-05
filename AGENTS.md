@@ -4,12 +4,12 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## What this repo is
 
-This is the **tunan** plugin — 43 agents, 66 skills, and 4 MCP servers that ship as a marketplace plugin and npx-installable skill collection for Claude Code, Codex, OpenCode, Reasonix, and other AI coding agents.
+This is the **tunan** plugin — 43 agents, 66 skills, and 4 MCP servers that ship as a marketplace plugin for Claude Code, Codex, and OpenCode, and as an npx-installable skill collection for Reasonix.
 
 ## Repo structure
 
 ```
-skills/<name>/SKILL.md           # Each skill = SKILL.md + references/ (root level, npx-discoverable)
+skills/<name>/SKILL.md           # Each skill = SKILL.md + references/ (root level)
 agents/<name>.md                 # Each agent = bare-name .md file (root level)
 plugins/                         # Plugin manifest payload for Claude Code / Codex marketplaces
 ├── .claude-plugin/plugin.json   # Claude Code manifest (version, skills path "../skills/", MCP servers)
@@ -17,21 +17,29 @@ plugins/                         # Plugin manifest payload for Claude Code / Cod
 ├── .mcp.json                    # Bundled MCP server config
 ├── AGENTS.md                    # Comprehensive authoring guide (read this first)
 └── CLAUDE.md                    # Claude Code companion instructions
-install.sh                       # Local skill installer (bash)
-install.ps1                      # Local skill installer (PowerShell)
+install.sh                       # Installer — uses native plugin commands (bash)
+install.ps1                      # Installer — uses native plugin commands (PowerShell)
 bin/cli.js                       # npx entry point
 package.json                     # npm package (enables npx tunan install)
 ```
 
-Skills and agents live at the repo root so that `npx skills add raptoravis/tunan` can discover them. The `plugins/` directory holds the Claude Code and Codex marketplace manifests; plugin manifests reference the root `skills/` via relative paths (`"skills": "../skills/"`).
+Skills and agents live at the repo root. The `plugins/` directory holds the Claude Code, Codex, and OpenCode marketplace manifests; plugin manifests reference the root `skills/` via relative paths (`"skills": "../skills/"`).
 
 ## Installation
 
-Users install tunan in three ways:
+Users install tunan depending on their platform:
 
-1. **npx (recommended):** `npx skills add raptoravis/tunan --skill '*' -a <agent> -g -y`
-2. **From checkout:** `./install.sh --claude` or `./install.ps1 -Codex`
-3. **Marketplace:** Register `raptoravis/tunan` in Claude Code or Codex plugin marketplace
+- **Claude Code, Codex, OpenCode** — install as a native plugin through the marketplace:
+  - Claude Code: `/plugin marketplace add raptoravis/tunan` then `/plugin install tunan@tunan`
+  - Codex: `codex plugin marketplace add raptoravis/tunan` then `codex plugin add tunan@tunan`
+  - OpenCode: `opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git`
+
+- **Reasonix** — install via npx:
+  ```bash
+  npx skills add raptoravis/tunan --skill '*' -a reasonix -g -y
+  ```
+
+- **From checkout** — `./install.sh --reasonix` copies skills from the local clone into Reasonix (the only platform that uses the checkout source). For Claude Code, Codex, and OpenCode, install directly via the native plugin commands above (no clone needed).
 
 ## No build / test / lint toolchain
 
