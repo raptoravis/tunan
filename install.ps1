@@ -30,6 +30,9 @@ Replace same-named skills in the target directory
 .PARAMETER PruneManaged
 Remove stale skills recorded in this repo's managed manifest
 
+.PARAMETER Env
+Load API keys from $HOME\.env (TRIPO_API_KEY, GEMINI_API_KEY, ELEVENLABS_API_KEY)
+
 .EXAMPLE
 .\install.ps1 -Codex
 .\install.ps1 -Claude
@@ -46,7 +49,8 @@ param(
     [switch]$Agents,
     [switch]$All,
     [switch]$Force,
-    [switch]$PruneManaged
+    [switch]$PruneManaged,
+    [switch]$Env
 )
 
 $ErrorActionPreference = "Stop"
@@ -58,8 +62,29 @@ if ($All) {
     $Reasonix = $true
 }
 
+$homeDir = $env:USERPROFILE
+if (-not $homeDir) { $homeDir = $env:HOME }
+
+if ($Env) {
+    $envFile = Join-Path $homeDir ".env"
+    if (Test-Path $envFile) {
+        Get-Content $envFile | ForEach-Object {
+            $line = $_.Trim()
+            if ([string]::IsNullOrEmpty($line) -or $line -match '^\s*#') { return }
+            if ($line -match '^(TRIPO_API_KEY|GEMINI_API_KEY|ELEVENLABS_API_KEY)=(.*)$') {
+                $key = $matches[1]
+                $value = $matches[2].Trim('"', "'")
+                [Environment]::SetEnvironmentVariable($key, $value, "Process")
+                Write-Host "Set $key from $envFile"
+            }
+        }
+    } else {
+        Write-Warning "-Env specified but $envFile not found"
+    }
+}
+
 if (-not ($Codex -or $Claude -or $OpenCode -or $Reasonix -or $Agents)) {
-    Write-Host "Usage: .\install.ps1 [-Codex] [-Claude] [-OpenCode] [-Reasonix] [-Agents] [-All] [-Force] [-PruneManaged]"
+    Write-Host "Usage: .\install.ps1 [-Codex] [-Claude] [-OpenCode] [-Reasonix] [-Agents] [-All] [-Force] [-PruneManaged] [-Env]"
     Write-Host ""
     Write-Host "Targets:"
     Write-Host "  -Codex     Install into Codex skills directory"
@@ -154,9 +179,6 @@ function Install-Skills {
         if (Test-Path $skillFile) { $_.Name }
     } | Sort-Object | Set-Content $manifest
 }
-
-$homeDir = $env:USERPROFILE
-if (-not $homeDir) { $homeDir = $env:HOME }
 
 if ($Codex) {
     $codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $homeDir ".codex" }

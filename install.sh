@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: ./install.sh [--claude] [--codex] [--opencode] [--reasonix] [--agents] [--all] [--force] [--prune-managed]
+Usage: ./install.sh [--claude] [--codex] [--opencode] [--reasonix] [--agents] [--all] [--force] [--prune-managed] [--env]
 
 Installs tunan skills from ./skills into local agent skill directories.
 
@@ -24,6 +24,7 @@ Targets:
 Options:
   --force          Replace same-named skills in the target directory
   --prune-managed  Remove stale skills recorded in this repo's managed manifest
+  --env            Load API keys from $HOME/.env (TRIPO_API_KEY, GEMINI_API_KEY, ELEVENLABS_API_KEY)
 USAGE
 }
 
@@ -36,6 +37,7 @@ reasonix="false"
 agents="false"
 force="false"
 prune="false"
+env_flag="false"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -74,6 +76,10 @@ while [[ $# -gt 0 ]]; do
       prune="true"
       shift
       ;;
+    --env)
+      env_flag="true"
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -84,6 +90,26 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if [[ "$env_flag" == "true" ]]; then
+  env_file="${HOME:-$USERPROFILE}/.env"
+  if [[ -f "$env_file" ]]; then
+    while IFS='=' read -r key value || [[ -n "$key" ]]; do
+      key="${key##*( )}"; key="${key%%*( )}"
+      [[ -z "$key" || "$key" =~ ^# ]] && continue
+      case "$key" in
+        TRIPO_API_KEY|GEMINI_API_KEY|ELEVENLABS_API_KEY)
+          value="${value#\"}"; value="${value%\"}"
+          value="${value#\'}"; value="${value%\'}"
+          export "$key"="$value"
+          echo "Set $key from $env_file"
+          ;;
+      esac
+    done < "$env_file"
+  else
+    echo "Warning: --env specified but $env_file not found" >&2
+  fi
+fi
 
 if [[ "$codex" != "true" && "$claude" != "true" && "$opencode" != "true" && "$reasonix" != "true" && "$agents" != "true" ]]; then
   usage
