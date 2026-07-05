@@ -75,3 +75,5 @@ temp/
 dist/
 build/
 __pycache__
+.reasonix/
+reasonix.toml

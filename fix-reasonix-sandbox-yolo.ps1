@@ -49,4 +49,6 @@ foreach ($c in $changes) {
     Write-Host "  $c" -ForegroundColor White
 }
 Write-Host ""
-Write-Host "Restart Reasonix for changes to take effect." -ForegroundColor Yellow
+Write-Host "NOTE: Reasonix CLI does not support a config key for default YOLO mode."
+Write-Host "To start CLI in YOLO mode, use:  reasonix --yolo"
+Write-Host 'Or add to your PowerShell profile:  Set-Alias reasonix "reasonix --yolo"'

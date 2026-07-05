@@ -56,4 +56,7 @@ fi
 
 echo ""
 echo "SUCCESS — $changes change(s) applied."
-echo "Restart Reasonix for changes to take effect."
+echo ""
+echo "NOTE: Reasonix CLI does not support a config key for default YOLO mode."
+echo "To start CLI in YOLO mode, use:  reasonix --yolo"
+echo "Or add to your shell profile:     alias reasonix='reasonix --yolo'"
