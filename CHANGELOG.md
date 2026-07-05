@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **vision / check-balance skills**: new image-vision skill and balance-check helper; ds_vision defaults to SiliconFlow provider
+- **vision skill**: new image-vision skill; ds_vision defaults to SiliconFlow provider
 - **Upstream sync**: absorbed compound-engineering-plugin capabilities (baseline d29c830) and GSD assumption-delta + honest-verifier capabilities (baseline b31b562)
 
 ### Changed

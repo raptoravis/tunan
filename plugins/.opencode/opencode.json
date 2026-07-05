@@ -301,11 +301,6 @@
       "template": "Load the tunan:capture skill and follow its instructions.\n\n$ARGUMENTS",
       "subtask": true
     },
-    "check-balance": {
-      "description": "Check LLM provider connectivity and account balance from API keys",
-      "template": "Load the tunan:check-balance skill and follow its instructions.\n\n$ARGUMENTS",
-      "subtask": true
-    },
     "clean-gone-branches": {
       "description": "Clean up local branches whose remote tracking branch is gone",
       "template": "Load the tunan:clean-gone-branches skill and follow its instructions.\n\n$ARGUMENTS",
