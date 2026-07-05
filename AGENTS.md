@@ -9,12 +9,12 @@ This is the **tunan** plugin — 43 agents, 66 skills, and 4 MCP servers that sh
 ## Repo structure
 
 ```
-skills/<name>/SKILL.md           # Each skill = SKILL.md + references/ (root level)
-agents/<name>.md                 # Each agent = bare-name .md file (root level)
-plugins/                         # Plugin manifest payload for Claude Code / Codex marketplaces
-├── .claude-plugin/plugin.json   # Claude Code manifest (version, skills path "../skills/", MCP servers)
+plugins/                         # Plugin payload
+├── .claude-plugin/plugin.json   # Claude Code manifest (version, skills path "./skills/", MCP servers)
 ├── .codex-plugin/plugin.json    # Codex manifest (version + interface section)
 ├── .mcp.json                    # Bundled MCP server config
+├── skills/<name>/SKILL.md       # Each skill = SKILL.md + references/
+├── agents/<name>.md             # Each agent = bare-name .md file
 ├── AGENTS.md                    # Comprehensive authoring guide (read this first)
 └── CLAUDE.md                    # Claude Code companion instructions
 install.sh                       # Installer — uses native plugin commands (bash)
@@ -23,7 +23,7 @@ bin/cli.js                       # npx entry point
 package.json                     # npm package (enables npx tunan install)
 ```
 
-Skills and agents live at the repo root. The `plugins/` directory holds the Claude Code, Codex, and OpenCode marketplace manifests; plugin manifests reference the root `skills/` via relative paths (`"skills": "../skills/"`).
+Skills and agents live inside `plugins/`. Both the marketplace and `--plugin-dir` load skills via `"./skills/"` relative to the plugin root.
 
 ## Installation
 

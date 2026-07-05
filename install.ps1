@@ -121,7 +121,7 @@ if ($OpenCode) {
 # ── Reasonix (file copy) ──
 if ($Reasonix) {
     $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-    $sourceDir = Join-Path $scriptDir "skills"
+    $sourceDir = Join-Path $scriptDir "plugins\skills"
 
     if (-not (Test-Path $sourceDir)) {
         Write-Error "Source skills directory not found: $sourceDir"

@@ -30,8 +30,6 @@
     "ai-tools"
   ],
   "files": [
-    "skills/",
-    "agents/",
     "plugins/",
     ".opencode/plugins/tunan-plugin.js",
     "install.sh",

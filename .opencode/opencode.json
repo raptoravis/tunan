@@ -3,19 +3,19 @@
   "default_agent": "build",
   "plugin": ["./plugins"],
   "skills": {
-    "paths": ["../skills"]
+    "paths": ["plugins/skills"]
   },
   "instructions": [
     "AGENTS.md",
     "instructions/INSTRUCTIONS.md",
-    "skills/brainstorm/SKILL.md",
-    "skills/plan/SKILL.md",
-    "skills/code-review/SKILL.md",
-    "skills/work/SKILL.md",
-    "skills/verify/SKILL.md",
-    "skills/compound/SKILL.md",
-    "skills/debug/SKILL.md",
-    "skills/optimize/SKILL.md"
+    "plugins/skills/brainstorm/SKILL.md",
+    "plugins/skills/plan/SKILL.md",
+    "plugins/skills/code-review/SKILL.md",
+    "plugins/skills/work/SKILL.md",
+    "plugins/skills/verify/SKILL.md",
+    "plugins/skills/compound/SKILL.md",
+    "plugins/skills/debug/SKILL.md",
+    "plugins/skills/optimize/SKILL.md"
   ],
   "agent": {
     "build": {

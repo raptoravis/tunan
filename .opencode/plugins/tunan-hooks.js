@@ -17,7 +17,7 @@ const store = new ChangedFilesStore();
 let _bootstrapCache = undefined;
 // Resolve tunan root and skills directory
 const repoRoot = path.resolve(__dirname, '../..');
-const tunanSkillsDir = path.resolve(repoRoot, 'skills');
+const tunanSkillsDir = path.resolve(repoRoot, 'plugins/skills');
 const instructionsFile = path.resolve(repoRoot, '.opencode/instructions/INSTRUCTIONS.md');
 /**
  * Generate bootstrap content that tells the model about tunan skills and

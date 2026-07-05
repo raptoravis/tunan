@@ -19,259 +19,259 @@
     "adversarial-document-reviewer": {
       "description": "Challenges premises, surfaces unstated assumptions, and stress-tests decisions in high-stakes documents",
       "mode": "subagent",
-      "prompt": "{file:../../agents/adversarial-document-reviewer.md}",
+      "prompt": "{file:../agents/adversarial-document-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "adversarial-reviewer": {
       "description": "Constructs failure scenarios to break implementations across component boundaries",
       "mode": "subagent",
-      "prompt": "{file:../../agents/adversarial-reviewer.md}",
+      "prompt": "{file:../agents/adversarial-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "agent-native-reviewer": {
       "description": "Verifies agent-native parity -- any action a user can take, an agent can also take",
       "mode": "subagent",
-      "prompt": "{file:../../agents/agent-native-reviewer.md}",
+      "prompt": "{file:../agents/agent-native-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "ankane-readme-writer": {
       "description": "Creates README files following Ankane-style template for Ruby gems",
       "mode": "subagent",
-      "prompt": "{file:../../agents/ankane-readme-writer.md}",
+      "prompt": "{file:../agents/ankane-readme-writer.md}",
       "tools": { "read": true, "bash": true, "write": true, "edit": true }
     },
     "api-contract-reviewer": {
       "description": "Detects breaking API contract changes in routes, serializers, and type signatures",
       "mode": "subagent",
-      "prompt": "{file:../../agents/api-contract-reviewer.md}",
+      "prompt": "{file:../agents/api-contract-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "architecture-strategist": {
       "description": "Analyzes architectural decisions and pattern compliance",
       "mode": "subagent",
-      "prompt": "{file:../../agents/architecture-strategist.md}",
+      "prompt": "{file:../agents/architecture-strategist.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "best-practices-researcher": {
       "description": "Researches and synthesizes external best practices, documentation, and examples",
       "mode": "subagent",
-      "prompt": "{file:../../agents/best-practices-researcher.md}",
+      "prompt": "{file:../agents/best-practices-researcher.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "code-simplicity-reviewer": {
       "description": "Final pass for simplicity and minimalism -- identifies YAGNI violations and simplification opportunities",
       "mode": "subagent",
-      "prompt": "{file:../../agents/code-simplicity-reviewer.md}",
+      "prompt": "{file:../agents/code-simplicity-reviewer.md}",
       "tools": { "read": true, "write": true, "edit": true, "bash": true }
     },
     "coherence-reviewer": {
       "description": "Reviews documents for internal consistency, contradictions, and terminology drift",
       "mode": "subagent",
-      "prompt": "{file:../../agents/coherence-reviewer.md}",
+      "prompt": "{file:../agents/coherence-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "correctness-reviewer": {
       "description": "Reviews code for logic errors, edge cases, state bugs, and error propagation failures",
       "mode": "subagent",
-      "prompt": "{file:../../agents/correctness-reviewer.md}",
+      "prompt": "{file:../agents/correctness-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "data-integrity-guardian": {
       "description": "Reviews database migrations, data models, and persistent data code for safety",
       "mode": "subagent",
-      "prompt": "{file:../../agents/data-integrity-guardian.md}",
+      "prompt": "{file:../agents/data-integrity-guardian.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "data-migration-reviewer": {
       "description": "Reviews migration files, schema dumps, backfills -- schema drift, mapping correctness, deploy-window safety",
       "mode": "subagent",
-      "prompt": "{file:../../agents/data-migration-reviewer.md}",
+      "prompt": "{file:../agents/data-migration-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "deployment-verification-agent": {
       "description": "Produces Go/No-Go deployment checklists with SQL verification queries and rollback procedures",
       "mode": "subagent",
-      "prompt": "{file:../../agents/deployment-verification-agent.md}",
+      "prompt": "{file:../agents/deployment-verification-agent.md}",
       "tools": { "read": true, "write": true, "edit": true, "bash": true }
     },
     "design-implementation-reviewer": {
       "description": "Visually compares live UI implementation against Figma designs",
       "mode": "subagent",
-      "prompt": "{file:../../agents/design-implementation-reviewer.md}",
+      "prompt": "{file:../agents/design-implementation-reviewer.md}",
       "tools": { "read": true, "write": true, "edit": true, "bash": true }
     },
     "design-iterator": {
       "description": "Iteratively refines UI design through screenshot-analyze-improve cycles",
       "mode": "subagent",
-      "prompt": "{file:../../agents/design-iterator.md}",
+      "prompt": "{file:../agents/design-iterator.md}",
       "tools": { "read": true, "write": true, "edit": true, "bash": true }
     },
     "design-lens-reviewer": {
       "description": "Reviews plans for missing design decisions -- information architecture, interaction states, user flows",
       "mode": "subagent",
-      "prompt": "{file:../../agents/design-lens-reviewer.md}",
+      "prompt": "{file:../agents/design-lens-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "feasibility-reviewer": {
       "description": "Evaluates whether proposed technical approaches will survive contact with reality",
       "mode": "subagent",
-      "prompt": "{file:../../agents/feasibility-reviewer.md}",
+      "prompt": "{file:../agents/feasibility-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "figma-design-sync": {
       "description": "Detects and fixes visual differences between web implementation and Figma design",
       "mode": "subagent",
-      "prompt": "{file:../../agents/figma-design-sync.md}",
+      "prompt": "{file:../agents/figma-design-sync.md}",
       "tools": { "read": true, "write": true, "edit": true, "bash": true }
     },
     "framework-docs-researcher": {
       "description": "Gathers comprehensive documentation and best practices for frameworks and libraries",
       "mode": "subagent",
-      "prompt": "{file:../../agents/framework-docs-researcher.md}",
+      "prompt": "{file:../agents/framework-docs-researcher.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "git-history-analyzer": {
       "description": "Performs archaeological analysis of git history to trace code evolution",
       "mode": "subagent",
-      "prompt": "{file:../../agents/git-history-analyzer.md}",
+      "prompt": "{file:../agents/git-history-analyzer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "issue-intelligence-analyst": {
       "description": "Analyzes GitHub issues to surface recurring themes and pain patterns",
       "mode": "subagent",
-      "prompt": "{file:../../agents/issue-intelligence-analyst.md}",
+      "prompt": "{file:../agents/issue-intelligence-analyst.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "julik-frontend-races-reviewer": {
       "description": "Reviews Stimulus/Turbo/DOM-timing-sensitive frontend code for race conditions",
       "mode": "subagent",
-      "prompt": "{file:../../agents/julik-frontend-races-reviewer.md}",
+      "prompt": "{file:../agents/julik-frontend-races-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "learnings-researcher": {
       "description": "Searches tunan:solution-labeled feature issues for applicable past learnings",
       "mode": "subagent",
-      "prompt": "{file:../../agents/learnings-researcher.md}",
+      "prompt": "{file:../agents/learnings-researcher.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "maintainability-reviewer": {
       "description": "Reviews code for structural quality, coupling, naming, dead code, and abstraction debt",
       "mode": "subagent",
-      "prompt": "{file:../../agents/maintainability-reviewer.md}",
+      "prompt": "{file:../agents/maintainability-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "pattern-recognition-specialist": {
       "description": "Analyzes code for design patterns, anti-patterns, naming conventions, and duplication",
       "mode": "subagent",
-      "prompt": "{file:../../agents/pattern-recognition-specialist.md}",
+      "prompt": "{file:../agents/pattern-recognition-specialist.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "performance-oracle": {
       "description": "Analyzes code for performance bottlenecks, algorithmic complexity, and scalability",
       "mode": "subagent",
-      "prompt": "{file:../../agents/performance-oracle.md}",
+      "prompt": "{file:../agents/performance-oracle.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "performance-reviewer": {
       "description": "Reviews code for runtime performance and scalability issues with confidence calibration",
       "mode": "subagent",
-      "prompt": "{file:../../agents/performance-reviewer.md}",
+      "prompt": "{file:../agents/performance-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "pr-comment-resolver": {
       "description": "Evaluates and resolves PR review threads -- assesses validity, implements fixes",
       "mode": "subagent",
-      "prompt": "{file:../../agents/pr-comment-resolver.md}",
+      "prompt": "{file:../agents/pr-comment-resolver.md}",
       "tools": { "read": true, "write": true, "edit": true, "bash": true }
     },
     "previous-comments-reviewer": {
       "description": "Checks whether prior PR review feedback has been addressed in the current diff",
       "mode": "subagent",
-      "prompt": "{file:../../agents/previous-comments-reviewer.md}",
+      "prompt": "{file:../agents/previous-comments-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "product-lens-reviewer": {
       "description": "Challenges problem framing, evaluates scope decisions, and surfaces goal misalignment",
       "mode": "subagent",
-      "prompt": "{file:../../agents/product-lens-reviewer.md}",
+      "prompt": "{file:../agents/product-lens-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "project-standards-reviewer": {
       "description": "Audits changes against the project's own AGENTS.md and CLAUDE.md standards",
       "mode": "subagent",
-      "prompt": "{file:../../agents/project-standards-reviewer.md}",
+      "prompt": "{file:../agents/project-standards-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "reliability-reviewer": {
       "description": "Reviews code for production reliability -- error handling, retries, timeouts, background jobs",
       "mode": "subagent",
-      "prompt": "{file:../../agents/reliability-reviewer.md}",
+      "prompt": "{file:../agents/reliability-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "repo-research-analyst": {
       "description": "Conducts thorough research on repository structure, documentation, conventions, and patterns",
       "mode": "subagent",
-      "prompt": "{file:../../agents/repo-research-analyst.md}",
+      "prompt": "{file:../agents/repo-research-analyst.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "scope-guardian-reviewer": {
       "description": "Challenges unjustified complexity, scope creep, and premature abstractions",
       "mode": "subagent",
-      "prompt": "{file:../../agents/scope-guardian-reviewer.md}",
+      "prompt": "{file:../agents/scope-guardian-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "security-lens-reviewer": {
       "description": "Evaluates plans for security gaps -- auth/authz assumptions, data exposure, API vulnerabilities",
       "mode": "subagent",
-      "prompt": "{file:../../agents/security-lens-reviewer.md}",
+      "prompt": "{file:../agents/security-lens-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "security-reviewer": {
       "description": "Reviews code for exploitable vulnerabilities -- auth, user input, permissions",
       "mode": "subagent",
-      "prompt": "{file:../../agents/security-reviewer.md}",
+      "prompt": "{file:../agents/security-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "security-sentinel": {
       "description": "Performs security audits for vulnerabilities, OWASP compliance, and hardcoded secrets",
       "mode": "subagent",
-      "prompt": "{file:../../agents/security-sentinel.md}",
+      "prompt": "{file:../agents/security-sentinel.md}",
       "tools": { "read": true, "write": true, "edit": true, "bash": true }
     },
     "session-historian": {
       "description": "Synthesizes findings from prior coding-agent sessions about the same problem or topic",
       "mode": "subagent",
-      "prompt": "{file:../../agents/session-historian.md}",
+      "prompt": "{file:../agents/session-historian.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "slack-researcher": {
       "description": "Searches Slack for organizational context -- decisions, constraints, and discussions",
       "mode": "subagent",
-      "prompt": "{file:../../agents/slack-researcher.md}",
+      "prompt": "{file:../agents/slack-researcher.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "spec-flow-analyzer": {
       "description": "Analyzes specifications and feature descriptions for user flow completeness and gap identification",
       "mode": "subagent",
-      "prompt": "{file:../../agents/spec-flow-analyzer.md}",
+      "prompt": "{file:../agents/spec-flow-analyzer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "swift-ios-reviewer": {
       "description": "Reviews Swift/iOS code -- SwiftUI state, retain cycles, concurrency, Core Data threading",
       "mode": "subagent",
-      "prompt": "{file:../../agents/swift-ios-reviewer.md}",
+      "prompt": "{file:../agents/swift-ios-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "testing-reviewer": {
       "description": "Reviews code for test coverage gaps, weak assertions, and brittle tests",
       "mode": "subagent",
-      "prompt": "{file:../../agents/testing-reviewer.md}",
+      "prompt": "{file:../agents/testing-reviewer.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "web-researcher": {
       "description": "Performs iterative web research and returns structured external grounding",
       "mode": "subagent",
-      "prompt": "{file:../../agents/web-researcher.md}",
+      "prompt": "{file:../agents/web-researcher.md}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     }
   },

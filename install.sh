@@ -22,7 +22,7 @@ USAGE
 }
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source_dir="$script_dir/skills"
+source_dir="$script_dir/plugins/skills"
 claude="false"
 codex="false"
 opencode="false"

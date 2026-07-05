@@ -1,9 +1,9 @@
 # Plugin Instructions
 
 These instructions apply when working in this repo, which ships the
-`tunan` plugin directly from the root: skills under `skills/`,
-agents under `agents/`, and the plugin manifests under `.claude-plugin/` and
-`.codex-plugin/`.
+`tunan` plugin. The plugin payload lives under `plugins/` — skills are at
+`plugins/skills/`, agents at `plugins/agents/`, and the plugin manifests under
+`plugins/.claude-plugin/` and `plugins/.codex-plugin/`.
 
 # Compounding Engineering Development
 
@@ -37,11 +37,14 @@ Before committing changes:
 ### Directory Structure
 
 ```
-agents/
-└── *.md          # Agent files use the bare agent name; frontmatter name carries no tunan- prefix (lfg-style)
-
-skills/
-└── */            # Skill dirs use the bare skill name (cp, plan, code-review, …) — no tunan- prefix; lfg is the one historical bare name
+plugins/
+├── .claude-plugin/plugin.json
+├── .codex-plugin/plugin.json
+├── agents/
+│   └── *.md          # Agent files use the bare agent name; frontmatter name carries no tunan- prefix (lfg-style)
+├── skills/
+│   └── */            # Skill dirs use the bare skill name (cp, plan, code-review, …) — no tunan- prefix; lfg is the one historical bare name
+└── ...
 ```
 
 Agents are grouped topically in `README.md` (Review, Document Review, Research, Design, Workflow, Docs) for reader navigation — those groupings are conceptual, not filesystem subdirectories.
