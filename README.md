@@ -50,9 +50,9 @@ Use `--force` (`-Force` on Windows) to replace existing skills. Works with any a
 
 > **⚠️ Required next step — run setup.** After installing, run `/tunan:setup` in any project to diagnose your environment, install missing CLI tools and MCP servers, verify `gh` is installed **and** authenticated (the workflow stores its artifacts in GitHub issues), and bootstrap project config. Skipping setup is the most common cause of skills failing on first use. Re-run `/tunan:setup` anytime to re-check.
 
-### Plugin marketplace install
+### Native plugin install (CLI)
 
-For deeper integration (slash commands, MCP auto-load), install as a native plugin through your agent's marketplace.
+For deeper integration (slash commands, MCP auto-load), install as a native plugin through each tool's CLI. Restart your agent afterward.
 
 **Claude Code:**
 
@@ -63,19 +63,32 @@ For deeper integration (slash commands, MCP auto-load), install as a native plug
 
 Reload when prompted.
 
+```bash
+# Install
+claude plugin marketplace add raptoravis/tunan
+claude plugin install tunan@tunan
+
+# Update
+claude plugin update tunan@tunan
+```
+
 **Codex:**
 
 ```bash
+# Install
 codex plugin marketplace add raptoravis/tunan
-codex
 ```
 
-Inside Codex, run `/plugins`, select the **tunan** marketplace, choose the **tunan** plugin, and install. Restart Codex afterward.
+Launch Codex, run `/plugins`, select the **tunan** marketplace, choose the **tunan** plugin, and install. Restart Codex afterward.
 
 **OpenCode:**
 
 ```bash
+# Install
 opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git
+
+# Update (use --force to bypass npm cache)
+opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git --force
 ```
 
 Or add to the `plugin` array in your `opencode.json`:
@@ -85,14 +98,6 @@ Or add to the `plugin` array in your `opencode.json`:
   "plugin": ["tunan@git+https://github.com/raptoravis/tunan.git"]
 }
 ```
-
-Restart OpenCode.
-
-> **Updating**: To pull the latest version, use `--force` to bypass npm's cache:
->
-> ```bash
-> opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git --force
-> ```
 
 ### Local development (from a checkout)
 
