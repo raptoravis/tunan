@@ -151,13 +151,14 @@ if ($Reasonix) {
             } else {
                 $parentDir = Split-Path $_.FullName -Parent
                 $parentName = Split-Path $parentDir -Leaf
-                if ($parentName -notin $excludeDirs -and $parentDir -notmatch '(\\|/)__(?:pycache|init)__') {
+                if ($parentName -notin $excludeDirs -and $parentDir -notmatch '(\|/)__(?:pycache|init)__') {
                     Copy-Item -Path $_.FullName -Destination $destPath -Force
                 }
             }
         }
     }
 
+    $count = 0
     Get-ChildItem -Path $sourceDir -Directory | ForEach-Object {
         $skillDir = $_.FullName
         $skillFile = Join-Path $skillDir "SKILL.md"
@@ -171,8 +172,9 @@ if ($Reasonix) {
         Remove-Item -Recurse -Force $dest -ErrorAction SilentlyContinue
         New-Item -ItemType Directory -Path $dest -Force | Out-Null
         Copy-Skill -Source $skillDir -Dest $dest
-        Write-Host "Installed $skillName -> $dest"
+        $count++
     }
+    Write-Host "Installed $count skills -> $target"
 
     Get-ChildItem -Path $sourceDir -Directory | ForEach-Object {
         $skillFile = Join-Path $_.FullName "SKILL.md"

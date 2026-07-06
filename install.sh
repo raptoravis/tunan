@@ -129,6 +129,7 @@ if [[ "$reasonix" == "true" ]]; then
     fi
   }
 
+  count=0
   for skill in "$source_dir"/*; do
     [[ -d "$skill" && -f "$skill/SKILL.md" ]] || continue
     skill_name="$(basename "$skill")"
@@ -140,8 +141,9 @@ if [[ "$reasonix" == "true" ]]; then
     rm -rf "$dest"
     mkdir -p "$dest"
     copy_skill "$skill" "$dest"
-    echo "Installed $skill_name -> $dest"
+    count=$((count + 1))
   done
+  echo "Installed $count skills -> $target"
 
   for skill in "$source_dir"/*; do
     [[ -d "$skill" && -f "$skill/SKILL.md" ]] || continue
