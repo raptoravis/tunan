@@ -134,7 +134,6 @@ const createPlugin = async () => {
             };
           }
         }
-        console.log(`[tunan] registered ${skills.length} skills + ${Object.keys(config.command).filter(k => k.startsWith('tunan-')).length} slash commands`);
       } catch (e) {
         console.error('[tunan] config hook error:', e.message);
       }
