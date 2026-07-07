@@ -1,5 +1,3 @@
-// OpenCode loads plugins via the "plugin" config field. The module must export
-// a factory function as default export or named "server" export.
-// The factory: (input?: PluginInput, options?: PluginOptions) => Promise<Hooks>
-export { default, default as server } from './tunan-hooks.js';
+// OpenCode V2 Plugin API: exports a named const from the hooks module.
+export { TunanHooksPlugin as default, TunanHooksPlugin } from "./tunan-hooks.js";
 //# sourceMappingURL=index.js.map

@@ -1,2 +1,2 @@
-export { default, default as server } from './tunan-hooks.js';
+export { TunanHooksPlugin as default, TunanHooksPlugin } from './tunan-hooks.js';
 //# sourceMappingURL=index.d.ts.map

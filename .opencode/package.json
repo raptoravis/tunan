@@ -1,6 +1,6 @@
 {
   "name": "tunan-opencode",
-  "version": "1.0.0",
+  "version": "4.1.0",
   "description": "tunan plugin for OpenCode",
   "type": "module",
   "main": "plugins/index.js",
@@ -14,7 +14,7 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "@opencode-ai/plugin": "1.17.13",
+    "@opencode-ai/plugin": "1.17.14",
     "glob": "^10.3.10"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "tunan",
-  "version": "3.43.2",
+  "version": "4.1.0",
   "type": "module",
   "main": ".opencode/plugins/tunan-plugin.js",
   "description": "AI-powered development tools for code review, research, design, and workflow automation — marketplace plugin for Claude Code, Codex, and OpenCode; npx-installable for Reasonix.",
