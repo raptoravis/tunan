@@ -237,11 +237,36 @@ stays stable for reuse. Only close it if the user explicitly asks to retire the
 handoff entirely (blocking tool to confirm); never close it merely because it
 was picked up, and never close it if the user only previewed.
 
+## Claude Code Fast-Path (`claude --bg`)
+
+When the user is on Claude Code and wants to hand off immediately without creating a GitHub issue, use the `claude --bg` mechanism for a lightweight, same-machine handoff:
+
+```bash
+claude --bg --name "<descriptive name>" "<handoff summary>"
+```
+
+This launches a background agent seeded with the summary as its prompt. It starts in the current working directory and returns immediately; the user manages it with `claude agents`.
+
+Always pass `--name` with a descriptive name (e.g. `--name "Fix login bug"`) — it sets the display name shown in the job list, session picker, and terminal title.
+
+**When to use each path:**
+
+| Path | When |
+|------|------|
+| `tunan:handoff` issue | Cross-machine handoff, long gaps between sessions, team handoffs, non-Claude-Code environments |
+| `claude --bg` | Same machine, immediate continuation, Claude Code available, lightweight context |
+
+**Include a "suggested skills" section** in the summary regardless of which path — it tells the next agent which skills to invoke.
+
+**Do not duplicate** content already captured in other artifacts (PRDs, plans, ADRs, issues, commits, diffs). Reference them by path or URL instead.
+
+**Redact sensitive information** — API keys, passwords, PII — before writing the summary (it becomes the agent's prompt).
+
 ## Common mistakes
 
 - **Writing a local `HANDOFF.md`** — the whole point of this skill is that the
-  handoff is a `tunan:handoff` issue. Never fall back to a local file; abort if
-  `gh` is unavailable.
+  handoff is a `tunan:handoff` issue (or a `claude --bg` agent on Claude Code). Never fall back to a local file; abort if
+  `gh` is unavailable and `claude --bg` isn't applicable.
 - **Skipping Failed Approaches** — always include it when anything was tried and
   abandoned (say "None" only if truly nothing failed). It is the highest-value
   section.

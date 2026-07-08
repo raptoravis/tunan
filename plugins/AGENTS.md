@@ -90,6 +90,8 @@ Important: Just because the developer's installed plugin may be out of date, it'
 
 Skills are guardrails for an intelligent agent, not a step-by-step controller for a non-intelligent one. The principles below were learned from real-world testing and should guide future skill edits.
 
+**Prefer positive instruction over negation.** Steering by prohibition backfires — "don't write local files" names the banned behavior and makes it more available, not less. State the target behavior so the banned one is never spoken: "write findings to a GitHub issue" rather than "don't write a local file." Keep a prohibition only as a hard guardrail you can't phrase positively, and even then pair it with what to do instead. This applies to skill authoring (how rules are phrased) and to agent prompting (how skills instruct the model).
+
 **Calibrate prescription level to the failure mode.** Three rough levels:
 
 - **Hard rules** for deterministic safety (e.g., "don't silently `cd` to another repo and write outputs there"). The agent's judgment must not vary — the failure mode is bad enough that mechanical adherence is right.

@@ -66,9 +66,9 @@ Use the platform's blocking question tool for classification and selection decis
 The authoritative upstream is the `main` branch of `https://github.com/mattpocock/skills`. Fetch via GitHub API or raw URLs — never clone the full repo.
 
 Skill categories in mattpocock's tree:
-- `skills/engineering/` — to-issues, to-prd, implement, tdd, domain-modeling, diagnosing-bugs, codebase-design, etc.
+- `skills/engineering/` — to-issues, to-prd, implement, tdd, domain-modeling, diagnosing-bugs, codebase-design, code-review, research, etc.
 - `skills/productivity/` — grill-me, grilling, handoff, teach, writing-great-skills, etc.
-- `skills/in-progress/` — loop-me, review, wizard, writing-beats, etc.
+- `skills/in-progress/` — loop-me, wizard, writing-beats, claude-handoff, wayfinder, etc.
 - `skills/misc/` — git-guardrails, setup-pre-commit, scaffold-exercises, etc.
 - `skills/personal/` — edit-article, obsidian-vault (**always skip** — personal to Matt)
 - `skills/deprecated/` — design-an-interface, qa, ubiquitous-language (**always skip**)
@@ -165,23 +165,27 @@ For each mattpocock skill, classify against tunan's existing inventory:
 
 | Verdict | Criteria | Action |
 |---------|----------|--------|
-| **Already covered** | A tunan skill fully subsumes it | Skip; note the covering tunan skill |
-| **Already synced** | A tunan skill with the same name exists AND was previously synced from this upstream | Skip, unless `--force`; note the tunan skill |
+| **Already covered** | A tunan skill fully subsumes it | Skip; note the covering tunan skill. BUT: if the upstream skill was **modified** since last sync, still check its diff — improvements may be absorbable into the covering tunan skill |
+| **Already synced** | A tunan skill with the same name exists AND was previously synced from this upstream | Skip, unless `--force`; note the tunan skill. BUT: if the upstream skill was **modified** since last sync, check its diff and absorb improvements into the existing tunan skill |
 | **Pure additive** | No tunan skill covers this territory | Translate → create SKILL.md |
-| **Partial overlap** | A tunan skill covers some but not all, OR a novel interaction pattern is worth absorbing | Surface for user decision |
+| **Partial overlap** | A tunan skill covers some but not all, OR a novel interaction pattern is worth absorbing | **Absorb into the existing tunan skill** (enhance its SKILL.md or references) rather than creating a standalone — only create a new skill when the approaches are fundamentally different shapes. Surface for user decision when genuinely ambiguous |
 | **Out of scope** | Personal to Matt, deprecated, or not applicable | Skip; note reason |
 
 Agent judgment for classification — not keyword matching. Consider:
 - What problem does the mattpocock skill solve?
 - Which tunan skill (if any) solves the same problem?
 - Is the mattpocock approach novel enough to warrant a separate skill despite overlap?
+- For modified skills: what changed? Is the delta a new concept worth absorbing, or just editorial?
 
 **Established classifications (from prior syncs — apply these, don't re-litigate):**
-- `grill-me` / `grilling` → **Already synced** (tunan:grill-me, tunan:grill-me absorbed grilling)
+- `grill-me` / `grilling` → **Already synced** (tunan:grill-me absorbed grilling; 2026-07-08 sync absorbed facts-vs-decisions distinction + "don't enact until confirmed" rule)
 - `loop-me` → **Already synced** (tunan:loop-me)
+- `research` → **Already synced** (tunan:research — created 2026-07-08)
+- `wayfinder` → **Already synced** (tunan:wayfinder — created 2026-07-08)
 - `to-prd` → **Partial overlap** (tunan:brainstorm covers requirements synthesis; to-prd's non-interactive mode + Testing Decisions section are the delta — enhance brainstorm references, don't create a standalone)
-- `to-issues` → **Already covered** (tunan:plan Implementation Units + vertical-slice philosophy)
+- `to-issues` → **Already covered** (tunan:plan Implementation Units + vertical-slice philosophy; 2026-07-08 sync absorbed Wide refactors expand-contract pattern into tunan:plan)
 - `handoff` → **Already covered** (tunan:handoff — different implementation, same purpose)
+- `claude-handoff` → **Partial overlap** (tunan:handoff covers session handoff; `claude --bg` fast-path absorbed as alternative mode in tunan:handoff 2026-07-08)
 - `teach` → **Pure additive** (no tunan equivalent)
 - `implement` / `prototype` → **Already covered** (tunan:work)
 - `diagnosing-bugs` → **Already covered** (tunan:debug)
@@ -192,11 +196,11 @@ Agent judgment for classification — not keyword matching. Consider:
 - `ask-matt` → **Out of scope** (personal to Matt)
 - `edit-article`, `obsidian-vault` → **Out of scope** (personal)
 - `setup-matt-pocock-skills` → **Out of scope** (mattpocock setup — not applicable to tunan)
-- `writing-great-skills` → **Partial overlap** (tunan AGENTS.md "Skill Design Principles" covers similar ground)
+- `writing-great-skills` → **Partial overlap** (tunan AGENTS.md "Skill Design Principles" covers similar ground; 2026-07-08 sync absorbed negation anti-pattern into AGENTS.md)
 - `writing-beats`, `writing-fragments`, `writing-shape` → **Pure additive** (writing workflow helpers, no tunan equivalent)
 - `wizard` → **Pure additive** (guided setup wizard, no tunan equivalent)
-- `review` → **Partial overlap** (tunan:code-review covers engineering review; mattpocock's review skill may have a different shape)
-- `decision-mapping` → **Pure additive** (no tunan equivalent)
+- `code-review` (was `review`) → **Partial overlap** (renamed + promoted from in-progress to engineering 2026-07; tunan:code-review covers engineering review; mattpocock's is a two-axis Standards+Spec approach. Fowler smell baseline absorbed into tunan:code-review `references/fowler-smells.md`)
+- `decision-mapping` → **Removed upstream** (was Pure additive; deleted from mattpocock/skills as of 2026-07-08 sync)
 - `improve-codebase-architecture` → **Already covered** (tunan:plan + tunan:code-review with architecture reviewer)
 - `resolving-merge-conflicts` → **Already covered** (tunan handles merge conflicts through git integration implicitly)
 - `scaffold-exercises` → **Out of scope** (Matt's course-specific tooling)
@@ -207,6 +211,18 @@ Agent judgment for classification — not keyword matching. Consider:
 ### Phase 3: Translate Format
 
 When creating or adapting a skill:
+
+#### Absorption (when merging into an existing tunan skill)
+
+When the verdict is Partial overlap, Already covered (modified), or Already synced (modified), absorb the upstream changes rather than creating a new skill. Common patterns:
+
+- **New technique → new subsection.** A novel pattern (e.g., expand-contract for wide refactors) becomes a new subsection in the existing skill's SKILL.md, placed near the related concept.
+- **Checklist / baseline → new reference file.** A curated list (e.g., Fowler smells) becomes a `references/<name>.md` file linked from the skill's persona catalog or relevant section.
+- **Sharper rule → edit existing section.** A tightened distinction (e.g., "facts vs decisions") replaces or sharpens the existing guidance inline.
+- **Design principle → AGENTS.md.** Cross-cutting authoring guidance (e.g., negation anti-pattern) goes into `plugins/AGENTS.md` under Skill Design Principles, not into any single skill.
+- **Alternative mode → new subsection.** A different mechanism for the same purpose (e.g., `claude --bg` vs issue handoff) becomes a named subsection in the existing skill, with a comparison table.
+
+After absorbing, update the Established classifications list with the date and what was absorbed.
 
 #### Frontmatter
 

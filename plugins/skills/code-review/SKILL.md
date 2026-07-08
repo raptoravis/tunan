@@ -846,3 +846,7 @@ Selected reviewer prompt assets live under `references/personas/`. Read only the
 ### Findings Schema
 
 @./references/findings-schema.json
+
+### Fowler Smell Baseline
+
+`references/fowler-smells.md` — curated Fowler code smells carried by the maintainability reviewer. Loaded on demand by that reviewer; not inlined.

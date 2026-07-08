@@ -15,7 +15,7 @@ AI-powered development tools that get smarter with every use — make each unit 
 | Component   | Count |
 | ----------- | ----- |
 | Agents      | 43    |
-| Skills      | 68    |
+| Skills      | 70    |
 | MCP Servers | 4     |
 
 ## Skills
@@ -45,6 +45,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | [`/tunan:compound`](../../docs/skills/compound.md)                 | Document solved problems to compound team knowledge                                                                                                                                                                                                                                     |
 | [`/tunan:compound-refresh`](../../docs/skills/compound-refresh.md) | Refresh stale or drifting learnings and decide whether to keep, update, replace, or archive them                                                                                                                                                                                        |
 | [`/tunan:loop-me`](#)                                              | Design workflow specs through a grilling session — for recurring life patterns worth delegating to an agent. Each workflow spec is a GitHub issue labeled `tunan:workflow`, ready for an implementer agent to build                                                                                                                                                                         |
+| `/tunan:wayfinder`                                                          | Plan large work — more than one agent session can hold — as a shared map of investigation tickets on the issue tracker. Charts the way as a `tunan:wayfinder-map` issue with typed child tickets (research, prototype, grilling, task), then resolves them one at a time until the route is clear |
 | [`/tunan:optimize`](../../docs/skills/optimize.md)                 | Run iterative optimization loops with parallel experiments, measurement gates, and LLM-as-judge quality scoring                                                                                                                                                                         |
 | [`/tunan:product-pulse`](../../docs/skills/product-pulse.md)       | Generate a single-page, time-windowed report on usage, performance, errors, and followups. Stores each report as a GitHub issue labeled `tunan:pulse`; the labeled issue list is the browseable timeline of what users experienced                                                                                                    |
 | `/tunan:retro`                                                              | Engineering-cadence complement of `product-pulse`: a zero-config, time-windowed retrospective on what actually shipped (merged PRs, closed features), cadence (shipping streak, PR cycle time, per-author), in-flight/stuck work, and the window's `tunan:solution` learnings. Reads `git` + `gh` only; stores each report as a GitHub issue labeled `tunan:retro`                                                                    |
@@ -57,6 +58,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | [`/tunan:slack-research`](../../docs/skills/slack-research.md)                      | Search Slack for interpreted organizational context -- decisions, constraints, and discussion arcs                                                                                                                          |
 | [`riffrec-feedback-analysis`](../../docs/skills/riffrec-feedback-analysis.md) | Convert [Riffrec](https://github.com/kieranklaassen/riffrec) recordings, videos, audio, or notes into structured feedback. Routes between setup, quick bug report, and extensive analysis that hands off to `brainstorm` |
 | `/tunan:explain`                                                                      | Turn a concept, a diff, an idea, or a window of recent work into a dense, visual explainer with optional check-in exercises — for personal learning, not repo docs |
+| `/tunan:research`                                                                     | Investigate a question against primary sources and capture the findings as a GitHub issue labeled `tunan:research` — delegates to a background agent so the current session continues uninterrupted |
 
 ### Git Workflow
 

@@ -63,9 +63,18 @@ Good questions:
 - "The plan assumes the payment gateway responds within 2s. Under peak load we've seen 8s+ timeouts. Which path: (A) add a circuit breaker at the gateway call (Recommended — one-and-done, no schema change), (B) make the whole flow async with a job queue, or (C) add a client-side timeout and retry UI?"
 - "The design puts the mute toggle on the rule entity. If rule-delete silently drops pause state with no warning, operators won't notice until alerts go missing. Where should the checkpoint live: (A) warn on rule-delete when a mute is active (Recommended — lowest carrying cost), (B) move mute to a separate entity that survives rule-delete, or (C) accept the risk and document it?"
 
-### Codebase-Answerable Questions
+### Facts vs Decisions
 
-If a question can be answered by exploring the codebase (e.g., "does this endpoint already return the field we need?"), explore first. Present the finding as the recommended answer rather than asking the user. Only fire a question when the answer is genuinely a design choice the codebase cannot settle.
+Distinguish sharply between facts and decisions:
+
+- **Facts** live in the codebase, docs, or runtime behavior. When a question hinges on a fact, look it up — explore the codebase, read the spec, check the logs. Present the finding as the recommended answer rather than asking the user.
+- **Decisions** are the user's to make. Put each one to the user and wait for their answer. Never answer your own grilling questions.
+
+The test: "can the codebase settle this?" — if yes, it's a fact; if no, it's a decision that needs the user's judgment.
+
+### Don't Enact Until Confirmed
+
+Do not enact the plan or apply any revisions until the user confirms the grilling has reached a shared understanding. Grilling sharpens the plan; it does not execute it. The user says when the grilling is done and what to do next.
 
 ### Exit Conditions
 

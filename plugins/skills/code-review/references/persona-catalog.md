@@ -12,7 +12,7 @@ Spawned on every review regardless of diff content.
 |---------|-------|-------|
 | `correctness` | `tunan:correctness-reviewer` | Logic errors, edge cases, state bugs, error propagation, intent compliance |
 | `testing` | `tunan:testing-reviewer` | Coverage gaps, weak assertions, brittle tests, missing edge case tests |
-| `maintainability` | `tunan:maintainability-reviewer` | Structural quality, complexity deletion, 1k-line regressions, coupling, type-boundary leaks, dead code, premature abstraction |
+| `maintainability` | `tunan:maintainability-reviewer` | Structural quality, complexity deletion, 1k-line regressions, coupling, type-boundary leaks, dead code, premature abstraction. Also carries a Fowler smell baseline (`references/fowler-smells.md`) — curated code smells that apply even when the repo documents no conventions |
 | `project-standards` | `tunan:project-standards-reviewer` | CLAUDE.md and AGENTS.md compliance -- frontmatter, references, naming, cross-platform portability, tool selection |
 
 **CE agents (unstructured output, synthesized separately):**

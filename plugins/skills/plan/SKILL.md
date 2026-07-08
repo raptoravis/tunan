@@ -520,6 +520,18 @@ Avoid:
 
 Each unit carries a stable plan-local **U-ID** assigned in Phase 3.5 (`U1`, `U2`, …). U-IDs survive reordering, splitting, and deletion: new units take the next unused number, gaps are fine, and existing IDs are never renumbered. This lets `work` reference units unambiguously across plan edits.
 
+#### 3.3b Wide Refactors (Expand-Contract)
+
+Most work breaks naturally into vertical slices — each unit delivers a narrow but complete path through every layer. A **wide refactor** is the exception: one mechanical change (rename a column, retype a shared symbol) whose blast radius fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand-contract**:
+
+1. **Expand** — add the new form beside the old so nothing breaks. Both coexist.
+2. **Migrate** — convert call sites over in batches sized by blast radius (per package, per directory). Each batch is its own unit, blocked by the expand unit. CI stays green batch to batch because the old form still exists.
+3. **Contract** — delete the old form once no caller remains, in a unit blocked by every migrate batch.
+
+When even the batches can't stay green alone, keep the sequence but let them share an integration branch that all block a final integrate-and-verify unit — green is promised only there.
+
+This pattern only applies to mechanical, whole-codebase changes. Do not use it to justify horizontal slicing for work that should be vertical.
+
 #### 3.4 High-Level Technical Design
 
 When the plan's technical approach has shape that prose alone doesn't carry well — architecture across components, sequencing across processes, state machines, branching gates, lifecycles, quantitative comparisons — include a High-Level Technical Design section that conveys the shape. The exact form (component diagram, sequence, swim lane, flowchart, state machine, decision matrix, pseudo-code grammar, bar chart for sizing concerns) is the agent's call per artifact — pick what makes the content land fastest for the reader.
