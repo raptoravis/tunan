@@ -15,7 +15,7 @@ AI-powered development tools that get smarter with every use — make each unit 
 | Component   | Count |
 | ----------- | ----- |
 | Agents      | 43    |
-| Skills      | 66    |
+| Skills      | 68    |
 | MCP Servers | 4     |
 
 ## Skills
@@ -56,6 +56,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | [`/tunan:sessions`](../../docs/skills/sessions.md)                                  | Ask questions about session history across Claude Code, Codex, and Cursor                                                                                                                                                   |
 | [`/tunan:slack-research`](../../docs/skills/slack-research.md)                      | Search Slack for interpreted organizational context -- decisions, constraints, and discussion arcs                                                                                                                          |
 | [`riffrec-feedback-analysis`](../../docs/skills/riffrec-feedback-analysis.md) | Convert [Riffrec](https://github.com/kieranklaassen/riffrec) recordings, videos, audio, or notes into structured feedback. Routes between setup, quick bug report, and extensive analysis that hands off to `brainstorm` |
+| `/tunan:explain`                                                                      | Turn a concept, a diff, an idea, or a window of recent work into a dense, visual explainer with optional check-in exercises — for personal learning, not repo docs |
 
 ### Git Workflow
 
@@ -90,6 +91,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | `/tunan:sync-ups`                                                                 | Maintainer: merge the latest upstream `everyinc/compound-engineering-plugin` changes into the local tunan fork — computes the delta since the last synced commit, ports skill changes with the branding transform, flags dead files, and records the new sync point |
 | `/tunan:sync-gsd`                                                                 | Maintainer: audit upstream `open-gsd/gsd-core` for new capabilities worth absorbing into tunan — computes the delta since the last-absorbed commit, classifies it into capabilities (changesets are the index), surfaces each for a keep/skip decision, re-expresses accepted ones in tunan's own skill shapes, and records the new audit baseline. Capability audit, not a file port |
 | `/tunan:sync-mattpocock`                                                           | Sync a skill from mattpocock/skills into tunan — fetch, classify coverage (already-covered / pure-additive / partial-overlap / out-of-scope), translate format conventions, and write the adapted SKILL.md. `--audit` bulk-discovers unmined skills; `--diff` shows changes since last sync |
+| `/tunan:sync-superpowers`                                                         | Sync skills from obra/superpowers into tunan — fetch, classify coverage, identify complementary patterns, and either create new tunan skills or enhance existing ones with absorbed techniques. `--audit` bulk-discovers all skills; `--diff` shows changes since last sync |
 | [`/tunan:release-notes`](../../docs/skills/release-notes.md)             | Summarize recent tunan plugin releases, or answer a question about a past release with a version citation                                                                                                      |
 | `/tunan:align`                                                                 | AI-initiated alignment: at every decision point, surface at least 3 ranked options with the best pre-selected as the default, so the sponsor confirms the optimal choice in one tap. Invoked by other skills at decision points |
 
@@ -122,6 +124,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | Skill                | Description                                        |
 | -------------------- | -------------------------------------------------- |
 | `gemini-imagegen` | Generate and edit images using Google's Gemini API |
+| `/tunan:sweep`     | Sweep configured feedback sources (Slack, GitHub Issues; email experimental) for new items: acknowledge at source, analyze recordings, verify fixes, and emit a `/lfg`-ready plan. First run sets up sources |
 
 ### Beta / Experimental
 
