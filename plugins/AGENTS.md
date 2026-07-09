@@ -122,6 +122,74 @@ Non-interactive modes can create audit gaps, but only when the _corresponding in
 
 The fix differs by answer. Sometimes "fix the spec" means loosening over-prescription, not adding more rules. Sometimes the right answer is "accept the variance — the agent's adaptation was correct for the case."
 
+## Testing Skills with Subagent Pressure Scenarios
+
+Skills that enforce discipline (TDD, verification, debugging process) need to resist rationalization. Agents are smart and will find loopholes when under pressure. Writing a skill and assuming it works is like shipping untested code.
+
+### The TDD-for-Skills Analogy
+
+| TDD Concept | Skill Creation |
+|-------------|----------------|
+| **Test case** | Pressure scenario with subagent |
+| **Production code** | Skill document (SKILL.md) |
+| **Test fails (RED)** | Agent violates rule without skill (baseline) |
+| **Test passes (GREEN)** | Agent complies with skill present |
+| **Refactor** | Close loopholes while maintaining compliance |
+| **Write test first** | Run baseline scenario BEFORE writing skill |
+| **Watch it fail** | Document exact rationalizations agent uses |
+| **Minimal code** | Write skill addressing those specific violations |
+| **Watch it pass** | Verify agent now complies |
+| **Refactor cycle** | Find new rationalizations → plug → re-verify |
+
+### Pressure Types
+
+When testing discipline-enforcing skills, apply these pressures (individually and combined):
+
+- **Time pressure** — "This needs to ship in 10 minutes"
+- **Sunk cost** — "You've already spent 2 hours on this approach"
+- **Authority** — "The tech lead said to skip testing this time"
+- **Exhaustion** — "This is the 5th bug today, just fix it"
+
+### Testing Workflow
+
+1. **RED — Baseline:** Dispatch a subagent WITHOUT the skill loaded. Give it a task that tempts the violation. Document: what choices did it make? What rationalizations did it use verbatim? Which pressures triggered violations?
+
+2. **GREEN — Write the skill:** Write the minimal SKILL.md that addresses those specific rationalizations. Don't add content for hypothetical cases. Re-test with the skill loaded — agent should now comply.
+
+3. **REFACTOR — Close loopholes:** Agent found a new rationalization? Add an explicit counter in the anti-rationalization table. Re-test until bulletproof.
+
+### Match the Form to the Failure
+
+Before writing guidance, classify the baseline failure. The form that bulletproofs one failure type measurably backfires on another:
+
+| Baseline failure | Right form | Wrong form |
+|---|---|---|
+| Skips/violates a rule under pressure | Prohibition + rationalization table + red flags | Soft guidance ("prefer...", "consider...") |
+| Complies, but output has wrong shape | Positive recipe: state what the output IS | Prohibition list ("don't restate", "never narrate") |
+| Omits a required element | Structural: REQUIRED field in the template | Prose reminders near the template |
+| Behavior should depend on a condition | Conditional keyed to an observable predicate | Unconditional rule + exemption clauses |
+
+**Why prohibitions backfire on shaping problems:** under a competing incentive, agents negotiate with "don't X." A recipe leaves nothing to negotiate: the output matches the stated shape or it doesn't.
+
+### Bulletproofing Discipline Skills
+
+For skills that enforce rules (TDD, verification, debugging process):
+
+1. **Close every loophole explicitly.** Don't just state the rule — forbid specific workarounds: "Write code before test? Delete it. Start over. No exceptions: don't keep it as reference, don't adapt it while writing tests, don't look at it."
+
+2. **Add a spirit-vs-letter gate.** "Violating the letter of the rules is violating the spirit of the rules." This cuts off an entire class of rationalizations.
+
+3. **Build a rationalization table.** Capture excuses from baseline testing. Every excuse agents make goes in the table with its rebuttal.
+
+4. **Create a red flags list.** Make it easy for agents to self-check when rationalizing.
+
+### When to Apply
+
+- **Always** for discipline-enforcing skills (rules/requirements)
+- **Recommended** for technique skills (how-to guides)
+- **Light-touch** for pattern skills (mental models)
+- **Skip** for pure reference skills (documentation/APIs)
+
 ## Skill Compliance Checklist
 
 When adding or modifying skills, verify compliance with the skill spec:

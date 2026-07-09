@@ -83,6 +83,8 @@ Every plan should contain:
 
 A plan is ready when an implementer can start confidently without needing the plan to write the code for them.
 
+**Write for zero context.** Assume the implementer is a skilled developer who knows almost nothing about the codebase and has questionable taste. Document everything they need: which files to touch, what code to write, which patterns to follow, how to verify. If a step relies on knowledge the implementer cannot derive from the plan alone, the plan is incomplete.
+
 ## Workflow
 
 ### Phase 0: Resume, Source, and Scope
@@ -678,6 +680,7 @@ Omit "include when material" sections that don't carry information for this spec
 - Do not include git commands, commit messages, or exact test command recipes
 - Do not expand implementation units into micro-step `RED/GREEN/REFACTOR` instructions
 - Do not pretend an execution-time question is settled just to make the plan look complete
+- **No placeholders.** Never write "TBD", "TODO", "implement later", "fill in details", "add appropriate error handling" (without specifics), or "write tests for the above" (without actual test scenarios). Every step that describes what to do must show how. References to types, functions, or methods not defined in any unit are plan failures — each unit's implementer sees only their own task and cannot resolve cross-unit references
 
 ### Phase 5: Final Review, Write File, and Handoff
 
@@ -694,6 +697,8 @@ Before finalizing, check:
 - Test scenarios name specific inputs, actions, and expected outcomes without becoming test code
 - Feature-bearing units with blank or missing test scenarios are flagged as incomplete — feature-bearing units must have actual test scenarios, not just an annotation. The `Test expectation: none -- [reason]` annotation is only valid for non-feature-bearing units (pure config, scaffolding, styling)
 - Deferred items are explicit and not hidden as fake certainty
+- **Placeholder scan:** Search the plan for red-flag patterns — "TBD", "TODO", "implement later", "fill in details", "add appropriate error handling", "add validation", "handle edge cases", "write tests for the above" (without actual scenarios), "Similar to Task N" (without repeating the code). Fix every hit.
+- **Type/signature consistency:** Do the function names, method signatures, and property names used in later units match what earlier units define? A function called `clearLayers()` in U3 but `clearFullLayers()` in U7 is a bug.
 - **High-Level Technical Design presence audit (load-bearing).** For each architecture trigger in Phase 3.4 that the plan content satisfies (3+ components with directed relationships, 3+ protocol steps, 3+ state machine states, lifecycle, 3+ decision points, 3+ data-flow stages, mode/flag combinations, DSL/API surface design, non-obvious single-component shape), verify a corresponding sketch/diagram is present in the High-Level Technical Design section. Count the firing triggers; count the sketches; the sketch count must be at least the count of distinct trigger categories that fired. Missing the section when a trigger fired, OR including the section but skipping a triggered sketch within it, is incomplete — return to Phase 3.4 and add the missing sketch. Token cost is not a valid reason to fail this check.
 - If a High-Level Technical Design section is included, it uses the right medium for the work, carries the non-prescriptive framing, and does not contain implementation code (no imports, exact signatures, or framework-specific syntax)
 - Per-unit technical design fields, if present, are concise and directional rather than copy-paste-ready

@@ -15,7 +15,7 @@ AI-powered development tools that get smarter with every use — make each unit 
 | Component   | Count |
 | ----------- | ----- |
 | Agents      | 43    |
-| Skills      | 70    |
+| Skills      | 71    |
 | MCP Servers | 4     |
 
 ## Skills
@@ -42,6 +42,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | [`/tunan:code-review`](../../docs/skills/code-review.md)           | Structured code review with tiered persona agents, confidence gating, and dedup pipeline                                                                                                                                                                                                |
 | [`/tunan:work`](../../docs/skills/work.md)                         | Execute work items systematically                                                                                                                                                                                                                                                       |
 | [`/tunan:debug`](../../docs/skills/debug.md)                       | Systematically find root causes and fix bugs -- traces causal chains, forms testable hypotheses, and implements test-first fixes                                                                                                                                                        |
+| [`/tunan:dispatching-parallel-agents`](../../docs/skills/dispatching-parallel-agents.md) | Dispatch one subagent per independent problem domain for parallel investigation or implementation -- use when facing 2+ independent tasks without shared state or sequential dependencies |
 | [`/tunan:compound`](../../docs/skills/compound.md)                 | Document solved problems to compound team knowledge                                                                                                                                                                                                                                     |
 | [`/tunan:compound-refresh`](../../docs/skills/compound-refresh.md) | Refresh stale or drifting learnings and decide whether to keep, update, replace, or archive them                                                                                                                                                                                        |
 | [`/tunan:loop-me`](#)                                              | Design workflow specs through a grilling session — for recurring life patterns worth delegating to an agent. Each workflow spec is a GitHub issue labeled `tunan:workflow`, ready for an implementer agent to build                                                                                                                                                                         |

@@ -7,7 +7,7 @@ This repository ships the **`tunan`** plugin, bundling 43 agents, 66 skills, and
 | Component   | Count |
 | ----------- | ----- |
 | Agents      | 43    |
-| Skills      | 66    |
+| Skills      | 67    |
 | MCP Servers | 4     |
 
 See the [full component reference](plugins/README.md) for the complete inventory, grouped by category.

@@ -255,6 +255,8 @@ Determine how to proceed based on what was provided in `<input_document>` (after
 
 ### Phase 2: Execute
 
+**Continuous execution.** Do not pause between tasks to check in or summarize progress — execute all tasks without stopping. The only reasons to pause are: a BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste time — execute the plan.
+
 1. **Task Execution Loop**
 
    For each task in priority order:
@@ -282,6 +284,23 @@ Determine how to proceed based on what was provided in `<input_document>` (after
    - Do not skip verifying that a new test fails before implementing the fix or feature
    - Do not over-implement beyond the current behavior slice when working test-first
    - Skip test-first discipline for trivial renames, pure configuration, and pure styling work
+
+   **Iron Law for test-first units:**
+
+   ```
+   NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
+   ```
+
+   If you wrote code before the test, delete it and start over. No exceptions — don't keep it as "reference," don't "adapt" it while writing tests. Delete means delete.
+
+   When a unit is marked test-first, read `references/test-first-discipline.md` for the full RED-GREEN-REFACTOR cycle, the anti-rationalization table, and the red-flags self-check. The table below is your load-time defense:
+
+   | Excuse | Reality |
+   |--------|---------|
+   | "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
+   | "I'll test after" | Tests passing immediately prove nothing. |
+   | "Already manually tested" | Ad-hoc ≠ systematic. No record, can't re-run. |
+   | "TDD will slow me down" | TDD faster than debugging. Pragmatic = test-first. |
 
    **Test Discovery** — Before implementing changes to a file, find its existing test files (search for test/spec files that import, reference, or share naming patterns with the implementation file). When a plan specifies test scenarios or test files, start there, then check for additional test coverage the plan may not have enumerated. Changes to implementation files should be accompanied by corresponding test updates — new tests for new behavior, modified tests for changed behavior, removed or updated tests for deleted behavior.
 
@@ -391,6 +410,8 @@ Determine how to proceed based on what was provided in `<input_document>` (after
    - Create new tasks if scope expands
    - Keep user informed of major milestones
    - When the plan defines U-IDs for Implementation Units, or the plan or origin document carries stable R-IDs (and optionally A/F/AE IDs), reference them in blockers, deferred-work notes, task summaries, and final verification — not routine status updates. U-IDs anchor units across plan edits; R/A/F/AE anchor product intent across the brainstorm-plan handoff. Use the IDs the plan supplies and do not invent ones it does not. This preserves traceability without burying signal under noise.
+
+   **Durable progress ledger.** Conversation memory does not survive compaction. When executing multi-task plans, maintain a `tunan:progress` marker comment on the feature issue (see `references/progress-marker.md`) recording which U-IDs have landed. After compaction, trust the ledger and `git log` over your own recollection — the commits exist in git even when your context no longer remembers creating them. The ledger is your recovery map.
 
 ### Phase 3-4: Quality Check and Finishing Work
 
