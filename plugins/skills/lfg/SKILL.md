@@ -6,6 +6,8 @@ argument-hint: "[feature description | #N to resume] [--hotfix | --tweak]"
 
 CRITICAL: You MUST execute every step below IN ORDER. Do NOT skip any required step. Do NOT jump ahead to coding or implementation. The plan phase (step 1) MUST be completed and verified BEFORE any work begins. Violating this order produces bad output.
 
+**Anti-stall: this pipeline runs autonomously from step 1 through step 11 without stopping.** After each subagent returns or each gate passes, immediately proceed to the next step — do NOT stop to report progress or wait for the user. A subagent completing is a signal to CONTINUE, never a signal to stop. The only valid stop conditions are: (a) a GATE says "stop the pipeline", (b) gh preflight fails, or (c) `<promise>DONE</promise>` has been emitted.
+
 When invoking any skill referenced below, resolve its name against the available-skills list the host platform provides and use that exact entry. Some platforms list skills under a plugin namespace (e.g., `tunan:plan`); others list the bare name. Invoking a short-form guess that isn't in the list will fail — always match a listed entry verbatim before calling the Skill/Task tool.
 
 **Artifact model: one feature, one issue — the pipeline chains via comments on that issue, not separate issues or local files.** A feature is a **single GitHub issue** for its whole lifetime. Its NUMBER `#N` — the **feature issue** — is the one handle threaded through every stage. The requirement is the issue **body**; each later stage lands as a **marker comment** on the same issue and adds a label. There are **no** separate `tunan:plan` or `tunan:solution` issues:
@@ -39,7 +41,7 @@ gh repo view --json nameWithOwner
 
 1. **Run `plan` in an isolated subagent** (see the dispatch convention above): instruct it to load the `plan` skill with `$ARGUMENTS` and to return only the **feature issue ref (`#<N>`/URL)**, plan depth, IU count, and whether an acceptance gate was frozen — never the full plan body. The subagent writes the plan comment (`<!-- tunan:plan -->`) and acceptance gate comment (`<!-- tunan:gate -->`) onto the feature issue itself, so the orchestrator only needs the ref for downstream gate checks and handoffs. If a prior `brainstorm` ran in this pipeline and produced a feature issue, pass that issue ref so the plan consumes it and writes its plan comment onto the same `#<N>`. When no upstream feature issue exists, `plan` creates the feature issue itself (requirement stub body) before writing the plan comment. **Run plan inline only when the harness cannot dispatch subagents.**
 
-   GATE: STOP. If plan reported the task is non-software and cannot be processed in pipeline mode, stop the pipeline and inform the user that LFG requires software tasks. Otherwise, **record the feature issue ref (`#<N>`/URL)** that `plan` reports, then run the script gate to verify the plan comment actually landed — the gate, not the agent's recollection, decides whether step 1 is complete (pick the variant for the current OS):
+   GATE (only stop on non-software task — otherwise continue straight through): If plan reported the task is non-software and cannot be processed in pipeline mode, stop the pipeline and inform the user that LFG requires software tasks. Otherwise, **record the feature issue ref (`#<N>`/URL)** that `plan` reports, then **immediately run the script gate** to verify the plan comment actually landed — the gate, not the agent's recollection, decides whether step 1 is complete. Do NOT stop to report plan completion to the user — continue straight through the gates into step 2 (pick the variant for the current OS):
 
    ```bash
    bash scripts/gate.sh plan-exists <N>
@@ -65,7 +67,7 @@ gh repo view --json nameWithOwner
 
 2. **Run `work` in an isolated subagent** (see the dispatch convention above): instruct it to load the `work` skill with the **feature issue ref `#<N>`** from step 1 as its work source (`work` reads the plan comment `<!-- tunan:plan -->` on that issue) and to return only a concise summary of what changed (files touched, key decisions). The subagent edits the working tree on disk, so the gate below still sees the changes.
 
-   GATE: STOP. Verify that implementation work was actually performed via the script gate — it confirms the working tree is dirty or HEAD diverged from the base branch, so a "done" claim with no code change is caught (pick the variant for the current OS):
+   GATE (only re-run work if no changes detected — otherwise continue to step 2a): Verify that implementation work was actually performed via the script gate — it confirms the working tree is dirty or HEAD diverged from the base branch, so a "done" claim with no code change is caught (pick the variant for the current OS):
 
    ```bash
    bash scripts/gate.sh work-done
@@ -198,7 +200,7 @@ gh repo view --json nameWithOwner
 
    3. Read the subagent's summary (not raw logs) and return to iteration (1) with the next attempt counter. If it reported a flaky/unfixable failure with no code change, treat that as the residual outcome below rather than retrying.
 
-   GATE: STOP iterating after 3 failed attempts. If CI is still red after 3 fix cycles:
+   GATE (bound the fix loop — do not spin indefinitely): STOP iterating after 3 failed attempts. If CI is still red after 3 fix cycles:
    - Compose a `## CI Failures Unresolved` markdown section listing each remaining failing check, the failure summary, and the run/check URL.
    - Append or replace this section in the PR body, write the new body to an OS temp file, then run:
 
@@ -226,4 +228,4 @@ gh repo view --json nameWithOwner
 
 11. Output `<promise>DONE</promise>` when complete. Include the chain in the summary: the **feature issue `#<N>`** (carrying its req body plus `tunan:plan` and `tunan:solution` comments) and the PR URL — a single issue handle, not three separate issue numbers.
 
-Start with step 1 now. Remember: GH preflight and plan FIRST, then work. Never skip the plan.
+Start with step 1 now, then run every subsequent step in order without stopping until `<promise>DONE</promise>`. Remember: GH preflight and plan FIRST, then work. Never skip the plan. The pipeline is autonomous — ONLY stop when a GATE explicitly says "stop the pipeline" or when `<promise>DONE</promise>` has been emitted.

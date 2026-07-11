@@ -42,7 +42,7 @@ After all mutations in this run have settled (initial create/update, deepening s
 
 ## 5.4 Post-Generation Options
 
-**Pipeline mode:** If invoked from an automated workflow such as LFG or any `disable-model-invocation` context, skip the interactive menu below and return control to the caller immediately, passing the feature issue ref. The plan comment has already been created/updated, the confidence check has already run, and doc-review has already run — the caller (e.g., lfg) determines the next step.
+**Pipeline mode:** If invoked from an automated workflow such as LFG or any `disable-model-invocation` context, skip the interactive menu below and return control to the caller immediately. Output the structured handoff on its own line FIRST, before any diagnostic summary: `FEATURE_ISSUE=#<N> DEPTH=<depth> IU_COUNT=<N> GATE=<frozen|none>`. Follow with a brief diagnostic summary (confidence check, doc-review envelope, plan comment URL, gate URL). The plan comment and acceptance gate have already been written — the caller (e.g., lfg) determines the next step.
 
 **Summary line above the menu (always):** Print a single concise line summarizing the headless review state — e.g., `Doc review applied 3 fixes. 2 decisions, 1 proposed fix, 4 FYI observations remain (1 at P1).` When no fixes were applied and no findings remain, print `Doc review clean — no fixes needed.` This line establishes what the autofix pass did (or didn't) so the user has the context to choose between the menu options below.
 

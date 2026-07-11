@@ -988,4 +988,10 @@ If the user types free-form prompts targeting the findings (e.g., "review", "wal
 
 **Completion check:** This skill is not complete until the post-generation menu above has been presented, the user has selected an action, and the inline routing for that selection has been executed. Presenting the menu and stopping at the user's selection is not completion — fire the routed action.
 
-**Pipeline mode exception:** In LFG or any `disable-model-invocation` context, skip the interactive menu and return control to the caller (passing the feature issue ref `FEATURE_ISSUE`) after the plan comment is created/updated, the confidence check has run, and `doc-review` has run in headless mode (per `references/plan-handoff.md`).
+**Pipeline mode exception:** In LFG or any `disable-model-invocation` context, skip the interactive menu and return control to the caller immediately. Output the structured handoff on its own line FIRST, before any diagnostic summary — the caller parses this line to extract the feature issue ref:
+
+```text
+FEATURE_ISSUE=#<N> DEPTH=<lightweight|standard|deep> IU_COUNT=<N> GATE=<frozen|none>
+```
+
+Then, on subsequent lines, include a brief diagnostic summary (confidence check result, doc-review headless envelope, plan comment URL, gate URL). The plan comment and acceptance gate have already been written/updated — the caller (e.g., lfg) determines the next step.
