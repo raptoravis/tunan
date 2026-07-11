@@ -2,7 +2,7 @@
 
 AI-powered development tools that get smarter with every use — make each unit of engineering work easier than the last. Brainstorm requirements, plan implementations, review code with specialized reviewers, research institutional learnings, and capture solved problems so future work compounds.
 
-This repository ships the **`tunan`** plugin, bundling 43 agents, 66 skills, and 4 MCP servers — as a marketplace plugin for Claude Code, Codex, and OpenCode, and as an npx-installable skill collection for Reasonix.
+This repository ships the **`tunan`** plugin, bundling 43 agents, 66 skills, and 4 MCP servers — as a marketplace plugin for Claude Code, Codex, and OpenCode, as an npx-installable skill collection for Reasonix, and as Cursor rules for Cursor.
 
 | Component   | Count |
 | ----------- | ----- |
@@ -64,6 +64,24 @@ Or add to the `plugin` array in your `opencode.json`:
 }
 ```
 
+**Cursor:**
+
+Cursor does not have a plugin marketplace — install via the install script, which copies tunan's Cursor rules into your project's `.cursor/rules/` directory:
+
+```bash
+./install.sh --cursor
+```
+
+On Windows (PowerShell):
+
+```powershell
+.\install.ps1 -Cursor
+```
+
+Or install into a custom directory via the `CURSOR_RULES_DIR` environment variable.
+
+After installing, restart Cursor to load the rules, then run `/tunan:setup`.
+
 ### npx install (Reasonix)
 
 Reasonix does not have a plugin marketplace — install via npx:
@@ -72,23 +90,25 @@ Reasonix does not have a plugin marketplace — install via npx:
 npx skills add raptoravis/tunan --skill '*' -a reasonix -g -y
 ```
 
-### From checkout (Reasonix only)
+### From checkout (Cursor and Reasonix)
 
-For Reasonix, you can install directly from a local clone — the script copies `skills/` into the Reasonix directory:
+For Cursor and Reasonix, you can install directly from a local clone — the script copies rules or skills into the respective directory:
 
 ```bash
 git clone https://github.com/raptoravis/tunan.git
 cd tunan
-./install.sh --reasonix
+./install.sh --cursor    # Copies rules into .cursor/rules/
+./install.sh --reasonix  # Copies skills into ~/.reasonix/skills/
 ```
 
 On Windows (PowerShell):
 
 ```powershell
+.\install.ps1 -Cursor
 .\install.ps1 -Reasonix
 ```
 
-Use `--force` (`-Force` on Windows) to replace existing skills.
+Use `--force` (`-Force` on Windows) to replace existing files.
 
 > For Claude Code, Codex, and OpenCode, install directly via the native plugin commands above — no clone needed. The install script also accepts `--claude` / `--codex` / `--opencode` (which delegate to each platform's plugin CLI), but those still install from the marketplace, not the checkout.
 

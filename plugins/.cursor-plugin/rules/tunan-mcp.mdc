@@ -1,0 +1,44 @@
+---
+description: "tunan MCP server configuration — GitHub, web search, sequential thinking, and browser automation."
+globs: "**/*"
+alwaysApply: true
+---
+# tunan MCP Servers
+
+The tunan plugin configures 4 MCP servers. These should be available in your Cursor environment.
+
+## GitHub (`github` MCP server)
+
+Provides tools for GitHub platform interaction:
+- Issue management: `list_issues`, `issue_read`, `issue_write`, `search_issues`
+- Pull request management: `list_pull_requests`, `pull_request_read`, `pull_request_review_write`, `create_pull_request`, `merge_pull_request`
+- Code search: `search_code`, `search_repositories`
+- File operations: `get_file_contents`, `create_or_update_file`, `push_files`
+- Commit/branch: `list_commits`, `get_commit`, `create_branch`
+
+**Key conventions for issue management:**
+- Use `search_issues` before creating new issues to avoid duplicates
+- Always set `state_reason` when closing issues
+- Use pagination with batches of 5-10 items for list operations
+- Use `minimal_output: true` when full details aren't needed
+
+## Google AI Search (`gemini-search` MCP server)
+
+Provides real-time web search:
+- `web_search` — Search with Google AI Mode, get synthesized answers with sources
+- `ask` — General questions with optional web grounding
+
+## Sequential Thinking (`sequential-thinking` MCP server)
+
+Structured problem-solving through step-by-step reasoning:
+- Break down complex problems
+- Dynamic thought adjustment
+- Branch and revise thinking paths
+
+## Usage Notes
+
+All tunan workflows that require GitHub issue access (brainstorm, plan, work, code-review, compound, etc.) rely on the GitHub MCP server being properly configured. Ensure the `github` server is authenticated and connected before running these workflows.
+
+The `gemini-search` server is used by research-oriented skills (`web-researcher`, `learnings-researcher`, etc.) for external context gathering.
+
+The `sequential-thinking` server is used for complex analysis and decision-making tasks.

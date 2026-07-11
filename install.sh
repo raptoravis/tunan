@@ -3,29 +3,32 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: ./install.sh [--claude] [--codex] [--opencode] [--reasonix] [--all] [--force]
+Usage: ./install.sh [--claude] [--codex] [--opencode] [--cursor] [--reasonix] [--all] [--force]
 
 Installs tunan for AI coding agents using each platform's native install mechanism:
   Claude Code / Codex / OpenCode → native plugin commands
-  Reasonix                       → file copy (no plugin marketplace)
+  Cursor / Reasonix              → file copy (no plugin marketplace)
 
 Targets:
   --claude   Install via: claude plugin marketplace add raptoravis/tunan && claude plugin install tunan@tunan
   --codex    Install via: codex plugin marketplace add raptoravis/tunan && codex plugin add tunan@tunan
   --opencode Install via: opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git
+  --cursor   Install Cursor rules into .cursor/rules/ in the current directory (or CURSOR_RULES_DIR)
   --reasonix Install skills into ${REASONIX_SKILLS_DIR:-$HOME/.reasonix}/skills
-  --all      Install for all four platforms
+  --all      Install for all five platforms
 
 Options:
-  --force   For --reasonix: replace same-named skills. For --claude/--codex/--opencode: passed as --force / update to the plugin command.
+  --force   For --cursor/--reasonix: replace same-named files. For --claude/--codex/--opencode: passed as --force / update to the plugin command.
 USAGE
 }
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source_dir="$script_dir/plugins/skills"
+rules_source_dir="$script_dir/plugins/.cursor-plugin/rules"
 claude="false"
 codex="false"
 opencode="false"
+cursor="false"
 reasonix="false"
 force="false"
 
@@ -34,11 +37,13 @@ while [[ $# -gt 0 ]]; do
     --codex)    codex="true"; shift ;;
     --claude)   claude="true"; shift ;;
     --opencode) opencode="true"; shift ;;
+    --cursor)   cursor="true"; shift ;;
     --reasonix) reasonix="true"; shift ;;
     --all)
       codex="true"
       claude="true"
       opencode="true"
+      cursor="true"
       reasonix="true"
       shift
       ;;
@@ -48,7 +53,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ "$codex" != "true" && "$claude" != "true" && "$opencode" != "true" && "$reasonix" != "true" ]]; then
+if [[ "$codex" != "true" && "$claude" != "true" && "$opencode" != "true" && "$cursor" != "true" && "$reasonix" != "true" ]]; then
   usage
   exit 1
 fi
@@ -100,6 +105,41 @@ if [[ "$opencode" == "true" ]]; then
     echo "OpenCode CLI not found. Install it first, then run:"
     echo "  opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git"
   fi
+fi
+
+# ── Cursor (file copy) ──
+if [[ "$cursor" == "true" ]]; then
+  if [[ ! -d "$rules_source_dir" ]]; then
+    echo "Source rules directory not found: $rules_source_dir" >&2
+    exit 1
+  fi
+
+  target="${CURSOR_RULES_DIR:-$PWD/.cursor}/rules"
+  echo "Installing tunan Cursor rules -> $target"
+
+  mkdir -p "$target"
+
+  count=0
+  for rule in "$rules_source_dir"/*.mdc; do
+    [[ -f "$rule" ]] || continue
+    rule_name="$(basename "$rule")"
+    dest="$target/$rule_name"
+    if [[ -e "$dest" && "$force" != "true" ]]; then
+      echo "  Skipping $rule_name (already exists; use --force to overwrite)"
+      continue
+    fi
+    cp "$rule" "$dest"
+    echo "  Installed $rule_name"
+    count=$((count + 1))
+  done
+
+  if [[ $count -eq 0 ]]; then
+    echo "No new rules to install (all already present)."
+  else
+    echo "Installed $count Cursor rule(s) -> $target"
+  fi
+
+  echo "Cursor: tunan rules installed. Restart Cursor to load them, then run /tunan:setup."
 fi
 
 # ── Reasonix (file copy) ──

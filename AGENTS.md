@@ -4,7 +4,7 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## What this repo is
 
-This is the **tunan** plugin — 43 agents, 66 skills, and 4 MCP servers that ship as a marketplace plugin for Claude Code, Codex, and OpenCode, and as an npx-installable skill collection for Reasonix.
+This is the **tunan** plugin — 43 agents, 66 skills, and 4 MCP servers that ship as a marketplace plugin for Claude Code, Codex, and OpenCode, as an npx-installable skill collection for Reasonix, and as Cursor rules for Cursor.
 
 ## Repo structure
 
@@ -12,6 +12,7 @@ This is the **tunan** plugin — 43 agents, 66 skills, and 4 MCP servers that sh
 plugins/                         # Plugin payload
 ├── .claude-plugin/plugin.json   # Claude Code manifest (version, skills path "./skills/", MCP servers)
 ├── .codex-plugin/plugin.json    # Codex manifest (version + interface section)
+├── .cursor-plugin/plugin.json   # Cursor manifest (version, skills path, rules path)
 ├── .mcp.json                    # Bundled MCP server config
 ├── skills/<name>/SKILL.md       # Each skill = SKILL.md + references/
 ├── agents/<name>.md             # Each agent = bare-name .md file
@@ -34,12 +35,17 @@ Users install tunan depending on their platform:
   - Codex: `codex plugin marketplace add raptoravis/tunan` then `codex plugin add tunan@tunan`
   - OpenCode: `opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git`
 
+- **Cursor** — install via the install script (file copy):
+  ```bash
+  ./install.sh --cursor
+  ```
+
 - **Reasonix** — install via npx:
   ```bash
   npx skills add raptoravis/tunan --skill '*' -a reasonix -g -y
   ```
 
-- **From checkout** — `./install.sh --reasonix` copies skills from the local clone into Reasonix (the only platform that uses the checkout source). For Claude Code, Codex, and OpenCode, install directly via the native plugin commands above (no clone needed).
+- **From checkout** — `./install.sh --cursor` or `./install.sh --reasonix` copies from the local clone into the respective platform (Cursor rules or Reasonix skills). For Claude Code, Codex, and OpenCode, install directly via the native plugin commands above (no clone needed).
 
 ## No build / test / lint toolchain
 
@@ -52,6 +58,7 @@ Both manifests MUST stay in sync. When bumping:
 ```
 plugins/.claude-plugin/plugin.json  →  "version": "X.Y.Z"
 plugins/.codex-plugin/plugin.json   →  "version": "X.Y.Z"
+plugins/.cursor-plugin/plugin.json  →  "version": "X.Y.Z"
 ```
 
 ## Local development (testing skills live)

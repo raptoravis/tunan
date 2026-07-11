@@ -5,6 +5,19 @@ All notable changes to the tunan plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.0] - 2026-07-11
+
+### Added
+
+- **Cursor support**: Added Cursor as a fully supported platform. Created `.cursor-plugin/` manifest with `plugin.json`, Cursor rule files (`.mdc`) for tunan workflow context and MCP server configuration. Added `--cursor` / `-Cursor` flags to `install.sh`, `install.ps1`, and `bin/cli.js` for file-copy-based installation into `.cursor/rules/`.
+
+### Changed
+
+- Updated all three manifests (`.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, `.cursor-plugin/plugin.json`) to sync at version 4.3.0.
+- Updated `AGENTS.md`, `CLAUDE.md`, and `plugins/AGENTS.md` to include `.cursor-plugin/plugin.json` in version sync instructions, directory structure diagrams, and pre-commit checklists.
+- Updated `README.md` with Cursor installation instructions.
+- Updated `package.json` with `cursor` keyword and `install:cursor` script.
+
 ## [3.43.2] - 2026-07-03
 
 ### Added

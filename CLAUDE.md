@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-This is the **tunan** plugin — 43 agents, 66 skills, and 5 MCP servers that ship as a marketplace plugin for Claude Code, Codex, and OpenCode, and as an npx-installable skill collection for Reasonix. The plugin payload lives under `plugins/`.
+This is the **tunan** plugin — 43 agents, 66 skills, and 5 MCP servers that ship as a marketplace plugin for Claude Code, Codex, and OpenCode, as an npx-installable skill collection for Reasonix, and as Cursor rules for Cursor. The plugin payload lives under `plugins/`.
 
 ## Plugin structure
 
@@ -12,6 +12,7 @@ This is the **tunan** plugin — 43 agents, 66 skills, and 5 MCP servers that sh
 plugins/
 ├── .claude-plugin/plugin.json   # Claude Code manifest (version, skills path, MCP servers)
 ├── .codex-plugin/plugin.json    # Codex manifest (version + interface section)
+├── .cursor-plugin/plugin.json   # Cursor manifest (version, skills path, rules path)
 ├── .mcp.json                    # Bundled MCP server config
 ├── skills/<name>/SKILL.md       # Each skill = SKILL.md + references/
 ├── agents/<name>.md             # Each agent = bare-name .md file
@@ -25,11 +26,12 @@ This repo was simplified — the Bun toolchain, release-please, CI workflows, an
 
 ## Version bumping
 
-Both manifests MUST stay in sync. When bumping:
+All three manifests MUST stay in sync. When bumping:
 
 ```
 plugins/.claude-plugin/plugin.json  →  "version": "X.Y.Z"
 plugins/.codex-plugin/plugin.json   →  "version": "X.Y.Z"
+plugins/.cursor-plugin/plugin.json  →  "version": "X.Y.Z"
 ```
 
 ## Local development (testing skills live)

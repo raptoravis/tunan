@@ -22,5 +22,6 @@
     "image-generation"
   ],
   "skills": "./skills/",
-  "mcpServers": "./.mcp.json"
+  "mcpServers": "./.mcp.json",
+  "rules": "./rules/"
 }

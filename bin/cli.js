@@ -12,18 +12,19 @@ function usage() {
   console.log(`tunan installer — install tunan for AI coding agents
 
 Usage:
-  npx tunan install [--claude] [--codex] [--opencode] [--reasonix] [--all] [--force]
+  npx tunan install [--claude] [--codex] [--opencode] [--cursor] [--reasonix] [--all] [--force]
 
 Each platform uses its native install mechanism:
   Claude Code / Codex / OpenCode → native plugin commands
-  Reasonix                       → file copy (no plugin marketplace)
+  Cursor / Reasonix              → file copy (no plugin marketplace)
 
 Install to specific agents:
   npx tunan install --claude         Claude Code (native plugin)
   npx tunan install --codex          Codex (native plugin)
   npx tunan install --opencode       OpenCode (native plugin)
+  npx tunan install --cursor         Cursor (rules copy)
   npx tunan install --reasonix       Reasonix (file copy)
-  npx tunan install --all            All four platforms
+  npx tunan install --all            All five platforms
   npx tunan install --all --force    Force-replace / update
 
 After installing, restart your agent and run /tunan:setup in any project.
@@ -49,6 +50,7 @@ if (subCmd === 'install') {
       if (a === '--claude') return '-Claude';
       if (a === '--codex') return '-Codex';
       if (a === '--opencode') return '-OpenCode';
+      if (a === '--cursor') return '-Cursor';
       if (a === '--reasonix') return '-Reasonix';
       if (a === '--all') return '-All';
       if (a === '--force') return '-Force';

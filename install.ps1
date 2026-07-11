@@ -4,7 +4,7 @@ Installs tunan for AI coding agents using each platform's native install mechani
 
 .DESCRIPTION
 Claude Code / Codex / OpenCode → native plugin commands
-Reasonix                       → file copy (no plugin marketplace)
+Cursor / Reasonix              → file copy (no plugin marketplace)
 
 .PARAMETER Claude
 Install via: claude plugin marketplace add raptoravis/tunan && claude plugin install tunan@tunan
@@ -15,18 +15,22 @@ Install via: codex plugin marketplace add raptoravis/tunan && codex plugin add t
 .PARAMETER OpenCode
 Install via: opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git
 
+.PARAMETER Cursor
+Install Cursor rules into .cursor\rules\ in the current directory (or $env:CURSOR_RULES_DIR)
+
 .PARAMETER Reasonix
 Install skills into $env:REASONIX_SKILLS_DIR (defaults to $HOME\.reasonix\skills)
 
 .PARAMETER All
-Install for all four platforms
+Install for all five platforms
 
 .PARAMETER Force
-For Reasonix: replace same-named skills. For plugin commands: update/reinstall.
+For Cursor/Reasonix: replace same-named files. For plugin commands: update/reinstall.
 
 .EXAMPLE
 .\install.ps1 -Claude
 .\install.ps1 -Codex
+.\install.ps1 -Cursor
 .\install.ps1 -Reasonix
 .\install.ps1 -All -Force
 #>
@@ -36,6 +40,7 @@ param(
     [switch]$Claude,
     [switch]$Codex,
     [switch]$OpenCode,
+    [switch]$Cursor,
     [switch]$Reasonix,
     [switch]$All,
     [switch]$Force
@@ -47,18 +52,20 @@ if ($All) {
     $Claude = $true
     $Codex = $true
     $OpenCode = $true
+    $Cursor = $true
     $Reasonix = $true
 }
 
-if (-not ($Claude -or $Codex -or $OpenCode -or $Reasonix)) {
-    Write-Host "Usage: .\install.ps1 [-Claude] [-Codex] [-OpenCode] [-Reasonix] [-All] [-Force]"
+if (-not ($Claude -or $Codex -or $OpenCode -or $Cursor -or $Reasonix)) {
+    Write-Host "Usage: .\install.ps1 [-Claude] [-Codex] [-OpenCode] [-Cursor] [-Reasonix] [-All] [-Force]"
     Write-Host ""
     Write-Host "Targets:"
     Write-Host "  -Claude    Install via Claude Code native plugin"
     Write-Host "  -Codex     Install via Codex native plugin"
     Write-Host "  -OpenCode  Install via OpenCode native plugin"
+    Write-Host "  -Cursor    Install Cursor rules into .cursor\rules\"
     Write-Host "  -Reasonix  Install skills into Reasonix directory"
-    Write-Host "  -All       Install for all four platforms"
+    Write-Host "  -All       Install for all five platforms"
     exit 1
 }
 
@@ -116,6 +123,43 @@ if ($OpenCode) {
         Write-Host "OpenCode CLI not found. Install it first, then run:"
         Write-Host "  opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git"
     }
+}
+
+# ── Cursor (file copy) ──
+if ($Cursor) {
+    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $rulesSourceDir = Join-Path $scriptDir "plugins\.cursor-plugin\rules"
+
+    if (-not (Test-Path $rulesSourceDir)) {
+        Write-Error "Source rules directory not found: $rulesSourceDir"
+        exit 1
+    }
+
+    $target = if ($env:CURSOR_RULES_DIR) { $env:CURSOR_RULES_DIR } else { Join-Path (Get-Location) ".cursor\rules" }
+    Write-Host "Installing tunan Cursor rules -> $target"
+
+    New-Item -ItemType Directory -Path $target -Force | Out-Null
+
+    $count = 0
+    Get-ChildItem -Path $rulesSourceDir -Filter "*.mdc" | ForEach-Object {
+        $ruleName = $_.Name
+        $dest = Join-Path $target $ruleName
+        if ((Test-Path $dest) -and (-not $Force)) {
+            Write-Host "  Skipping $ruleName (already exists; use -Force to overwrite)"
+            return
+        }
+        Copy-Item -Path $_.FullName -Destination $dest -Force
+        Write-Host "  Installed $ruleName"
+        $count++
+    }
+
+    if ($count -eq 0) {
+        Write-Host "No new rules to install (all already present)."
+    } else {
+        Write-Host "Installed $count Cursor rule(s) -> $target"
+    }
+
+    Write-Host "Cursor: tunan rules installed. Restart Cursor to load them, then run /tunan:setup."
 }
 
 # ── Reasonix (file copy) ──

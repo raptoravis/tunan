@@ -1,0 +1,82 @@
+---
+description: "tunan — AI-powered development tools (brainstorm, plan, code-review, work, debug, compound). Loaded on every request."
+globs: "**/*"
+alwaysApply: true
+---
+# tunan — Engineering Workflow Toolkit
+
+You have access to the **tunan** plugin, a suite of AI-powered development tools that make each unit of engineering work easier than the last. The plugin bundles 43 agents, 66 skills, and 4 MCP servers.
+
+## Core Workflow
+
+tunan provides a structured engineering pipeline:
+
+1. **`/tunan:brainstorm`** — Explore requirements and approaches through collaborative dialogue, then capture a right-sized requirement as a GitHub issue.
+2. **`/tunan:plan`** — Create structured implementation plans stored on the feature issue.
+3. **`/tunan:work`** — Execute work efficiently while maintaining quality and finishing features.
+4. **`/tunan:code-review`** — Structured code review using tiered persona agents.
+5. **`/tunan:verify`** — Run test/lint/build checks and emit a validation contract.
+6. **`/tunan:compound`** — Document solved problems to compound team knowledge.
+
+## Skills Reference
+
+The full skill library lives under `plugins/skills/`. When a user invokes a tunan workflow, load the corresponding `SKILL.md` from the skill directory and follow its instructions.
+
+### Key Skills
+
+| Skill | Purpose |
+|-------|---------|
+| `brainstorm` | Requirements exploration and capture as GitHub issues |
+| `plan` | Technical implementation planning |
+| `work` | Systematic feature execution |
+| `code-review` | Multi-persona code review with confidence-gated findings |
+| `verify` | Run checks and emit machine-readable contracts |
+| `compound` | Document solved problems |
+| `debug` | Systematic root cause analysis and fix |
+| `commit` | Create well-structured git commits |
+| `commit-push-pr` | Commit, push, and open a PR |
+| `setup` | Diagnose and configure tunan environment |
+| `status` | List open PRs, issues, and handoff items |
+| `resume` | Resume an interrupted feature pipeline |
+| `lfg` | Full autonomous engineering pipeline end-to-end |
+| `hotfix` | Fast-path autonomous bug fix pipeline |
+| `tweak` | Fast-path autonomous small change pipeline |
+
+### Review Agents
+
+tunan includes specialized review personas: `correctness-reviewer`, `security-reviewer`, `performance-reviewer`, `api-contract-reviewer`, `data-migration-reviewer`, `reliability-reviewer`, `testing-reviewer`, `maintainability-reviewer`, `project-standards-reviewer`, `adversarial-reviewer`, and more.
+
+### Research Agents
+
+`learnings-researcher`, `web-researcher`, `repo-research-analyst`, `framework-docs-researcher`, `best-practices-researcher`, `slack-researcher`, `spec-flow-analyzer`, `session-historian`.
+
+## MCP Servers
+
+The plugin bundles 4 MCP servers configured in `.mcp.json`:
+- **github** — GitHub API integration (issues, PRs, code search)
+- **gemini-search** — Google AI-powered web search
+- **sequential-thinking** — Structured problem-solving
+- **playwright** — Browser automation (if installed)
+
+## Artifact Model
+
+All durable artifacts live as GitHub issues:
+- `tunan:req` — Requirements (issue body)
+- `tunan:plan` — Implementation plans (marker comment `<!-- tunan:plan -->`)
+- `tunan:gate` — Acceptance gates (marker comment `<!-- tunan:gate -->`)
+- `tunan:solution` — Documented solutions (marker comment `<!-- tunan:solution -->`)
+
+A feature is **one GitHub issue** for its lifetime. There is no local-file fallback.
+
+## Interaction Method
+
+When asking the user a question, use the platform's blocking question tool. In Cursor, this is the `ask_user` or equivalent interactive prompt mechanism. Ask one question at a time. Prefer single-select choices when natural options exist.
+
+When dispatching sub-agents, use Cursor's agent dispatch mechanism. Prefer bounded parallel execution where available.
+
+## Project Context
+
+- `AGENTS.md` / `CLAUDE.md` at repo root — Project instructions and conventions
+- `CONCEPTS.md` — Shared domain vocabulary (if present)
+- `STRATEGY.md` — Product strategy (if present)
+- `.cursor/rules/` — Cursor-specific rules (loaded as AI context)

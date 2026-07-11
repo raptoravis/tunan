@@ -3,7 +3,7 @@
 These instructions apply when working in this repo, which ships the
 `tunan` plugin. The plugin payload lives under `plugins/` — skills are at
 `plugins/skills/`, agents at `plugins/agents/`, and the plugin manifests under
-`plugins/.claude-plugin/` and `plugins/.codex-plugin/`.
+`plugins/.claude-plugin/`, `plugins/.codex-plugin/`, and `plugins/.cursor-plugin/`.
 
 # Compounding Engineering Development
 
@@ -21,7 +21,7 @@ This is easy to miss because authoring feels like using: you edit the plugin whi
 
 ## Versioning
 
-The plugin version lives in two manifests that must stay in sync: `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`. When a change warrants a version bump, update both to the same value in the same commit.
+The plugin version lives in three manifests that must stay in sync: `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and `.cursor-plugin/plugin.json`. When a change warrants a version bump, update all three to the same value in the same commit.
 
 The automated release pipeline (release-please, CI workflows, the multi-marketplace parity tooling, and the Bun converter) was removed when the repo was simplified to ship only the plugin payload. There is no `bun run` toolchain, test suite, or `CHANGELOG.md` release automation in this repo anymore — do not reference them.
 
@@ -29,7 +29,7 @@ The automated release pipeline (release-please, CI workflows, the multi-marketpl
 
 Before committing changes:
 
-- [ ] `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` versions match
+- [ ] `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and `.cursor-plugin/plugin.json` versions match
 - [ ] README.md component counts verified
 - [ ] README.md tables accurate (agents, skills)
 - [ ] plugin.json description matches current counts
@@ -40,6 +40,9 @@ Before committing changes:
 plugins/
 ├── .claude-plugin/plugin.json
 ├── .codex-plugin/plugin.json
+├── .cursor-plugin/plugin.json
+├── .cursor-plugin/rules/
+│   └── *.mdc          # Cursor rule files
 ├── agents/
 │   └── *.md          # Agent files use the bare agent name; frontmatter name carries no tunan- prefix (lfg-style)
 ├── skills/
@@ -234,7 +237,7 @@ Keep rationale at the highest-level location that covers it; restate behavioral 
 
 ### Cross-Platform User Interaction
 
-- [ ] When a skill needs to ask the user a question, instruct use of the platform's blocking question tool and name the known equivalents (`AskUserQuestion` in Claude Code, `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi via the `pi-ask-user` extension)
+- [ ] When a skill needs to ask the user a question, instruct use of the platform's blocking question tool and name the known equivalents (`AskUserQuestion` in Claude Code, `request_user_input` in Codex, `ask_user` in Gemini/Pi/Cursor, `ask_user` in Pi via the `pi-ask-user` extension)
 - [ ] For Claude Code, also instruct to load `AskUserQuestion` via `ToolSearch` with `select:AskUserQuestion` first if its schema isn't already loaded — `AskUserQuestion` is a deferred tool and won't be available at session start. A pending schema load is not a valid reason to fall back to text.
 - [ ] Include a fallback: when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes where `request_user_input` is unavailable, or `ToolSearch` returns no match), present numbered options in chat and wait for the user's reply — never silently skip the question.
 - [ ] **Every answer-alignment moment routes through the blocking tool — never an ad-hoc chat menu.** Anywhere a skill asks the user to pick among options — end-of-flow "what next" / handoff menus, branch/path decisions ("which path applies", "rename the branch?"), "which issue to use", confirmations with named options — must use the blocking question tool (≤4 options) and must use the skill's canonical options. The recurring failure mode is the agent improvising a `接下来做什么` / `what next` numbered list in chat and inventing its own options instead of firing the tool. A bare numbered list is the fallback only when the harness lacks a blocking tool or the call errors — never a default convenience, and **option count alone never justifies it** (see the overflow rule below). `disable-model-invocation` value docs (`$ARGUMENTS` enumerations) and intentionally-inferring skills (e.g., `code-review`) are not answer-alignment moments and are exempt.
@@ -265,7 +268,7 @@ Design rules for blocking question menus (`AskUserQuestion` / `request_user_inpu
 
 ### Cross-Platform Sub-Agent Dispatch
 
-- [ ] When a skill dispatches sub-agents, instruct use of the platform's subagent primitive and name the known equivalents (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi via the `pi-subagents` extension)
+- [ ] When a skill dispatches sub-agents, instruct use of the platform's subagent primitive and name the known equivalents (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi via the `pi-subagents` extension, Cursor's agent mode subagent dispatch)
 - [ ] Prefer bounded parallel execution: respect platform active-subagent limits, queue overflow work, and treat limit-related spawn errors as backpressure. Include a sequential fallback for platforms that do not support parallel dispatch
 - [ ] Prefer sub-agents shipped with this plugin (`tunan:*`) over platform built-ins. Built-ins have different names on each target (e.g., Claude Code's `Explore` is `explorer` on Codex via `spawn_agent`'s `agent_type`, `scout` on Pi via `pi-subagents`) — using our own avoids the enumeration tax. Exception: when a built-in offers a meaningful benefit worth keeping, enumerate the per-platform equivalents inline at the call site so the model can route correctly on each target.
 
