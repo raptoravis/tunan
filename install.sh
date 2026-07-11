@@ -13,7 +13,7 @@ Targets:
   --claude   Install via: claude plugin marketplace add raptoravis/tunan && claude plugin install tunan@tunan
   --codex    Install via: codex plugin marketplace add raptoravis/tunan && codex plugin add tunan@tunan
   --opencode Install via: opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git
-  --cursor   Install Cursor rules into .cursor/rules/ in the current directory (or CURSOR_RULES_DIR)
+  --cursor   Install Cursor rules globally into ${CURSOR_RULES_DIR:-$HOME/.cursor}/rules
   --reasonix Install skills into ${REASONIX_SKILLS_DIR:-$HOME/.reasonix}/skills
   --all      Install for all five platforms
 
@@ -114,7 +114,7 @@ if [[ "$cursor" == "true" ]]; then
     exit 1
   fi
 
-  target="${CURSOR_RULES_DIR:-$PWD/.cursor}/rules"
+  target="${CURSOR_RULES_DIR:-$HOME/.cursor}/rules"
   echo "Installing tunan Cursor rules -> $target"
 
   mkdir -p "$target"

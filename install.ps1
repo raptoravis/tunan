@@ -16,7 +16,7 @@ Install via: codex plugin marketplace add raptoravis/tunan && codex plugin add t
 Install via: opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git
 
 .PARAMETER Cursor
-Install Cursor rules into .cursor\rules\ in the current directory (or $env:CURSOR_RULES_DIR)
+Install Cursor rules globally into $env:CURSOR_RULES_DIR (defaults to $HOME\.cursor\rules)
 
 .PARAMETER Reasonix
 Install skills into $env:REASONIX_SKILLS_DIR (defaults to $HOME\.reasonix\skills)
@@ -135,7 +135,7 @@ if ($Cursor) {
         exit 1
     }
 
-    $target = if ($env:CURSOR_RULES_DIR) { $env:CURSOR_RULES_DIR } else { Join-Path (Get-Location) ".cursor\rules" }
+    $target = if ($env:CURSOR_RULES_DIR) { $env:CURSOR_RULES_DIR } else { Join-Path $homeDir ".cursor\rules" }
     Write-Host "Installing tunan Cursor rules -> $target"
 
     New-Item -ItemType Directory -Path $target -Force | Out-Null

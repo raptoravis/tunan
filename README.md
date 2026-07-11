@@ -66,7 +66,7 @@ Or add to the `plugin` array in your `opencode.json`:
 
 **Cursor:**
 
-Cursor does not have a plugin marketplace — install via the install script, which copies tunan's Cursor rules into your project's `.cursor/rules/` directory:
+Cursor does not have a plugin marketplace — install via the install script, which copies tunan's Cursor rules into the global `~/.cursor/rules/` directory (or `CURSOR_RULES_DIR` if set):
 
 ```bash
 ./install.sh --cursor
@@ -77,8 +77,6 @@ On Windows (PowerShell):
 ```powershell
 .\install.ps1 -Cursor
 ```
-
-Or install into a custom directory via the `CURSOR_RULES_DIR` environment variable.
 
 After installing, restart Cursor to load the rules, then run `/tunan:setup`.
 
