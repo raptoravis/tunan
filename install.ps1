@@ -79,12 +79,19 @@ if ($Claude) {
     if ($claudePath) {
         claude plugin marketplace add raptoravis/tunan 2>$null
         if ($Force) {
-            claude plugin update tunan@tunan
-            if ($LASTEXITCODE -ne 0) { claude plugin install tunan@tunan }
-        } else {
+            Write-Host "Force: reinstalling from scratch..."
+            claude plugin uninstall tunan@tunan 2>$null
             claude plugin install tunan@tunan
+        } else {
+            claude plugin update tunan@tunan 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host "Updated tunan to latest."
+            } else {
+                Write-Host "Not yet installed - installing..."
+                claude plugin install tunan@tunan
+            }
         }
-        Write-Host "Claude Code: plugin installed. Restart Claude Code, then run /tunan:setup."
+        Write-Host "Claude Code: done. Restart Claude Code, then run /tunan:setup."
     } else {
         Write-Host "Claude Code CLI not found. Install it first, then run:"
         Write-Host "  claude plugin marketplace add raptoravis/tunan"
@@ -98,8 +105,20 @@ if ($Codex) {
     $codexPath = Get-Command codex -ErrorAction SilentlyContinue
     if ($codexPath) {
         codex plugin marketplace add raptoravis/tunan 2>$null
-        codex plugin add tunan@tunan
-        Write-Host "Codex: plugin installed. Restart Codex, then run /tunan:setup."
+        if ($Force) {
+            Write-Host "Force: reinstalling from scratch..."
+            codex plugin remove tunan@tunan 2>$null
+            codex plugin add tunan@tunan
+        } else {
+            codex plugin update tunan@tunan 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host "Updated tunan to latest."
+            } else {
+                Write-Host "Not yet installed - installing..."
+                codex plugin add tunan@tunan
+            }
+        }
+        Write-Host "Codex: done. Restart Codex, then run /tunan:setup."
     } else {
         Write-Host "Codex CLI not found. Install it first, then run:"
         Write-Host "  codex plugin marketplace add raptoravis/tunan"
@@ -114,11 +133,12 @@ if ($OpenCode) {
     if ($opencodePath) {
         $pluginSpec = "tunan@git+https://github.com/raptoravis/tunan.git"
         if ($Force) {
+            Write-Host "Force: reinstalling from scratch..."
             opencode plugin -g $pluginSpec --force
         } else {
             opencode plugin -g $pluginSpec
         }
-        Write-Host "OpenCode: plugin installed. Restart OpenCode, then run /tunan:setup."
+        Write-Host "OpenCode: done. Restart OpenCode, then run /tunan:setup."
     } else {
         Write-Host "OpenCode CLI not found. Install it first, then run:"
         Write-Host "  opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git"
@@ -141,25 +161,22 @@ if ($Cursor) {
     New-Item -ItemType Directory -Path $target -Force | Out-Null
 
     $count = 0
+    $updated = 0
     Get-ChildItem -Path $rulesSourceDir -Filter "*.mdc" | ForEach-Object {
         $ruleName = $_.Name
         $dest = Join-Path $target $ruleName
-        if ((Test-Path $dest) -and (-not $Force)) {
-            Write-Host "  Skipping $ruleName (already exists; use -Force to overwrite)"
-            return
+        if (Test-Path $dest) {
+            Write-Host "  Updating $ruleName"
+            $updated++
+        } else {
+            Write-Host "  Installing $ruleName"
         }
         Copy-Item -Path $_.FullName -Destination $dest -Force
-        Write-Host "  Installed $ruleName"
         $count++
     }
 
-    if ($count -eq 0) {
-        Write-Host "No new rules to install (all already present)."
-    } else {
-        Write-Host "Installed $count Cursor rule(s) -> $target"
-    }
-
-    Write-Host "Cursor: tunan rules installed. Restart Cursor to load them, then run /tunan:setup."
+    Write-Host "Installed $count Cursor rule(s) -> $target ($updated updated, $($count - $updated) new)"
+    Write-Host "Cursor: done. Restart Cursor to load them, then run /tunan:setup."
 }
 
 # ── Reasonix (file copy) ──
@@ -203,6 +220,7 @@ if ($Reasonix) {
     }
 
     $count = 0
+    $updated = 0
     Get-ChildItem -Path $sourceDir -Directory | ForEach-Object {
         $skillDir = $_.FullName
         $skillFile = Join-Path $skillDir "SKILL.md"
@@ -210,20 +228,23 @@ if ($Reasonix) {
         $skillName = $_.Name
         $sourceNames = "$sourceNames$skillName "
         $dest = Join-Path $target $skillName
-        if ((Test-Path $dest) -and (-not $Force)) {
-            return
+        if (Test-Path $dest) {
+            Write-Host "  Updating $skillName"
+            $updated++
+        } else {
+            Write-Host "  Installing $skillName"
         }
         Remove-Item -Recurse -Force $dest -ErrorAction SilentlyContinue
         New-Item -ItemType Directory -Path $dest -Force | Out-Null
         Copy-Skill -Source $skillDir -Dest $dest
         $count++
     }
-    Write-Host "Installed $count skills -> $target"
+    Write-Host "Installed $count skills -> $target ($updated updated, $($count - $updated) new)"
 
     Get-ChildItem -Path $sourceDir -Directory | ForEach-Object {
         $skillFile = Join-Path $_.FullName "SKILL.md"
         if (Test-Path $skillFile) { $_.Name }
     } | Sort-Object | Set-Content $manifest
 
-    Write-Host "Reasonix: skills installed. Restart Reasonix, then run /tunan:setup."
+    Write-Host "Reasonix: done. Restart Reasonix, then run /tunan:setup."
 }

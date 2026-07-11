@@ -18,7 +18,7 @@ Targets:
   --all      Install for all five platforms
 
 Options:
-  --force   For --cursor/--reasonix: replace same-named files. For --claude/--codex/--opencode: passed as --force / update to the plugin command.
+  --force   Force a fresh install (uninstall first) instead of updating in place.
 USAGE
 }
 
@@ -64,11 +64,16 @@ if [[ "$claude" == "true" ]]; then
   if command -v claude >/dev/null 2>&1; then
     claude plugin marketplace add raptoravis/tunan 2>/dev/null || true
     if [[ "$force" == "true" ]]; then
-      claude plugin update tunan@tunan || claude plugin install tunan@tunan
+      echo "Force: reinstalling from scratch…"
+      claude plugin uninstall tunan@tunan 2>/dev/null || true
+      claude plugin install tunan@tunan
+    elif claude plugin update tunan@tunan 2>/dev/null; then
+      echo "Updated tunan to latest."
     else
+      echo "Not yet installed — installing…"
       claude plugin install tunan@tunan
     fi
-    echo "Claude Code: plugin installed. Restart Claude Code, then run /tunan:setup."
+    echo "Claude Code: done. Restart Claude Code, then run /tunan:setup."
   else
     echo "Claude Code CLI not found. Install it first, then run:"
     echo "  claude plugin marketplace add raptoravis/tunan"
@@ -81,8 +86,17 @@ if [[ "$codex" == "true" ]]; then
   echo "Installing tunan for Codex (native plugin)…"
   if command -v codex >/dev/null 2>&1; then
     codex plugin marketplace add raptoravis/tunan 2>/dev/null || true
-    codex plugin add tunan@tunan
-    echo "Codex: plugin installed. Restart Codex, then run /tunan:setup."
+    if [[ "$force" == "true" ]]; then
+      echo "Force: reinstalling from scratch…"
+      codex plugin remove tunan@tunan 2>/dev/null || true
+      codex plugin add tunan@tunan
+    elif codex plugin update tunan@tunan 2>/dev/null; then
+      echo "Updated tunan to latest."
+    else
+      echo "Not yet installed — installing…"
+      codex plugin add tunan@tunan
+    fi
+    echo "Codex: done. Restart Codex, then run /tunan:setup."
   else
     echo "Codex CLI not found. Install it first, then run:"
     echo "  codex plugin marketplace add raptoravis/tunan"
@@ -96,11 +110,12 @@ if [[ "$opencode" == "true" ]]; then
   if command -v opencode >/dev/null 2>&1; then
     plugin_spec="tunan@git+https://github.com/raptoravis/tunan.git"
     if [[ "$force" == "true" ]]; then
+      echo "Force: reinstalling from scratch…"
       opencode plugin -g "$plugin_spec" --force
     else
       opencode plugin -g "$plugin_spec"
     fi
-    echo "OpenCode: plugin installed. Restart OpenCode, then run /tunan:setup."
+    echo "OpenCode: done. Restart OpenCode, then run /tunan:setup."
   else
     echo "OpenCode CLI not found. Install it first, then run:"
     echo "  opencode plugin -g tunan@git+https://github.com/raptoravis/tunan.git"
@@ -120,26 +135,23 @@ if [[ "$cursor" == "true" ]]; then
   mkdir -p "$target"
 
   count=0
+  updated=0
   for rule in "$rules_source_dir"/*.mdc; do
     [[ -f "$rule" ]] || continue
     rule_name="$(basename "$rule")"
     dest="$target/$rule_name"
-    if [[ -e "$dest" && "$force" != "true" ]]; then
-      echo "  Skipping $rule_name (already exists; use --force to overwrite)"
-      continue
+    if [[ -e "$dest" ]]; then
+      echo "  Updating $rule_name"
+      updated=$((updated + 1))
+    else
+      echo "  Installing $rule_name"
     fi
     cp "$rule" "$dest"
-    echo "  Installed $rule_name"
     count=$((count + 1))
   done
 
-  if [[ $count -eq 0 ]]; then
-    echo "No new rules to install (all already present)."
-  else
-    echo "Installed $count Cursor rule(s) -> $target"
-  fi
-
-  echo "Cursor: tunan rules installed. Restart Cursor to load them, then run /tunan:setup."
+  echo "Installed $count Cursor rule(s) -> $target (${updated} updated, $((count - updated)) new)"
+  echo "Cursor: done. Restart Cursor to load them, then run /tunan:setup."
 fi
 
 # ── Reasonix (file copy) ──
@@ -170,25 +182,29 @@ if [[ "$reasonix" == "true" ]]; then
   }
 
   count=0
+  updated=0
   for skill in "$source_dir"/*; do
     [[ -d "$skill" && -f "$skill/SKILL.md" ]] || continue
     skill_name="$(basename "$skill")"
     source_names="$source_names$skill_name "
     dest="$target/$skill_name"
-    if [[ -e "$dest" && "$force" != "true" ]]; then
-      continue
+    if [[ -d "$dest" ]]; then
+      echo "  Updating $skill_name"
+      updated=$((updated + 1))
+    else
+      echo "  Installing $skill_name"
     fi
     rm -rf "$dest"
     mkdir -p "$dest"
     copy_skill "$skill" "$dest"
     count=$((count + 1))
   done
-  echo "Installed $count skills -> $target"
+  echo "Installed $count skills -> $target (${updated} updated, $((count - updated)) new)"
 
   for skill in "$source_dir"/*; do
     [[ -d "$skill" && -f "$skill/SKILL.md" ]] || continue
     basename "$skill"
   done | sort > "$manifest"
 
-  echo "Reasonix: skills installed. Restart Reasonix, then run /tunan:setup."
+  echo "Reasonix: done. Restart Reasonix, then run /tunan:setup."
 fi
