@@ -166,8 +166,6 @@ export const TunanHooksPlugin: Plugin = async (ctx) => {
         "read",
         "glob",
         "grep",
-        "codegraph_search",
-        "codegraph_context",
       ];
       if (autoApproveTools.includes(input.tool)) {
         output.approve = true;

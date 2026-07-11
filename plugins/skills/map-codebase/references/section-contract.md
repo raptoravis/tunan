@@ -12,7 +12,6 @@ mapped_at_sha: <full git HEAD sha at map time>
 mapped_at_date: <YYYY-MM-DD>
 mode: full            # full | fast
 focus: tech+arch      # present only when mode is fast; omit otherwise
-codegraph: indexed    # indexed | unavailable — whether CodeGraph backed this map
 ```
 ````
 
@@ -24,7 +23,7 @@ Keep each section tight and current-state. A thin section gets one honest line, 
 
 1. **`## STACK`** — languages, runtimes, frameworks, build tooling, package managers, and versions actually in use. The "what is this written in and with."
 2. **`## INTEGRATIONS`** — external systems the code talks to: databases, queues, third-party APIs, auth providers, cloud services, MCP servers. Note how each is reached (SDK, REST, env-configured). "no external integrations" is a valid, useful answer.
-3. **`## ARCHITECTURE`** — the system's shape: layers, major modules and their responsibilities, the dominant patterns and data/control flow between parts. Prefer CodeGraph (`codegraph_context`, `codegraph_explore`, `codegraph_impact`) over prose guessing.
+3. **`## ARCHITECTURE`** — the system's shape: layers, major modules and their responsibilities, the dominant patterns and data/control flow between parts. Derive from native code search (Glob/Grep/Read), not prose guessing.
 4. **`## STRUCTURE`** — directory layout and where things live: entry points, where features vs. infrastructure vs. tests sit, naming conventions for files/dirs. The map a newcomer needs to find anything.
 5. **`## CONVENTIONS`** — coding standards and idioms actually followed: error handling, naming, state management, formatting/lint rules, recurring patterns. What a reviewer would expect new code to match. (Distinct from `CONCEPTS.md`, which is domain vocabulary — this is code style.)
 6. **`## TESTING`** — test frameworks, where tests live, what is covered vs. not, how the suite runs, and any CI gates. Honest about gaps.

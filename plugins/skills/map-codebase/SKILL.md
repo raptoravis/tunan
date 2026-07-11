@@ -37,14 +37,14 @@ Interpret the argument as a mode. If empty, default to `full` (or `refresh` sema
 - **`status`** — read-only. Read the map issue's provenance header, compare `mapped_at_sha` against current `git rev-parse HEAD`, and report staleness (commits behind, files changed). No re-scan, no write.
 - **`refresh`** — re-map and update the same issue in place, then add a revision comment summarizing what changed.
 - **`diff`** — re-scan, compare the fresh findings against the stored body, and post a **changed-sections summary** as an issue comment for review. Does not overwrite the body; the user runs `refresh` after reviewing.
-- **`query <term>`** — answer a structural question about the codebase. Do **not** build a separate search index: read the map issue for written context, then use **CodeGraph** (`codegraph_*` tools) for the live structural answer (callers, callees, impact, definitions). CodeGraph is tunan's pre-built AST index — prefer it over grep loops. If CodeGraph is unavailable, say so and fall back to native search over the repo.
+- **`query <term>`** — answer a structural question about the codebase. Do **not** build a separate search index: read the map issue for written context, then use native search tools (Glob, Grep, Read) over the repo for the answer.
 
 ## Core Principles
 
 1. **Current state, not aspiration.** Describe what the code *is* today — patterns actually in use, debt actually present — not what it should become. CONCERNS records real risk; it does not prescribe a roadmap.
 2. **One living issue.** A repo has exactly one `tunan:codebase-map` issue. Re-mapping updates it; it is never duplicated.
 3. **Concurrent discovery, serial write.** Mappers run in parallel but **return their sections to the orchestrator**; the orchestrator writes the issue once. Never let multiple agents edit the issue concurrently — concurrent edits clobber each other.
-4. **CodeGraph first for structure.** Structural questions (who-calls-what, impact, layering) go through `codegraph_*`, not grep+read. Reserve native search for literal text.
+4. **Native search for structure.** Structural questions (who-calls-what, impact, layering) go through native Glob/Grep/Read tools over the repo.
 5. **Provenance is load-bearing.** Every write stamps `mapped_at_sha` and date. `status`/`diff` depend on it to compute drift.
 6. **Honest gaps over padding.** If a section is thin (no tests, no external integrations), say so in one line. Do not invent structure to fill a heading.
 
@@ -86,7 +86,7 @@ Route on the result and the mode:
 - **No issue + (`status`/`diff`/`query`)** → nothing to read. Tell the user no map exists yet and offer to run `full`. Stop unless they accept.
 - **Issue exists + `status`** → read provenance, compute staleness (below), report, stop.
 - **Issue exists + `diff`** → go to Phase 1 (scan), then Phase 2 diff path (comment only).
-- **Issue exists + `query`** → read the issue body, answer via CodeGraph, stop.
+- **Issue exists + `query`** → read the issue body, answer via native search tools, stop.
 - **Issue exists + (`full`/`refresh`/empty)** → confirm before overwriting. Use the blocking question tool: "A map already exists (mapped at `<sha>`, `<date>`). Re-map and update it in place?" Options: *Refresh in place* (recommended) / *Cancel*. On confirm, go to Phase 1.
 
 **Staleness computation** (for `status` and the refresh confirmation): read the issue body's provenance YAML, take `mapped_at_sha`, then:
@@ -101,7 +101,7 @@ Report `N commits behind` and a one-line file-churn summary. If `<mapped_at_sha>
 
 ### Phase 1: Map (parallel mappers)
 
-Read `references/mapper-dispatch.md` — it holds the per-mapper prompts, the area→section assignment, and the CodeGraph-first guidance. Dispatch mappers using the platform's subagent primitive (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi). Prefer tunan/bundled agents or the `Explore` agent over platform-built-in bare names. Respect the platform's active-subagent limit; queue overflow; fall back to sequential dispatch where parallel is unsupported.
+Read `references/mapper-dispatch.md` — it holds the per-mapper prompts and the area→section assignment. Dispatch mappers using the platform's subagent primitive (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex, `subagent` in Pi). Prefer tunan/bundled agents or the `Explore` agent over platform-built-in bare names. Respect the platform's active-subagent limit; queue overflow; fall back to sequential dispatch where parallel is unsupported.
 
 - **`full`** → four mappers in parallel (tech, arch, quality, concerns).
 - **`fast --focus <area>`** → one mapper for that area only.
@@ -143,11 +143,11 @@ Surface in chat: a one-to-two-line summary per section plus the top CONCERNS ite
 
 - Does not write local files. The map lives only in the `tunan:codebase-map` issue; there is no `.planning/` or any on-disk artifact.
 - Does not keep a per-run timeline. One living issue, updated in place — re-mapping does not open a new issue.
-- Does not build a bespoke search/intel index. Structural queries go through CodeGraph; the issue body is the written context, CodeGraph is the live index.
+- Does not build a bespoke search/intel index. The issue body is the written context; structural queries use native search tools.
 - Does not prescribe a roadmap. CONCERNS surfaces real risk and debt; turning that into work is `brainstorm`/`plan`.
 - Does not let mappers write the issue. Discovery is parallel; the issue write is a single serial step in the orchestrator.
 - Does not mutate the repo or any external system. Code access is read-only.
 
 ## Learn More
 
-The single-issue, living-document model is deliberate. A current-state map is only useful if there is one authoritative copy that stays current — a timeline of stale snapshots invites reading the wrong one. Storing it in issue state (not `.planning/*.md`) keeps it in the same searchable store as requirements (`tunan:req`), plans, config, and learnings (`tunan:solution`), so the whole project context lives in one place and travels with the repo on GitHub rather than in a contributor's working tree. Pairing the written map with CodeGraph gives both halves: the issue answers "what is this codebase and why," CodeGraph answers "what calls this and what breaks if I change it." Run `map-codebase` when joining a repo or before a planning pass; run `status` to see whether the map has drifted from HEAD.
+The single-issue, living-document model is deliberate. A current-state map is only useful if there is one authoritative copy that stays current — a timeline of stale snapshots invites reading the wrong one. Storing it in issue state (not `.planning/*.md`) keeps it in the same searchable store as requirements (`tunan:req`), plans, config, and learnings (`tunan:solution`), so the whole project context lives in one place and travels with the repo on GitHub rather than in a contributor's working tree. The written map answers "what is this codebase and why"; native search tools answer "what calls this and what breaks if I change it." Run `map-codebase` when joining a repo or before a planning pass; run `status` to see whether the map has drifted from HEAD.

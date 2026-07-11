@@ -38,7 +38,7 @@ allowed-tools:
 
 ## 子代理派发约定
 
-用平台的子代理原语（`Agent`/`Task` in Claude Code、`spawn_agent` in Codex、`subagent` in Pi）。优先用本插件自带的 `tunan:*` 代理或内置 `Explore`（只读勘探）。受平台并发上限约束，溢出排队，limit 报错当背压处理；不支持并行的平台退化为顺序执行。给子代理**传文件路径而非文件内容**，让它只读自己需要的部分。探索代码优先用 CodeGraph MCP（`codegraph_*`，结构化、亚毫秒）而非 grep/read 循环。
+用平台的子代理原语（`Agent`/`Task` in Claude Code、`spawn_agent` in Codex、`subagent` in Pi）。优先用本插件自带的 `tunan:*` 代理或内置 `Explore`（只读勘探）。受平台并发上限约束，溢出排队，limit 报错当背压处理；不支持并行的平台退化为顺序执行。给子代理**传文件路径而非文件内容**，让它只读自己需要的部分。探索代码用原生 Glob/Grep/Read 工具。
 
 ## 执行流程
 
@@ -61,7 +61,7 @@ allowed-tools:
 对每个待生成/更新的文档项，派发一个撰写子代理：
 
 - 输入：文档类型契约（`references/doc-types.md` 里对应段落）、目标文件路径、相关代码区域的路径。
-- 职责：直接探索代码（优先 CodeGraph），写出/更新该文档；**只写它能在代码里证实的内容**，不确定的事实标 `<!-- VERIFY: <claim> -->` 留给 Phase 3，而不是编造。
+- 职责：直接探索代码（用原生 Glob/Grep/Read），写出/更新该文档；**只写它能在代码里证实的内容**，不确定的事实标 `<!-- VERIFY: <claim> -->` 留给 Phase 3，而不是编造。
 - 产物：写入目标 markdown 文件，返回它新增/改动的**可核验事实清单**（路径、签名、命令、端点）。
 
 按波次派发，尊重并发上限。
@@ -85,4 +85,4 @@ allowed-tools:
 - 不写 issue（文档是仓库文件，不是 issue-state）。
 - 不编造无法在代码里证实的路径/签名/端点——宁可标 `VERIFY` 也不要幻觉。
 - 不 commit/push——停在 unstaged。
-- 不用 shell `find`/`ls`/`cat`/`grep` 做常规文件勘探——用原生 Glob/Grep/Read 与 CodeGraph。
+- 不用 shell `find`/`ls`/`cat`/`grep` 做常规文件勘探——用原生 Glob/Grep/Read。

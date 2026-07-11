@@ -242,12 +242,6 @@ def update_config(config_path: str, mcp_src_path: str, skills_dir: str) -> list:
                 if "command" not in entry:
                     continue
                 cmd = [entry["command"]] + entry.get("args", [])
-                if name == "codegraph":
-                    try:
-                        _sp.run(["codegraph", "--version"], capture_output=True, timeout=5)
-                        cmd = ["codegraph", "serve", "--mcp"]
-                    except (FileNotFoundError, _sp.TimeoutExpired):
-                        pass
                 existing[name] = {"type": "local", "command": cmd, "enabled": True}
                 added_mcp.append(name)
             if added_mcp:

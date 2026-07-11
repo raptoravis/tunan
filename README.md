@@ -130,7 +130,7 @@ The plugin ships a bundled [`.mcp.json`](plugins/.mcp.json). Two lightweight, no
 - `context7` — up-to-date library / API documentation lookup
 - `sequential-thinking` — structured multi-step reasoning
 
-Two heavier servers are **opt-in** (they pull large dependencies — browser binaries, a Chrome install): `playwright` and `chrome-devtools`. We also recommend `codegraph` (structural code search via AST index: callers, callees, impact analysis), which needs a one-time global install (`npm i -g @colbymchenry/codegraph`). Run `/tunan:setup` to check which MCP servers are registered and install any missing ones interactively. See the [MCP reference](plugins/README.md#mcp-servers) for details.
+Two heavier servers are **opt-in** (they pull large dependencies — browser binaries, a Chrome install): `playwright` and `chrome-devtools`. Run `/tunan:setup` to check which MCP servers are registered and install any missing ones interactively. See the [MCP reference](plugins/README.md#mcp-servers) for details.
 
 ## Getting started
 

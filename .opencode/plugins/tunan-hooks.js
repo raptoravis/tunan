@@ -116,7 +116,7 @@ export const TunanHooksPlugin = async (ctx) => {
             if (isHookDisabled("permission:auto"))
                 return;
             const autoApproveTools = [
-                "read", "glob", "grep", "codegraph_search", "codegraph_context",
+                "read", "glob", "grep",
             ];
             if (autoApproveTools.includes(input.tool)) {
                 output.approve = true;

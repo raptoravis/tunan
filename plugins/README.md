@@ -147,8 +147,6 @@ The plugin ships a bundled [`.mcp.json`](.mcp.json). Two lightweight, no-API-key
 
 Two heavier servers are **opt-in** — they pull large dependencies (browser binaries, a Chrome install), so `/tunan:setup` offers them but leaves them unchecked by default.
 
-We also recommend `codegraph` (structural code search via AST index: callers, callees, impact analysis). Install it once globally (`npm i -g @colbymchenry/codegraph`), then register it with `claude mcp add codegraph -- codegraph serve --mcp`.
-
 | Server            | Installs via                          | Purpose                                  |
 | ----------------- | ------------------------------------- | ---------------------------------------- |
 | `playwright`      | `claude mcp add playwright …`         | Cross-browser automation                 |

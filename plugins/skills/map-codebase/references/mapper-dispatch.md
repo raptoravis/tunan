@@ -19,17 +19,17 @@
 - Respect the platform's active-subagent cap; queue overflow; fall back to sequential dispatch where parallel is unsupported.
 - Pass each mapper the repo root and the section contract location (`references/section-contract.md`) by path, not by inlining — the mapper reads only what it needs.
 
-## CodeGraph-first instruction (include in every mapper prompt)
+## Structural search instruction (include in every mapper prompt)
 
-> Structural questions — what calls what, module layering, change-impact, where a symbol is defined — go through CodeGraph (`codegraph_context` first, then one `codegraph_explore` for the surfaced symbols; `codegraph_impact`/`codegraph_callers` for blast radius). CodeGraph is a pre-built AST index; do not rebuild it with grep+read loops. Use native file-search/read only for literal text (config values, comments, log strings) or to confirm a specific detail CodeGraph did not cover. If CodeGraph is not initialized, note `codegraph: unavailable` in your return and fall back to native search.
+> Structural questions — what calls what, module layering, change-impact, where a symbol is defined — go through native search tools (Glob, Grep, Read). Use file-search/read for literal text (config values, comments, log strings, definitions).
 
 ## Per-mapper prompt skeletons
 
-Each prompt: name the area, name the exact sections to return, set the current-state framing, and require the CodeGraph-first rule above. Keep returns tight — honest one-liners for thin areas, no invented structure.
+Each prompt: name the area, name the exact sections to return, set the current-state framing. Keep returns tight — honest one-liners for thin areas, no invented structure.
 
 **Tech mapper** — "Map the technology surface of the repo at `<root>`. Return two markdown sections, `## STACK` (languages, runtimes, frameworks, build tooling, package managers, versions actually in use) and `## INTEGRATIONS` (external systems the code talks to — DBs, queues, third-party APIs, auth, cloud, MCP — and how each is reached). Read manifests/lockfiles for ground truth. 'No external integrations' is a valid answer. Return only the two sections."
 
-**Architecture mapper** — "Map the architecture of the repo at `<root>`. Return `## ARCHITECTURE` (layers, major modules and responsibilities, dominant patterns, data/control flow) and `## STRUCTURE` (directory layout, entry points, where features vs. infra vs. tests live, file/dir naming). Use CodeGraph for layering and flow. Return only the two sections."
+**Architecture mapper** — "Map the architecture of the repo at `<root>`. Return `## ARCHITECTURE` (layers, major modules and responsibilities, dominant patterns, data/control flow) and `## STRUCTURE` (directory layout, entry points, where features vs. infra vs. tests live, file/dir naming). Use native search for layering and flow. Return only the two sections."
 
 **Quality mapper** — "Map the code-quality conventions of the repo at `<root>`. Return `## CONVENTIONS` (error handling, naming, state management, lint/format rules, recurring idioms a reviewer expects new code to match — code style, not domain vocabulary) and `## TESTING` (frameworks, where tests live, coverage vs. gaps, how the suite runs, CI gates). Be honest about gaps. Return only the two sections."
 

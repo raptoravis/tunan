@@ -112,7 +112,7 @@ claude --plugin-dir ./tunan/plugins
 - `context7` — 最新的库/API 文档查找
 - `sequential-thinking` — 结构化多步推理
 
-两个较重的服务器是**可选的**（它们会拉取大型依赖——浏览器二进制文件、Chrome 安装）：`playwright` 和 `chrome-devtools`。我们还推荐 `codegraph`（基于 AST 索引的结构化代码搜索：调用者、被调用者、影响分析），需一次性全局安装（`npm i -g @colbymchenry/codegraph`）。运行 `/tunan:setup` 检查哪些 MCP 服务器已注册，并交互式安装缺少的服务器。详见 [MCP 参考](plugins/README.md#mcp-servers)。
+两个较重的服务器是**可选的**（它们会拉取大型依赖——浏览器二进制文件、Chrome 安装）：`playwright` 和 `chrome-devtools`。运行 `/tunan:setup` 检查哪些 MCP 服务器已注册，并交互式安装缺少的服务器。详见 [MCP 参考](plugins/README.md#mcp-servers)。
 
 ## 快速开始
 

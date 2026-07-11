@@ -19,9 +19,8 @@
 
 ## 核验手段优先级
 
-1. **CodeGraph MCP**（`codegraph_search` / `codegraph_node` / `codegraph_callers`）——查符号是否存在、取真实签名，结构化且准确，优先用。
-2. 原生 Glob/Grep/Read——查文件路径是否存在、查路由/配置定义的字面文本。
-3. 不要用 shell `grep`/`find`/`cat` 做这些——用原生工具，避免子代理工作流里的权限弹窗。
+1. 原生 Glob/Grep/Read——查符号是否存在、查文件路径是否存在、查路由/配置定义的字面文本。
+2. 不要用 shell `grep`/`find`/`cat` 做这些——用原生工具，避免子代理工作流里的权限弹窗。
 
 ## 严禁
 
