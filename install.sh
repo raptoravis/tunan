@@ -141,7 +141,6 @@ if [[ "$cursor" == "true" ]]; then
     rule_name="$(basename "$rule")"
     dest="$target/$rule_name"
     if [[ -e "$dest" ]]; then
-      echo "  Updating $rule_name"
       updated=$((updated + 1))
     else
       echo "  Installing $rule_name"
@@ -189,7 +188,6 @@ if [[ "$reasonix" == "true" ]]; then
     source_names="$source_names$skill_name "
     dest="$target/$skill_name"
     if [[ -d "$dest" ]]; then
-      echo "  Updating $skill_name"
       updated=$((updated + 1))
     else
       echo "  Installing $skill_name"

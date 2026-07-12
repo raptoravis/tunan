@@ -166,7 +166,6 @@ if ($Cursor) {
         $ruleName = $_.Name
         $dest = Join-Path $target $ruleName
         if (Test-Path $dest) {
-            Write-Host "  Updating $ruleName"
             $updated++
         } else {
             Write-Host "  Installing $ruleName"
@@ -229,7 +228,6 @@ if ($Reasonix) {
         $sourceNames = "$sourceNames$skillName "
         $dest = Join-Path $target $skillName
         if (Test-Path $dest) {
-            Write-Host "  Updating $skillName"
             $updated++
         } else {
             Write-Host "  Installing $skillName"
