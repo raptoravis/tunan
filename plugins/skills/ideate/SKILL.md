@@ -26,7 +26,7 @@ Ask one question at a time. Prefer concise single-select choices when natural op
 
 ## Focus Hint
 
-<focus_hint> #$ARGUMENTS </focus_hint>
+The **focus hint** is any optional context this skill was invoked with — present in the current prompt or conversation, whether the user gave it directly or a calling skill passed it. The rest of this skill refers to it as `{focus_hint}` (empty if none was given).
 
 Interpret any provided argument as optional context. It may be:
 
@@ -299,14 +299,14 @@ Run grounding agents in parallel in the **foreground** (do not background — re
 
 **Repo mode dispatch:**
 
-**Resolve the project profile from the shared cache first.** The question-agnostic profile (stack, top-level layout, conventions, root instruction files) is identical for every run at this commit, so reuse it instead of re-deriving it in the codebase scan. Set `SKILL_DIR` to this skill's directory and run the helper (full protocol in `references/repo-profile-cache.md`):
+**Resolve the project profile from the shared cache first.** The question-agnostic profile (stack, top-level layout, conventions, root instruction files) is identical whenever committed profile inputs match, so reuse it instead of re-deriving it in the codebase scan. Set `SKILL_DIR` to this skill's directory and run the helper (full protocol in `references/repo-profile-cache.md`):
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing the SKILL.md you just read>"
-python3 "$SKILL_DIR/scripts/repo-profile-cache.py" get
+SKILL_DIR="<absolute path of the directory containing the SKILL.md you just read>";
+python3 "$SKILL_DIR/../../scripts/repo-profile-cache.py" get
 ```
 
-On `HIT`, load the profile JSON — that is your agnostic project shape (stack, top-level layout, conventions); do not re-derive it in the scan. On `MISS`, dispatch a generic subagent with `references/agents/repo-profiler.md` to derive the profile, write its JSON output to a file under `<scratch-dir>`, then persist with `python3 "$SKILL_DIR/scripts/repo-profile-cache.py" put <file>` (re-set `SKILL_DIR` in that call — shell vars don't persist between Bash invocations). On `NO-CACHE`, derive the agnostic shape inline (the codebase scan below covers it) and skip the `put`. The cache is an optimization, never a hard dependency — on any failure or unreadable output, degrade to the full scan. With the profile in hand, the codebase scan runs **only the question-specific slice** on top of it.
+On `HIT`, load the profile JSON — that is your agnostic project shape (stack, top-level layout, conventions); do not re-derive it in the scan. On `MISS`, dispatch a generic subagent with `references/agents/repo-profiler.md` to derive the profile, write its JSON output to a file under `<scratch-dir>`, then persist with `python3 "$SKILL_DIR/../../scripts/repo-profile-cache.py" put <file>` (re-set `SKILL_DIR` in that call — shell vars don't persist between Bash invocations). On `NO-CACHE`, derive the agnostic shape inline (the codebase scan below covers it) and skip the `put`. The cache is an optimization, never a hard dependency — on any failure or unreadable output, degrade to the full scan. With the profile in hand, the codebase scan runs **only the question-specific slice** on top of it.
 
 1. **Quick context scan** — dispatch a general-purpose sub-agent using the platform's cheapest capable model when the harness exposes a known override; otherwise inherit. Before dispatching, apply the routing test from "User-Supplied Research Artifacts" below to any root-level `*.md` file the focus hint names: research artifacts (evidence) take that subsection's distillation path, so list them on the prompt's research-artifacts line to keep the scan from duplicating them into `User-named references`. Dispatch with this prompt:
 

@@ -9,14 +9,14 @@ openai into an ephemeral environment — no manual install, no global
 pollution. A bare `python vision.py` also works if openai is already
 on the path.
 
-Providers: doubao (豆包), qwen (通义千问), openai (GPT-4o),
-siliconflow (硅基流动), or any OpenAI-compatible endpoint.
+Providers: doubao (豆包 / 字节跳动 Volcengine Ark), qwen (通义千问),
+openai (GPT-4o), siliconflow (硅基流动), or any OpenAI-compatible endpoint.
 
 API keys are resolved from real environment variables first, then from
 a ~/.env file (zero-dependency loader), so you can configure once without
 touching settings.json. Real env vars win over ~/.env.
 
-Set one of: DOUBAO_API_KEY, DASHSCOPE_API_KEY, OPENAI_API_KEY,
+Set one of: BD_API_KEY (or DOUBAO_API_KEY), DASHSCOPE_API_KEY, OPENAI_API_KEY,
 SILICONFLOW_API_KEY
 """
 # /// script
@@ -55,19 +55,21 @@ def _get_openai_client(api_key: str, base_url: str):
 # ── provider registry ──────────────────────────────────────────────
 PROVIDERS = {
     "doubao": {
-        "key_env": "DOUBAO_API_KEY",
+        # 豆包 / 字节跳动 Volcengine Ark — OpenAI 兼容。
+        # key 优先读 BD_API_KEY(字节跳动账号体系),DOUBAO_API_KEY 作为旧名向后兼容。
+        "key_envs": ["BD_API_KEY", "DOUBAO_API_KEY"],
         "base_env": "DOUBAO_BASE_URL",
         "base_default": "https://ark.cn-beijing.volces.com/api/v3",
         "model_default": "doubao-seed-2-0-pro-260215",
     },
     "qwen": {
-        "key_env": "DASHSCOPE_API_KEY",
+        "key_envs": ["DASHSCOPE_API_KEY"],
         "base_env": "DASHSCOPE_BASE_URL",
         "base_default": "https://dashscope.aliyuncs.com/compatible-mode/v1",
         "model_default": "qwen-vl-max",
     },
     "openai": {
-        "key_env": "OPENAI_API_KEY",
+        "key_envs": ["OPENAI_API_KEY"],
         "base_env": "OPENAI_BASE_URL",
         "base_default": "https://api.openai.com/v1",
         "model_default": "gpt-4o",
@@ -76,7 +78,7 @@ PROVIDERS = {
         # 硅基流动 (SiliconFlow) — OpenAI 兼容的国内模型聚合平台,
         # 视觉模型可在 SILICONFLOW_MODEL 切换: Qwen/Qwen2.5-VL-72B-Instruct,
         # Qwen/Qwen2-VL-72B-Instruct, deepseek-ai/deepseek-vl2 等。
-        "key_env": "SILICONFLOW_API_KEY",
+        "key_envs": ["SILICONFLOW_API_KEY"],
         "base_env": "SILICONFLOW_BASE_URL",
         "base_default": "https://api.siliconflow.cn/v1",
         "model_default": "Qwen/Qwen2.5-VL-72B-Instruct",
@@ -97,7 +99,12 @@ def load_dotenv(path: Path) -> None:
     """Load KEY=VALUE pairs from a .env file. Never overrides real env vars."""
     if not path.is_file():
         return
-    for line in path.read_text(encoding="utf-8").splitlines():
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (PermissionError, OSError) as e:
+        print(f"Warning: cannot read env file {path}: {e}", file=sys.stderr)
+        return
+    for line in text.splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
@@ -134,7 +141,7 @@ def resolve_provider(name: str | None) -> tuple[str, dict]:
 
     # auto-detect: first provider whose API key is set
     for pname, pconf in PROVIDERS.items():
-        if os.environ.get(pconf["key_env"]):
+        if any(os.environ.get(k) for k in pconf["key_envs"]):
             return pname, pconf
 
     return "doubao", PROVIDERS["doubao"]
@@ -157,10 +164,26 @@ def resolve_model(provider_name: str, config: dict) -> str:
 
 # ── main ────────────────────────────────────────────────────────────
 def vision(image_path: str, prompt: str, provider_name: str, config: dict) -> str:
-    api_key = os.environ.get(config["key_env"], "")
+    api_key = ""
+    matched_key = ""
+    for k in config["key_envs"]:
+        v = os.environ.get(k, "")
+        if v:
+            api_key = v
+            matched_key = k
+            break
     if not api_key:
-        print(f"Error: {config['key_env']} env var is not set", file=sys.stderr)
+        names = " or ".join(config["key_envs"])
+        print(f"Error: {names} env var is not set", file=sys.stderr)
         sys.exit(1)
+
+    # Warn when multiple key_envs are set for a provider (e.g. both
+    # BD_API_KEY and DOUBAO_API_KEY) — the first match wins silently.
+    if len(config["key_envs"]) > 1:
+        others = [k for k in config["key_envs"] if k != matched_key and os.environ.get(k, "")]
+        if others:
+            print(f"Warning: {matched_key} selected for provider '{provider_name}'; "
+                  f"also set: {', '.join(others)}", file=sys.stderr)
 
     model = resolve_model(provider_name, config)
     base_url = os.environ.get(config["base_env"], config["base_default"])
@@ -168,7 +191,11 @@ def vision(image_path: str, prompt: str, provider_name: str, config: dict) -> st
     max_tokens = int(os.environ.get("VISION_MAX_TOKENS", "4096"))
 
     ext = Path(image_path).suffix.lower()
-    mime = MIME_MAP.get(ext, "image/png")
+    mime = MIME_MAP.get(ext)
+    if mime is None:
+        mime = "image/png"
+        print(f"Warning: unknown extension '{ext}' — assuming image/png. "
+              f"Supported: {', '.join(MIME_MAP)}", file=sys.stderr)
     b64 = encode_image(image_path)
     data_uri = f"data:{mime};base64,{b64}"
 
@@ -213,7 +240,7 @@ def main():
         result = vision(args.image_path, args.prompt, provider_name, config)
         print(result)
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+        print(f"Error [{type(e).__name__}]: {e}", file=sys.stderr)
         sys.exit(1)
 
 

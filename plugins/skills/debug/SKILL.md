@@ -8,7 +8,13 @@ argument-hint: "[issue reference, error message, test path, or description of br
 
 Find root causes, then fix them. This skill investigates bugs systematically — tracing the full causal chain before proposing a fix — and optionally implements the fix with test-first discipline.
 
-<bug_description> #$ARGUMENTS </bug_description>
+The **bug description** is the input this skill was invoked with — the failure to diagnose, present in the current prompt or conversation, whether the user provided it directly or a calling skill passed it (e.g. `babysit-pr` / `lfg` in `mode:pipeline`, which pass the failing jobs and log tails as the argument). It may be a description of the failure, a `mode:` token, or an issue reference (`#123`, `org/repo#123`, or an issue URL). The rest of this skill refers to it as `<bug_description>`; if nothing was provided, treat `<bug_description>` as blank.
+
+## Mode
+
+Default is **interactive** — investigate, then use the Phase 2 fix-choice gate and the Phase 4 handoff prompt as written below.
+
+**`mode:pipeline`** (set by an orchestrator such as `babysit-pr` or `lfg`): run fully non-interactively. Strip the `mode:pipeline` token from `<bug_description>` before parsing. **Read `references/pipeline-mode.md` and follow it** — it overrides every "ask the user" point in this skill with a conservative default, replaces the Phase 2 fix-gate with "fix convergent bugs, defer divergent ones," and replaces the Phase 4 prompt with a structured return. Never call the blocking-question tool in pipeline mode.
 
 ## The Iron Law
 
@@ -44,7 +50,7 @@ Beyond the trivial-bug fast-path in Phase 0, no further phase skipping — compl
 Parse the input and reach a clear problem statement.
 
 **If the input references an issue tracker**, fetch it:
-- GitHub (`#123`, `org/repo#123`, github.com URL): Parse the issue reference from `<bug_description>` and fetch with `gh issue view <number> --json title,body,comments,labels`. For URLs, pass the URL directly to `gh`.
+- GitHub (`#123`, `org/repo#123`, a github.com or GitHub Enterprise issue URL): Parse the issue reference from `<bug_description>` and fetch with `gh issue view <number> --json title,body,comments,labels`. For URLs, pass the URL directly to `gh` (it targets whatever host it is configured for, GHE included).
 - Other trackers (Linear URL/ID, Jira URL/key, any tracker URL): Attempt to fetch using available MCP tools or by fetching the URL content. If the fetch fails — auth, missing tool, non-public page — ask the user to paste the relevant issue content. Ensure the fetch includes the full comment thread, not just the opening description.
 
 Read the full conversation — the original description AND every comment, with particular attention to the latest ones. Comments frequently contain updated reproduction steps, narrowed scope, prior failed attempts, additional stack traces, or a pivot to a different suspected root cause; treating the opening post as the whole picture often sends the investigation in the wrong direction. Extract reported symptoms, expected behavior, reproduction steps, and environment details from the combined thread. Then proceed to Phase 1.
@@ -77,8 +83,8 @@ Confirm the bug exists and understand its behavior. Run the test, trigger the er
 - **Writing the reproduction test:** Orient on the project's testing conventions before authoring the failing test. Resolve them from the shared repo-grounding cache first — set `SKILL_DIR` to this skill's directory and run the helper (full protocol in `references/repo-profile-cache.md`):
 
   ```bash
-  SKILL_DIR="<absolute path of the directory containing the SKILL.md you just read>"
-  python3 "$SKILL_DIR/scripts/repo-profile-cache.py" get
+  SKILL_DIR="<absolute path of the directory containing the SKILL.md you just read>";
+  python3 "$SKILL_DIR/../../scripts/repo-profile-cache.py" get
   ```
 
   On `HIT`, use the cached profile's `conventions.testing` field as the testing-convention orientation — do not re-read the *root* instruction files for it. (If the bug lives under a subdirectory with its own scoped `AGENTS.md`/`CLAUDE.md` testing rules, still read those fresh — subdirectory-scoped instructions are excluded from the cache.) **But if that field is empty or null** (the profile recorded no explicit testing guidance), still fall back to the inline check below — in particular, look for a clear style across the project's existing tests. On `MISS` or `NO-CACHE` (or any error), fall back to deriving it inline as today: if the project has testing-conventions guidance — a dedicated testing skill, an `AGENTS.md`/`CLAUDE.md` testing section, or a clear style across existing tests — apply it. The cache is purely an orientation convenience here; never block on it, and do not derive or persist a full profile just for this lookup. Either way, write a minimal isolated test that fails on the current bug and passes once the corrected behavior lands; name it descriptively so the failure message itself explains the bug.
@@ -281,6 +287,8 @@ Analyze how this was introduced and what allowed it to survive. Note any systemi
 ---
 
 ### Phase 4: Handoff
+
+**`mode:pipeline` — skip this entire interactive handoff.** Do not run the polish/review tail, do not ask about residuals, do not show the branch menu, do not offer learning capture. Instead: commit and push the convergent fix (per `references/pipeline-mode.md`), then emit that reference's **structured return** as the skill's final output. Divergent / needs-human items are deferred there (open thread or the caller's run-report comment — never a PR-body section), not prompted. The rest of this section is the interactive path only.
 
 **Structured summary** — always write this first:
 

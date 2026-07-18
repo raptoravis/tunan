@@ -1,6 +1,6 @@
 ---
 name: vision
-description: "Call vision models (Doubao, Qwen, OpenAI, SiliconFlow, or any OpenAI-compatible endpoint) to analyze images. Use when you need to understand screenshots, UI layouts, diagrams, charts, mockups, or any image content — especially valuable on text-only base models like DeepSeek that cannot see images natively. Supports png, jpg, jpeg, webp, gif. Reads API keys from environment variables or ~/.env. Use proactively before reading code to infer layout problems, and for visual regression, design-spec comparison, and accessibility checks."
+description: "Call vision models (Doubao/ByteDance Volcengine Ark, Qwen, OpenAI, SiliconFlow, or any OpenAI-compatible endpoint) to analyze images. Use when you need to understand screenshots, UI layouts, diagrams, charts, mockups, or any image content — especially valuable on text-only base models like DeepSeek that cannot see images natively. Supports png, jpg, jpeg, webp, gif. Reads API keys from environment variables or ~/.env. Use proactively before reading code to infer layout problems, and for visual regression, design-spec comparison, and accessibility checks."
 ---
 
 # vision
@@ -33,7 +33,7 @@ Then set at least one API key in `~/.env` (zero-config, shared with other tools)
 ```dotenv
 # ~/.env  (i.e. C:\Users\<you>\.env on Windows)
 DASHSCOPE_API_KEY=sk-your-qwen-key
-# DOUBAO_API_KEY=...
+# BD_API_KEY=...           # 字节跳动 / 豆包 (Volcengine Ark)
 # OPENAI_API_KEY=...
 # SILICONFLOW_API_KEY=sk-your-siliconflow-key
 VISION_PROVIDER=qwen
@@ -65,8 +65,8 @@ The merged content comes from `scripts/claude-md-fragment.md` (single source —
 
 ## Providers
 
-### doubao (豆包 / Volcengine Ark)
-- API key: `DOUBAO_API_KEY`
+### doubao (豆包 / 字节跳动 Volcengine Ark)
+- API key: `BD_API_KEY` (字节跳动账号体系；旧的 `DOUBAO_API_KEY` 仍可用作别名)
 - Default model: `doubao-seed-2-0-pro-260215`
 - Custom endpoint: `DOUBAO_BASE_URL`
 
@@ -137,6 +137,6 @@ When checking a frontend page's layout or UI, **do not** infer layout problems b
 This skill and the bundled `ds-vision` MCP server overlap in purpose but differ in integration:
 
 - **This skill** (`tunan:vision`) — a CLI script you call explicitly. Multi-provider (Doubao / Qwen / OpenAI / any-compatible). Best when you want provider choice or a one-shot analysis embedded in a larger flow.
-- **`ds-vision` MCP** — a zero-dependency `describe_image` tool the model can call natively. Defaults to SiliconFlow via curl (reuses `~/.env`). Best for hands-off, model-driven image reading.
+- **`ds-vision` MCP** — a zero-dependency `describe_image` tool the model can call natively. Reuses `~/.env` (same provider keys as this skill). Best for hands-off, model-driven image reading.
 
 Use whichever fits the moment; they share the `~/.env` convention so keys need only be set once.

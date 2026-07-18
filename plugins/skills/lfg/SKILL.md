@@ -116,7 +116,7 @@ gh repo view --json nameWithOwner
    Do not prompt the user. This step embraces the autopilot contract: residuals must become durable before DONE, but the agent never stops to ask.
    1. Load `references/tracker-defer.md` in **non-interactive mode**. Pass the residual actionable findings from step 4/5 (or the run artifact when the summary was truncated).
    2. Collect the structured return: `{ filed: [...], failed: [...], no_sink: [...] }`.
-   3. Compose a `## Residual Review Findings` markdown section from the structured return:
+   3. Compose a `## Residual Review Findings` markdown section from the structured return (this goes into the committed record file in step 4, **not** the PR body):
       - For each item in `filed`: a bullet with severity, file:line, title, and a link to the tracker ticket URL.
       - For each item in `failed`: a bullet with severity, file:line, title, and the failure reason (e.g., `Defer failed: gh returned 401 — tracker unavailable`).
       - For each item in `no_sink`: a bullet with severity, file:line, and title inlined verbatim so the PR body or fallback file is the durable record.
@@ -166,7 +166,7 @@ gh repo view --json nameWithOwner
 
    This commits any remaining changes, pushes the branch, and opens a pull request. If step 6 already opened a PR (check with `gh pr view --json number,url,state 2>/dev/null`), skip PR creation but still commit and push any uncommitted changes.
 
-9. **CI watch and autofix loop** (only when an open PR exists for the current branch)
+9. **Drive CI to green via `babysit-pr`** (only when an open PR exists for the current branch)
 
    Detect the PR; if none exists or `gh` is unavailable, skip this step entirely and proceed to step 10.
 

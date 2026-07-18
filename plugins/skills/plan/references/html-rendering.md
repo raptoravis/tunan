@@ -303,7 +303,10 @@ contracts — the agent picks shapes that fit the content.
 - **Key Technical Decisions** — repeating cards with the decision ID,
   bold decision title (often with inline code for technical
   identifiers), and prose rationale. Flat cards (not collapsibles) —
-  these are reference material readers scan, not drill into.
+  these are reference material readers scan, not drill into. A
+  `session-settled:` annotation renders as visible text in the card —
+  never an attribute or hidden markup — stem preserved verbatim so
+  grep works on the HTML artifact.
 - **Risks** — color-coded cards with status eyebrow (e.g., "RISK ·
   MITIGATED" / "OPEN · DEFERRED FOLLOW-UP") and prose body. Color of
   the left-border or accent communicates status at a glance.

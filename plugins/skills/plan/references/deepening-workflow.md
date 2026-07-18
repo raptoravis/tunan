@@ -212,6 +212,8 @@ If the user chooses "Discuss", engage in brief dialogue about the findings and t
 
 When presenting findings from multiple agents targeting the same section, present them one agent at a time so the user can make independent decisions. Do not merge findings from different agents before showing them.
 
+Findings against `session-settled:`-labeled KTDs are presented like any other — suppressing them is pipeline/auto-mode behavior only, never interactive. A user-accepted finding that changes a labeled KTD is a new settlement: update the KTD text and relabel it `user-approved`.
+
 After all agents have been reviewed, carry only the accepted findings forward to 5.3.7.
 
 If the user accepted no findings, report "No findings accepted — plan unchanged." Then proceed directly to Phase 5.4 (skip document-review and synthesis — the plan was not modified). This interactive-mode-only skip does not apply in auto mode; auto mode always proceeds through 5.3.7 and 5.3.8. No explicit scratch cleanup needed — `$SCRATCH_DIR` is OS temp and will be cleaned up by the OS; leaving it in place preserves the rejected agent artifacts for debugging.

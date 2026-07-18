@@ -228,7 +228,7 @@ After the interview completes, merge a `pulse_*` block into the repo's `tunan:co
 
 If no `tunan:config` issue exists yet, create it first (ensure the `tunan:config` label exists, then `gh issue create --title "[config] tunan settings" --label "tunan:config" --body-file <tmpfile>` with the `pulse_*` block in the yaml). See the config-issue storage contract documented in the `setup` skill.
 
-The pulse block uses these flat keys (matches the `work_delegate_*` precedent for consistency):
+The pulse block uses skill-prefixed flat keys so it can share the config file without owning unrelated settings:
 
 ```yaml
 # --- Product pulse ---
