@@ -15,7 +15,7 @@ AI-powered development tools that get smarter with every use — make each unit 
 | Component   | Count |
 | ----------- | ----- |
 | Agents      | 43    |
-| Skills      | 72    |
+| Skills      | 75    |
 | MCP Servers | 4     |
 
 ## Skills
@@ -39,6 +39,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | [`/tunan:brainstorm`](../../docs/skills/brainstorm.md)             | Interactive Q&A to think through a feature or problem; writes a right-sized requirements doc into a GitHub issue labeled `tunan:req` (the source of truth) before planning. Pass a `tunan:raw` capture or `tunan:req` issue ref to resume or expand one captured by `/tunan:new-raw`  |
 | `/tunan:req`                                                              | Short alias for `/tunan:brainstorm` — same workflow, named after the `tunan:req` artifact it produces                                                                                                                                                                               |
 | [`/tunan:plan`](../../docs/skills/plan.md)                         | Create structured plans for any multi-step task -- software features, research workflows, events, study plans -- with automatic confidence checking. Writes the plan as a `<!-- tunan:plan -->` comment on the feature's `tunan:req` issue (adding the `tunan:plan` label) and reads requirements from that same issue body. For software plans it also freezes an acceptance gate (a `<!-- tunan:gate -->` comment, label `tunan:gate`) — the verbatim criteria `tunan:verify` / `code-review` later judge the work against |
+| `/tunan:to-tickets`                                                          | Break a plan, spec, or the current conversation into a set of tracer-bullet tickets with blocking edges, published as GitHub issues. Each ticket is a vertical slice — a narrow but complete path through every layer — with dependency order so the frontier is always clear |
 | [`/tunan:code-review`](../../docs/skills/code-review.md)           | Structured code review with tiered persona agents, confidence gating, and dedup pipeline                                                                                                                                                                                                |
 | [`/tunan:work`](../../docs/skills/work.md)                         | Execute work items systematically                                                                                                                                                                                                                                                       |
 | [`/tunan:debug`](../../docs/skills/debug.md)                       | Systematically find root causes and fix bugs -- traces causal chains, forms testable hypotheses, and implements test-first fixes                                                                                                                                                        |
@@ -114,6 +115,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`doc-review`](../../docs/skills/doc-review.md)        | Review documents using parallel persona agents for role-specific feedback                                                                   |
 | `grill-me`                                                  | A relentless one-question-at-a-time interview to stress-test and sharpen a plan, design, or document — sequential adversarial Q&A with recommended answers                                                                   |
+| `batch-grill-me`                                             | A relentless interview that asks every frontier question at once, round by round — map decisions as a design tree and work the frontier in batches instead of one-at-a-time                                                                   |
 | `verify`                                                    | Run a project's test/lint/build checks (and optionally delegate dynamic observation to `test-browser`), judge the feature's frozen acceptance gate (`gate:#N`) verbatim into a `gates[]` PASS/FAIL/INVALID dimension, and emit the same schema-versioned `mode:agent` contract as `code-review`; used as `lfg`'s local green gate. Invoke as `tunan:verify`                |
 | [`/tunan:simplify-code`](../../docs/skills/simplify-code.md) | Simplify recent code changes for reuse, quality, and efficiency — parallel reviewers find issues, fixes applied, behavior verified by tests |
 
@@ -122,6 +124,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | Skill                                       | Description                                                      |
 | ------------------------------------------- | ---------------------------------------------------------------- |
 | [`proof`](../../docs/skills/proof.md) | Create, edit, and share documents via Proof collaborative editor |
+| `to-questionnaire`                          | Turn a decision you can't fully answer into a structured questionnaire for someone else to fill in — pull knowledge out of a recipient who holds context the user lacks |
 
 ### Automation & Tools
 

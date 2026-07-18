@@ -84,6 +84,28 @@ From the 2026-06-25 audit (GSD `a0e45cd`, full survey):
     behind explicit per-step blocking confirmation. (GSD: `commands/gsd/inbox.md`;
     tunan: `status/`)
 
+From the 2026-07-18 audit (GSD `863a54e`):
+
+14. **UI consideration probe** — 8-category closed taxonomy of UI state considerations
+    (empty/loading/error/populated/partial/overflow/zero-one-many/long-text) for plan-phase
+    UI completeness checking. Re-expressed without GSD's probe-core model, element-kind
+    classification, or compiled edge-probe engine: a simple checklist reference loaded by
+    `plan` when requirements involve UI surfaces. (GSD: `gsd-core/references/ui-consideration-probe.md`,
+    `capabilities/ui/`; tunan: `plan/references/ui-consideration-probe.md`)
+15. **Specless probe fallback** — when the `tunan:req` lacks explicit edge-coverage or
+    prohibition sections, plan still runs the same probe logic, sourcing predicates from
+    requirement text directly. Re-expressed as agent-facing guidance without GSD's bash/Node.js
+    machinery: the protocol (edge probe → prohibition recall → author into must_haves) and the
+    no-silent-drop rule.  (GSD: `gsd-core/references/specless-probe-fallback.md`;
+    tunan: `plan/references/specless-probe-fallback.md`)
+16. **Fix-acceptance guardrail** — multi-signal anti-overfitting gate for debug fix
+    verification: target test greens, mutation check, no-op/behavior-deleting detector,
+    adjacent tests, revert-and-reconfirm. Re-expressed without Stryker dependency: mutation
+    check degrades gracefully to skip-when-unavailable, signals 1+3+5 form the irreducible
+    core. Documented technical-debt escape hatch preserved. (GSD:
+    `gsd-core/references/debugger-fix-acceptance.md`; tunan:
+    `debug/references/fix-acceptance-guardrail.md`)
+
 From the 2026-06-30 audit (GSD `b31b562`):
 
 12. **Assumption-delta checkpoint** — advisory, non-blocking checkpoint during plan
