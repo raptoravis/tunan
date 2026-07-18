@@ -96,8 +96,20 @@ MIME_MAP = {
 
 
 # ── ~/.env loader (zero-dependency, real env wins) ─────────────────
+# Tracks the line number of each key in the .env file so auto-detection
+# can prefer the provider whose API key appears earliest in the file.
+_key_order: dict[str, int] = {}  # key_name -> 1-based line number
+
+
 def load_dotenv(path: Path) -> None:
-    """Load KEY=VALUE pairs from a .env file. Never overrides real env vars."""
+    """Load KEY=VALUE pairs from a .env file. Never overrides real env vars.
+
+    Also populates _key_order so resolve_provider can pick the provider
+    whose key appears first in the file — the user controls priority by
+    reordering lines in ~/.env.
+    """
+    global _key_order
+    _key_order.clear()
     if not path.is_file():
         return
     try:
@@ -105,7 +117,9 @@ def load_dotenv(path: Path) -> None:
     except (PermissionError, OSError) as e:
         print(f"Warning: cannot read env file {path}: {e}", file=sys.stderr)
         return
+    line_num = 0
     for line in text.splitlines():
+        line_num += 1
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
@@ -114,6 +128,10 @@ def load_dotenv(path: Path) -> None:
         val = val.strip().strip('"').strip("'")
         if key and key not in os.environ:
             os.environ[key] = val
+        # Record the first occurrence of each key (duplicate keys later in
+        # the file are ignored — first write wins for ordering).
+        if key and key not in _key_order:
+            _key_order[key] = line_num
 
 
 # ── helpers ─────────────────────────────────────────────────────────
@@ -140,10 +158,23 @@ def resolve_provider(name: str | None) -> tuple[str, dict]:
             sys.exit(1)
         return env_provider, PROVIDERS[env_provider]
 
-    # auto-detect: first provider whose API key is set
+    # auto-detect: prefer the provider whose API key appears earliest
+    # in the ~/.env file. Keys set only via real env vars (not in the
+    # file) sort after file-based keys. Fall back to doubao if nothing
+    # is configured.
+    candidates = []
     for pname, pconf in PROVIDERS.items():
-        if any(os.environ.get(k) for k in pconf["key_envs"]):
-            return pname, pconf
+        set_keys = [k for k in pconf["key_envs"] if os.environ.get(k)]
+        if not set_keys:
+            continue
+        # Earliest line number among this provider's keys in the .env file.
+        # float('inf') means the key was set via a real env var, not .env.
+        earliest = min(_key_order.get(k, float('inf')) for k in set_keys)
+        candidates.append((earliest, pname, pconf))
+
+    if candidates:
+        candidates.sort(key=lambda x: x[0])
+        return candidates[0][1], candidates[0][2]
 
     return "doubao", PROVIDERS["doubao"]
 
