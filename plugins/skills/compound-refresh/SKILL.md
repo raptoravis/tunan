@@ -42,7 +42,7 @@ gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X DELETE
 
 ## Mode Detection
 
-Check if `$ARGUMENTS` contains `mode:headless`. If present, strip it from arguments (use the remainder as a scope hint) and run in **headless mode**.
+Check whether the arguments you were invoked with contain `mode:headless`. If present, strip it from the arguments (use the remainder as a scope hint) and run in **headless mode**.
 
 | Mode | When | Behavior |
 |------|------|----------|
@@ -140,7 +140,7 @@ Each result is a **feature issue**; its learning lives in the `<!-- tunan:soluti
 
 **Legacy local learning files:** if pre-migration local learning files exist in the repo, note them in the report as legacy content that should be migrated into `tunan:solution` issues (or deleted once migrated). Do not treat them as candidates for this workflow; this skill operates only on issues.
 
-If `$ARGUMENTS` is provided, use it to narrow scope before proceeding. Try these matching strategies in order, stopping at the first that produces results:
+If a scope argument was provided, use it to narrow scope before proceeding. Try these matching strategies in order, stopping at the first that produces results:
 
 1. **Issue ref** — if the argument is `#<N>` or a full issue URL, target that issue directly
 2. **Category match** — check if the argument matches a `category` slug (e.g., `performance-issues`, `database-issues`) in the YAML blocks; also try it as a label search term: `gh issue list --label "tunan:solution" --search "<arg>"`

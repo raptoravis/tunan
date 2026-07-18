@@ -25,7 +25,7 @@ Ask one question at a time. Reserve multi-select for first-run configuration onl
 
 ## Lookback Window
 
-<lookback> #$ARGUMENTS </lookback>
+The **lookback window** is the time range this skill was invoked with (e.g. `24h`, `7d`) — present in the current prompt or conversation, whether the user gave it directly or a calling skill passed it.
 
 Interpret the argument as a time window. Common forms:
 

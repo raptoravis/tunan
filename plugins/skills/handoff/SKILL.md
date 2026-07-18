@@ -1,7 +1,7 @@
 ---
 name: handoff
 description: "Transfer working context between AI coding sessions via a GitHub issue labeled tunan:handoff instead of a local HANDOFF.md file. The create mode captures the current task, progress, failed approaches, key decisions, and resume steps into an issue; the resume mode reads a saved handoff issue, checks for git drift, and continues the work. Use when the user says handoff, hand off, save state, transfer context, wrap up a session for another agent, or pick up a saved handoff. Distinct from the resume skill, which resumes a feature pipeline by its issue phase markers — this is free-form session-to-session transfer. Takes create or resume plus an optional issue number."
-argument-hint: "create|resume [<issue #N>]"
+argument-hint: "create|resume [<issue #N> | keywords]"
 ---
 
 # handoff — transfer session context through a GitHub issue, not a local file
@@ -91,6 +91,20 @@ From the conversation history, extract: the original goal, what was completed,
 decisions and their rationale, user preferences expressed this session, and
 error messages encountered with how they were resolved.
 
+**Capture discipline** (absorbed from upstream session-continuity practice):
+
+- **Point, don't reproduce.** Link to the artifacts the next agent needs — the
+  feature issue `#<N>`, the `<!-- tunan:plan -->` comment, commit SHAs, branch
+  name, open PR URL, relevant file paths — instead of pasting their contents.
+  The handoff orients; the linked source stays canonical.
+- **Redact secrets.** Strip credentials, tokens, and unrelated personal data
+  before writing the issue body. Preserve an operational path or value only when
+  the next agent genuinely needs it, and never paste raw secrets even then.
+- **Orient with metadata, not prose.** The issue title plus a one-line summary
+  that distinguishes this handoff (`[handoff] <topic> — <what's next>`) is what
+  `gh issue list --label tunan:handoff` surfaces for discovery; keep it scannable
+  so the right handoff is picked when several are open.
+
 ### Step 2 — build the handoff body
 
 Load `references/handoff-template.md` and follow its body shape and authoring
@@ -168,6 +182,17 @@ Mention the next agent can pick it up with `/tunan:handoff resume #<N>` (or just
   If it is closed, carries no `tunan:handoff` label, or its body lacks the
   `kind: handoff` metadata block, warn and confirm (blocking tool) before
   resuming against it — a stale or mistyped `#N` should not be resumed silently.
+- If free-text **keywords** were passed instead of an issue number (e.g.
+  `/tunan:handoff resume auth refactor`), narrow by searching handoff issue
+  bodies/titles before listing, so the user lands on the relevant one without
+  scanning every open handoff:
+
+  ```bash
+  gh issue list --label "tunan:handoff" --state all --search "<keywords>" --json number,title,url,state,updatedAt
+  ```
+
+  A keyword search that returns nothing falls through to the full list below —
+  never treat an empty keyword search as "no handoff exists".
 - Otherwise list handoff issues across **all** states (so a previously closed
   handoff is found rather than missed — mirrors `create` and the
   `tunan:config` / `tunan:codebase-map` single-issue lookups):

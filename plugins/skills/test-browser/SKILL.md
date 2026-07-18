@@ -6,7 +6,7 @@ argument-hint: "[PR number, branch name, 'current', or --port PORT]"
 
 # Browser Test Skill
 
-Run end-to-end browser tests on pages affected by a PR or branch changes using the `agent-browser` CLI.
+Run end-to-end browser tests on pages affected by a PR or branch using the best approved browser driver available in the active harness.
 
 ## Use `agent-browser` Only For Browser Automation
 
@@ -40,9 +40,7 @@ If not installed, inform the user: "`agent-browser` is not installed. Run `/tuna
 
 Before starting, verify `agent-browser` is available:
 
-```bash
-command -v agent-browser >/dev/null 2>&1 && echo "Ready" || echo "NOT INSTALLED"
-```
+## Workflow
 
 If not installed, inform the user: "`agent-browser` is not installed. Run `/tunan:setup` to install required dependencies." Then stop.
 
@@ -193,38 +191,18 @@ agent-browser snapshot -i
 
 ### 7. Test Each Affected Page
 
-For each affected route:
-
-**Navigate and capture snapshot:**
-```bash
-agent-browser open "http://localhost:${PORT}/[route]"
-agent-browser snapshot -i
-```
-
-**For headed mode:**
-```bash
-agent-browser --headed open "http://localhost:${PORT}/[route]"
-agent-browser --headed snapshot -i
-```
+For each affected route, use the selected driver to navigate and capture fresh rendered or interactive state.
 
 **Verify key elements:**
-- Use `agent-browser snapshot -i` to get interactive elements with refs
 - Page title/heading present
 - Primary content rendered
 - No error messages visible
 - Forms have expected fields
+- No new console errors attributable to the tested flow
 
-**Test critical interactions:**
-```bash
-agent-browser click @e1
-agent-browser snapshot -i
-```
+**Test critical interactions:** derive locators or element references from the selected driver's latest inspected state, perform the click/fill/press action, then inspect the resulting state. Do not guess selectors or reuse stale references.
 
-**Take screenshots:**
-```bash
-agent-browser screenshot page-name.png
-agent-browser screenshot --full page-name-full.png
-```
+**Take screenshots:** capture viewport and full-page evidence when the selected driver supports it. Materialize screenshots as local artifacts when a later workflow or report needs file paths; otherwise in-app evidence is sufficient.
 
 ### 8. Human Verification (When Required)
 
@@ -257,7 +235,7 @@ Did it work correctly?
 When a test fails:
 
 1. **Document the failure:**
-   - Screenshot the error state: `agent-browser screenshot error.png`
+   - Capture a screenshot of the error state with the selected driver
    - Note the exact reproduction steps
 
 2. **Ask the user how to proceed**, using the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi. Fall back to a numbered list in chat only when no blocking tool exists or the call errors — never silently skip:
@@ -324,37 +302,6 @@ After all tests complete, present a summary:
 /tunan:test-browser --port 5000
 ```
 
-## agent-browser CLI Reference
+## Driver Reference
 
-Run `agent-browser --help` for all commands.
-
-Key commands:
-
-```bash
-# Navigation
-agent-browser open <url>           # Navigate to URL
-agent-browser back                 # Go back
-agent-browser close                # Close browser
-
-# Snapshots (get element refs)
-agent-browser snapshot -i          # Interactive elements with refs (@e1, @e2, etc.)
-agent-browser snapshot -i --json   # JSON output
-
-# Interactions (use refs from snapshot)
-agent-browser click @e1            # Click element
-agent-browser fill @e1 "text"      # Fill input
-agent-browser type @e1 "text"      # Type without clearing
-agent-browser press Enter          # Press key
-
-# Screenshots
-agent-browser screenshot out.png       # Viewport screenshot
-agent-browser screenshot --full out.png # Full page screenshot
-
-# Headed mode (visible browser)
-agent-browser --headed open <url>      # Open with visible browser
-agent-browser --headed click @e1       # Click in visible browser
-
-# Wait
-agent-browser wait @e1             # Wait for element
-agent-browser wait 2000            # Wait milliseconds
-```
+When `agent-browser` is selected as the fallback, read `references/agent-browser-driver.md` from this skill's directory before running its commands. Host-native drivers follow their harness-provided instructions instead.

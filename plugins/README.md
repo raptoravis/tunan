@@ -15,7 +15,7 @@ AI-powered development tools that get smarter with every use — make each unit 
 | Component   | Count |
 | ----------- | ----- |
 | Agents      | 43    |
-| Skills      | 71    |
+| Skills      | 72    |
 | MCP Servers | 4     |
 
 ## Skills
@@ -72,6 +72,7 @@ The primary entry points for engineering work, invoked as slash commands. Detail
 | `cpm`                                                             | Same as `cp` but with `--am` defaulted on — pushes directly to a protected base without the confirmation prompt (a thin delegate to `cp`; pass `--no-am` to restore the prompt)                                                                                                       |
 | [`worktree`](../../docs/skills/worktree.md)                       | Manage Git worktrees for parallel development                                                                                                             |
 | `merge-pr-verify-close`                                          | Merge a reviewed, CI-green PR, verify the merged base branch, then close the feature issue only when verification passes (never force-merges or bypasses branch protection). Invoke explicitly after human PR review — `lfg` does not call it                                              |
+| `babysit-pr`                                                     | Watch an open GitHub PR over time — continuously react to new review comments and CI failures throughout the PR's life until it is merge-ready. A sustained watch loop, not a one-shot resolve or single CI fix. GitHub only (including GitHub Enterprise)                                |
 | `closeissue`                                                    | Close a specified issue, or the feature issue for the req/plan currently being worked on — resolves the target by explicit number, current branch's PR body, branch name, or a req/plan search, and confirms before closing (never reopens, deletes, or force-closes)                     |
 | `status`                                                        | Read-only snapshot of what's left — lists open PRs, open issues, and unfinished items in `tunan:handoff` handoffs. Defaults to current user; `--user <name>` queries a specific user, `--all` shows everyone, `--req` filters issues to `tunan:req`. Creates nothing (unlike `retro`)                                                    |
 | `resume`                                                        | Resume an interrupted `lfg` feature pipeline at the right stage instead of re-running from step 1 — reads the feature issue's labels, marker comments, and any open PR to detect the phase (`plan` / `work` / `review-ci` / `done`) and dispatches to the correct next skill                |

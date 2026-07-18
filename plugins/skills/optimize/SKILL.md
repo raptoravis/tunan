@@ -16,9 +16,9 @@ Use the platform's blocking question tool: `AskUserQuestion` in Claude Code (cal
 
 ## Input
 
-<optimization_input> #$ARGUMENTS </optimization_input>
+The **optimization input** is the input this skill was invoked with — present in the current prompt or conversation, whether the user provided it directly or a calling skill passed it: a goal to optimize, or a path to an optimization spec YAML file.
 
-If the input above is empty, ask: "What would you like to optimize? Describe the goal, or provide a path to an optimization spec YAML file."
+If no optimization input was provided, ask: "What would you like to optimize? Describe the goal, or provide a path to an optimization spec YAML file."
 
 ## Optimization Spec Schema
 
@@ -399,8 +399,8 @@ Read the code within `scope.mutable` to understand:
 Optionally dispatch `tunan:repo-research-analyst` for deeper codebase analysis if the scope is large or unfamiliar. When you do, resolve the question-agnostic project profile from the shared cache first (set `SKILL_DIR` to this skill's directory; protocol in `references/repo-profile-cache.md`):
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing the SKILL.md you just read>"
-python3 "$SKILL_DIR/scripts/repo-profile-cache.py" get
+SKILL_DIR="<absolute path of the directory containing the SKILL.md you just read>";
+python3 "$SKILL_DIR/../../scripts/repo-profile-cache.py" get
 ```
 
 On `HIT` load the profile JSON; on `MISS` derive it via `references/agents/repo-profiler.md` and `put` the result; on `NO-CACHE` derive inline. Pass the profile to `tunan:repo-research-analyst` and request only the question-specific scopes (e.g. `patterns`) so it skips re-deriving the agnostic stack/architecture/conventions.

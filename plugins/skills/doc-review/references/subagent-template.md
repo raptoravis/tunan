@@ -147,6 +147,7 @@ False-positive categories to actively suppress. Do NOT emit a finding when any o
 - **Changes in functionality that are likely intentional** — if the document is explicitly making a design choice different from a precedent you noticed, that is a decision, not an error. Flag only when the document appears unaware of the precedent
 - **Issues that a linter, typechecker, or validator would catch** — spelling in identifiers, JSON syntax errors, YAML indentation. These surface automatically elsewhere; the review layer adds value by catching what tools cannot
 - **Visual-aid removal as redundancy** — ASCII diagrams, mermaid blocks, illustrative tables, and other visual aids are intentional communication choices, not redundancy with prose. Do NOT flag a visual aid for deletion because "the prose covers the same content," "the diagram is ornamental," or "the prose is more detailed." Diagrams aid comprehension for readers who think spatially even when prose alone is technically sufficient — the author included the diagram deliberately. If a visual aid has internal inconsistency with the prose (drifted counts, mismatched labels, wrong sequencing, stale numbers), file the inconsistency as a finding with a `suggested_fix` that updates the visual aid to match — never recommend deletion as the fix. Diagram-update fixes follow the standard `autofix_class` rubric — typically `safe_auto` because the correct content is mechanically derivable from the prose (count drift, stale labels, drifted numbers), `gated_auto` when the update changes design intent or scope, `manual` only when the right update genuinely requires judgment. Diagram deletion is not an eligible fix at any tier.
+- **Settlement-annotation removal** — `(session-settled: ...)` parentheticals on Key Technical Decision entries are decision provenance, not prose clutter. Never flag them for removal or rewording.
 
 **Advisory observations — route to FYI, do not force a decision.** If the honest answer to "what actually breaks if we don't fix this?" is "nothing breaks, but…", the finding is advisory. Ask: would a competent implementer hit a wrong outcome, a production bug, a misleading plan, or rework later? If no, set `confidence: 50` so synthesis routes the finding to the FYI subsection rather than surfacing it as a decision or proposed fix. Do not suppress — the observation still has value; it just does not warrant user judgment. Typical advisory shapes: naming asymmetry with no wrong answer, subjective readability note about non-stylistic content (e.g., a definition placed before the term it defines), "could also be split" organizational preference when the current split is not broken. Style belongs to the false-positive catalog above, not here — pedantic style nitpicks suppress entirely.
 
@@ -157,6 +158,7 @@ False-positive categories to actively suppress. Do NOT emit a finding when any o
 Document type: {document_type}
 Document path: {document_path}
 Origin: {origin_path}
+Settled decisions: {settled_ktds}
 
 {decision_primer}
 

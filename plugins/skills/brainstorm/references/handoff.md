@@ -41,12 +41,14 @@ What would you like to do next? (Pick a number or describe what you want.)
 **Preamble when blocking questions remain and user wants to pause:**
 
 ```
-Brainstorm paused. Planning is blocked until the remaining questions are resolved.
+Brainstorm paused. I'm holding planning until the remaining questions are resolved — say the word and I'll proceed anyway, recording each open item as an explicit assumption or a question deferred to planning.
 
 Requirement: #<N> — <issue URL>  # omit line if no issue was created
 
 What would you like to do next? (Pick a number or describe what you want.)
 ```
+
+The override sentence is load-bearing, not padding: the planning options are hidden while `Resolve Before Planning` is non-empty, so without it the user is told planning is blocked and is never told the block is theirs to lift. `Resolve Before Planning` is your own judgment call — an over-cautious read of it must not silently strand the user with no visible way forward. Hiding the option withholds the *recommendation*; it never withholds the *choice*.
 
 Present only the options that apply. Renumber so visible options stay contiguous starting at 1.
 
@@ -132,7 +134,7 @@ Brainstorm paused.
 
 Requirement: #<N> — <issue URL>  # omit line if no issue was created
 
-Planning is blocked by:
+Planning is held on:
 - [Blocking question 1]
 - [Blocking question 2]
 

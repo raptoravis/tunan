@@ -26,6 +26,7 @@ This skill does not implement code. It explores, clarifies, and documents decisi
 4. **Keep implementation out of the requirements doc by default** - Do not include libraries, schemas, endpoints, file layouts, or code-level design unless the brainstorm itself is inherently about a technical or architectural change.
 5. **Right-size the artifact** - Simple work gets a compact requirements document or brief alignment. Larger work gets a fuller document. Do not add ceremony that does not help planning.
 6. **Apply YAGNI to carrying cost, not coding effort** - Prefer the simplest approach that delivers meaningful value. Avoid speculative complexity and hypothetical future-proofing, but low-cost polish or delight is worth including when its ongoing cost is small and easy to maintain.
+7. **Do not turn coverage into decomposition** - For software brainstorms, treat named devices, providers, and data sources as coverage requirements, not automatically as separate integration workstreams. Split them only when a shared access path cannot satisfy a named requirement. Leave connector selection to planning unless that choice materially changes product scope or behavior.
 
 ## Interaction Rules
 
@@ -50,13 +51,15 @@ These rules apply to every brainstorm, including the universal (non-software) fl
 
 ## Feature Description
 
-<feature_description> #$ARGUMENTS </feature_description>
+The **feature description** is the input this skill was invoked with — what to explore, present in the current prompt or conversation, whether the user provided it directly or a calling skill passed it.
 
 `$ARGUMENTS` may be either a free-text feature description OR a reference to an existing `tunan:req` issue (a `#<N>` token or a full GitHub issue URL). When it is an issue ref, Phase 0.0 binds that issue and reads its body as the feature description / resume source; otherwise the text is the feature description.
 
 **If the feature description above is empty (no text and no issue ref), ask the user:** "What would you like to explore? Please describe the feature, problem, or improvement you're thinking about, or pass an existing `tunan:req` issue (`#<N>` or its URL) to continue."
 
 Do not proceed until you have a feature description or a bound issue.
+
+**Session-settled decisions.** The invoking conversation, or a distilled brief passed as invocation input — from the user or a calling skill — may carry decisions already examined-and-chosen. Read `references/settled-decisions.md` before classifying conversation-carried decisions — it carries the settlement test, the two provenance classes, the annotation shape, and capture rules. Skipping the classification fails in both directions: re-asking a decision the user already made, or promoting an unexamined assertion to settled.
 
 ## Execution Flow
 
@@ -199,6 +202,29 @@ Product-tier triggers additional Phase 1.2 questions and additional sections in 
 
 **Visual probe tripwire.** If the feature is inherently visual or spatial — drawing/canvas tools, annotation behavior, visual editors, UI layout or navigation, interaction states, charts, diagrams, animation, maps, timelines, or spatial flows — read `references/visual-probes.md` now and remember that a visual-probe gate is pending. Strong signals include freehand vs constrained drawing behavior, canvas annotation tools, layout comparisons, and state/flow placement. Loading the reference here is readiness only; do not offer the visual path until the first concrete shape/behavior decision. If the user later chooses visual, run the helper at `scripts/visual-probe-server.js` by resolving it relative to this loaded `brainstorm` skill directory; if the runtime does not expose a concrete skill directory, do not guess from the project CWD — use the text path.
 
+#### 0.4 Surface the Workflow Spine
+
+For **Standard and Deep** scope, create a task list with the platform's task tracking tool (`TaskCreate`/`TaskUpdate`/`TaskList` in Claude Code, `update_plan` in Codex, or the equivalent on other harnesses). Skip it entirely for Lightweight and on the Phase 0.1b non-software route. Create it here, not earlier — 0.1b and 0.1c exit before this point, and the tier is unknown until 0.3.
+
+If the harness exposes no task primitive — including `ToolSearch` or its equivalent returning no match — name the six tasks once in chat and continue without per-task updates, rather than dropping the spine silently. Do not restate the list to simulate progress you cannot track.
+
+The spine is six tasks, in order:
+
+1. Check what already exists
+2. Ask scoping questions
+3. Weigh approaches and recommend
+4. Confirm scope before writing
+5. Write the requirements plan
+6. Offer next steps
+
+**Conditional work earns a task only when its gate fires** — never at creation, and never as a placeholder for a branch that may not run. A branch earns one when the user is either waiting on it or would be surprised to learn it happened: an accepted blindspot pass, a dispatched Slack researcher, a Phase 2.6 verifier working in the background. A step that fires per-decision rather than once does not — it would thrash the list. Insert it at the position where it runs.
+
+**Name every task you add the way the spine is named:** verb first, five words or fewer, naming the outcome the user can hold you to — not the phase, the internal activity, or the tool. `Verify claims against the code`, not `Phase 2.6 claim verification`. Never restate counts, quotas, or pacing in a name; that contract lives in the phase that owns it.
+
+**When a gate resolves such that a listed task will not run, record the skip — never mark it plainly complete, and never let it vanish unexplained.** In order of preference: set a `cancelled` or `skipped` status if the harness has one; otherwise rename the task to name the skip (`Skipped: no doc warranted`) and then mark it complete; only if the name cannot be changed, delete it. Say why in the conversation either way — the list carries the fact, not the reason. If Phase 3 decides no doc is warranted, that is task 5. If the 0.1c handoff is accepted mid-dialogue, clear the list entirely — `pov` owns the run from there. A task you find yourself skipping routinely is misnamed: it encodes a branch rather than an outcome, so rename it to what happens in the common case.
+
+The list is a view for the user, not an instruction to you. It does not change when a phase fires or what that phase requires, and it never substitutes for a phase's own exit condition.
+
 ### Phase 1: Understand the Idea
 
 #### 1.1 Existing Context Scan
@@ -212,11 +238,11 @@ Scan the repo before substantive brainstorming. Match depth to scope:
 _Constraint Check (inline)_ — Source the agnostic orientation (STRATEGY summary, CONCEPTS vocabulary, conventions) from the shared repo-grounding profile cache instead of re-reading those files every run. Set `SKILL_DIR` to this skill's directory and run the helper (full protocol in `references/repo-profile-cache.md`):
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing the SKILL.md you just read>"
-python3 "$SKILL_DIR/scripts/repo-profile-cache.py" get
+SKILL_DIR="<absolute path of the directory containing the SKILL.md you just read>";
+python3 "$SKILL_DIR/../../scripts/repo-profile-cache.py" get
 ```
 
-On `HIT`, load the profile JSON and take the agnostic orientation from it — `conventions.strategy` for the STRATEGY summary, `vocabulary` for the CONCEPTS terms, and `conventions` (coding standards, testing, review process, instruction files) for workflow/product/scope constraints; do not re-read those files. On `MISS`, dispatch a generic subagent with `references/agents/repo-profiler.md` to derive the profile, write its JSON output to a file, then persist with `python3 "$SKILL_DIR/scripts/repo-profile-cache.py" put <file>` (re-set `SKILL_DIR` in that call — shell vars don't persist between Bash invocations), and use the same fields. On `NO-CACHE`, derive the orientation inline and skip the `put`. The cache is an optimization, never a correctness dependency: if it is unavailable, or any cached field is absent/null, fall back to reading the source inline — the project's active instructions and conventions already in your context for workflow, product, or scope constraints (no need to open or name specific instruction files); `STRATEGY.md` if it exists — the product's target problem, approach, persona, and active tracks, which shape scope, success criteria, and which approaches are aligned vs out-of-scope; and `CONCEPTS.md` at repo root if it exists — the project's authoritative vocabulary. Also read the `tunan:project` issue if it exists (`gh issue list --label "tunan:project" --state all --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`) — the project's target problem, approach, persona, active tracks, and current milestone are direct input to what this brainstorm should deliver. Use these names in dialogue, approaches, and the requirements doc; map user-offered synonyms back. If any of these add nothing, move on. This pass — including the cache resolution — stays in the main conversation; the dialogue needs this material in context to shape its questions.
+On `HIT`, load the profile JSON and take the agnostic orientation from it — `conventions.strategy` for the STRATEGY summary, `vocabulary` for the CONCEPTS terms, and `conventions` (coding standards, testing, review process, instruction files) for workflow/product/scope constraints; do not re-read those files. On `MISS`, dispatch a generic subagent with `references/agents/repo-profiler.md` to derive the profile, write its JSON output to a file, then persist with `python3 "$SKILL_DIR/../../scripts/repo-profile-cache.py" put <file>` (re-set `SKILL_DIR` in that call — shell vars don't persist between Bash invocations), and use the same fields. On `NO-CACHE`, derive the orientation inline and skip the `put`. The cache is an optimization, never a correctness dependency: if it is unavailable, or any cached field is absent/null, fall back to reading the source inline — the project's active instructions and conventions already in your context for workflow, product, or scope constraints (no need to open or name specific instruction files); `STRATEGY.md` if it exists — the product's target problem, approach, persona, and active tracks, which shape scope, success criteria, and which approaches are aligned vs out-of-scope; and `CONCEPTS.md` at repo root if it exists — the project's authoritative vocabulary. Also read the `tunan:project` issue if it exists (`gh issue list --label "tunan:project" --state all --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`) — the project's target problem, approach, persona, active tracks, and current milestone are direct input to what this brainstorm should deliver. Use these names in dialogue, approaches, and the requirements doc; map user-offered synonyms back. If any of these add nothing, move on. This pass — including the cache resolution — stays in the main conversation; the dialogue needs this material in context to shape its questions.
 
 _Topic Scan (grounding scout)_ — Create a scratch dir at `${TMPDIR:-/tmp}/tunan/brainstorm/<run-id>/` (short unique slug), then dispatch one extraction-tier sub-agent via the platform's subagent primitive (`Agent`/`Task` in Claude Code, `spawn_agent` in Codex) where available; otherwise run the work inline or serially. In harnesses that support background dispatch, proceed to Phase 1.2/1.3 **without waiting**: the scout runs during the user's think-time on the opening questions. Scout prompt:
 
@@ -283,6 +309,8 @@ Favor moves that compound value, reduce future carrying cost, or make the produc
 
 These questions force an explicit product thesis and feed the Scope Boundaries subsections ("Deferred for later" and "Outside this product's identity") and Dependencies / Assumptions in the requirements document.
 
+A session-settled decision counts as already-probed — it is not a gap. Spend the pressure test's scrutiny on unexamined assertions instead: each gets its one examination here rather than being re-litigated downstream.
+
 #### 1.3 Collaborative Dialogue
 
 Follow the Interaction Rules above. **This is where most questions fire, so the enumerable-means-tool hard rule (Interaction Rule 4) is load-bearing here: every direction, priority, scope/mechanism-confirmation, or yes/no-with-consequences question gets asked through `AskUserQuestion` (load it via `ToolSearch select:AskUserQuestion` first if needed) — never as a prose "is it A or B?". Only rigor probes (Phase 1.2 gap lenses) and genuinely diagnostic/narrative questions stay open-ended (Interaction Rule 5). When in doubt, fire the tool.**
@@ -308,6 +336,8 @@ This gate **takes precedence over the default blocking-question path** (Interact
 **Exit condition:** Continue until the idea is clear AND no integration-check questions are pending, OR the user explicitly wants to proceed.
 
 ### Phase 2: Explore Approaches
+
+**Reasoning elevation (Claude Code only).** Before generating approaches, if positively Claude Code (`CLAUDECODE=1`, not Cursor/Codex), load `references/reasoning-elevation.md` and follow it — it may dispatch approach generation to a higher-reasoning model when the user has opted in, and it owns the completion-time discoverability tip. On any non-Claude host, skip it entirely — proceed on the session model with no mention. If a prompt names a model this skill does not recognize on this harness, proceed on the session model without comment.
 
 If multiple plausible directions remain, propose **2-3 concrete approaches** based on research and conversation. Otherwise state the recommended direction directly.
 
@@ -356,6 +386,8 @@ Fires for **all tiers** including Lightweight. Skip Phase 2.5 entirely on the Ph
 - **Path B — at least one blocking question fired, OR tier is Standard / Deep-feature / Deep-product**: full tier-aware scoping synthesis with confirmation gate. Two scenarios fire Path B: (a) the user invested answer-time during dialogue, or (b) the user pre-loaded substantive scope content (Phase 0.2 fast-path with a richly-specified opening prompt). Either way, the substance earns a real checkpoint. Confirmation is unconditional even when zero call-outs survive the keep test.
 
 **Why the tier guard on Path A**: Phase 0.2's fast path serves two very different cases — a tight one-liner that needs no dialogue ("fix the typo on line 47") and a richly pre-loaded brainstorm context that ALSO needs no dialogue because the user pre-stated everything. Without the tier guard, both route to Path A and the pre-loaded case gets a 1-sentence checkpoint for what may be 20+ items worth of scope. Tier-classifying Phase 0.3 distinguishes the two — pre-loaded substance makes the tier Standard or Deep, which then routes to Path B.
+
+Session-settled decisions render in the scoping synthesis as `Carrying forward:` lines, never as questions or call-outs — `references/synthesis-summary.md` owns the rendering. Path B rich-context openers carrying prior-session decisions are the common case.
 
 #### 2.6 Claim Verification (inside the Path B confirmation wait)
 

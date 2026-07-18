@@ -2,12 +2,12 @@
 
 AI-powered development tools that get smarter with every use — make each unit of engineering work easier than the last. Brainstorm requirements, plan implementations, review code with specialized reviewers, research institutional learnings, and capture solved problems so future work compounds.
 
-This repository ships the **`tunan`** plugin, bundling 43 agents, 66 skills, and 4 MCP servers — as a marketplace plugin for Claude Code, Codex, and OpenCode, as an npx-installable skill collection for Reasonix, and as Cursor rules for Cursor.
+This repository ships the **`tunan`** plugin, bundling 43 agents, 72 skills, and 4 MCP servers — as a marketplace plugin for Claude Code, Codex, and OpenCode, as an npx-installable skill collection for Reasonix, and as Cursor rules for Cursor.
 
 | Component   | Count |
 | ----------- | ----- |
 | Agents      | 43    |
-| Skills      | 67    |
+| Skills      | 72    |
 | MCP Servers | 4     |
 
 See the [full component reference](plugins/README.md) for the complete inventory, grouped by category.

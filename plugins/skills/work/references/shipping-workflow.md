@@ -171,7 +171,7 @@ Before creating PR, verify:
 - [ ] Simplify: `simplify-code` when diff >=30 lines (or skipped with reason)
 - [ ] Code review: Tier 1 completed, or Tier 2 when escalated, or skipped (no Tier 1 + Tier 2 criteria not met — note in summary)
 - [ ] PR description includes summary, testing notes, and evidence when captured
-- [ ] PR description includes Compound Engineered badge with accurate model and harness
+- [ ] `commit-push-pr` received `branding:on` from the Compound Engineering workflow
 
 ## Code Review Tiers
 

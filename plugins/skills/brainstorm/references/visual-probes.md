@@ -58,7 +58,22 @@ Label the artifact as directional. State what the user should judge and what the
 
 ## Display Helper
 
-Use the bundled display-only helper when the current platform can run a bundled skill script:
+Use the bundled display-only helper when the current platform can run a bundled skill script. Invoke it via the `SKILL_DIR` anchor: set `SKILL_DIR` to the absolute path of the directory containing the `brainstorm` `SKILL.md` you loaded (the Bash tool's cwd is the user's project, not the skill dir), and re-set it in the same command on each call since shell vars don't persist between Bash invocations. Do not resolve the helper from the user's project CWD.
+
+Start (detached):
+
+```bash
+SKILL_DIR="<absolute path of the brainstorm skill directory>";
+node "$SKILL_DIR/scripts/visual-probe-server.js" start --root /tmp/tunan/brainstorm-visual/<run-id>
+```
+
+Append `--foreground` to that `start` command for foreground mode. Status and stop take the same anchor — and because `SKILL_DIR` does not persist between Bash invocations, each must re-set it in its own call rather than reuse the `start` block's value:
+
+```bash
+SKILL_DIR="<absolute path of the brainstorm skill directory>";
+node "$SKILL_DIR/scripts/visual-probe-server.js" status --root /tmp/tunan/brainstorm-visual/<run-id>
+# stop: the same command with `stop` in place of `status` (re-set SKILL_DIR again)
+```
 
 - Helper: `scripts/visual-probe-server.js`
 - Resolve the helper path relative to the loaded `brainstorm` skill directory before running it. Do not resolve it from the user's project CWD.

@@ -47,7 +47,7 @@ Ask one question at a time. Prefer a concise single-select choice when natural o
 
 ## Feature Description
 
-<feature_description> #$ARGUMENTS </feature_description>
+The **feature description** is the input this skill was invoked with — what to plan, present in the current prompt or conversation, whether the user provided it directly or a calling skill passed it (e.g. `lfg` in `mode:pipeline`).
 
 **If the feature description above is empty, ask the user:** "What would you like to plan? Describe the task, goal, or project you have in mind, or pass a `tunan:req` issue ref (`#N` or URL)." Then wait for their response before continuing.
 
@@ -171,7 +171,9 @@ gh issue list --label "tunan:req" --search "<terms>" --state open --json number,
 
 If multiple requirement issues match, ask which one to use using the platform's blocking question tool when available (see Interaction Method). Otherwise, present numbered options in chat and wait for the user's reply before proceeding.
 
-#### 0.3 Use the Requirement Issue as Primary Input
+**Session-settled decisions are an input tier alongside the document sources above.** Decisions already examined-and-chosen in the invoking conversation — or carried in a distilled brief passed as invocation input, from the user or a calling skill — enter planning as settled constraints, not open questions. Read `references/settled-decisions.md` before classifying conversation-carried decisions — it carries the settlement test, the two provenance classes, the annotation shape, capture rules, and brief-entry requirements. Classifying without it risks labeling unexamined assertions as settled, or re-asking decisions the user already closed.
+
+#### 0.3 Use the Product Contract as Primary Input
 
 If a relevant requirement issue exists:
 
@@ -193,7 +195,9 @@ If no relevant requirement issue exists, planning may proceed from the user's re
 
 #### 0.4 Planning Bootstrap (No Requirement Issue or Unclear Input)
 
-If no relevant requirement issue exists, or the input needs more structure:
+**Settled decisions get the same preservation discipline as origin Product Contract decisions.** Session-settled decisions (from the conversation or a passed brief) are augmented by research, never re-asked, and never silently rewritten. Contradiction evidence routes by the severity ladder: nothing found — proceed silently; suboptimal-but-workable — proceed as settled and attach a conflict call-out to the labeled KTD at plan-write; invalidating — stop as blocked per the Phase 5.2 pipeline contract.
+
+#### 0.4 Planning Bootstrap (No Requirements Doc or Unclear Input)
 
 - Assess whether the request is already clear enough for direct technical planning — if so, continue to Phase 0.5
 - If the ambiguity is mainly product framing, user behavior, or scope definition, recommend `brainstorm` as a suggestion — but always offer to continue planning here as well
@@ -317,16 +321,16 @@ Prepare a concise planning context summary (a paragraph or two) to pass as input
 - Otherwise use the feature description directly
 - If a `tunan:project` issue exists, read it (`gh issue list --label "tunan:project" --state all --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`) and include the relevant pieces (target problem, approach, active tracks, current milestone) in the summary so downstream research and planning decisions are anchored to project intent and the roadmap
 - If `CONCEPTS.md` exists at repo root, read it — its definitions are the canonical names for domain entities, named processes, and status concepts. Plan with those terms rather than synonyms.
-- If a `tunan:codebase-map` issue exists, read it for current-state grounding — it is the `map-codebase` snapshot of the repo's stack, architecture, structure, conventions, testing, and concerns. Resolve and read it: `gh issue list --label "tunan:codebase-map" --state all --json number --jq '.[0].number // empty'`, then `gh issue view <N> --json body --jq .body`. Fold its ARCHITECTURE/CONVENTIONS/CONCERNS into the planning context summary so research starts from the known baseline rather than rediscovering it — when the map is fresh (check its provenance `mapped_at_sha`), this can narrow or skip parts of the repo scan below. Treat it as grounding, not gospel; it may be stale. Absent → skip silently, never block.
+- Include session-settled decisions with their rejected alternatives, plus the standing line "If you find evidence a settled decision cannot work, report it — do not suppress it." Do not pass the decision's advocacy or rationale, and keep any adversarial or validation lens blind to settlement markers.
 
 **Resolve the project profile from the shared cache first.** The agnostic profile (stack, deps, conventions, structure) is identical at this commit, so reuse it instead of having `tunan:repo-research-analyst` re-derive `technology`/`architecture`/`conventions` every run. Set `SKILL_DIR` to this skill's directory and run the helper (protocol in `references/repo-profile-cache.md`):
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing the SKILL.md you just read>"
-python3 "$SKILL_DIR/scripts/repo-profile-cache.py" get
+SKILL_DIR="<absolute path of the directory containing the SKILL.md you just read>";
+python3 "$SKILL_DIR/../../scripts/repo-profile-cache.py" get
 ```
 
-On `HIT`, load the profile JSON as your agnostic grounding. On `MISS`, dispatch a generic subagent with `references/agents/repo-profiler.md` to derive it, write its JSON to a file, then `python3 "$SKILL_DIR/scripts/repo-profile-cache.py" put <file>` (re-set `SKILL_DIR` in that call — shell vars don't persist between Bash invocations). On `NO-CACHE` — or if the call errors or returns nothing — derive it inline and skip the `put`; never block on the cache. Pass the resulting profile to `tunan:repo-research-analyst` below so it skips the agnostic scopes. The cached profile covers only *root* conventions — if the work targets a subdirectory with its own scoped instruction file (a nested `AGENTS.md`/`CLAUDE.md`), read that fresh; subdirectory-scoped instructions are deliberately excluded from the cache.
+On `HIT`, load the profile JSON as your agnostic grounding. On `MISS`, dispatch a generic subagent with `references/agents/repo-profiler.md` to derive it, write its JSON to a file, then `python3 "$SKILL_DIR/../../scripts/repo-profile-cache.py" put <file>` (re-set `SKILL_DIR` in that call — shell vars don't persist between Bash invocations). On `NO-CACHE` — or if the call errors or returns nothing — derive it inline and skip the `put`; never block on the cache. Pass the resulting profile to `tunan:repo-research-analyst` below so it skips the agnostic scopes. The cached profile covers only *root* conventions — if the work targets a subdirectory with its own scoped instruction file (a nested `AGENTS.md`/`CLAUDE.md`), read that fresh; subdirectory-scoped instructions are deliberately excluded from the cache.
 
 Run these agents in parallel:
 
@@ -488,6 +492,10 @@ For each question, decide whether it should be:
 - **Deferred to implementation** - the answer depends on code changes, runtime behavior, or execution-time discovery
 
 Ask the user only when the answer materially affects architecture, scope, sequencing, or risk and cannot be responsibly inferred. Use the platform's blocking question tool when available (see Interaction Method).
+
+**Never re-ask a session-settled decision.** A decision carrying the `session-settled:` label, or classified settled per `references/settled-decisions.md`, is answered input, not a planning question. An unexamined directive receives exactly one challenge here, backed by research evidence, and the outcome lands in the plan as a labeled or unlabeled Key Technical Decision — the plan is the challenge ledger; later pipeline stages do not re-challenge. An unanswered pipeline-surfaced challenge resurfaces only through the calling pipeline's residual channel.
+
+**Scaffold questions on unfamiliar territory.** When the user has signaled they lack working knowledge of the area a question lives in — an explicit "I don't know X", or earlier answers showing they *cannot evaluate* options rather than merely haven't decided — do not ask the question naked. Present it as a taught decision: the realistic options, one clause each on the trade-off that matters for this plan, and a recommended default. If the user still cannot evaluate, record the default as an explicit assumption in the plan instead of extracting a guess. In pipeline mode (LFG, any `disable-model-invocation` context) this scaffolding never presents anything — resolve to the recommended default and record it as an explicit assumption in the plan.
 
 **Do not** run tests, build the app, or probe runtime behavior in this phase. The goal is a strong plan, not partial execution.
 
@@ -697,8 +705,7 @@ Before finalizing, check:
 - Test scenarios name specific inputs, actions, and expected outcomes without becoming test code
 - Feature-bearing units with blank or missing test scenarios are flagged as incomplete — feature-bearing units must have actual test scenarios, not just an annotation. The `Test expectation: none -- [reason]` annotation is only valid for non-feature-bearing units (pure config, scaffolding, styling)
 - Deferred items are explicit and not hidden as fake certainty
-- **Placeholder scan:** Search the plan for red-flag patterns — "TBD", "TODO", "implement later", "fill in details", "add appropriate error handling", "add validation", "handle edge cases", "write tests for the above" (without actual scenarios), "Similar to Task N" (without repeating the code). Fix every hit.
-- **Type/signature consistency:** Do the function names, method signatures, and property names used in later units match what earlier units define? A function called `clearLayers()` in U3 but `clearFullLayers()` in U7 is a bug.
+- Every implementation unit that implements a session-settled decision cites the labeled KTD in its Requirements or Approach — the cited-KTD excerpt is the channel through which executors receive the label
 - **High-Level Technical Design presence audit (load-bearing).** For each architecture trigger in Phase 3.4 that the plan content satisfies (3+ components with directed relationships, 3+ protocol steps, 3+ state machine states, lifecycle, 3+ decision points, 3+ data-flow stages, mode/flag combinations, DSL/API surface design, non-obvious single-component shape), verify a corresponding sketch/diagram is present in the High-Level Technical Design section. Count the firing triggers; count the sketches; the sketch count must be at least the count of distinct trigger categories that fired. Missing the section when a trigger fired, OR including the section but skipping a triggered sketch within it, is incomplete — return to Phase 3.4 and add the missing sketch. Token cost is not a valid reason to fail this check.
 - If a High-Level Technical Design section is included, it uses the right medium for the work, carries the non-prescriptive framing, and does not contain implementation code (no imports, exact signatures, or framework-specific syntax)
 - Per-unit technical design fields, if present, are concise and directional rather than copy-paste-ready
@@ -735,7 +742,9 @@ Fires **only when the plan was sourced from an upstream requirement issue** (Pha
 
 **Do NOT enumerate the touch surface.** Sentences like "The touch surface is...", "This plan touches...", "The implementation reaches into...", "Files modified include..." are plan-pitch leaks. File paths, module names, directory introductions, and per-file change descriptions belong in the plan body (Implementation Units at Phase 5.2), not the synthesis. The synthesis names _what_ the plan targets, not _where_ the code lives.
 
-**Pre-emit scans.** Before emitting the synthesis, scan the output:
+**Reasoning elevation (Claude Code only).** Before authoring the plan, if positively Claude Code (`CLAUDECODE=1`, not Cursor/Codex), load `references/reasoning-elevation.md` and follow it — it may dispatch the interpret-findings-then-author step to a higher-reasoning model when the user has opted in, and it owns the completion-time discoverability tip. On any non-Claude host, skip it entirely — proceed on the session model with no mention. If a prompt names a model this skill does not recognize on this harness, proceed on the session model without comment.
+
+**REQUIRED: Write the plan file to disk before presenting any options.**
 
 - Bare ID references (`AE\d+`, `R\d+`, `F\d+`, `A\d+`, `U\d+`) → replace with plain names.
 - File paths (`path/like.md`, `path/like.py`, etc.) → cut unless the path IS the topic of an explicit fork in the call-outs.
@@ -793,12 +802,9 @@ gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | start
 
 - **None found** → create the comment and add the stage label:
 
-  ```bash
-  gh issue comment <N> --body-file <tmpfile>
-  ```
-  ```bash
-  gh issue edit <N> --add-label "tunan:plan"
-  ```
+**Session-settled KTDs.** Author each settled decision as a labeled Key Technical Decision carrying the annotation `(session-settled: user-directed — chosen over <alternative>: <one-line reason>)` (class per `references/settled-decisions.md`: `user-directed` or `user-approved`). A KTD that instantiates a labeled Key Decision from a brainstorm-sourced Product Contract inherits the label and cites the source decision.
+
+**HTML composition timing.** When `OUTPUT_FORMAT=html`, Phase 5.3 deepening runs before this write completes its final form, but `doc-review` is skipped in HTML mode (its mutation mechanics are markdown-only today — see Phase 5.3.8 format gate in `references/plan-handoff.md`). The HTML artifact reflects deepening synthesis but not doc-review autofixes; this is a known gap until doc-review gains HTML-aware mutation.
 
 - **Exists** (resume/deepen) → update it in place by id:
 
@@ -882,13 +888,7 @@ resume/deepen (preserving G-IDs). Ensure the label exists first:
 gh label list --search "tunan:gate"
 ```
 
-If absent: `gh label create "tunan:gate" --color 1f883d --description "tunan acceptance gate"`.
-
-Find / write the comment:
-
-```bash
-gh api repos/{owner}/{repo}/issues/<N>/comments --jq '.[] | select(.body | startswith("<!-- tunan:gate -->")) | .id'
-```
+**Pipeline mode:** If invoked from an automated workflow such as LFG or any `disable-model-invocation` context, skip interactive questions. Make the needed choices automatically and proceed to writing the plan. Pipeline mode forces `OUTPUT_FORMAT=md` at Phase 0.0. Exception: when research produced invalidating evidence (infeasible, wrong-thing, destructive) against any session-settled decision in play for the run — whether carried in the caller brief or already carried as a `session-settled:` label in the artifact being enriched (brainstorm Key Decisions or plan KTDs) — do not write the plan and do not resolve silently — return a blocked report to the caller containing the token `settled-decision-invalidated`, the decision, and the reason, parallel to the non-software pipeline stop in `references/universal-planning.md`, so the caller can stop.
 
 - None found → `gh issue comment <N> --body-file <gate-file>` then `gh issue edit <N> --add-label "tunan:gate"`.
 - Exists → `gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<gate-file>`.

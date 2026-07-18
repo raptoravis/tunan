@@ -4,16 +4,18 @@ Load this when the input's fit for `pov` is in doubt, or to route a Hold (SKILL.
 
 ## The discriminator
 
-`pov` always takes an **external input** and judges it **against this project**, producing a **decisive position** — not options, not requirements, not implementation, not a diagnosis. If the answer should be a *verdict about your project*, it is `pov`. If the answer is options, requirements, implementation, a diagnosis, or a neutral explainer, route out.
+`pov` takes a **supplied subject** and judges it **against this project**, producing a **decisive position** — not options, not requirements, not implementation, not a diagnosis. If the answer should be a *verdict about your project*, it is `pov`. If the answer is options, requirements, implementation, a diagnosis, or a neutral explainer, route out.
 
 ## Where the lines fall
 
 | If the user wants... | Route to | The line |
 |---|---|---|
 | A neutral explainer ("tell me about X") | general research / answer it directly | `pov` only returns a project-grounded verdict; with no project angle, answer it as a normal research question — or a dedicated deep-research-style tool *if the environment has one* — rather than forcing a verdict |
+| A holistic take on a supplied document ("what do you think of this doc?") | `pov` | A take judges the document's direction, strengths, risks, and bottom line; "review this doc" or "find the issues" asks for findings and routes to `doc-review`. When the wording is ambiguous, ask one clarifying line rather than guessing |
+| A judgment among approaches the user already supplied | `pov` | Options supplied → judge them against the project; options still need to be invented → `ideate` |
 | Options invented from an open field | `ideate` | Invented vs. discovered: ideate invents; `pov` judges/selects from a discoverable field |
 | To scope an idea already chosen | `brainstorm` | `pov` decides *whether*; brainstorm scopes *what* once it's a yes |
-| To know how to build something decided | `plan` | Verdict accepted → hand off; `pov` does no task breakdown |
+| To know how to build something decided | `plan` | Verdict accepted → offer the handoff, or perform it only when the original request authorized that named action and the Phase 4 authority gate passes; `pov` does no task breakdown |
 | To fix observed broken behavior | `debug` | `pov` assesses *exposure and priority* of a CVE; debug investigates an *actual failure* |
 | Product thesis / company direction | `strategy` | `pov` is bounded to a specific external input |
 
