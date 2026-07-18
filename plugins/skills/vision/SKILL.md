@@ -33,7 +33,7 @@ Then set at least one API key in `~/.env` (zero-config, shared with other tools)
 ```dotenv
 # ~/.env  (i.e. C:\Users\<you>\.env on Windows)
 DASHSCOPE_API_KEY=sk-your-qwen-key
-# BD_API_KEY=...           # 字节跳动 / 豆包 (Volcengine Ark)
+# ARK_API_KEY=...           # 字节跳动 / 豆包 (Volcengine Ark 方舟)
 # OPENAI_API_KEY=...
 # SILICONFLOW_API_KEY=sk-your-siliconflow-key
 VISION_PROVIDER=qwen
@@ -66,9 +66,11 @@ The merged content comes from `scripts/claude-md-fragment.md` (single source —
 ## Providers
 
 ### doubao (豆包 / 字节跳动 Volcengine Ark)
-- API key: `BD_API_KEY` (字节跳动账号体系；旧的 `DOUBAO_API_KEY` 仍可用作别名)
-- Default model: `doubao-seed-2-0-pro-260215`
+- API key: `ARK_API_KEY` (方舟平台标准密钥；旧的 `BD_API_KEY` / `DOUBAO_API_KEY` 仍可用作别名)
+- Default model: `doubao-seed-2-1-pro-260628` (256K context, text + image + video, deep reasoning)
 - Custom endpoint: `DOUBAO_BASE_URL`
+- Also available: `doubao-seed-evolving` (持续迭代版, 每月更新), `doubao-seed-2-0-pro-260215` (2.0 Pro 旧版)
+- Note: `doubao-seed-2-1-turbo-260628` 仅支持纯文本，不支持视觉
 
 ### qwen (通义千问 / DashScope)
 - API key: `DASHSCOPE_API_KEY`
