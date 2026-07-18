@@ -16,7 +16,7 @@ API keys are resolved from real environment variables first, then from
 a ~/.env file (zero-dependency loader), so you can configure once without
 touching settings.json. Real env vars win over ~/.env.
 
-Set one of: BD_API_KEY (or DOUBAO_API_KEY), DASHSCOPE_API_KEY, OPENAI_API_KEY,
+Set one of: ARK_API_KEY (or BD_API_KEY / DOUBAO_API_KEY), DASHSCOPE_API_KEY, OPENAI_API_KEY,
 SILICONFLOW_API_KEY
 """
 # /// script
@@ -56,11 +56,12 @@ def _get_openai_client(api_key: str, base_url: str):
 PROVIDERS = {
     "doubao": {
         # 豆包 / 字节跳动 Volcengine Ark — OpenAI 兼容。
-        # key 优先读 BD_API_KEY(字节跳动账号体系),DOUBAO_API_KEY 作为旧名向后兼容。
-        "key_envs": ["BD_API_KEY", "DOUBAO_API_KEY"],
+        # key 优先读 ARK_API_KEY（方舟平台标准密钥），BD_API_KEY、
+        # DOUBAO_API_KEY 作为旧名向后兼容。
+        "key_envs": ["ARK_API_KEY", "BD_API_KEY", "DOUBAO_API_KEY"],
         "base_env": "DOUBAO_BASE_URL",
         "base_default": "https://ark.cn-beijing.volces.com/api/v3",
-        "model_default": "doubao-seed-2-0-pro-260215",
+        "model_default": "doubao-seed-2-1-pro-260628",
     },
     "qwen": {
         "key_envs": ["DASHSCOPE_API_KEY"],
