@@ -15,7 +15,7 @@ uv run "${CLAUDE_SKILL_DIR}/scripts/vision.py" [--provider <name>] <image_path> 
 
 `uv run` reads the PEP 723 dependency block at the top of `vision.py` and auto-installs `openai` into an ephemeral environment on first run — **no manual install step, no global pollution**. Prerequisite: have [uv](https://docs.astral.sh/uv/) on the PATH (`pip install uv` or `winget install astral-sh.uv` on Windows).
 
-When `--provider` is omitted, the provider resolves by: `--provider` flag → `VISION_PROVIDER` env → first API key found → `doubao`.
+When `--provider` is omitted, the provider resolves by: `--provider` flag → `VISION_PROVIDER` env → first API key found in `~/.env` (by file line order) → `doubao`.
 
 > The same `uv run` command works in Git Bash and PowerShell on Windows, and on macOS/Linux.
 
