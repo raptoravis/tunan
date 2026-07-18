@@ -1,6 +1,6 @@
 {
   "name": "tunan",
-  "version": "4.5.1",
+  "version": "4.5.2",
   "description": "AI-powered development tools for code review, research, design, and workflow automation.",
   "author": {
     "name": "raptoravis",
@@ -29,7 +29,11 @@
     "longDescription": "tunan is a suite of skills and agents that make each unit of engineering work easier than the last. Brainstorm requirements, plan implementations, review code with specialized reviewers, research institutional learnings, and capture solved problems so future work benefits. Skills install natively via Codex; the review/research/workflow agents that some skills spawn are a Claude Code feature.",
     "developerName": "Every",
     "category": "Coding",
-    "capabilities": ["Interactive", "Read", "Write"],
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
     "websiteURL": "https://github.com/raptoravis/tunan",
     "defaultPrompt": [
       "/tunan:brainstorm a new feature",

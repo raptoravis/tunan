@@ -6,7 +6,7 @@ argument-hint: "[#<N> | <issue-url> | path/to/document.md | nothing — grills t
 
 # Grill a Plan or Design
 
-Grill the user relentlessly about a plan, design, or document — one question at a time, with a recommended answer attached to each. Walk down every branch of the design tree, resolving dependencies between decisions one-by-one, until the plan can withstand real-world contact.
+Grill the user relentlessly about a plan, design, or document — one question at a time, with a recommended answer attached to each. Walk down every branch of the decision tree, resolving dependencies between decisions one-by-one, until the plan can withstand real-world contact.
 
 This is **sequential adversarial Q&A**, not parallel batch review. The user answers each question before the next one fires. The agent's job is to find the unexamined corners, surface unstated assumptions, and force the user to defend (or revise) every load-bearing decision.
 
@@ -70,7 +70,7 @@ Distinguish sharply between facts and decisions:
 - **Facts** live in the codebase, docs, or runtime behavior. When a question hinges on a fact, look it up — explore the codebase, read the spec, check the logs. Present the finding as the recommended answer rather than asking the user.
 - **Decisions** are the user's to make. Put each one to the user and wait for their answer. Never answer your own grilling questions.
 
-The test: "can the codebase settle this?" — if yes, it's a fact; if no, it's a decision that needs the user's judgment.
+The test: "can the environment (filesystem, tools, docs, runtime) settle this?" — if yes, it's a fact; if no, it's a decision that needs the user's judgment.
 
 ### Don't Enact Until Confirmed
 

@@ -1,6 +1,6 @@
 ---
 name: wayfinder
-description: "Plan a large chunk of work — more than one agent session can hold — as a shared map of investigation tickets on the issue tracker, and resolve them one at a time until the way to the destination is clear. Use when a loose idea arrives that is too big for one session and the path forward is unclear."
+description: "Plan a large chunk of work — more than one agent session can hold — as a shared map of decision tickets on the issue tracker, and resolve them one at a time until the way to the destination is clear. Use when a loose idea arrives that is too big for one session and the path forward is unclear."
 argument-hint: "[a loose idea, or a map issue #N to continue working through]"
 ---
 
