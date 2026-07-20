@@ -53,14 +53,14 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/phase.ps1 detect
 It prints one machine line on stdout, e.g.:
 
 ```
-phase=work next=work pr=- issue=42 units_done=U1,U2 units_total=5
+phase=work next=work pr=- issue=42 units_done=U1,U2 units_total=5 label_stale=-
 ```
 
-Parse `phase`, `next`, `pr`, and the optional `units_done` / `units_total`. The last two come from the feature issue's `<!-- tunan:progress -->` marker (maintained by `work`) and are `-` when no progress marker exists; when present they let the confirm line in Step 2 report unit-level progress (e.g., "2 of 5 units landed"). The exit code is advisory: `0` = a phase was determined (including `done`), `1` = issue not found, `2` = gh/infra problem. On `1`/`2`, surface the stderr hint and stop — do not fabricate a phase.
+Parse `phase`, `next`, `pr`, `units_done`, `units_total`, and `label_stale`. `units_done` / `units_total` come from the feature issue's `<!-- tunan:progress -->` marker (maintained by `work`) and are `-` when no progress marker exists; when present they let the confirm line in Step 2 report unit-level progress (e.g., "2 of 5 units landed"). `label_stale` is the bare stage name (e.g. `plan`) when the stage label exists on the issue but its matching marker comment does not — the label was applied (manually or by an interrupted run) but the content never landed. It is `-` otherwise. The exit code is advisory: `0` = a phase was determined (including `done`), `1` = issue not found, `2` = gh/infra problem. On `1`/`2`, surface the stderr hint and stop — do not fabricate a phase.
 
 ## Step 2 — confirm, then dispatch
 
-Tell the sponsor the resolved feature issue, the detected `phase`, and the planned next action in one line, then dispatch. When `units_done`/`units_total` are present (not `-`) and the phase is `work` or `review-ci`, include the unit progress in that line (e.g., "2 of 5 units landed so far") so the sponsor sees how far work got before the interruption. Phase → action:
+Tell the sponsor the resolved feature issue, the detected `phase`, and the planned next action in one line, then dispatch. When `label_stale` is not `-`, mention the stale label in that line (e.g., "the `tunan:plan` label is present on #N but its marker comment was never written — re-running plan will self-heal"). When `units_done`/`units_total` are present (not `-`) and the phase is `work` or `review-ci`, include the unit progress in that line (e.g., "2 of 5 units landed so far") so the sponsor sees how far work got before the interruption. Phase → action:
 
 | `phase` | what already exists | resume by |
 |---|---|---|

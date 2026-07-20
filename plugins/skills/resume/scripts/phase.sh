@@ -10,12 +10,19 @@
 #   phase.sh detect <issue>
 #
 # Emits ONE machine line on stdout, then human hints on stderr:
-#   phase=<plan|work|review-ci|done|unknown> next=<skill|none> pr=<url|-> issue=<N> units_done=<csv|-> units_total=<N|->
+#   phase=<plan|work|review-ci|done|unknown> next=<skill|none> pr=<url|-> issue=<N> units_done=<csv|-> units_total=<N|-> label_stale=<stage|->
 #
 # units_done / units_total come from an optional <!-- tunan:progress --> comment
 # that `work` maintains as a resume hint (git stays authoritative for shipped
-# code). They are `-` when no progress comment exists. Appended fields keep the
-# line backward-compatible — callers that parse only phase/next/pr/issue still work.
+# code). They are `-` when no progress comment exists.
+#
+# label_stale is the bare stage name (e.g. "plan") when the stage label exists on
+# the issue but its marker comment does not — the label was applied (manually or
+# by an interrupted run) but the content was never written. `-` otherwise.
+# Callers can report this so the next stage self-heals (re-running the missing
+# stage is safe: --add-label is idempotent, and the create-or-update pattern
+# writes the missing comment). Appended fields keep the line backward-compatible
+# — callers that parse only phase/next/pr/issue still work.
 #
 # Phase ladder (each later phase implies the earlier evidence is present):
 #   plan       — feature issue exists, no <!-- tunan:plan --> comment yet  -> run plan
@@ -28,9 +35,24 @@ set -o pipefail
 cmd="${1:-}"; n="${2:-}"
 
 err() { echo "$*" >&2; }
-udone="-"; utotal="-"
+udone="-"; utotal="-"; lstale="-"
 emit() { # phase next pr
-  echo "phase=$1 next=$2 pr=${3:--} issue=${n:--} units_done=$udone units_total=$utotal"
+  echo "phase=$1 next=$2 pr=${3:--} issue=${n:--} units_done=$udone units_total=$utotal label_stale=$lstale"
+}
+
+# Check whether a stage label exists on the issue without its matching marker
+# comment — the label was applied (manually or by an interrupted run) but the
+# content never landed.  Callers can report this and self-heal (re-running the
+# stage is safe: --add-label is idempotent, and the comment create-or-update
+# pattern writes the missing content).
+check_stale_label() { # <stage-label>  (e.g. "tunan:plan")
+  local label="$1"
+  lstale="-"
+  local labels
+  labels="$(gh api "repos/$slug/issues/$n" --jq '.labels[].name' 2>/dev/null)"
+  if printf '%s' "$labels" | grep -qx "$label"; then
+    lstale="${label#tunan:}"
+  fi
 }
 
 # Populate udone/utotal from the optional <!-- tunan:progress --> comment, whose
@@ -95,6 +117,7 @@ if has_marker "<!-- tunan:plan -->"; then
   exit 0
 fi
 
+check_stale_label "tunan:plan"
 emit plan plan -
 err "Feature #$n has no plan comment — resume at plan (lfg step 1)."
 exit 0

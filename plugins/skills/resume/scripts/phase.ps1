@@ -10,12 +10,19 @@
     phase.ps1 detect <issue>
 
   Emits ONE machine line on stdout, then human hints on stderr:
-    phase=<plan|work|review-ci|done|unknown> next=<skill|none> pr=<url|-> issue=<N> units_done=<csv|-> units_total=<N|->
+    phase=<plan|work|review-ci|done|unknown> next=<skill|none> pr=<url|-> issue=<N> units_done=<csv|-> units_total=<N|-> label_stale=<stage|->
 
   units_done / units_total come from an optional <!-- tunan:progress --> comment
   that `work` maintains as a resume hint (git stays authoritative for shipped code).
-  They are `-` when no progress comment exists. Appended fields keep the line
-  backward-compatible — callers parsing only phase/next/pr/issue still work.
+  They are `-` when no progress comment exists.
+
+  label_stale is the bare stage name (e.g. "plan") when the stage label exists on
+  the issue but its marker comment does not — the label was applied (manually or
+  by an interrupted run) but the content was never written. `-` otherwise.
+  Callers can report this so the next stage self-heals (re-running the missing
+  stage is safe: --add-label is idempotent, and the create-or-update pattern
+  writes the missing comment). Appended fields keep the line backward-compatible
+  — callers parsing only phase/next/pr/issue still work.
 #>
 [CmdletBinding()]
 param(
@@ -27,10 +34,34 @@ $ErrorActionPreference = 'Continue'
 
 $script:Udone = '-'
 $script:Utotal = '-'
+$script:Lstale = '-'
 function Emit($phase, $next, $pr) {
   if (-not $pr) { $pr = '-' }
   $iss = if ($N) { $N } else { '-' }
-  Write-Output "phase=$phase next=$next pr=$pr issue=$iss units_done=$script:Udone units_total=$script:Utotal"
+  Write-Output "phase=$phase next=$next pr=$pr issue=$iss units_done=$script:Udone units_total=$script:Utotal label_stale=$script:Lstale"
+}
+
+# Check whether a stage label exists on the issue without its matching marker
+# comment — the label was applied (manually or by an interrupted run) but the
+# content never landed.  Sets $script:Lstale to the bare stage name (e.g. "plan")
+# if stale, "-" otherwise.
+function Check-StaleLabel([string]$label) {
+  $script:Lstale = '-'
+  # Pull labels as raw JSON, parse in PowerShell to avoid jq-interpolation issues
+  # on Windows PowerShell 5.1 (same pattern as Has-MarkerComment).
+  $prevEnc = [Console]::OutputEncoding
+  try {
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $raw = & gh api "repos/$slug/issues/$N" --jq '.labels[].name' 2>$null
+  } finally {
+    [Console]::OutputEncoding = $prevEnc
+  }
+  if ($LASTEXITCODE -ne 0) { return }
+  $labels = ($raw -join "`n").Trim()
+  if ([string]::IsNullOrWhiteSpace($labels)) { return }
+  if (($labels -split "`n") -ccontains $label) {
+    $script:Lstale = $label -replace '^tunan:', ''
+  }
 }
 
 # Populate Udone/Utotal from the optional <!-- tunan:progress --> comment, whose
@@ -89,6 +120,7 @@ if (Has-Marker "<!-- tunan:plan -->") {
   exit 0
 }
 
+Check-StaleLabel "tunan:plan"
 Emit plan plan -
 Write-Error "Feature #$N has no plan comment — resume at plan (lfg step 1)."
 exit 0

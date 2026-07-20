@@ -86,6 +86,14 @@ gh api repos/{owner}/{repo}/issues/comments/<comment-id> -X PATCH -F body=@<file
 3. If none → `gh issue comment <N> --body-file <file>` and `gh issue edit <N> --add-label "<stage-label>"`.
 4. If one exists → PATCH it in place by id.
 
+> **Non-atomicity.** Steps 3's two `gh` commands are not atomic — the label can exist
+> without the comment, or vice versa, if the agent is interrupted between them or one
+> call fails. Downstream detection always checks the **marker comment** (the authoritative
+> content anchor), never the label alone. Re-running the stage is safe: `--add-label` is
+> idempotent, and the create-or-update pattern writes the missing comment. The
+> `resume` phase detector reports a `label_stale=<stage>` field when it finds a label
+> without its marker so callers can surface the inconsistency.
+
 Swap `<!-- tunan:plan -->` / `tunan:plan` for the solution marker / label as needed.
 
 ## Notes
