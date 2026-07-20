@@ -852,7 +852,7 @@ Selected reviewer prompt assets live under `references/personas/`. Read only the
 
 ### Subagent Template
 
-@./references/subagent-template.md
+Read `references/subagent-template.md` for the subagent dispatch template.
 
 ### Diff Scope Rules
 

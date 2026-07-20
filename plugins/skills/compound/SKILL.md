@@ -58,14 +58,10 @@ Learnings are stored on GitHub, never local files. A feature is **one GitHub iss
 **Ensure the label exists** before relabeling:
 
 ```bash
-gh label list --search "tunan:solution"
-```
-
-If absent:
-
-```bash
 gh label create "tunan:solution" --color 1f883d --description "tunan solution"
 ```
+
+(If the label already exists the command is a harmless no-op — the error can be ignored.)
 
 **Resolve the feature issue `#N`.** The solution comment always lives on the feature issue the solved problem belongs to:
 

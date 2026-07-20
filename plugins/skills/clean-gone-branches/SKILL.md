@@ -17,8 +17,6 @@ Run the discovery script to fetch the latest remote state and identify gone bran
 bash scripts/clean-gone
 ```
 
-[scripts/clean-gone](./scripts/clean-gone)
-
 The script runs `git fetch --prune` first, then parses `git branch -vv` for branches marked `: gone]`.
 
 If the script outputs `__NONE__`, report that no stale branches were found and stop.

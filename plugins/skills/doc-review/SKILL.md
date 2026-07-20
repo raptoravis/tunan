@@ -306,7 +306,7 @@ For the four-option routing question and per-finding walk-through (interactive m
 
 ### Subagent Template
 
-@./references/subagent-template.md
+Read `references/subagent-template.md` for the subagent dispatch template.
 
 ### Findings Schema
 

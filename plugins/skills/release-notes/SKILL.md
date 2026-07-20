@@ -1,6 +1,6 @@
 ---
 name: release-notes
-description: Summarize recent tunan plugin releases, or answer a specific question about a past release with a version citation. Use when the user types `/tunan:release-notes` or asks "what changed in tunan recently?" or "what happened to `<skill-name>`?".
+description: "Summarize recent tunan plugin releases, or answer a specific question about a past release with a version citation. Use when the user invokes the release-notes skill or asks what changed in tunan recently, or what happened to a specific skill."
 argument-hint: "[optional: question about a past release]"
 disable-model-invocation: true
 ---

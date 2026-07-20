@@ -24,14 +24,10 @@ Plans are GitHub issues. Before reading or writing any issue, run this preflight
 Ensure the `tunan:plan` label exists before adding it to a feature issue:
 
 ```bash
-gh label list --search "tunan:plan"
-```
-
-If absent, create it:
-
-```bash
 gh label create "tunan:plan" --color 1f883d --description "tunan plan"
 ```
+
+(If the label already exists the command is a harmless no-op — the error can be ignored.)
 
 **When directly invoked, always plan.** Never classify a direct invocation as "not a planning task" and abandon the workflow. If the input is unclear, ask clarifying questions or use the planning bootstrap (Phase 0.4) to establish enough context — but always stay in the planning workflow.
 

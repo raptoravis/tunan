@@ -1,6 +1,6 @@
 ---
 name: status
-description: '列出当前仓库还没合并的 open PR、还没关闭的 open issue,以及 tunan:handoff 交接单里还没完成的事项,快速看还剩什么工作。默认只查当前用户,--user <name> 查指定用户,--all 查所有人,--req 只看 tunan:req 需求项,--triage 把 open issue/PR 对照 .github 模板做合规审阅(默认仍只读;加 --label / --close-incomplete 才会打标签/关闭,且每步需确认)。只读,不创建任何 issue。用户说"还剩什么"/"剩余工作"/"还有什么没做"/"open issues"/"handoff 里还剩什么"/"triage 一下 issues"/"what is left"/"/tunan:status" 时用。'
+description: "列出当前仓库还没合并的 open PR、还没关闭的 open issue,以及 tunan:handoff 交接单里还没完成的事项,快速看还剩什么工作。默认只查当前用户, `--user <name>` 查指定用户, `--all` 查所有人, `--req` 只看 tunan:req 需求项, `--triage` 把 open issue/PR 对照 .github 模板做合规审阅(默认仍只读;加 `--label` / `--close-incomplete` 才会打标签/关闭,且每步需确认)。只读,不创建任何 issue。"
 ---
 
 # status — 看还剩什么工作

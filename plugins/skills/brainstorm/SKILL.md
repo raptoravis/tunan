@@ -94,14 +94,10 @@ gh repo view --json nameWithOwner
 **Ensure the `tunan:req` label exists** (needed when Phase 3 creates the issue):
 
 ```bash
-gh label list --search "tunan:req"
-```
-
-If it is absent, create it:
-
-```bash
 gh label create "tunan:req" --color 1f883d --description "tunan requirements"
 ```
+
+(If the label already exists the command is a harmless no-op — the error can be ignored.)
 
 **Resolve the issue binding:**
 

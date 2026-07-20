@@ -1,15 +1,6 @@
 ---
 name: sync-ups
-description: |
-  Merge the latest upstream everyinc/compound-engineering-plugin changes into
-  the local tunan skills fork. Use when the user says "sync-ups", "拉上游更新",
-  "merge upstream", "sync compound-engineering", "合并上游", "pull upstream into
-  tunan", or asks to bring this fork up to date with the upstream
-  compound-engineering-plugin. Maintainer-facing: run from the tunan fork repo
-  root. Computes the delta since the last synced upstream commit, ports skill
-  changes with the tunan branding transform applied, flags dead files (added
-  reference/script files no SKILL.md wires in), records the new sync point, and
-  stops at unstaged changes for the maintainer to review.
+description: "Merge upstream everyinc/compound-engineering-plugin changes into tunan. Use when the user says sync-ups, 拉上游更新, merge upstream, or asks to sync with upstream. Computes delta since last synced commit, ports skill changes with tunan branding, flags dead files, records the new sync point, and stops at unstaged changes."
 disable-model-invocation: true
 allowed-tools: Bash(bash *fetch-upstream-delta.sh), Bash(powershell.exe *fetch-upstream-delta.ps1)
 ---

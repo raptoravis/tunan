@@ -1,15 +1,6 @@
 ---
 name: sync-gsd
-description: |
-  Audit the upstream open-gsd/gsd-core project for new capabilities worth
-  absorbing into the local tunan skills, and absorb the ones the maintainer
-  picks. Use when the user says "sync-gsd", "拉 GSD 更新", "absorb GSD", "同步
-  gsd", "审计 gsd-core", or asks to bring the latest GSD-core capabilities into
-  tunan. Maintainer-facing: run from the tunan repo root. tunan is NOT a fork of
-  GSD — this is a capability audit, not a file port: it computes the delta since
-  the last-absorbed GSD commit, classifies changes into capabilities, surfaces
-  each for a keep/skip decision, ports accepted ones into tunan's own skill
-  shapes, records the new audit baseline, and stops at unstaged changes.
+description: "Audit open-gsd/gsd-core for new capabilities worth absorbing into tunan. Use when the user says sync-gsd, 拉 GSD 更新, absorb GSD, or asks to sync GSD capabilities. This is a capability audit, not a file port — computes delta since last-absorbed commit, classifies changes, surfaces each for keep/skip, ports accepted ones, records the new baseline, and stops at unstaged changes."
 disable-model-invocation: true
 allowed-tools: Bash(bash *fetch-gsd-delta.sh), Bash(powershell.exe *fetch-gsd-delta.ps1)
 ---

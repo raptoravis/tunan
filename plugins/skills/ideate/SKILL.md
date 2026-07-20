@@ -88,14 +88,10 @@ gh repo view --json nameWithOwner
 **Ensure the `tunan:idea` label exists** (needed when Phase 5 creates the issue):
 
 ```bash
-gh label list --search "tunan:idea"
-```
-
-If it is absent, create it:
-
-```bash
 gh label create "tunan:idea" --color 1f883d --description "tunan idea"
 ```
+
+(If the label already exists the command is a harmless no-op — the error can be ignored.)
 
 **Resume check.** If `$ARGUMENTS` contains an issue ref (a `#<N>` token or a full GitHub issue URL), bind that issue and read its body as the resume source:
 

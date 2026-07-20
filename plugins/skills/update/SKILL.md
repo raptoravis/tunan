@@ -1,12 +1,6 @@
 ---
 name: update
-description: |
-  Check if the tunan plugin is up to date and recommend the
-  update command if not. Use when the user says "update tunan",
-  "check tunan version", "ce update", "is tunan
-  up to date", "update ce plugin", or reports issues that might stem from a
-  stale tunan plugin version. This skill only works in Claude
-  Code — it relies on the plugin harness cache layout.
+description: "Check if the tunan plugin is up to date and recommend the update command if not. Use when the user says update tunan, check tunan version, or reports issues that might stem from a stale plugin version. Claude Code only — relies on the plugin harness cache layout."
 disable-model-invocation: true
 ce_platforms: [claude]
 allowed-tools: Bash(bash *upstream-version.sh), Bash(bash *currently-loaded-version.sh), Bash(bash *marketplace-name.sh), Bash(powershell.exe *upstream-version.ps1), Bash(powershell.exe *currently-loaded-version.ps1), Bash(powershell.exe *marketplace-name.ps1)
