@@ -77,7 +77,7 @@ PROVIDERS = {
     },
     "siliconflow": {
         # 硅基流动 (SiliconFlow) — OpenAI 兼容的国内模型聚合平台,
-        # 视觉模型可在 SILICONFLOW_MODEL 切换: Qwen/Qwen2.5-VL-72B-Instruct,
+        # 视觉模型可在 SILICONFLOW_VISION_MODEL 切换: Qwen/Qwen2.5-VL-72B-Instruct,
         # Qwen/Qwen2-VL-72B-Instruct, deepseek-ai/deepseek-vl2 等。
         "key_envs": ["SILICONFLOW_API_KEY"],
         "base_env": "SILICONFLOW_BASE_URL",
@@ -180,16 +180,16 @@ def resolve_provider(name: str | None) -> tuple[str, dict]:
 
 
 def resolve_model(provider_name: str, config: dict) -> str:
-    # VISION_MODEL (global override, highest priority)
-    global_model = os.environ.get("VISION_MODEL", "")
-    if global_model:
-        return global_model
-
-    # provider-specific env: {PROVIDER}_MODEL
-    provider_model_env = f"{provider_name.upper()}_MODEL"
+    # provider-specific env: {PROVIDER}_VISION_MODEL (highest priority)
+    provider_model_env = f"{provider_name.upper()}_VISION_MODEL"
     provider_model = os.environ.get(provider_model_env, "")
     if provider_model:
         return provider_model
+
+    # VISION_MODEL (global fallback)
+    global_model = os.environ.get("VISION_MODEL", "")
+    if global_model:
+        return global_model
 
     return config["model_default"]
 

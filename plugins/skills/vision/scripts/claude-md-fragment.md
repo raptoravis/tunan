@@ -11,4 +11,4 @@
    可用 `--provider doubao|qwen|openai` 切换模型；未指定时按 `VISION_PROVIDER` / `~/.env` 中先出现的 key 自动选。
 4. 汇总所有截图的分析结果，列出完整、去重的问题清单后再报告。
 
-key 与 provider 配置见 `~/.env`（`BD_API_KEY` / `DASHSCOPE_API_KEY` / `OPENAI_API_KEY` 等，`DOUBAO_API_KEY` 亦可），`vision.py` 每次运行自动加载。
+key 与 provider 配置见 `~/.env`（`ARK_API_KEY` / `DASHSCOPE_API_KEY` / `OPENAI_API_KEY` / `SILICONFLOW_API_KEY` 等，旧名 `BD_API_KEY` / `DOUBAO_API_KEY` 亦可），`vision.py` 每次运行自动加载。

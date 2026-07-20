@@ -88,15 +88,15 @@ The merged content comes from `scripts/claude-md-fragment.md` (single source —
 - API key: `SILICONFLOW_API_KEY`
 - Default model: `Qwen/Qwen2.5-VL-72B-Instruct`
 - Custom endpoint: `SILICONFLOW_BASE_URL`
-- OpenAI-compatible aggregator. Switch VL models via `SILICONFLOW_MODEL`, e.g. `Qwen/Qwen2-VL-72B-Instruct`, `deepseek-ai/deepseek-vl2`, `OpenGVLab/InternVL2-Llama3-76B`.
+- OpenAI-compatible aggregator. Switch VL models via `SILICONFLOW_VISION_MODEL`, e.g. `Qwen/Qwen2-VL-72B-Instruct`, `deepseek-ai/deepseek-vl2`, `OpenGVLab/InternVL2-Llama3-76B`.
 
 ## Configuration
 
 | Env var | Scope | Default |
 |---------|-------|---------|
 | `VISION_PROVIDER` | Default provider | auto-detect |
-| `VISION_MODEL` | Override model (all providers) | provider default |
-| `{PROVIDER}_MODEL` | Override model (per provider) | — |
+| `{PROVIDER}_VISION_MODEL` | Override model (per provider, highest priority) | — |
+| `VISION_MODEL` | Override model (all providers, fallback) | provider default |
 | `VISION_TEMPERATURE` | Response creativity 0–1 | `0` |
 | `VISION_MAX_TOKENS` | Max response tokens | `4096` |
 | `VISION_ENV_FILE` | Path to .env file | `~/.env` |
@@ -111,7 +111,7 @@ uv run "${CLAUDE_SKILL_DIR}/scripts/vision.py" "screenshot.png" "Describe the pa
 uv run "${CLAUDE_SKILL_DIR}/scripts/vision.py" --provider qwen "mockup.png" "List all components, colors, and spacing patterns."
 
 # Custom model
-QWEN_MODEL=qvq-max uv run "${CLAUDE_SKILL_DIR}/scripts/vision.py" -p qwen "diagram.png" "Explain the architecture."
+QWEN_VISION_MODEL=qvq-max uv run "${CLAUDE_SKILL_DIR}/scripts/vision.py" -p qwen "diagram.png" "Explain the architecture."
 
 # GPT-4o for visual regression against a design spec
 uv run "${CLAUDE_SKILL_DIR}/scripts/vision.py" -p openai "after.png" "Compare with app design spec, flag differences."
