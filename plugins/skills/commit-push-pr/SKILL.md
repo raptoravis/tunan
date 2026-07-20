@@ -65,7 +65,7 @@ Note the existing PR URL from the PR check if `state: OPEN`. Step 5 uses it to r
 
 ## Step 2: Determine conventions
 
-Match repo style for commit messages and PR titles (project instructions in context > recent commits > conventional commits as default). With conventional commits, default to `fix:` over `feat:` when ambiguous — adding code to remedy broken or missing behavior is `fix:`. Reserve `feat:` for capabilities the user could not previously accomplish. The user may override.
+Match repo style for commit messages and PR titles (project instructions in context > recent commits > conventional commits as default). **Never prefix commit messages with `@`** — the `@` character is a platform mention, not a commit convention; if recent commits have it, those are errors to ignore, not patterns to replicate. With conventional commits, default to `fix:` over `feat:` when ambiguous — adding code to remedy broken or missing behavior is `fix:`. Reserve `feat:` for capabilities the user could not previously accomplish. The user may override.
 
 ## Step 3: Commit and push
 

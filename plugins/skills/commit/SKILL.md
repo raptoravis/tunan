@@ -54,6 +54,8 @@ Follow this priority order:
 2. **Recent commit history** -- If no explicit convention is documented, examine the 10 most recent commits from Step 1. If a clear pattern emerges (e.g., conventional commits, ticket prefixes, emoji prefixes), match that pattern.
 3. **Default: conventional commits** -- If neither source provides a pattern, use conventional commit format: `type(scope): description` where type is one of `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `ci`, `style`, `build`.
 
+**IMPORTANT: Never prefix commit message subjects with `@`.** The `@` character at the start of a subject line is a GitHub/Git-platform mention, not a commit convention. If recent commits in the history have `@ ` prefixes (e.g., `@ fix(...):`), those are errors — do NOT replicate them. The conventional commit format starts directly with the type: `fix(scope): description`, `feat(scope): description`, etc. No prefix character comes before the type.
+
 When using conventional commits, choose the type that most precisely describes the change (the type list above). Where `fix:` and `feat:` both seem to fit, default to `fix:`: a change that remedies broken or missing behavior is `fix:` even when implemented by adding code. Reserve `feat:` for capabilities the user could not previously accomplish. Other types remain primary when they fit better. The user may override for a specific change.
 
 ### Step 3: Consider logical commits
